@@ -399,9 +399,30 @@ export default function AgendaPage() {
     await loadData();
   };
 
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    const ok = window.confirm(
+      "Deseja realmente excluir este agendamento? Essa ação não pode ser desfeita."
+    );
+
+    if (!ok) return;
+
+    const { error } = await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", appointmentId);
+
+    if (error) {
+      alert("Erro ao excluir agendamento: " + error.message);
+      return;
+    }
+
+    setSelectedAppointmentDetails(null);
+    await loadData();
+  };
+
   const getDurationHeight = (mins: number) => {
-    const slots = Math.max(1, Math.round((mins || 30) / 15));
-    return slots * SLOT_HEIGHT - 10;
+    const slots = Math.max(1, Math.ceil((Number(mins) || 30) / 15));
+    return slots * SLOT_HEIGHT - 6;
   };
 
   const getPatientByAppointment = (appointment: any) => {
@@ -1274,7 +1295,7 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className="border-l border-[#c6e0e0] min-h-[42px] p-1 cursor-pointer hover:bg-[#f6ffff] relative transition-colors min-w-0 overflow-hidden"
+                    className="border-l border-[#c6e0e0] min-h-[42px] cursor-pointer hover:bg-[#f6ffff] relative transition-colors min-w-0 overflow-visible"
                     onClick={() => openNew(d.date, h)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
@@ -1298,11 +1319,11 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-300 ring-offset-1"
                             : ""
-                        } w-full max-w-full overflow-hidden text-white text-[10px] px-2 py-1.5 rounded-lg cursor-pointer mb-1 relative shadow-sm`}
+                        } absolute left-1 right-1 top-1 z-20 max-w-[calc(100%-0.5rem)] overflow-hidden text-white text-[10px] px-2 py-1.5 rounded-lg cursor-pointer shadow-sm`}
                         style={{
                           height: `${getDurationHeight(a.duration || 30)}px`,
                         }}
-                        title="Clique para abrir o prontuário. Arraste para remarcar. Use a barra inferior para alterar a duração."
+                        title="Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."
                       >
                         <div className="font-black truncate pr-1 leading-tight text-[10px]">
                           {a.patient_name || a.title}
@@ -1544,6 +1565,14 @@ export default function AgendaPage() {
                   className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#f6ffff]"
                 >
                   Editar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteAppointment(selectedAppointmentDetails.id)}
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 hover:bg-red-100"
+                >
+                  Excluir agendamento
                 </button>
 
                 {selectedAppointmentDetails.type !== "compromisso" &&
