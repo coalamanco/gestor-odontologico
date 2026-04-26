@@ -1,0 +1,1346 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertTriangle,
+  AlertCircle,
+  CalendarCheck,
+  Clock,
+  DollarSign,
+  LineChart as LineChartIcon,
+  TrendingUp,
+  Users,
+  Wallet,
+  Zap,
+} from "lucide-react";
+import { supabaseNoSchemaCache } from "@/lib/supabase";
+import { getUserRole } from "@/lib/getUserRole";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+type FinancialRecord = {
+  id: string;
+  patient_id?: string | null;
+  amount?: number | string | null;
+  paid_amount?: number | string | null;
+  status?: string | null;
+  created_at?: string | null;
+  paid_at?: string | null;
+  payment_method?: string | null;
+  receipt_type?: string | null;
+  description?: string | null;
+  procedure_name?: string | null;
+  treatment_name?: string | null;
+  category?: string | null;
+  type?: string | null;
+};
+
+type Appointment = {
+  id: string;
+  patient_id?: string | null;
+  patient_name?: string | null;
+  title?: string | null;
+  date?: string | null;
+  start_time?: string | null;
+  duration?: number | string | null;
+  status?: string | null;
+  type?: string | null;
+};
+
+type Patient = {
+  id: string;
+  name?: string | null;
+  created_at?: string | null;
+};
+
+type DashboardStats = {
+  recebidoHoje: number;
+  recebidoMes: number;
+  aReceber: number;
+  saldoPrevisto: number;
+  pacientes: number;
+  novosPacientesMes: number;
+  consultasHoje: number;
+  confirmadosHoje: number;
+  faltasMes: number;
+  ocupacaoHoje: number;
+  taxaConfirmacao: number;
+  taxaFaltas: number;
+  ticketMedio: number;
+};
+
+const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function parseMoney(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return value;
+  return Number(String(value).replace(",", ".")) || 0;
+}
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function isSameMonth(dateString?: string | null, base = new Date()) {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return false;
+  return (
+    date.getFullYear() === base.getFullYear() &&
+    date.getMonth() === base.getMonth()
+  );
+}
+
+function isSameDay(dateString?: string | null, base = new Date()) {
+  if (!dateString) return false;
+  return dateString.slice(0, 10) === toDateKey(base);
+}
+
+function normalizeStatus(status?: string | null) {
+  return String(status || "agendado").trim().toLowerCase();
+}
+
+function paymentMethodLabel(value?: string | null) {
+  switch (value) {
+    case "dinheiro":
+      return "Dinheiro";
+    case "pix":
+      return "Pix";
+    case "cartao_credito":
+      return "Crédito";
+    case "cartao_debito":
+      return "Débito";
+    case "boleto":
+      return "Boleto";
+    case "transferencia":
+      return "Transferência";
+    case "cheque":
+      return "Cheque";
+    default:
+      return "Sem método";
+  }
+}
+
+
+function normalizeLabel(value?: string | null) {
+  const label = String(value || "").trim();
+  return label || "Não informado";
+}
+
+function statusLabel(value?: string | null) {
+  const status = normalizeStatus(value);
+
+  switch (status) {
+    case "confirmado":
+      return "Confirmado";
+    case "em atendimento":
+    case "em_atendimento":
+      return "Em atendimento";
+    case "finalizado":
+      return "Finalizado";
+    case "faltou":
+      return "Faltou";
+    case "cancelado":
+    case "cancelada":
+      return "Cancelado";
+    default:
+      return "Agendado";
+  }
+}
+
+const statusColors: Record<string, string> = {
+  Agendado: "#239d9a",
+  Confirmado: "#2563eb",
+  "Em atendimento": "#7c3aed",
+  Finalizado: "#059669",
+  Faltou: "#dc2626",
+  Cancelado: "#64748b",
+};
+
+function CheckCircleIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+export default function Dashboard() {
+  const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<"hoje" | "semana" | "mes">("mes");
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+
+        const currentRole = await getUserRole();
+        setRole(currentRole || "admin");
+
+        const [{ data: financial }, { data: appointmentsData }, { data: patientsData }] =
+          await Promise.all([
+            supabaseNoSchemaCache
+              .from("financial_records")
+              .select("*")
+              .order("created_at", { ascending: false }),
+            supabaseNoSchemaCache
+              .from("appointments")
+              .select("*")
+              .order("date", { ascending: true })
+              .order("start_time", { ascending: true }),
+            supabaseNoSchemaCache
+              .from("patients")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ]);
+
+        setFinancialRecords((financial || []) as FinancialRecord[]);
+        setAppointments((appointmentsData || []) as Appointment[]);
+        setPatients((patientsData || []) as Patient[]);
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  const today = useMemo(() => new Date(), []);
+
+  const stats: DashboardStats = useMemo(() => {
+    const todayKey = toDateKey(new Date());
+
+    const recebidoHoje = financialRecords.reduce((acc, record) => {
+      const paid = parseMoney(record.paid_amount);
+      const paidAt = record.paid_at || record.created_at;
+
+      if (paid > 0 && isSameDay(paidAt, new Date())) return acc + paid;
+
+      return acc;
+    }, 0);
+
+    const recebidoMes = financialRecords.reduce((acc, record) => {
+      const paid = parseMoney(record.paid_amount);
+      const paidAt = record.paid_at || record.created_at;
+
+      if (paid > 0 && isSameMonth(paidAt, new Date())) return acc + paid;
+
+      return acc;
+    }, 0);
+
+    const aReceber = financialRecords.reduce((acc, record) => {
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      return acc + Math.max(0, amount - paid);
+    }, 0);
+
+    const consultasHojeList = appointments.filter(
+      (appointment) => appointment.date === todayKey
+    );
+
+    const confirmadosHoje = consultasHojeList.filter(
+      (appointment) => normalizeStatus(appointment.status) === "confirmado"
+    ).length;
+
+    const consultasMesList = appointments.filter((appointment) =>
+      isSameMonth(appointment.date, new Date())
+    );
+
+    const faltasMes = consultasMesList.filter(
+      (appointment) => normalizeStatus(appointment.status) === "faltou"
+    ).length;
+
+    const novosPacientesMes = patients.filter((patient) =>
+      isSameMonth(patient.created_at, new Date())
+    ).length;
+
+    const totalSlotsDia = 11 * 4;
+    const usedSlots = consultasHojeList.reduce((acc, appointment) => {
+      return acc + Math.max(1, Math.round(Number(appointment.duration || 30) / 15));
+    }, 0);
+
+    const taxaConfirmacao =
+      consultasHojeList.length > 0
+        ? Math.round((confirmadosHoje / consultasHojeList.length) * 100)
+        : 0;
+
+    const taxaFaltas =
+      consultasMesList.length > 0
+        ? Math.round((faltasMes / consultasMesList.length) * 100)
+        : 0;
+
+    const pacientesComPagamentoNoMes = new Set(
+      financialRecords
+        .filter((record) => {
+          const paid = parseMoney(record.paid_amount);
+          const paidAt = record.paid_at || record.created_at;
+          return paid > 0 && isSameMonth(paidAt, new Date()) && record.patient_id;
+        })
+        .map((record) => String(record.patient_id))
+    );
+
+    const ticketMedio =
+      pacientesComPagamentoNoMes.size > 0
+        ? recebidoMes / pacientesComPagamentoNoMes.size
+        : 0;
+
+    return {
+      recebidoHoje,
+      recebidoMes,
+      aReceber,
+      saldoPrevisto: recebidoMes + aReceber,
+      pacientes: patients.length,
+      novosPacientesMes,
+      consultasHoje: consultasHojeList.length,
+      confirmadosHoje,
+      faltasMes,
+      ocupacaoHoje: Math.min(100, Math.round((usedSlots / totalSlotsDia) * 100)),
+      taxaConfirmacao,
+      taxaFaltas,
+      ticketMedio,
+    };
+  }, [financialRecords, appointments, patients]);
+
+  const weeklyRevenue = useMemo(() => {
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - now.getDay());
+
+    return Array.from({ length: 7 }).map((_, index) => {
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + index);
+      const key = toDateKey(date);
+
+      const amount = financialRecords.reduce((acc, record) => {
+        const paid = parseMoney(record.paid_amount);
+        const paidAt = record.paid_at || record.created_at;
+        if (paid > 0 && paidAt?.slice(0, 10) === key) return acc + paid;
+        return acc;
+      }, 0);
+
+      return {
+        name: weekLabels[index],
+        amount,
+      };
+    });
+  }, [financialRecords]);
+
+  const monthlyRevenue = useMemo(() => {
+    const base = new Date();
+    return Array.from({ length: 6 }).map((_, reverseIndex) => {
+      const index = 5 - reverseIndex;
+      const date = new Date(base.getFullYear(), base.getMonth() - index, 1);
+      const month = date.toLocaleDateString("pt-BR", { month: "short" });
+
+      const amount = financialRecords.reduce((acc, record) => {
+        const paid = parseMoney(record.paid_amount);
+        const paidAt = record.paid_at || record.created_at;
+        if (!paidAt) return acc;
+
+        const paidDate = new Date(paidAt);
+        if (
+          paid > 0 &&
+          paidDate.getFullYear() === date.getFullYear() &&
+          paidDate.getMonth() === date.getMonth()
+        ) {
+          return acc + paid;
+        }
+
+        return acc;
+      }, 0);
+
+      return {
+        name: month.replace(".", ""),
+        amount,
+      };
+    });
+  }, [financialRecords]);
+
+  const paymentMethods = useMemo(() => {
+    const grouped: Record<string, number> = {};
+
+    financialRecords.forEach((record) => {
+      const paid = parseMoney(record.paid_amount);
+      if (paid <= 0) return;
+
+      const label = paymentMethodLabel(record.payment_method);
+      grouped[label] = (grouped[label] || 0) + paid;
+    });
+
+    return Object.entries(grouped)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [financialRecords]);
+
+  const todayAppointments = useMemo(() => {
+    const todayKey = toDateKey(new Date());
+
+    return appointments
+      .filter((appointment) => appointment.date === todayKey)
+      .sort((a, b) => String(a.start_time || "").localeCompare(String(b.start_time || "")))
+      .slice(0, 7);
+  }, [appointments]);
+
+  const debtors = useMemo(() => {
+    const patientNameById = new Map(
+      patients.map((patient) => [patient.id, patient.name || "Paciente"])
+    );
+
+    const grouped: Record<string, number> = {};
+
+    financialRecords.forEach((record) => {
+      if (!record.patient_id) return;
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      const remaining = Math.max(0, amount - paid);
+
+      if (remaining <= 0) return;
+
+      grouped[record.patient_id] = (grouped[record.patient_id] || 0) + remaining;
+    });
+
+    return Object.entries(grouped)
+      .map(([patientId, amount]) => ({
+        patientId,
+        name: patientNameById.get(patientId) || "Paciente",
+        amount,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 6);
+  }, [financialRecords, patients]);
+
+  const intelligentInsights = useMemo(() => {
+    const now = new Date();
+
+    const overdueRecords = financialRecords.filter((record) => {
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      const remaining = Math.max(0, amount - paid);
+
+      if (remaining <= 0) return false;
+
+      const createdAt = record.created_at ? new Date(record.created_at) : null;
+      if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
+
+      const daysOpen = Math.floor(
+        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return daysOpen >= 30;
+    });
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    const tomorrowKey = toDateKey(tomorrow);
+
+    const tomorrowAppointments = appointments.filter(
+      (appointment) => appointment.date === tomorrowKey
+    );
+
+    const tomorrowNotConfirmed = tomorrowAppointments.filter((appointment) => {
+      const status = String(appointment.status || "agendado").toLowerCase();
+      return status !== "confirmado" && status !== "finalizado";
+    });
+
+    const noShowsThisMonth = appointments.filter(
+      (appointment) =>
+        isSameMonth(appointment.date, now) &&
+        normalizeStatus(appointment.status) === "faltou"
+    );
+
+    const todayKey = toDateKey(now);
+    const todayAppointmentsList = appointments.filter(
+      (appointment) => appointment.date === todayKey
+    );
+
+    const todayPending = todayAppointmentsList.filter((appointment) => {
+      const status = String(appointment.status || "agendado").toLowerCase();
+      return status === "agendado";
+    });
+
+    const emptyAgendaToday = todayAppointmentsList.length === 0;
+
+    const totalOverdue = overdueRecords.reduce((acc, record) => {
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      return acc + Math.max(0, amount - paid);
+    }, 0);
+
+    return [
+      {
+        id: "overdue",
+        title: "Cobranças com mais de 30 dias",
+        description:
+          overdueRecords.length > 0
+            ? `${overdueRecords.length} débito(s) somando ${formatCurrency(totalOverdue)}.`
+            : "Nenhuma cobrança antiga em aberto.",
+        level: overdueRecords.length > 0 ? "warning" : "success",
+        action: "Abrir financeiro",
+        href: "/financeiro",
+      },
+      {
+        id: "tomorrow",
+        title: "Consultas de amanhã sem confirmação",
+        description:
+          tomorrowNotConfirmed.length > 0
+            ? `${tomorrowNotConfirmed.length} consulta(s) ainda precisam de confirmação.`
+            : "Agenda de amanhã está sob controle.",
+        level: tomorrowNotConfirmed.length > 0 ? "warning" : "success",
+        action: "Abrir agenda",
+        href: "/agenda",
+      },
+      {
+        id: "today",
+        title: "Consultas de hoje ainda agendadas",
+        description:
+          todayPending.length > 0
+            ? `${todayPending.length} consulta(s) ainda sem mudança de status.`
+            : emptyAgendaToday
+              ? "Nenhuma consulta agendada para hoje."
+              : "Fluxo do dia está atualizado.",
+        level: todayPending.length > 0 ? "info" : "success",
+        action: "Ver agenda",
+        href: "/agenda",
+      },
+      {
+        id: "noshow",
+        title: "Faltas no mês",
+        description:
+          noShowsThisMonth.length > 0
+            ? `${noShowsThisMonth.length} falta(s) registrada(s) neste mês.`
+            : "Nenhuma falta registrada neste mês.",
+        level: noShowsThisMonth.length > 0 ? "danger" : "success",
+        action: "Ver agenda",
+        href: "/agenda",
+      },
+    ];
+  }, [financialRecords, appointments]);
+
+  const productionByProcedure = useMemo(() => {
+    const grouped: Record<string, { name: string; amount: number; count: number }> = {};
+
+    financialRecords.forEach((record) => {
+      const date = record.paid_at || record.created_at;
+      if (!isSameMonth(date, new Date())) return;
+
+      const label = normalizeLabel(
+        record.procedure_name ||
+          record.treatment_name ||
+          record.category ||
+          record.description ||
+          "Procedimento não informado"
+      );
+
+      const amount = parseMoney(record.paid_amount) || parseMoney(record.amount);
+
+      if (!grouped[label]) {
+        grouped[label] = { name: label, amount: 0, count: 0 };
+      }
+
+      grouped[label].amount += amount;
+      grouped[label].count += 1;
+    });
+
+    return Object.values(grouped)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 6);
+  }, [financialRecords]);
+
+  const appointmentsByWeekday = useMemo(() => {
+    const grouped = weekLabels.map((name) => ({ name, total: 0 }));
+
+    appointments.forEach((appointment) => {
+      if (!isSameMonth(appointment.date, new Date())) return;
+      if (!appointment.date) return;
+
+      const date = new Date(`${appointment.date}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return;
+
+      grouped[date.getDay()].total += 1;
+    });
+
+    return grouped;
+  }, [appointments]);
+
+  const appointmentStatusData = useMemo(() => {
+    const grouped: Record<string, number> = {};
+
+    appointments.forEach((appointment) => {
+      if (!isSameMonth(appointment.date, new Date())) return;
+
+      const label = statusLabel(appointment.status);
+      grouped[label] = (grouped[label] || 0) + 1;
+    });
+
+    return Object.entries(grouped).map(([name, value]) => ({ name, value }));
+  }, [appointments]);
+
+  const isAdminUser = role === "admin";
+
+  const quickActions = [
+    {
+      title: "Nova consulta",
+      description: "Abrir agenda para criar atendimento",
+      href: "/agenda",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Novo paciente",
+      description: "Cadastrar paciente no sistema",
+      href: "/pacientes",
+      icon: Users,
+    },
+    {
+      title: "Novo orçamento",
+      description: "Abrir pacientes para gerar orçamento",
+      href: "/pacientes",
+      icon: Wallet,
+    },
+    {
+      title: "Relatórios",
+      description: "Analisar financeiro da clínica",
+      href: "/relatorios",
+      icon: LineChartIcon,
+    },
+  ].filter((action) => isAdminUser || action.title !== "Relatórios");
+
+  const cards = [
+    {
+      title: "Recebido hoje",
+      value: formatCurrency(stats.recebidoHoje),
+      icon: DollarSign,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
+      description: "Entradas registradas hoje",
+    },
+    {
+      title: "Recebido no mês",
+      value: formatCurrency(stats.recebidoMes),
+      icon: TrendingUp,
+      color: "text-[#239d9a]",
+      bg: "bg-[#eefafa]",
+      description: "Pagamentos do mês atual",
+    },
+    {
+      title: "A receber",
+      value: formatCurrency(stats.aReceber),
+      icon: AlertCircle,
+      color: "text-amber-700",
+      bg: "bg-amber-50",
+      description: "Valores pendentes",
+    },
+    {
+      title: "Consultas hoje",
+      value: String(stats.consultasHoje),
+      icon: CalendarCheck,
+      color: "text-blue-700",
+      bg: "bg-blue-50",
+      description: `${stats.confirmadosHoje} confirmada(s)`,
+    },
+    {
+      title: "Pacientes",
+      value: String(stats.pacientes),
+      icon: Users,
+      color: "text-slate-700",
+      bg: "bg-slate-100",
+      description: `${stats.novosPacientesMes} novo(s) este mês`,
+    },
+    {
+      title: "Ocupação hoje",
+      value: `${stats.ocupacaoHoje}%`,
+      icon: Clock,
+      color: "text-purple-700",
+      bg: "bg-purple-50",
+      description: "Baseado na agenda",
+    },
+    {
+      title: "Confirmação",
+      value: `${stats.taxaConfirmacao}%`,
+      icon: CalendarCheck,
+      color: "text-cyan-700",
+      bg: "bg-cyan-50",
+      description: `${stats.confirmadosHoje}/${stats.consultasHoje} consulta(s) hoje`,
+    },
+    {
+      title: "Taxa de faltas",
+      value: `${stats.taxaFaltas}%`,
+      icon: AlertTriangle,
+      color: "text-red-700",
+      bg: "bg-red-50",
+      description: `${stats.faltasMes} falta(s) neste mês`,
+    },
+    {
+      title: "Ticket médio",
+      value: formatCurrency(stats.ticketMedio),
+      icon: Wallet,
+      color: "text-indigo-700",
+      bg: "bg-indigo-50",
+      description: "Média por paciente pagante no mês",
+    },
+  ].filter((card) => {
+    if (isAdminUser) return true;
+
+    return ![
+      "Recebido hoje",
+      "Recebido no mês",
+      "A receber",
+      "Ticket médio",
+    ].includes(card.title);
+  });
+
+  return (
+    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6">
+      <div className="max-w-7xl mx-auto space-y-6 pb-12">
+        <div className="rounded-3xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] p-6 md:p-8 text-white">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-widest border border-white/20">
+                  Dashboard da clínica
+                </div>
+                <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">
+                  Visão geral do consultório
+                </h1>
+                <p className="mt-2 text-sm md:text-base text-cyan-50 max-w-2xl">
+                  Acompanhe agenda, recebimentos, pendências e indicadores principais em um só lugar.
+                </p>
+              </div>
+
+              {isAdminUser && (
+                <div className="rounded-2xl bg-white/15 border border-white/25 p-4 min-w-[260px]">
+                  <div className="text-xs font-black uppercase tracking-widest text-cyan-50">
+                    Saldo previsto
+                  </div>
+                  <div className="mt-1 text-3xl font-black">
+                    {formatCurrency(stats.saldoPrevisto)}
+                  </div>
+                  <div className="mt-1 text-xs text-cyan-50">
+                    Recebido no mês + valores em aberto
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {(["hoje", "semana", "mes"] as const).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setPeriod(item)}
+                  className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
+                    period === item
+                      ? "bg-[#239d9a] text-white"
+                      : "bg-[#eefafa] text-[#239d9a] hover:bg-[#def5f4]"
+                  }`}
+                >
+                  {item === "hoje" ? "Hoje" : item === "semana" ? "Semana" : "Mês"}
+                </button>
+              ))}
+            </div>
+
+            <div className="text-xs font-semibold text-slate-400">
+              {loading ? "Carregando dados..." : "Dados atualizados do sistema"}
+            </div>
+          </div>
+        </div>
+
+        {isAdminUser && stats.aReceber > 0 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-amber-100 p-3 text-amber-700">
+                <AlertCircle size={22} />
+              </div>
+              <div>
+                <div className="font-black text-amber-800">
+                  Atenção: existem valores pendentes para receber
+                </div>
+                <div className="text-sm text-amber-700">
+                  Total em aberto: {formatCurrency(stats.aReceber)}
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="/financeiro"
+              className="rounded-xl bg-amber-600 px-4 py-2 text-center text-sm font-black text-white hover:bg-amber-700"
+            >
+              Abrir financeiro
+            </a>
+          </div>
+        )}
+
+        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-xl font-black text-slate-800">
+              Ações rápidas
+            </CardTitle>
+            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+              Atalhos principais do consultório
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {quickActions.map((action) => (
+              <a
+                key={action.title}
+                href={action.href}
+                className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+                    <action.icon size={20} />
+                  </div>
+
+                  <div>
+                    <div className="font-black text-slate-800">{action.title}</div>
+                    <div className="mt-1 text-xs font-medium text-slate-500">
+                      {action.description}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {cards.map((card) => (
+            <Card
+              key={card.title}
+              className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden"
+            >
+              <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+                <div>
+                  <CardTitle className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    {card.title}
+                  </CardTitle>
+                  <div className={`mt-3 text-3xl font-black tracking-tight ${card.color}`}>
+                    {card.value}
+                  </div>
+                </div>
+
+                <div className={`rounded-2xl p-3 ${card.bg} ${card.color}`}>
+                  <card.icon size={22} />
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <p className="text-sm font-medium text-slate-500">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+          <CardHeader className="px-6 pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl font-black text-slate-800">
+                  Indicadores inteligentes
+                </CardTitle>
+                <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+                  Alertas automáticos para decisões rápidas
+                </CardDescription>
+              </div>
+
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+                <Zap size={22} />
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {intelligentInsights.map((item) => {
+              const classes =
+                item.level === "danger"
+                  ? "border-red-100 bg-red-50 text-red-700"
+                  : item.level === "warning"
+                    ? "border-amber-100 bg-amber-50 text-amber-700"
+                    : item.level === "info"
+                      ? "border-blue-100 bg-blue-50 text-blue-700"
+                      : "border-emerald-100 bg-emerald-50 text-emerald-700";
+
+              return (
+                <div
+                  key={item.id}
+                  className={`rounded-2xl border p-4 ${classes}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                      {item.level === "success" ? (
+                        <CheckCircleIcon />
+                      ) : (
+                        <AlertTriangle size={18} />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="text-sm font-black leading-tight">
+                        {item.title}
+                      </div>
+                      <div className="mt-1 text-xs font-medium opacity-90">
+                        {item.description}
+                      </div>
+
+                      <a
+                        href={item.href}
+                        className="mt-3 inline-flex rounded-xl bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest hover:bg-white"
+                      >
+                        {item.action}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {isAdminUser && (
+            <Card className="xl:col-span-2 rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+              <CardHeader className="px-6 pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-xl font-black text-slate-800">
+                      Evolução financeira
+                    </CardTitle>
+                  <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+                    Recebimentos dos últimos meses
+                  </CardDescription>
+                </div>
+
+                <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+                  <LineChartIcon size={22} />
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="px-4 pb-6">
+              <div className="h-[320px] min-h-[320px] min-w-0 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyRevenue}>
+                    <defs>
+                      <linearGradient id="financialGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#239d9a" stopOpacity={0.22} />
+                        <stop offset="95%" stopColor="#239d9a" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d9eeee" />
+
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12, fontWeight: 700 }}
+                    />
+
+                    <YAxis hide />
+
+                    <Tooltip
+                      formatter={(value: any) => [formatCurrency(Number(value || 0)), "Recebido"]}
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "1px solid #d9eeee",
+                        boxShadow: "0 10px 25px rgba(15, 23, 42, 0.10)",
+                      }}
+                    />
+
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="#239d9a"
+                      strokeWidth={4}
+                      fill="url(#financialGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-black text-slate-800">
+                Agenda de hoje
+              </CardTitle>
+              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Próximas consultas
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              {todayAppointments.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                  Nenhuma consulta para hoje.
+                </div>
+              )}
+
+              {todayAppointments.map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-black text-slate-800 truncate">
+                        {appointment.patient_name || appointment.title || "Paciente"}
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        {appointment.start_time || "--:--"} •{" "}
+                        {appointment.title || "Consulta"}
+                      </div>
+                    </div>
+
+                    <span className="rounded-full bg-[#eefafa] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#239d9a]">
+                      {appointment.status || "agendado"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {isAdminUser && (
+            <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-black text-slate-800">
+                  Recebimentos da semana
+              </CardTitle>
+              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Distribuição diária
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div className="h-[260px] min-h-[260px] min-w-0 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyRevenue}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d9eeee" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12, fontWeight: 700 }}
+                    />
+                    <YAxis hide />
+                    <Tooltip
+                      formatter={(value: any) => [formatCurrency(Number(value || 0)), "Recebido"]}
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "1px solid #d9eeee",
+                      }}
+                    />
+                    <Bar dataKey="amount" radius={[10, 10, 0, 0]}>
+                      {weeklyRevenue.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill="#239d9a" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {isAdminUser && (
+            <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-black text-slate-800">
+                  Pacientes com saldo em aberto
+              </CardTitle>
+              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Prioridade para cobrança
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              {debtors.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                  Nenhum saldo em aberto.
+                </div>
+              )}
+
+              {debtors.map((debtor, index) => (
+                <div
+                  key={debtor.patientId}
+                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-black">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-black text-slate-800 truncate">
+                        {debtor.name}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Saldo pendente
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="font-black text-amber-700">
+                    {formatCurrency(debtor.amount)}
+                  </div>
+                </div>
+              ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {isAdminUser && (
+            <Card className="xl:col-span-2 rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-xl font-black text-slate-800">
+                  Produção da clínica
+              </CardTitle>
+              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Faturamento por procedimento no mês atual
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {productionByProcedure.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                  Nenhuma produção registrada neste mês.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {productionByProcedure.map((item, index) => {
+                    const maxAmount = Math.max(...productionByProcedure.map((row) => row.amount), 1);
+                    const percent = Math.max(8, Math.round((item.amount / maxAmount) * 100));
+
+                    return (
+                      <div
+                        key={item.name}
+                        className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                              #{index + 1} • {item.count} lançamento(s)
+                            </div>
+                            <div className="mt-1 truncate font-black text-slate-800">
+                              {item.name}
+                            </div>
+                          </div>
+
+                          <div className="text-right font-black text-[#239d9a]">
+                            {formatCurrency(item.amount)}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#eefafa]">
+                          <div
+                            className="h-full rounded-full bg-[#239d9a]"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-black text-slate-800">
+                Status da agenda
+              </CardTitle>
+              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Distribuição do mês atual
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div className="h-[260px] min-h-[260px] min-w-0 w-full">
+                {appointmentStatusData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] text-center text-sm text-slate-400">
+                    Nenhuma consulta no mês.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={appointmentStatusData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={56}
+                        outerRadius={88}
+                        paddingAngle={3}
+                      >
+                        {appointmentStatusData.map((entry) => (
+                          <Cell
+                            key={entry.name}
+                            fill={statusColors[entry.name] || "#239d9a"}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any, name: any) => [`${value} consulta(s)`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              {appointmentStatusData.length > 0 && (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {appointmentStatusData.map((item) => (
+                    <div key={item.name} className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: statusColors[item.name] || "#239d9a" }}
+                      />
+                      {item.name}: {item.value}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-slate-800">
+              Movimento da agenda
+            </CardTitle>
+            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+              Consultas por dia da semana no mês atual
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="h-[280px] min-h-[280px] min-w-0 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={appointmentsByWeekday}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d9eeee" />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12, fontWeight: 700 }}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    formatter={(value: any) => [`${Number(value || 0)} consulta(s)`, "Consultas"]}
+                    contentStyle={{
+                      borderRadius: "16px",
+                      border: "1px solid #d9eeee",
+                    }}
+                  />
+                  <Bar dataKey="total" radius={[10, 10, 0, 0]}>
+                    {appointmentsByWeekday.map((_, index) => (
+                      <Cell key={`agenda-cell-${index}`} fill="#239d9a" />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {isAdminUser && (
+          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-black text-slate-800">
+                Formas de pagamento
+            </CardTitle>
+            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+              Principais métodos recebidos
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              {paymentMethods.length === 0 && (
+                <div className="md:col-span-5 rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                  Nenhum pagamento registrado ainda.
+                </div>
+              )}
+
+              {paymentMethods.map((method) => (
+                <div
+                  key={method.name}
+                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4"
+                >
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    {method.name}
+                  </div>
+                  <div className="mt-2 text-lg font-black text-[#239d9a]">
+                    {formatCurrency(method.amount)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

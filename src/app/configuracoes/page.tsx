@@ -1,0 +1,1938 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+type ConfigTab = "clinica" | "procedimentos" | "equipe" | "anamnese" | "comunicacao" | "financeiro";
+
+type ProcedureItem = {
+  id: string;
+  name: string;
+  categoria: string | null;
+  price: number | null;
+};
+
+type ProfessionalItem = {
+  id: string;
+  name: string;
+  cro: string | null;
+  specialty: string | null;
+  phone: string | null;
+  email: string | null;
+  active: boolean | null;
+};
+
+type AnamnesisItem = {
+  id: string;
+  question: string;
+  type: string | null;
+  options: string | null;
+  active: boolean | null;
+};
+
+type MessageTemplateItem = {
+  id: string;
+  type: string;
+  title: string | null;
+  content: string | null;
+  active: boolean | null;
+};
+
+export default function ConfiguracoesPage() {
+  const [tab, setTab] = useState<ConfigTab>("clinica");
+
+  const [loading, setLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  const [form, setForm] = useState({
+    name: "",
+    document_type: "cpf",
+    document: "",
+    display_name: "",
+    owner: "",
+    cro: "",
+    email: "",
+    phone: "",
+    whatsapp: "",
+    zip_code: "",
+    address: "",
+    number: "",
+    district: "",
+    city: "",
+    state: "",
+    start_hour: "08",
+    end_hour: "20",
+    max_patients_day: "15",
+    timezone: "America/Sao_Paulo",
+  });
+
+  const [procedures, setProcedures] = useState<ProcedureItem[]>([]);
+  const [procedureSearch, setProcedureSearch] = useState("");
+  const [procedureLoading, setProcedureLoading] = useState(false);
+  const [procedureForm, setProcedureForm] = useState({
+    id: "",
+    name: "",
+    categoria: "",
+    price: "",
+  });
+
+  const [team, setTeam] = useState<ProfessionalItem[]>([]);
+  const [teamSearch, setTeamSearch] = useState("");
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [memberForm, setMemberForm] = useState({
+    id: "",
+    name: "",
+    cro: "",
+    specialty: "",
+    phone: "",
+    email: "",
+    active: true,
+  });
+
+  const [anamnesis, setAnamnesis] = useState<AnamnesisItem[]>([]);
+  const [anamnesisSearch, setAnamnesisSearch] = useState("");
+  const [anamnesisLoading, setAnamnesisLoading] = useState(false);
+  const [anamnesisForm, setAnamnesisForm] = useState({
+    id: "",
+    question: "",
+    type: "yes_no",
+    options: "",
+    active: true,
+  });
+
+  const [messages, setMessages] = useState<MessageTemplateItem[]>([]);
+  const [messageSearch, setMessageSearch] = useState("");
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [messageForm, setMessageForm] = useState({
+    id: "",
+    type: "lembrete",
+    title: "",
+    content: "",
+    active: true,
+  });
+
+  const [financialSettings, setFinancialSettings] = useState({
+    default_receipt_type: "simples",
+    accepted_payment_methods: "Pix, Dinheiro, Cartão de crédito, Cartão de débito",
+    pix_key: "",
+    receipt_note: "",
+    late_fee_percent: "0",
+    interest_percent_month: "0",
+    default_due_days: "0",
+  });
+  const [financialLoading, setFinancialLoading] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const loadSettings = async () => {
+    try {
+      setLoadingSettings(true);
+
+      const { data, error } = await supabase
+        .from("clinic_settings")
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (error) {
+        alert("Erro ao carregar configurações: " + error.message);
+        return;
+      }
+
+      if (data) {
+        setForm({
+          name: data.name || "",
+          document_type: data.document_type || "cpf",
+          document: data.document || data.cnpj || "",
+          display_name: data.display_name || "",
+          owner: data.owner || "",
+          cro: data.cro || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          whatsapp: data.whatsapp || "",
+          zip_code: data.zip_code || "",
+          address: data.address || "",
+          number: data.number || "",
+          district: data.district || data.neighborhood || "",
+          city: data.city || "",
+          state: data.state || "",
+          start_hour: String(data.start_hour || "08"),
+          end_hour: String(data.end_hour || "20"),
+          max_patients_day: String(data.max_patients_day || "15"),
+          timezone: data.timezone || "America/Sao_Paulo",
+        });
+      }
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const loadProcedures = async () => {
+    setProcedureLoading(true);
+
+    const { data, error } = await supabase
+      .from("procedures")
+      .select("id, name, categoria, price")
+      .order("name");
+
+    if (error) {
+      alert("Erro ao carregar procedimentos: " + error.message);
+      setProcedureLoading(false);
+      return;
+    }
+
+    setProcedures((data || []) as ProcedureItem[]);
+    setProcedureLoading(false);
+  };
+
+  const loadTeam = async () => {
+    setTeamLoading(true);
+
+    const { data, error } = await supabase
+      .from("professionals")
+      .select("id, name, cro, specialty, phone, email, active")
+      .order("name");
+
+    if (error) {
+      alert("Erro ao carregar equipe: " + error.message);
+      setTeamLoading(false);
+      return;
+    }
+
+    setTeam((data || []) as ProfessionalItem[]);
+    setTeamLoading(false);
+  };
+
+  const loadAnamnesis = async () => {
+    setAnamnesisLoading(true);
+
+    const { data, error } = await supabase
+      .from("anamnesis_templates")
+      .select("id, question, type, options, active")
+      .order("created_at");
+
+    if (error) {
+      alert("Erro ao carregar anamnese: " + error.message);
+      setAnamnesisLoading(false);
+      return;
+    }
+
+    setAnamnesis((data || []) as AnamnesisItem[]);
+    setAnamnesisLoading(false);
+  };
+
+  const loadMessages = async () => {
+    setMessageLoading(true);
+
+    const { data, error } = await supabase
+      .from("message_templates")
+      .select("id, type, title, content, active")
+      .order("type");
+
+    if (error) {
+      alert("Erro ao carregar comunicação: " + error.message);
+      setMessageLoading(false);
+      return;
+    }
+
+    setMessages((data || []) as MessageTemplateItem[]);
+    setMessageLoading(false);
+  };
+
+  const loadFinancialSettings = async () => {
+    setFinancialLoading(true);
+
+    const { data, error } = await supabase
+      .from("financial_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (error) {
+      alert("Erro ao carregar financeiro/fiscal: " + error.message);
+      setFinancialLoading(false);
+      return;
+    }
+
+    if (data) {
+      setFinancialSettings({
+        default_receipt_type: data.default_receipt_type || "simples",
+        accepted_payment_methods:
+          data.accepted_payment_methods ||
+          "Pix, Dinheiro, Cartão de crédito, Cartão de débito",
+        pix_key: data.pix_key || "",
+        receipt_note: data.receipt_note || "",
+        late_fee_percent: String(data.late_fee_percent ?? "0"),
+        interest_percent_month: String(data.interest_percent_month ?? "0"),
+        default_due_days: String(data.default_due_days ?? "0"),
+      });
+    }
+
+    setFinancialLoading(false);
+  };
+
+  useEffect(() => {
+    loadSettings();
+    loadProcedures();
+    loadTeam();
+    loadAnamnesis();
+    loadMessages();
+    loadFinancialSettings();
+  }, []);
+
+  const saveClinicSettings = async () => {
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("clinic_settings")
+      .upsert([{ id: 1, ...form }]);
+
+    if (error) {
+      alert("Erro ao salvar: " + error.message);
+    } else {
+      alert("Configurações salvas com sucesso.");
+      await loadSettings();
+    }
+
+    setLoading(false);
+  };
+
+  const resetProcedureForm = () => {
+    setProcedureForm({
+      id: "",
+      name: "",
+      categoria: "",
+      price: "",
+    });
+  };
+
+  const saveProcedure = async () => {
+    if (!procedureForm.name.trim()) {
+      alert("Informe o nome do procedimento.");
+      return;
+    }
+
+    const payload = {
+      name: procedureForm.name.trim(),
+      categoria: procedureForm.categoria.trim() || null,
+      price: Number(procedureForm.price || 0),
+    };
+
+    setProcedureLoading(true);
+
+    const query = procedureForm.id
+      ? supabase.from("procedures").update(payload).eq("id", procedureForm.id)
+      : supabase.from("procedures").insert([payload]);
+
+    const { error } = await query;
+
+    if (error) {
+      alert("Erro ao salvar procedimento: " + error.message);
+      setProcedureLoading(false);
+      return;
+    }
+
+    resetProcedureForm();
+    await loadProcedures();
+    setProcedureLoading(false);
+  };
+
+  const editProcedure = (item: ProcedureItem) => {
+    setProcedureForm({
+      id: item.id,
+      name: item.name || "",
+      categoria: item.categoria || "",
+      price: String(item.price || ""),
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteProcedure = async (item: ProcedureItem) => {
+    const ok = window.confirm(`Excluir o procedimento "${item.name}"?`);
+    if (!ok) return;
+
+    setProcedureLoading(true);
+
+    const { error } = await supabase
+      .from("procedures")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Erro ao excluir procedimento: " + error.message);
+      setProcedureLoading(false);
+      return;
+    }
+
+    await loadProcedures();
+    setProcedureLoading(false);
+  };
+
+  const resetMemberForm = () => {
+    setMemberForm({
+      id: "",
+      name: "",
+      cro: "",
+      specialty: "",
+      phone: "",
+      email: "",
+      active: true,
+    });
+  };
+
+  const saveMember = async () => {
+    if (!memberForm.name.trim()) {
+      alert("Informe o nome do profissional.");
+      return;
+    }
+
+    const payload = {
+      name: memberForm.name.trim(),
+      cro: memberForm.cro.trim() || null,
+      specialty: memberForm.specialty.trim() || null,
+      phone: memberForm.phone.trim() || null,
+      email: memberForm.email.trim() || null,
+      active: memberForm.active,
+    };
+
+    setTeamLoading(true);
+
+    const query = memberForm.id
+      ? supabase.from("professionals").update(payload).eq("id", memberForm.id)
+      : supabase.from("professionals").insert([payload]);
+
+    const { error } = await query;
+
+    if (error) {
+      alert("Erro ao salvar profissional: " + error.message);
+      setTeamLoading(false);
+      return;
+    }
+
+    resetMemberForm();
+    await loadTeam();
+    setTeamLoading(false);
+  };
+
+  const editMember = (item: ProfessionalItem) => {
+    setMemberForm({
+      id: item.id,
+      name: item.name || "",
+      cro: item.cro || "",
+      specialty: item.specialty || "",
+      phone: item.phone || "",
+      email: item.email || "",
+      active: item.active ?? true,
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteMember = async (item: ProfessionalItem) => {
+    const ok = window.confirm(`Excluir o profissional "${item.name}"?`);
+    if (!ok) return;
+
+    setTeamLoading(true);
+
+    const { error } = await supabase
+      .from("professionals")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Erro ao excluir profissional: " + error.message);
+      setTeamLoading(false);
+      return;
+    }
+
+    await loadTeam();
+    setTeamLoading(false);
+  };
+
+  const resetAnamnesisForm = () => {
+    setAnamnesisForm({
+      id: "",
+      question: "",
+      type: "yes_no",
+      options: "",
+      active: true,
+    });
+  };
+
+  const saveAnamnesisQuestion = async () => {
+    if (!anamnesisForm.question.trim()) {
+      alert("Informe a pergunta da anamnese.");
+      return;
+    }
+
+    const payload = {
+      question: anamnesisForm.question.trim(),
+      type: anamnesisForm.type,
+      options: anamnesisForm.options.trim() || null,
+      active: anamnesisForm.active,
+    };
+
+    setAnamnesisLoading(true);
+
+    const query = anamnesisForm.id
+      ? supabase
+          .from("anamnesis_templates")
+          .update(payload)
+          .eq("id", anamnesisForm.id)
+      : supabase.from("anamnesis_templates").insert([payload]);
+
+    const { error } = await query;
+
+    if (error) {
+      alert("Erro ao salvar pergunta: " + error.message);
+      setAnamnesisLoading(false);
+      return;
+    }
+
+    resetAnamnesisForm();
+    await loadAnamnesis();
+    setAnamnesisLoading(false);
+  };
+
+  const editAnamnesisQuestion = (item: AnamnesisItem) => {
+    setAnamnesisForm({
+      id: item.id,
+      question: item.question || "",
+      type: item.type || "yes_no",
+      options: item.options || "",
+      active: item.active ?? true,
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteAnamnesisQuestion = async (item: AnamnesisItem) => {
+    const ok = window.confirm(`Excluir a pergunta "${item.question}"?`);
+    if (!ok) return;
+
+    setAnamnesisLoading(true);
+
+    const { error } = await supabase
+      .from("anamnesis_templates")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Erro ao excluir pergunta: " + error.message);
+      setAnamnesisLoading(false);
+      return;
+    }
+
+    await loadAnamnesis();
+    setAnamnesisLoading(false);
+  };
+
+  const seedDefaultAnamnesis = async () => {
+    const ok = window.confirm(
+      "Inserir uma anamnese odontológica completa? Isso não apaga perguntas existentes."
+    );
+
+    if (!ok) return;
+
+    const defaultQuestions = [
+      { question: "Está em tratamento médico atualmente?", type: "yes_no" },
+      { question: "Faz uso de medicamentos contínuos? Quais?", type: "text" },
+      { question: "Possui alergia a medicamentos, alimentos, látex ou anestésicos?", type: "text" },
+      { question: "Possui diabetes?", type: "yes_no" },
+      { question: "Possui hipertensão arterial?", type: "yes_no" },
+      { question: "Possui problemas cardíacos?", type: "yes_no" },
+      { question: "Já teve infarto, AVC ou trombose?", type: "yes_no" },
+      { question: "Possui problemas respiratórios como asma, bronquite ou rinite?", type: "yes_no" },
+      { question: "Possui problemas renais?", type: "yes_no" },
+      { question: "Possui problemas hepáticos?", type: "yes_no" },
+      { question: "Possui distúrbios de coagulação ou sangramento excessivo?", type: "yes_no" },
+      { question: "Faz uso de anticoagulantes?", type: "yes_no" },
+      { question: "Já realizou cirurgias? Quais?", type: "text" },
+      { question: "Já teve reação ou complicação com anestesia?", type: "yes_no" },
+      { question: "Está grávida ou existe suspeita de gravidez?", type: "yes_no" },
+      { question: "Fuma?", type: "yes_no" },
+      { question: "Consome bebida alcoólica com frequência?", type: "yes_no" },
+      { question: "Range ou aperta os dentes?", type: "yes_no" },
+      { question: "Sente dor dentária atualmente?", type: "yes_no" },
+      { question: "Tem sensibilidade dentária?", type: "yes_no" },
+      { question: "Apresenta sangramento gengival?", type: "yes_no" },
+      { question: "Já realizou tratamento de canal?", type: "yes_no" },
+      { question: "Já fez implantes dentários?", type: "yes_no" },
+      { question: "Usa prótese dentária?", type: "yes_no" },
+      { question: "Qual o principal motivo da consulta?", type: "text" },
+      { question: "Observações gerais do paciente", type: "text" },
+    ].map((item) => ({
+      ...item,
+      active: true,
+      options: null,
+    }));
+
+    setAnamnesisLoading(true);
+
+    const { error } = await supabase
+      .from("anamnesis_templates")
+      .insert(defaultQuestions);
+
+    if (error) {
+      alert("Erro ao inserir anamnese padrão: " + error.message);
+      setAnamnesisLoading(false);
+      return;
+    }
+
+    await loadAnamnesis();
+    setAnamnesisLoading(false);
+  };
+
+  const resetMessageForm = () => {
+    setMessageForm({
+      id: "",
+      type: "lembrete",
+      title: "",
+      content: "",
+      active: true,
+    });
+  };
+
+  const saveMessageTemplate = async () => {
+    if (!messageForm.title.trim()) {
+      alert("Informe o título da mensagem.");
+      return;
+    }
+
+    if (!messageForm.content.trim()) {
+      alert("Informe o conteúdo da mensagem.");
+      return;
+    }
+
+    const payload = {
+      type: messageForm.type,
+      title: messageForm.title.trim(),
+      content: messageForm.content.trim(),
+      active: messageForm.active,
+    };
+
+    setMessageLoading(true);
+
+    const query = messageForm.id
+      ? supabase
+          .from("message_templates")
+          .update(payload)
+          .eq("id", messageForm.id)
+      : supabase.from("message_templates").insert([payload]);
+
+    const { error } = await query;
+
+    if (error) {
+      alert("Erro ao salvar mensagem: " + error.message);
+      setMessageLoading(false);
+      return;
+    }
+
+    resetMessageForm();
+    await loadMessages();
+    setMessageLoading(false);
+  };
+
+  const editMessageTemplate = (item: MessageTemplateItem) => {
+    setMessageForm({
+      id: item.id,
+      type: item.type || "lembrete",
+      title: item.title || "",
+      content: item.content || "",
+      active: item.active ?? true,
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteMessageTemplate = async (item: MessageTemplateItem) => {
+    const ok = window.confirm(`Excluir a mensagem "${item.title}"?`);
+    if (!ok) return;
+
+    setMessageLoading(true);
+
+    const { error } = await supabase
+      .from("message_templates")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Erro ao excluir mensagem: " + error.message);
+      setMessageLoading(false);
+      return;
+    }
+
+    await loadMessages();
+    setMessageLoading(false);
+  };
+
+  const seedDefaultMessages = async () => {
+    const ok = window.confirm(
+      "Inserir mensagens padrão de comunicação? Isso não apaga mensagens existentes."
+    );
+
+    if (!ok) return;
+
+    const defaultMessages = [
+      {
+        type: "confirmacao",
+        title: "Confirmação de consulta",
+        content:
+          "Olá {{nome}}, tudo bem? Sua consulta está agendada para {{data}} às {{hora}}. Poderia confirmar sua presença?",
+      },
+      {
+        type: "lembrete",
+        title: "Lembrete de consulta",
+        content:
+          "Olá {{nome}}, passando para lembrar da sua consulta em {{data}} às {{hora}}. Te aguardamos!",
+      },
+      {
+        type: "cobranca",
+        title: "Cobrança",
+        content:
+          "Olá {{nome}}, identificamos um valor pendente de {{valor}} em seu atendimento. Podemos combinar a melhor forma de pagamento?",
+      },
+      {
+        type: "retorno",
+        title: "Retorno",
+        content:
+          "Olá {{nome}}, já está na hora do seu retorno odontológico. Gostaria de agendar um horário?",
+      },
+      {
+        type: "aniversario",
+        title: "Aniversário",
+        content:
+          "Olá {{nome}}, feliz aniversário! Desejamos muita saúde, alegria e muitos motivos para sorrir.",
+      },
+    ].map((item) => ({
+      ...item,
+      active: true,
+    }));
+
+    setMessageLoading(true);
+
+    const { error } = await supabase
+      .from("message_templates")
+      .insert(defaultMessages);
+
+    if (error) {
+      alert("Erro ao inserir mensagens padrão: " + error.message);
+      setMessageLoading(false);
+      return;
+    }
+
+    await loadMessages();
+    setMessageLoading(false);
+  };
+
+  const handleFinancialChange = (field: string, value: string) => {
+    setFinancialSettings((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveFinancialSettings = async () => {
+    setFinancialLoading(true);
+
+    const payload = {
+      id: 1,
+      default_receipt_type: financialSettings.default_receipt_type,
+      accepted_payment_methods: financialSettings.accepted_payment_methods,
+      pix_key: financialSettings.pix_key,
+      receipt_note: financialSettings.receipt_note,
+      late_fee_percent: Number(financialSettings.late_fee_percent || 0),
+      interest_percent_month: Number(financialSettings.interest_percent_month || 0),
+      default_due_days: Number(financialSettings.default_due_days || 0),
+    };
+
+    const { error } = await supabase
+      .from("financial_settings")
+      .upsert([payload]);
+
+    if (error) {
+      alert("Erro ao salvar financeiro/fiscal: " + error.message);
+      setFinancialLoading(false);
+      return;
+    }
+
+    alert("Configurações financeiras salvas com sucesso.");
+    await loadFinancialSettings();
+    setFinancialLoading(false);
+  };
+
+  const filteredProcedures = useMemo(() => {
+    const term = procedureSearch.trim().toLowerCase();
+
+    if (!term) return procedures;
+
+    return procedures.filter((item) => {
+      return (
+        String(item.name || "").toLowerCase().includes(term) ||
+        String(item.categoria || "").toLowerCase().includes(term)
+      );
+    });
+  }, [procedures, procedureSearch]);
+
+  const filteredTeam = useMemo(() => {
+    const term = teamSearch.trim().toLowerCase();
+
+    if (!term) return team;
+
+    return team.filter((item) => {
+      return (
+        String(item.name || "").toLowerCase().includes(term) ||
+        String(item.cro || "").toLowerCase().includes(term) ||
+        String(item.specialty || "").toLowerCase().includes(term) ||
+        String(item.email || "").toLowerCase().includes(term)
+      );
+    });
+  }, [team, teamSearch]);
+
+  const filteredAnamnesis = useMemo(() => {
+    const term = anamnesisSearch.trim().toLowerCase();
+
+    if (!term) return anamnesis;
+
+    return anamnesis.filter((item) => {
+      return (
+        String(item.question || "").toLowerCase().includes(term) ||
+        String(item.type || "").toLowerCase().includes(term)
+      );
+    });
+  }, [anamnesis, anamnesisSearch]);
+
+  const getQuestionTypeLabel = (type?: string | null) => {
+    if (type === "yes_no") return "Sim/Não";
+    if (type === "multiple") return "Múltipla escolha";
+    return "Texto";
+  };
+
+  const filteredMessages = useMemo(() => {
+    const term = messageSearch.trim().toLowerCase();
+
+    if (!term) return messages;
+
+    return messages.filter((item) => {
+      return (
+        String(item.type || "").toLowerCase().includes(term) ||
+        String(item.title || "").toLowerCase().includes(term) ||
+        String(item.content || "").toLowerCase().includes(term)
+      );
+    });
+  }, [messages, messageSearch]);
+
+  const getMessageTypeLabel = (type?: string | null) => {
+    if (type === "confirmacao") return "Confirmação";
+    if (type === "lembrete") return "Lembrete";
+    if (type === "cobranca") return "Cobrança";
+    if (type === "retorno") return "Retorno";
+    if (type === "aniversario") return "Aniversário";
+    return "Outro";
+  };
+
+  const formatCurrency = (value: number | null) => {
+    return Number(value || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">
+            Configurações do Consultório
+          </h1>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Dados usados na agenda, comunicações, recibos e procedimentos.
+          </p>
+        </div>
+
+        {(loadingSettings || procedureLoading || teamLoading || anamnesisLoading || messageLoading || financialLoading) && (
+          <div className="rounded-full bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a]">
+            Carregando...
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 border-b border-[#d9eeee]">
+        <button
+          type="button"
+          onClick={() => setTab("clinica")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "clinica"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Clínica
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("procedimentos")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "procedimentos"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Procedimentos
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("equipe")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "equipe"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Equipe
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("anamnese")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "anamnese"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Anamnese
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("comunicacao")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "comunicacao"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Comunicação
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("financeiro")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "financeiro"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Financeiro/Fiscal
+        </button>
+      </div>
+
+      {tab === "clinica" && (
+        <>
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="font-bold text-slate-700">Dados do Consultório</h2>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+              <input
+                placeholder="Nome do consultório"
+                value={form.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <div className="flex gap-2">
+                <select
+                  value={form.document_type}
+                  onChange={(e) => handleChange("document_type", e.target.value)}
+                  className="border border-[#c2dddd] p-3 rounded-xl w-28 bg-white"
+                >
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                </select>
+
+                <input
+                  placeholder={form.document_type === "cpf" ? "CPF" : "CNPJ"}
+                  value={form.document}
+                  onChange={(e) => handleChange("document", e.target.value)}
+                  className="border border-[#c2dddd] p-3 rounded-xl flex-1"
+                />
+              </div>
+
+              <input
+                placeholder="Nome para comunicação"
+                value={form.display_name}
+                onChange={(e) => handleChange("display_name", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Responsável pelo consultório"
+                value={form.owner}
+                onChange={(e) => handleChange("owner", e.target.value)}
+                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="CRO do responsável técnico"
+                value={form.cro}
+                onChange={(e) => handleChange("cro", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="font-bold text-slate-700">
+              Horário de funcionamento
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <input
+                type="number"
+                value={form.start_hour}
+                onChange={(e) => handleChange("start_hour", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+                placeholder="Horário inicial"
+              />
+
+              <input
+                type="number"
+                value={form.end_hour}
+                onChange={(e) => handleChange("end_hour", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+                placeholder="Horário final"
+              />
+
+              <select
+                value={form.timezone}
+                onChange={(e) => handleChange("timezone", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl md:col-span-2 bg-white"
+              >
+                <option value="America/Sao_Paulo">
+                  Brasília / São Paulo
+                </option>
+              </select>
+
+              <input
+                type="number"
+                value={form.max_patients_day}
+                onChange={(e) =>
+                  handleChange("max_patients_day", e.target.value)
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+                placeholder="Máx pacientes"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="font-bold text-slate-700">
+              Informações do consultório
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <input
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Telefone"
+                value={form.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="WhatsApp"
+                value={form.whatsapp}
+                onChange={(e) => handleChange("whatsapp", e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="font-bold text-slate-700">Endereço do consultório</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+              <input
+                placeholder="CEP"
+                value={form.zip_code}
+                onChange={(e) => handleChange("zip_code", e.target.value)}
+                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Rua / Avenida"
+                value={form.address}
+                onChange={(e) => handleChange("address", e.target.value)}
+                className="md:col-span-4 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Número"
+                value={form.number}
+                onChange={(e) => handleChange("number", e.target.value)}
+                className="md:col-span-1 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Bairro"
+                value={form.district}
+                onChange={(e) => handleChange("district", e.target.value)}
+                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Cidade"
+                value={form.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="UF"
+                value={form.state}
+                onChange={(e) => handleChange("state", e.target.value)}
+                maxLength={2}
+                className="md:col-span-1 border border-[#c2dddd] p-3 rounded-xl uppercase"
+              />
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Estes dados ficarão prontos para aparecer automaticamente em recibos, termos e prontuários impressos.
+            </p>
+          </div>
+
+          <div className="sticky bottom-0 bg-slate-50/90 backdrop-blur-sm border-t border-[#d9eeee] py-4 flex justify-end">
+            <button
+              onClick={saveClinicSettings}
+              disabled={loading}
+              className="bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-60 shadow-sm"
+            >
+              {loading ? "Salvando..." : "Salvar configurações"}
+            </button>
+          </div>
+        </>
+      )}
+
+      {tab === "procedimentos" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <h2 className="font-bold text-slate-700">
+                  Cadastro de procedimentos
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Base usada nos orçamentos e tratamentos.
+                </p>
+              </div>
+
+              <input
+                placeholder="Buscar procedimento"
+                value={procedureSearch}
+                onChange={(e) => setProcedureSearch(e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
+              <input
+                placeholder="Nome do procedimento"
+                value={procedureForm.name}
+                onChange={(e) =>
+                  setProcedureForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Categoria"
+                value={procedureForm.categoria}
+                onChange={(e) =>
+                  setProcedureForm((prev) => ({
+                    ...prev,
+                    categoria: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                type="number"
+                placeholder="Valor"
+                value={procedureForm.price}
+                onChange={(e) =>
+                  setProcedureForm((prev) => ({ ...prev, price: e.target.value }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {procedureForm.id && (
+                <button
+                  type="button"
+                  onClick={resetProcedureForm}
+                  className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancelar edição
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={saveProcedure}
+                disabled={procedureLoading}
+                className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+              >
+                {procedureForm.id ? "Salvar alteração" : "Adicionar procedimento"}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[2fr_1fr_1fr_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+              <div className="p-3">Procedimento</div>
+              <div className="p-3">Categoria</div>
+              <div className="p-3">Valor</div>
+              <div className="p-3 text-right">Ações</div>
+            </div>
+
+            {filteredProcedures.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-500">
+                Nenhum procedimento encontrado.
+              </div>
+            ) : (
+              filteredProcedures.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-[2fr_1fr_1fr_150px] border-b border-slate-100 text-sm last:border-b-0"
+                >
+                  <div className="p-3 font-black text-slate-700">
+                    {item.name}
+                  </div>
+
+                  <div className="p-3 text-slate-600">
+                    {item.categoria || "-"}
+                  </div>
+
+                  <div className="p-3 font-bold text-slate-700">
+                    {formatCurrency(item.price)}
+                  </div>
+
+                  <div className="p-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => editProcedure(item)}
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteProcedure(item)}
+                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "equipe" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <h2 className="font-bold text-slate-700">
+                  Cadastro da equipe
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Profissionais que poderão ser vinculados futuramente à agenda, prontuário e financeiro.
+                </p>
+              </div>
+
+              <input
+                placeholder="Buscar profissional"
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+              <input
+                placeholder="Nome do profissional"
+                value={memberForm.name}
+                onChange={(e) =>
+                  setMemberForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="CRO"
+                value={memberForm.cro}
+                onChange={(e) =>
+                  setMemberForm((prev) => ({ ...prev, cro: e.target.value }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Especialidade"
+                value={memberForm.specialty}
+                onChange={(e) =>
+                  setMemberForm((prev) => ({
+                    ...prev,
+                    specialty: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Telefone"
+                value={memberForm.phone}
+                onChange={(e) =>
+                  setMemberForm((prev) => ({ ...prev, phone: e.target.value }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <input
+                placeholder="Email"
+                value={memberForm.email}
+                onChange={(e) =>
+                  setMemberForm((prev) => ({ ...prev, email: e.target.value }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={memberForm.active}
+                  onChange={(e) =>
+                    setMemberForm((prev) => ({
+                      ...prev,
+                      active: e.target.checked,
+                    }))
+                  }
+                />
+                Profissional ativo
+              </label>
+
+              <div className="flex gap-2">
+                {memberForm.id && (
+                  <button
+                    type="button"
+                    onClick={resetMemberForm}
+                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancelar edição
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={saveMember}
+                  disabled={teamLoading}
+                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                >
+                  {memberForm.id ? "Salvar alteração" : "Adicionar profissional"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+              <div className="p-3">Profissional</div>
+              <div className="p-3">CRO</div>
+              <div className="p-3">Especialidade</div>
+              <div className="p-3">Contato</div>
+              <div className="p-3 text-right">Ações</div>
+            </div>
+
+            {filteredTeam.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-500">
+                Nenhum profissional encontrado.
+              </div>
+            ) : (
+              filteredTeam.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-[1.6fr_1fr_1fr_1fr_150px] border-b border-slate-100 text-sm last:border-b-0"
+                >
+                  <div className="p-3">
+                    <div className="font-black text-slate-700">
+                      {item.name}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {item.active === false ? "Inativo" : "Ativo"}
+                    </div>
+                  </div>
+
+                  <div className="p-3 text-slate-600">
+                    {item.cro || "-"}
+                  </div>
+
+                  <div className="p-3 text-slate-600">
+                    {item.specialty || "-"}
+                  </div>
+
+                  <div className="p-3 text-slate-600">
+                    <div>{item.phone || "-"}</div>
+                    <div className="text-xs text-slate-400">{item.email || ""}</div>
+                  </div>
+
+                  <div className="p-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => editMember(item)}
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteMember(item)}
+                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "anamnese" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <h2 className="font-bold text-slate-700">
+                  Modelo de anamnese odontológica
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Perguntas que serão usadas depois no prontuário do paciente.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={seedDefaultAnamnesis}
+                  disabled={anamnesisLoading}
+                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-sm font-black text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
+                >
+                  Inserir anamnese completa
+                </button>
+
+                <input
+                  placeholder="Buscar pergunta"
+                  value={anamnesisSearch}
+                  onChange={(e) => setAnamnesisSearch(e.target.value)}
+                  className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[2fr_220px_1fr] gap-3">
+              <input
+                placeholder="Pergunta da anamnese"
+                value={anamnesisForm.question}
+                onChange={(e) =>
+                  setAnamnesisForm((prev) => ({
+                    ...prev,
+                    question: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+
+              <select
+                value={anamnesisForm.type}
+                onChange={(e) =>
+                  setAnamnesisForm((prev) => ({
+                    ...prev,
+                    type: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl bg-white"
+              >
+                <option value="yes_no">Sim/Não</option>
+                <option value="text">Texto</option>
+                <option value="multiple">Múltipla escolha</option>
+              </select>
+
+              <input
+                placeholder="Opções, se múltipla escolha"
+                value={anamnesisForm.options}
+                onChange={(e) =>
+                  setAnamnesisForm((prev) => ({
+                    ...prev,
+                    options: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={anamnesisForm.active}
+                  onChange={(e) =>
+                    setAnamnesisForm((prev) => ({
+                      ...prev,
+                      active: e.target.checked,
+                    }))
+                  }
+                />
+                Pergunta ativa
+              </label>
+
+              <div className="flex gap-2">
+                {anamnesisForm.id && (
+                  <button
+                    type="button"
+                    onClick={resetAnamnesisForm}
+                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancelar edição
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={saveAnamnesisQuestion}
+                  disabled={anamnesisLoading}
+                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                >
+                  {anamnesisForm.id ? "Salvar alteração" : "Adicionar pergunta"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[2fr_180px_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+              <div className="p-3">Pergunta</div>
+              <div className="p-3">Tipo</div>
+              <div className="p-3">Status</div>
+              <div className="p-3 text-right">Ações</div>
+            </div>
+
+            {filteredAnamnesis.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-500">
+                Nenhuma pergunta encontrada.
+              </div>
+            ) : (
+              filteredAnamnesis.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-[2fr_180px_120px_150px] border-b border-slate-100 text-sm last:border-b-0"
+                >
+                  <div className="p-3">
+                    <div className="font-black text-slate-700">
+                      {item.question}
+                    </div>
+                    {item.options && (
+                      <div className="mt-1 text-xs text-slate-400">
+                        Opções: {item.options}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-3 text-slate-600">
+                    {getQuestionTypeLabel(item.type)}
+                  </div>
+
+                  <div className="p-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-black ${
+                        item.active === false
+                          ? "bg-slate-100 text-slate-500"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {item.active === false ? "Inativa" : "Ativa"}
+                    </span>
+                  </div>
+
+                  <div className="p-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => editAnamnesisQuestion(item)}
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteAnamnesisQuestion(item)}
+                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "comunicacao" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <h2 className="font-bold text-slate-700">
+                  Modelos de comunicação
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Mensagens usadas em WhatsApp, lembretes, cobranças e retornos.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={seedDefaultMessages}
+                  disabled={messageLoading}
+                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-sm font-black text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
+                >
+                  Inserir mensagens padrão
+                </button>
+
+                <input
+                  placeholder="Buscar mensagem"
+                  value={messageSearch}
+                  onChange={(e) => setMessageSearch(e.target.value)}
+                  className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
+              <span className="font-black text-[#239d9a]">Campos disponíveis:</span>{" "}
+              {"{{nome}}"}, {"{{data}}"}, {"{{hora}}"}, {"{{valor}}"}, {"{{procedimento}}"}.
+              Eles serão preenchidos automaticamente nas próximas integrações.
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-3">
+              <select
+                value={messageForm.type}
+                onChange={(e) =>
+                  setMessageForm((prev) => ({
+                    ...prev,
+                    type: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl bg-white"
+              >
+                <option value="confirmacao">Confirmação</option>
+                <option value="lembrete">Lembrete</option>
+                <option value="cobranca">Cobrança</option>
+                <option value="retorno">Retorno</option>
+                <option value="aniversario">Aniversário</option>
+                <option value="outro">Outro</option>
+              </select>
+
+              <input
+                placeholder="Título da mensagem"
+                value={messageForm.title}
+                onChange={(e) =>
+                  setMessageForm((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                className="border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+
+            <textarea
+              placeholder="Conteúdo da mensagem"
+              value={messageForm.content}
+              onChange={(e) =>
+                setMessageForm((prev) => ({
+                  ...prev,
+                  content: e.target.value,
+                }))
+              }
+              className="min-h-[140px] w-full border border-[#c2dddd] p-3 rounded-xl"
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={messageForm.active}
+                  onChange={(e) =>
+                    setMessageForm((prev) => ({
+                      ...prev,
+                      active: e.target.checked,
+                    }))
+                  }
+                />
+                Mensagem ativa
+              </label>
+
+              <div className="flex gap-2">
+                {messageForm.id && (
+                  <button
+                    type="button"
+                    onClick={resetMessageForm}
+                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancelar edição
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={saveMessageTemplate}
+                  disabled={messageLoading}
+                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                >
+                  {messageForm.id ? "Salvar alteração" : "Adicionar mensagem"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[160px_1fr_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+              <div className="p-3">Tipo</div>
+              <div className="p-3">Mensagem</div>
+              <div className="p-3">Status</div>
+              <div className="p-3 text-right">Ações</div>
+            </div>
+
+            {filteredMessages.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-500">
+                Nenhuma mensagem encontrada.
+              </div>
+            ) : (
+              filteredMessages.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-[160px_1fr_120px_150px] border-b border-slate-100 text-sm last:border-b-0"
+                >
+                  <div className="p-3 font-bold text-slate-600">
+                    {getMessageTypeLabel(item.type)}
+                  </div>
+
+                  <div className="p-3">
+                    <div className="font-black text-slate-700">
+                      {item.title || "-"}
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                      {item.content || ""}
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-black ${
+                        item.active === false
+                          ? "bg-slate-100 text-slate-500"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {item.active === false ? "Inativa" : "Ativa"}
+                    </span>
+                  </div>
+
+                  <div className="p-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => editMessageTemplate(item)}
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteMessageTemplate(item)}
+                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "financeiro" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+            <div>
+              <h2 className="font-bold text-slate-700">
+                Configurações financeiro/fiscal
+              </h2>
+              <p className="text-sm text-slate-500">
+                Dados usados em cobranças, recibos, financeiro do paciente e orçamentos.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  Tipo de recibo padrão
+                </label>
+                <select
+                  value={financialSettings.default_receipt_type}
+                  onChange={(e) =>
+                    handleFinancialChange("default_receipt_type", e.target.value)
+                  }
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl bg-white"
+                >
+                  <option value="simples">Recibo simples</option>
+                  <option value="ir">Recibo para declaração de IR</option>
+                  <option value="nenhum">Não emitir por padrão</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  Vencimento padrão
+                </label>
+                <input
+                  type="number"
+                  value={financialSettings.default_due_days}
+                  onChange={(e) =>
+                    handleFinancialChange("default_due_days", e.target.value)
+                  }
+                  placeholder="Dias após lançamento"
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  Chave Pix do consultório
+                </label>
+                <input
+                  value={financialSettings.pix_key}
+                  onChange={(e) => handleFinancialChange("pix_key", e.target.value)}
+                  placeholder="CPF, celular, e-mail ou chave aleatória"
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                Formas de pagamento aceitas
+              </label>
+              <input
+                value={financialSettings.accepted_payment_methods}
+                onChange={(e) =>
+                  handleFinancialChange("accepted_payment_methods", e.target.value)
+                }
+                placeholder="Pix, Dinheiro, Cartão de crédito..."
+                className="w-full border border-[#c2dddd] p-3 rounded-xl"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Separe as formas de pagamento por vírgula.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  Multa por atraso (%)
+                </label>
+                <input
+                  type="number"
+                  value={financialSettings.late_fee_percent}
+                  onChange={(e) =>
+                    handleFinancialChange("late_fee_percent", e.target.value)
+                  }
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  Juros ao mês (%)
+                </label>
+                <input
+                  type="number"
+                  value={financialSettings.interest_percent_month}
+                  onChange={(e) =>
+                    handleFinancialChange("interest_percent_month", e.target.value)
+                  }
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                Observação padrão do recibo
+              </label>
+              <textarea
+                value={financialSettings.receipt_note}
+                onChange={(e) =>
+                  handleFinancialChange("receipt_note", e.target.value)
+                }
+                placeholder="Ex.: Recebemos a importância referente aos serviços odontológicos prestados."
+                className="min-h-[120px] w-full border border-[#c2dddd] p-3 rounded-xl"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={saveFinancialSettings}
+                disabled={financialLoading}
+                className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-3 text-sm font-black text-white shadow-sm disabled:opacity-60"
+              >
+                {financialLoading ? "Salvando..." : "Salvar financeiro/fiscal"}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+            <span className="font-black text-[#239d9a]">Próxima integração:</span>{" "}
+            usar estas configurações automaticamente no financeiro do paciente,
+            emissão de recibo e mensagem de cobrança por WhatsApp.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

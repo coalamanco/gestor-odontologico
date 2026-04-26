@@ -1,0 +1,19 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/agenda/page": "app/agenda/page.js",
+  "/financeiro/despesas/page": "app/financeiro/despesas/page.js",
+  "/estoque/page": "app/estoque/page.js",
+  "/configuracoes/page": "app/configuracoes/page.js",
+  "/api/whatsapp/send/route": "app/api/whatsapp/send/route.js",
+  "/login/page": "app/login/page.js",
+  "/pacientes/[id]/orcamento/page": "app/pacientes/[id]/orcamento/page.js",
+  "/financeiro/page": "app/financeiro/page.js",
+  "/pacientes/page": "app/pacientes/page.js",
+  "/print/termo/[id]/page": "app/print/termo/[id]/page.js",
+  "/pacientes/[id]/page": "app/pacientes/[id]/page.js",
+  "/print/recibo/[id]/page": "app/print/recibo/[id]/page.js",
+  "/page": "app/page.js",
+  "/teste-whatsapp/page": "app/teste-whatsapp/page.js",
+  "/relatorios/page": "app/relatorios/page.js",
+  "/print/prontuario/[id]/page": "app/print/prontuario/[id]/page.js"
+}
