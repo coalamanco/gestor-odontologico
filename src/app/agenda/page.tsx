@@ -14,7 +14,7 @@ type AppointmentStatus =
   | "faltou"
   | "cancelado";
 
-const SLOT_HEIGHT = 42;
+const SLOT_HEIGHT = 48;
 const START_HOUR = 8;
 const END_HOUR = 20;
 
@@ -53,6 +53,10 @@ function formatDateBr(dateString: string) {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
   return `${day}/${month}/${year}`;
+}
+
+function isTodayDate(dateString: string) {
+  return dateString === formatDate(new Date());
 }
 
 function normalizePhone(value?: string | null) {
@@ -184,7 +188,7 @@ export default function AgendaPage() {
 
   useEffect(() => {
     loadData();
-  }, [clinicSettings.start_hour, now]);
+  }, []);
 
   const resetForm = () => {
     setEditingId(null);
@@ -1060,8 +1064,8 @@ export default function AgendaPage() {
   }, [appointments, financialRecords]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8]">
-      <div className="p-4 border-b border-[#c2dddd] bg-white/80 backdrop-blur-sm flex justify-between items-center shadow-sm">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-[#eefafa] via-[#f8ffff] to-[#e9f4f4]">
+      <div className="p-4 border-b border-[#c2dddd] bg-white/90 backdrop-blur-md flex justify-between items-center shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setWeekBaseDate((prev) => addDays(prev, -7))}
@@ -1084,13 +1088,15 @@ export default function AgendaPage() {
             ▶
           </button>
 
-          <h1 className="font-black text-2xl text-slate-800 ml-2">
-            Agenda Clínica •{" "}
-            {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
-              month: "long",
-              year: "numeric",
-            })}
-          </h1>
+          <div className="ml-2">
+            <h1 className="font-black text-2xl text-slate-800 leading-tight">Agenda Clínica</h1>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#239d9a]">
+              {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -1241,21 +1247,21 @@ export default function AgendaPage() {
       )}
 
       <div className="flex-1 flex flex-col min-h-0 p-3">
-        <div className="bg-white rounded-2xl border border-[#c2dddd] shadow-sm overflow-hidden flex flex-col min-h-0">
+        <div className="bg-white/95 rounded-[28px] border border-[#c2dddd] shadow-[0_18px_55px_rgba(15,23,42,0.10)] overflow-hidden flex flex-col min-h-0 ring-1 ring-white/70">
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
-            <div className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-[#f7ffff] text-xs font-bold sticky top-0 z-30 shadow-sm">
-              <div className="p-2 text-slate-500">Hora</div>
+            <div className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-[0_8px_22px_rgba(15,23,42,0.08)]">
+              <div className="p-3 text-slate-400 uppercase tracking-widest">Hora</div>
 
               {days.map((d) => (
                 <div
                   key={d.date}
-                  className="text-center p-2 border-l border-[#c2dddd] leading-tight"
+                  className={`text-center p-2.5 border-l border-[#c2dddd] leading-tight ${isTodayDate(d.date) ? "bg-[#e9fbfa]" : "bg-white/70"}` }
                 >
                   <div className="text-slate-700 font-black text-xs">
                     {d.label} {formatDateBr(d.date).slice(0, 5)}
                   </div>
 
-                  <div className="mt-1 text-[10px] font-black text-[#239d9a]">
+                  <div className={`mx-auto mt-1 w-fit rounded-full px-2 py-0.5 text-[10px] font-black ${isTodayDate(d.date) ? "bg-[#239d9a] text-white" : "bg-[#e8f7f6] text-[#239d9a]"}`}>
                     {getDayOccupation(d.date).used}/{getDayOccupation(d.date).total} pacientes
                   </div>
                 </div>
@@ -1265,7 +1271,7 @@ export default function AgendaPage() {
             <div className="relative">
               {currentTimePosition !== null && (
                 <div
-                  className="pointer-events-none absolute left-[70px] right-0 z-20 border-t-2 border-[#239d9a]"
+                  className="pointer-events-none absolute left-[76px] right-0 z-20 border-t-2 border-[#239d9a]"
                   style={{ top: `${currentTimePosition}px` }}
                 >
                   <span className="absolute -top-3 left-2 rounded-full bg-[#239d9a] px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
@@ -1277,9 +1283,9 @@ export default function AgendaPage() {
           {hours.map((h) => (
             <div
               key={h}
-              className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#c6e0e0] text-xs"
+              className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#d7ebeb] text-xs"
             >
-              <div className="p-2.5 bg-[#fbffff] font-bold text-slate-600">{h}</div>
+              <div className="px-3 py-3 bg-[#fbffff] font-black text-[11px] text-slate-500 tracking-tight">{h}</div>
 
               {days.map((d) => {
                 const ag = appointments.filter((a) => {
@@ -1295,7 +1301,7 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className="border-l border-[#c6e0e0] min-h-[42px] cursor-pointer hover:bg-[#f6ffff] relative transition-colors min-w-0 overflow-visible"
+                    className="border-l border-[#d7ebeb] min-h-[48px] cursor-pointer hover:bg-[#f6ffff] relative transition-colors min-w-0 overflow-visible group"
                     onClick={() => openNew(d.date, h)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
@@ -1317,28 +1323,36 @@ export default function AgendaPage() {
                         }}
                         className={`${getColor(a)} ${
                           hasDebt(a.patient_id)
-                            ? "ring-1 ring-amber-300 ring-offset-1"
+                            ? "ring-2 ring-amber-300 ring-offset-1"
                             : ""
-                        } absolute left-1 right-1 top-1 z-20 max-w-[calc(100%-0.5rem)] overflow-hidden text-white text-[10px] px-2 py-1.5 rounded-lg cursor-pointer shadow-sm`}
+                        } absolute left-1.5 right-1.5 top-1 z-20 max-w-[calc(100%-0.75rem)] overflow-hidden text-white text-[10px] px-2.5 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
                         style={{
                           height: `${getDurationHeight(a.duration || 30)}px`,
                         }}
                         title="Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."
                       >
-                        <div className="font-black truncate pr-1 leading-tight text-[10px]">
-                          {a.patient_name || a.title}
-                        </div>
-                        <div className="opacity-90 truncate mt-0.5 pr-1 leading-tight text-[9px]">
-                          {a.type === "compromisso" ? "Compromisso" : a.title}
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/55" />
+                        <div className="flex items-start justify-between gap-1 pl-1">
+                          <div className="min-w-0">
+                            <div className="font-black truncate pr-1 leading-tight text-[11px]">
+                              {a.patient_name || a.title}
+                            </div>
+                            <div className="opacity-90 truncate mt-0.5 pr-1 leading-tight text-[9px]">
+                              {a.type === "compromisso" ? "Compromisso" : a.title}
+                            </div>
+                          </div>
+                          <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[8px] font-black leading-none">
+                            {a.start_time}
+                          </span>
                         </div>
 
                         {a.professional_id && (
-                          <div className="opacity-95 truncate mt-0.5 pr-1 leading-tight text-[8px] font-bold">
+                          <div className="opacity-95 truncate mt-1 pl-1 pr-1 leading-tight text-[8px] font-bold">
                             {getProfessionalLabel(a.professional_id)}
                           </div>
                         )}
 
-                        <div className="mt-1 flex items-center gap-1 flex-nowrap overflow-hidden">
+                        <div className="mt-1.5 flex items-center gap-1 flex-nowrap overflow-hidden pl-1">
                           {a.type !== "compromisso" && (
                             <span
                               className={`shrink-0 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
@@ -1392,7 +1406,7 @@ export default function AgendaPage() {
                             setResizeStartY(e.clientY);
                             setResizeStartDuration(Number(a.duration || 30));
                           }}
-                          className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/15 cursor-ns-resize rounded-b-lg"
+                          className="absolute bottom-0 left-0 right-0 h-2 bg-black/15 cursor-ns-resize rounded-b-xl hover:bg-white/30 transition-colors"
                           title="Arraste para aumentar ou diminuir a duração"
                         />
                       </div>
@@ -1409,8 +1423,8 @@ export default function AgendaPage() {
 
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[520px] rounded-2xl overflow-hidden bg-white shadow-2xl border border-[#c2dddd]">
-            <div className={`${getColor(selectedAppointmentDetails)} text-white p-5`}>
+          <div className="w-full max-w-[560px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
+            <div className={`${getColor(selectedAppointmentDetails)} text-white p-5 shadow-inner`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black leading-tight">
