@@ -476,8 +476,9 @@ export default function OrcamentoPage({
   const [filteredProcedures, setFilteredProcedures] = useState<Procedure[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [draftItem, setDraftItem] = useState<DraftItem>(emptyDraftItem);
+  const [draftItem, setDraftItem] = useState<DraftItem>({ ...emptyDraftItem });
   const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
+  const [odontogramResetKey, setOdontogramResetKey] = useState(0);
 
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
@@ -513,8 +514,9 @@ export default function OrcamentoPage({
     setSearch("");
     setFilteredProcedures([]);
     setShowDropdown(false);
-    setDraftItem(emptyDraftItem);
+    setDraftItem({ ...emptyDraftItem });
     setDraftItems([]);
+    setOdontogramResetKey((current) => current + 1);
     setInstallments("1");
     setReceiptType("nenhum");
     setNotes("");
@@ -549,6 +551,13 @@ export default function OrcamentoPage({
     return values;
   };
 
+  const getMonthlyInstallmentDate = (index: number) => {
+    const baseDate = new Date();
+    baseDate.setHours(12, 0, 0, 0);
+    baseDate.setMonth(baseDate.getMonth() + index);
+    return baseDate;
+  };
+
   const fillFormFromBudget = async (budget: Budget) => {
     setInstallments(String(budget.installments || 1));
     setReceiptType(budget.receipt_type || "nenhum");
@@ -578,7 +587,8 @@ export default function OrcamentoPage({
     setSearch("");
     setFilteredProcedures([]);
     setShowDropdown(false);
-    setDraftItem(emptyDraftItem);
+    setDraftItem({ ...emptyDraftItem });
+    setOdontogramResetKey((current) => current + 1);
   };
 
   const loadData = async () => {
@@ -734,7 +744,8 @@ export default function OrcamentoPage({
     setSearch("");
     setFilteredProcedures([]);
     setShowDropdown(false);
-    setDraftItem(emptyDraftItem);
+    setDraftItem({ ...emptyDraftItem });
+    setOdontogramResetKey((current) => current + 1);
   };
 
   const removeItem = (index: number) => {
@@ -907,18 +918,23 @@ export default function OrcamentoPage({
     const descricaoBase =
       resumoTratamentos.trim() !== "" ? resumoTratamentos : "Orçamento aprovado";
 
-    const financialRecords = installmentValues.map((installmentAmount, index) => ({
-      patient_id: budget.patient_id,
-      patient_treatment_id: null,
-      budget_id: budget.id,
-      description: `${descricaoBase} • Parcela ${index + 1}/${numberOfInstallments}`,
-      amount: installmentAmount,
-      paid_amount: 0,
-      installment_number: index + 1,
-      installments: numberOfInstallments,
-      status: "pendente",
-      receipt_type: receipt,
-    }));
+    const financialRecords = installmentValues.map((installmentAmount, index) => {
+      const installmentDate = getMonthlyInstallmentDate(index);
+
+      return {
+        patient_id: budget.patient_id,
+        patient_treatment_id: null,
+        budget_id: budget.id,
+        description: `${descricaoBase} • Parcela ${index + 1}/${numberOfInstallments}`,
+        amount: installmentAmount,
+        paid_amount: 0,
+        installment_number: index + 1,
+        installments: numberOfInstallments,
+        status: "pendente",
+        receipt_type: receipt,
+        created_at: installmentDate.toISOString(),
+      };
+    });
 
     const { error: financialError } = await supabase
       .from("financial_records")
@@ -950,7 +966,10 @@ export default function OrcamentoPage({
         parcelas === 1
           ? formatCurrency(totalValue)
           : installmentValues
-              .map((value, index) => `Parcela ${index + 1}: ${formatCurrency(value)}`)
+              .map((value, index) => {
+                const date = getMonthlyInstallmentDate(index).toLocaleDateString("pt-BR");
+                return `Parcela ${index + 1}: ${formatCurrency(value)} - ${date}`;
+              })
               .join("\n");
 
       const mensagem =
@@ -1203,6 +1222,7 @@ export default function OrcamentoPage({
 
           <div className="mt-4">
             <OdontogramaNovo
+              key={odontogramResetKey}
               draftItem={draftItem}
               setDraftItem={setDraftItem}
             />
