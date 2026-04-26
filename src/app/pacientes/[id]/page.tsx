@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 type ReceiptType = "nenhum" | "simples" | "imposto_renda";
@@ -95,7 +96,335 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "documentos", label: "Documentos" },
 ];
 
+
+function NovoPacientePage() {
+  const router = useRouter();
+
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    cpf: "",
+    phone: "",
+    email: "",
+    birth_date: "",
+    gender: "",
+    plan: "",
+    cep: "",
+    address: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    notes: "",
+  });
+
+  const updateField = (field: string, value: string) => {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const onlyDigits = (value: string) => {
+    return String(value || "").replace(/\D/g, "");
+  };
+
+  const searchAddressByCep = async (value: string) => {
+    updateField("cep", value);
+
+    const cleanCep = onlyDigits(value);
+    if (cleanCep.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (data?.erro) {
+        alert("CEP não encontrado.");
+        return;
+      }
+
+      setForm((current) => ({
+        ...current,
+        cep: value,
+        address: data.logradouro || current.address,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }));
+    } catch {
+      alert("Não foi possível buscar o CEP agora.");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      alert("Informe o nome do paciente.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const { data, error } = await supabase
+        .from("patients")
+        .insert({
+          name: form.name.trim(),
+          cpf: onlyDigits(form.cpf) || null,
+          phone: onlyDigits(form.phone) || null,
+          email: form.email.trim() || null,
+          birth_date: form.birth_date || null,
+          gender: form.gender || null,
+          plan: form.plan.trim() || null,
+          address: form.address.trim() || null,
+          neighborhood: form.neighborhood.trim() || null,
+          city: form.city.trim() || null,
+          state: form.state.trim() || null,
+          notes: form.notes.trim() || null,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+
+      alert("Paciente cadastrado com sucesso.");
+
+      if (data?.id) {
+        router.push(`/pacientes/${data.id}`);
+      } else {
+        router.push("/pacientes");
+      }
+    } catch (error: any) {
+      alert("Erro ao cadastrar paciente: " + (error?.message || "erro inesperado"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6 overflow-y-auto">
+      <div className="max-w-5xl mx-auto space-y-5 pb-20">
+        <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-black text-slate-800">Novo paciente</h1>
+              <p className="text-sm text-slate-500 mt-1">
+                Cadastre um novo paciente no sistema.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => router.push("/pacientes")}
+              className="px-5 py-3 rounded-2xl border border-[#d9eeee] bg-white text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
+          <div>
+            <h2 className="text-lg font-black text-slate-800">Dados principais</h2>
+            <p className="text-sm text-slate-500">
+              O nome é obrigatório. Os demais campos podem ser preenchidos depois.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Nome completo *
+              </label>
+              <input
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                placeholder="Nome do paciente"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">CPF</label>
+              <input
+                value={form.cpf}
+                onChange={(e) => updateField("cpf", e.target.value)}
+                placeholder="CPF"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Telefone / WhatsApp
+              </label>
+              <input
+                value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                placeholder="Telefone"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">E-mail</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                placeholder="E-mail"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Data de nascimento
+              </label>
+              <input
+                type="date"
+                value={form.birth_date}
+                onChange={(e) => updateField("birth_date", e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">Gênero</label>
+              <select
+                value={form.gender}
+                onChange={(e) => updateField("gender", e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              >
+                <option value="">Não informado</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Convênio / Plano
+              </label>
+              <input
+                value={form.plan}
+                onChange={(e) => updateField("plan", e.target.value)}
+                placeholder="Particular, convênio etc."
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
+          <div>
+            <h2 className="text-lg font-black text-slate-800">Endereço</h2>
+            <p className="text-sm text-slate-500">Campos opcionais.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-slate-600 mb-1">CEP</label>
+              <input
+                value={form.cep}
+                onChange={(e) => searchAddressByCep(e.target.value)}
+                placeholder="CEP"
+                maxLength={9}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-4">
+              <label className="block text-sm font-bold text-slate-600 mb-1">Endereço</label>
+              <input
+                value={form.address}
+                onChange={(e) => updateField("address", e.target.value)}
+                placeholder="Rua, número, complemento"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-slate-600 mb-1">Bairro</label>
+              <input
+                value={form.neighborhood}
+                onChange={(e) => updateField("neighborhood", e.target.value)}
+                placeholder="Bairro"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block text-sm font-bold text-slate-600 mb-1">Cidade</label>
+              <input
+                value={form.city}
+                onChange={(e) => updateField("city", e.target.value)}
+                placeholder="Cidade"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-1">
+              <label className="block text-sm font-bold text-slate-600 mb-1">UF</label>
+              <input
+                value={form.state}
+                onChange={(e) => updateField("state", e.target.value.toUpperCase())}
+                placeholder="SC"
+                maxLength={2}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-600 mb-1">Observações</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => updateField("notes", e.target.value)}
+              placeholder="Observações gerais"
+              className="w-full min-h-[120px] border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/pacientes")}
+              className="px-5 py-3 rounded-2xl border border-[#d9eeee] bg-white text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] text-sm font-black text-white shadow-sm disabled:opacity-60"
+            >
+              {saving ? "Salvando..." : "Salvar paciente"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PacienteProntuarioPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  if (params.id === "novo") {
+    return <NovoPacientePage />;
+  }
+
+  return <PacienteProntuarioContent params={params} />;
+}
+
+function PacienteProntuarioContent({
   params,
 }: {
   params: { id: string };
