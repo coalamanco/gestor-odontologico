@@ -1268,18 +1268,7 @@ export default function AgendaPage() {
               ))}
             </div>
 
-            <div className="relative">
-              {currentTimePosition !== null && (
-                <div
-                  className="pointer-events-none absolute left-[76px] right-0 z-[999] border-t-[3px] border-[#239d9a]"
-                  style={{ top: `${currentTimePosition}px` }}
-                >
-                  <span className="absolute -top-3 left-2 rounded-full bg-[#239d9a] px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
-                    agora {pad(now.getHours())}:{pad(now.getMinutes())}
-                  </span>
-                </div>
-              )}
-
+            <div className="relative z-0">
           {hours.map((h) => (
             <div
               key={h}
@@ -1325,7 +1314,7 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-2 ring-amber-300 ring-offset-1"
                             : ""
-                        } absolute left-1.5 right-1.5 top-1 z-10 max-w-[calc(100%-0.75rem)] overflow-hidden text-white text-[10px] px-2.5 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
+                        } absolute left-1.5 right-1.5 top-1 z-[1] max-w-[calc(100%-0.75rem)] overflow-hidden text-white text-[10px] px-2.5 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
                         style={{
                           height: `${getDurationHeight(a.duration || 30)}px`,
                         }}
@@ -1416,6 +1405,17 @@ export default function AgendaPage() {
               })}
             </div>
           ))}
+
+              {currentTimePosition !== null && (
+                <div
+                  className="pointer-events-none absolute left-[76px] right-0 z-[9999] border-t-[3px] border-[#239d9a] drop-shadow-[0_0_6px_rgba(35,157,154,0.45)]"
+                  style={{ top: `${currentTimePosition}px` }}
+                >
+                  <span className="absolute -top-3 left-2 rounded-full bg-[#239d9a] px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
+                    agora {pad(now.getHours())}:{pad(now.getMinutes())}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
