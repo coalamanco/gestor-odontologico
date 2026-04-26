@@ -77,7 +77,7 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="w-64 min-h-screen bg-[#239d9a] text-white flex flex-col">
+    <aside className="w-52 min-h-screen bg-[#239d9a] text-white flex flex-col">
       <div className="p-5 border-b border-white/20">
         <div className="font-black text-lg">Dr. Henrique S. Pasquali</div>
         <div className="text-xs opacity-80">IMPLANTODONTIA</div>
