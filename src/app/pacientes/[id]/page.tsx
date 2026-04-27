@@ -991,6 +991,45 @@ function PacienteProntuarioContent({
     }
   };
 
+  const findExistingFinancialForTreatment = async (
+    treatment: PatientTreatment,
+    selectFields = "*"
+  ) => {
+    if (!treatment?.id) return null;
+
+    const { data: byTreatment, error: byTreatmentError } = await supabase
+      .from("financial_records")
+      .select(selectFields)
+      .eq("patient_id", params.id)
+      .eq("patient_treatment_id", treatment.id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+
+    if (byTreatmentError) throw byTreatmentError;
+
+    if (byTreatment && byTreatment.length > 0) {
+      return byTreatment[0] as unknown as FinancialRecord;
+    }
+
+    if (!treatment.budget_id) {
+      return null;
+    }
+
+    const { data: byBudget, error: byBudgetError } = await supabase
+      .from("financial_records")
+      .select(selectFields)
+      .eq("patient_id", params.id)
+      .eq("budget_id", treatment.budget_id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+
+    if (byBudgetError) throw byBudgetError;
+
+    return byBudget && byBudget.length > 0
+      ? (byBudget[0] as unknown as FinancialRecord)
+      : null;
+  };
+
   const confirmFinalizeTreatment = async () => {
     if (!selectedTreatment) return;
 
@@ -1032,14 +1071,10 @@ function PacienteProntuarioContent({
         parseMoney(selectedTreatment.total) ||
         parseMoney(selectedTreatment.unit_price);
 
-      const { data: existingFinancialRecord, error: existingFinancialError } =
-        await supabase
-          .from("financial_records")
-          .select("id")
-          .eq("patient_treatment_id", selectedTreatment.id)
-          .maybeSingle();
-
-      if (existingFinancialError) throw existingFinancialError;
+      const existingFinancialRecord = await findExistingFinancialForTreatment(
+        selectedTreatment,
+        "id"
+      );
 
       if (!existingFinancialRecord && valorTratamento > 0) {
         const { error: financialInsertError } = await supabase
@@ -1106,14 +1141,10 @@ function PacienteProntuarioContent({
       alert("Tratamento finalizado com sucesso.");
       closeFinalizeModal();
 
-      const { data: financialRecordToReceive, error: financialRecordError } =
-        await supabase
-          .from("financial_records")
-          .select("*")
-          .eq("patient_treatment_id", selectedTreatment.id)
-          .maybeSingle();
-
-      if (financialRecordError) throw financialRecordError;
+      const financialRecordToReceive = await findExistingFinancialForTreatment(
+        selectedTreatment,
+        "*"
+      );
 
       await loadData();
 
@@ -1172,13 +1203,7 @@ function PacienteProntuarioContent({
       return null;
     }
 
-    const { data: existing, error: existingError } = await supabase
-      .from("financial_records")
-      .select("*")
-      .eq("patient_treatment_id", treatment.id)
-      .maybeSingle();
-
-    if (existingError) throw existingError;
+    const existing = await findExistingFinancialForTreatment(treatment, "*");
 
     if (existing) {
       return existing as FinancialRecord;
