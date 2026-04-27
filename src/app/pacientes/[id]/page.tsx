@@ -21,6 +21,7 @@ type TabId =
   | "agendamentos"
   | "orcamentos"
   | "financeiro"
+  | "linha_tempo"
   | "documentos";
 
 type FinancialRecord = {
@@ -93,6 +94,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "agendamentos", label: "Agendamentos" },
   { id: "orcamentos", label: "Orçamentos" },
   { id: "financeiro", label: "Financeiro" },
+  { id: "linha_tempo", label: "Linha do tempo" },
   { id: "documentos", label: "Documentos" },
 ];
 
@@ -766,6 +768,7 @@ function PacienteProntuarioContent({
         "agendamentos",
         "orcamentos",
         "financeiro",
+        "linha_tempo",
         "documentos",
       ];
 
@@ -1351,6 +1354,176 @@ function PacienteProntuarioContent({
         return bDate - aDate;
       });
   }, [clinicalNotes]);
+
+
+  const completeTimeline = useMemo(() => {
+    const events: {
+      id: string;
+      date: string;
+      type: "clinical" | "appointment" | "budget" | "financial" | "payment" | "audit" | "treatment";
+      title: string;
+      subtitle?: string;
+      content?: string;
+      amount?: number;
+      status?: string | null;
+      userEmail?: string | null;
+    }[] = [];
+
+    clinicalNotes.forEach((note) => {
+      events.push({
+        id: `clinical-${note.id}`,
+        date: note.created_at || "",
+        type: "clinical",
+        title: note.title || "Evolução clínica",
+        subtitle: "Prontuário",
+        content: note.content || "",
+      });
+    });
+
+    appointments.forEach((appointment) => {
+      const dateTime = appointment.date
+        ? `${appointment.date}T${appointment.start_time || "12:00"}:00`
+        : appointment.created_at || "";
+
+      events.push({
+        id: `appointment-${appointment.id}`,
+        date: dateTime,
+        type: "appointment",
+        title: appointment.type === "compromisso" ? "Compromisso" : "Consulta agendada",
+        subtitle: `${appointment.date || "Data não informada"} às ${appointment.start_time || "-"}`,
+        content: appointment.description || appointment.title || appointment.status || "",
+        status: appointment.status || null,
+      });
+    });
+
+    patientTreatments.forEach((treatment) => {
+      const name =
+        treatment.procedure_name ||
+        treatment.treatment_name ||
+        treatment.title ||
+        "Tratamento";
+
+      events.push({
+        id: `treatment-${treatment.id}`,
+        date: treatment.completed_at || treatment.created_at || "",
+        type: "treatment",
+        title: treatment.status === "finalizado" ? "Tratamento finalizado" : "Tratamento criado",
+        subtitle: name,
+        content: [
+          treatment.tooth ? `Dente ${treatment.tooth}` : "",
+          treatment.face ? `Face ${treatment.face}` : "",
+        ]
+          .filter(Boolean)
+          .join(" • "),
+        amount: parseMoney(treatment.total),
+        status: treatment.status || null,
+      });
+    });
+
+    budgets.forEach((budget) => {
+      events.push({
+        id: `budget-${budget.id}`,
+        date: budget.approved_at || budget.created_at || "",
+        type: "budget",
+        title: budget.status === "aprovado" ? "Orçamento aprovado" : "Orçamento criado",
+        subtitle: budget.status || "pendente",
+        amount: parseMoney(budget.total),
+        status: budget.status || null,
+      });
+    });
+
+    financialRecords.forEach((record) => {
+      events.push({
+        id: `financial-${record.id}`,
+        date: record.paid_at || record.created_at || "",
+        type: "financial",
+        title: record.status === "pago" ? "Débito pago" : "Débito lançado",
+        subtitle: record.description || "Financeiro",
+        amount: parseMoney(record.amount),
+        status: record.status || null,
+      });
+    });
+
+    paymentTransactions.forEach((transaction) => {
+      events.push({
+        id: `payment-${transaction.id}`,
+        date: transaction.received_at || transaction.created_at || "",
+        type: "payment",
+        title: "Pagamento recebido",
+        subtitle: paymentMethodLabel(transaction.payment_method),
+        content: transaction.note || "",
+        amount: parseMoney(transaction.amount),
+      });
+    });
+
+    auditLogs.forEach((log) => {
+      events.push({
+        id: `audit-${log.id}`,
+        date: log.created_at || "",
+        type: "audit",
+        title: `${auditActionLabel(log.action)} ${auditTableLabel(log.table_name)}`,
+        subtitle: "Auditoria de segurança",
+        userEmail: log.user_email || null,
+        status: log.action || null,
+      });
+    });
+
+    return events.sort((a, b) => {
+      const aDate = a.date ? new Date(a.date).getTime() : 0;
+      const bDate = b.date ? new Date(b.date).getTime() : 0;
+      return bDate - aDate;
+    });
+  }, [
+    appointments,
+    auditLogs,
+    budgets,
+    clinicalNotes,
+    financialRecords,
+    patientTreatments,
+    paymentTransactions,
+  ]);
+
+  const timelineTypeLabel = (type: string) => {
+    switch (type) {
+      case "clinical":
+        return "Prontuário";
+      case "appointment":
+        return "Agenda";
+      case "budget":
+        return "Orçamento";
+      case "financial":
+        return "Financeiro";
+      case "payment":
+        return "Pagamento";
+      case "audit":
+        return "Auditoria";
+      case "treatment":
+        return "Tratamento";
+      default:
+        return "Registro";
+    }
+  };
+
+  const timelineTypeClass = (type: string) => {
+    switch (type) {
+      case "clinical":
+        return "bg-cyan-50 text-cyan-700 border-cyan-100";
+      case "appointment":
+        return "bg-sky-50 text-sky-700 border-sky-100";
+      case "budget":
+        return "bg-amber-50 text-amber-700 border-amber-100";
+      case "financial":
+        return "bg-rose-50 text-rose-700 border-rose-100";
+      case "payment":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
+      case "audit":
+        return "bg-blue-50 text-blue-700 border-blue-100";
+      case "treatment":
+        return "bg-purple-50 text-purple-700 border-purple-100";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-100";
+    }
+  };
 
   const activeTreatments = filteredTreatments.filter(
     (treatment) => treatment.status !== "finalizado"
@@ -2239,6 +2412,104 @@ function PacienteProntuarioContent({
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+
+        {activeTab === "linha_tempo" && (
+          <div className="bg-white rounded-2xl border border-[#d8eeee] p-5 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-lg font-black text-slate-800">
+                  Linha do tempo completa
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Prontuário, agenda, orçamentos, financeiro e auditoria em uma única visão.
+                </p>
+              </div>
+
+              <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
+                {completeTimeline.length} registros
+              </span>
+            </div>
+
+            {completeTimeline.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-8 text-center">
+                <p className="text-sm text-slate-500">
+                  Nenhum evento encontrado para este paciente.
+                </p>
+              </div>
+            ) : (
+              <div className="relative space-y-4">
+                <div className="absolute left-[15px] top-2 bottom-2 w-px bg-[#d8eeee]" />
+
+                {completeTimeline.map((event) => (
+                  <div key={event.id} className="relative pl-10">
+                    <div className="absolute left-0 top-4 h-8 w-8 rounded-full border border-[#d8eeee] bg-white shadow-sm flex items-center justify-center">
+                      <div className="h-3 w-3 rounded-full bg-[#239d9a]" />
+                    </div>
+
+                    <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-4 shadow-sm">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${timelineTypeClass(
+                                event.type
+                              )}`}
+                            >
+                              {timelineTypeLabel(event.type)}
+                            </span>
+
+                            {event.status && (
+                              <span className="rounded-full bg-white border border-[#d8eeee] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                {event.status}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="mt-2 text-base font-black text-slate-800">
+                            {event.title}
+                          </h3>
+
+                          {event.subtitle && (
+                            <p className="mt-1 text-sm font-semibold text-slate-600">
+                              {event.subtitle}
+                            </p>
+                          )}
+
+                          {event.content && (
+                            <p className="mt-2 text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">
+                              {event.content}
+                            </p>
+                          )}
+
+                          {event.userEmail && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Usuário: {event.userEmail}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="text-left md:text-right shrink-0">
+                          <div className="text-xs font-semibold text-slate-500">
+                            {event.date
+                              ? new Date(event.date).toLocaleString("pt-BR")
+                              : "Data não informada"}
+                          </div>
+
+                          {typeof event.amount === "number" && event.amount > 0 && (
+                            <div className="mt-2 text-sm font-black text-slate-800">
+                              {formatCurrency(event.amount)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
