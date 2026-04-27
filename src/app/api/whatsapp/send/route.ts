@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     if (!accessToken) {
       return NextResponse.json(
-        { error: "Não autorizado." },
+        { error: "Não autorizado. Faça login novamente no sistema." },
         { status: 401 }
       );
     }
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Sessão inválida ou expirada." },
+        { error: "Sessão inválida ou expirada. Faça login novamente." },
         { status: 401 }
       );
     }
