@@ -673,20 +673,43 @@ export default function AgendaPage() {
   ) => {
     if (appointmentPayload.type !== "consulta") return false;
 
-    const phoneDigits = normalizePhone(selectedPatient?.phone);
-
-    if (!phoneDigits) {
-      console.warn("WhatsApp automático não enviado: paciente sem telefone.");
-      return false;
-    }
-
-    const phone = phoneDigits.startsWith("55")
-      ? phoneDigits
-      : `55${phoneDigits}`;
-
-    const message = buildAutomaticWhatsappMessage(appointmentPayload);
-
     try {
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("name, phone")
+        .eq("id", appointmentPayload.patient_id)
+        .single();
+
+      const phoneDigits = normalizePhone(patient?.phone);
+
+      if (!phoneDigits) {
+        console.warn("WhatsApp automático não enviado: paciente sem telefone.");
+        return false;
+      }
+
+      const phone = phoneDigits.startsWith("55")
+        ? phoneDigits
+        : `55${phoneDigits}`;
+
+      const patientName = patient?.name || "paciente";
+
+      const message =
+        `Olá, ${patientName}! Tudo bem? 😊
+
+` +
+        `Sua consulta foi agendada.
+
+` +
+        `📅 Data: ${formatDateBr(appointmentPayload.date)}
+` +
+        `⏰ Horário: ${appointmentPayload.start_time}
+
+` +
+        `Por favor, confirme sua presença.
+
+` +
+        `Obrigado(a)!`;
+
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
