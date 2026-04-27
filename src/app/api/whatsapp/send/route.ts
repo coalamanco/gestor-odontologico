@@ -2,25 +2,13 @@ import { NextResponse } from "next/server";
 
 function normalizeBrazilPhone(phone: string) {
   const digits = String(phone || "").replace(/\D/g, "");
-
   if (!digits) return "";
-
-  if (digits.startsWith("55")) {
-    return digits;
-  }
-
+  if (digits.startsWith("55")) return digits;
   return `55${digits}`;
 }
 
-export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    message: "Rota /api/whatsapp/send está ativa.",
-  });
-}
-
 export async function POST(request: Request) {
-  console.log("🔥 ROTA WHATSAPP POST CHAMADA");
+  console.log("🔥 ROTA WHATSAPP CHAMADA");
 
   try {
     const { phone, message } = await request.json();
@@ -36,22 +24,14 @@ export async function POST(request: Request) {
     const token = process.env.ZAPI_TOKEN;
     const clientToken = process.env.ZAPI_CLIENT_TOKEN;
 
-    if (!instanceId || !token || !clientToken) {
-      console.error("❌ Z-API não configurada:", {
-        hasInstanceId: !!instanceId,
-        hasToken: !!token,
-        hasClientToken: !!clientToken,
-      });
-
+    if (!instanceId || !token) {
       return NextResponse.json(
-        { error: "Z-API não configurada no servidor." },
+        { error: "Z-API não configurada." },
         { status: 500 }
       );
     }
 
     const normalizedPhone = normalizeBrazilPhone(phone);
-
-    console.log("📲 Enviando WhatsApp para:", normalizedPhone);
 
     const response = await fetch(
       `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
@@ -59,7 +39,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Client-Token": clientToken,
+          ...(clientToken ? { "Client-Token": clientToken } : {}),
         },
         body: JSON.stringify({
           phone: normalizedPhone,
@@ -68,42 +48,18 @@ export async function POST(request: Request) {
       }
     );
 
-    const text = await response.text();
+    const result = await response.json();
 
-    let result: any = null;
-
-    try {
-      result = text ? JSON.parse(text) : null;
-    } catch {
-      result = text;
-    }
-
-    console.log("📩 Resposta Z-API:", {
-      status: response.status,
-      result,
-    });
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error: "Erro ao enviar WhatsApp.",
-          status: response.status,
-          details: result,
-        },
-        { status: response.status }
-      );
-    }
+    console.log("📩 Z-API:", result);
 
     return NextResponse.json({
       ok: true,
-      phone: normalizedPhone,
       result,
     });
   } catch (error: any) {
-    console.error("💥 Erro inesperado WhatsApp:", error);
-
+    console.error("❌ ERRO:", error);
     return NextResponse.json(
-      { error: error?.message || "Erro inesperado ao enviar WhatsApp." },
+      { error: "Erro ao enviar WhatsApp." },
       { status: 500 }
     );
   }
