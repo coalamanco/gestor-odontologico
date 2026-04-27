@@ -15,6 +15,8 @@ type Budget = {
   subtotal?: number | string | null;
   total?: number | string | null;
   installments?: number | null;
+  entry_value?: number | string | null;
+  entry_status?: string | null;
   receipt_type?: string | null;
   notes?: string | null;
   approved_at?: string | null;
@@ -488,6 +490,8 @@ export default function OrcamentoPage({
   const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
 
   const [installments, setInstallments] = useState("1");
+  const [entryValue, setEntryValue] = useState("0");
+  const [entryStatus, setEntryStatus] = useState("pago");
   const [receiptType, setReceiptType] = useState("nenhum");
   const [notes, setNotes] = useState("");
   const [discountType, setDiscountType] = useState("valor");
@@ -518,6 +522,8 @@ export default function OrcamentoPage({
     setDraftItems([]);
     setOdontogramResetKey((current) => current + 1);
     setInstallments("1");
+    setEntryValue("0");
+    setEntryStatus("pago");
     setReceiptType("nenhum");
     setNotes("");
     setDiscountType("valor");
@@ -560,6 +566,8 @@ export default function OrcamentoPage({
 
   const fillFormFromBudget = async (budget: Budget) => {
     setInstallments(String(budget.installments || 1));
+    setEntryValue(String(budget.entry_value ?? "0"));
+    setEntryStatus(budget.entry_status || "pago");
     setReceiptType(budget.receipt_type || "nenhum");
     setNotes(budget.notes || "");
     setDiscountType(budget.discount_type || "valor");
@@ -774,6 +782,8 @@ export default function OrcamentoPage({
             subtotal,
             total,
             installments: Number(installments || 1),
+            entry_value: Math.max(0, Math.min(parseMoney(entryValue), total)),
+            entry_status: entryStatus,
             receipt_type: receiptType,
             notes: notes || null,
           })
@@ -792,6 +802,8 @@ export default function OrcamentoPage({
             subtotal,
             total,
             installments: Number(installments || 1),
+            entry_value: Math.max(0, Math.min(parseMoney(entryValue), total)),
+            entry_status: entryStatus,
             receipt_type: receiptType,
             notes: notes || null,
           })
@@ -904,7 +916,14 @@ export default function OrcamentoPage({
     const numberOfInstallments = Math.max(1, Number(budget.installments || 1));
     const receipt = budget.receipt_type || "nenhum";
     const totalValue = Number(budget.total || 0);
-    const installmentValues = splitIntoInstallments(totalValue, numberOfInstallments);
+    const rawEntryValue = Number(budget.entry_value || 0);
+    const entryValue = Math.max(0, Math.min(rawEntryValue, totalValue));
+    const entryStatus = budget.entry_status === "pendente" ? "pendente" : "pago";
+    const remainingValue = Math.max(0, Number((totalValue - entryValue).toFixed(2)));
+    const installmentValues =
+      remainingValue > 0
+        ? splitIntoInstallments(remainingValue, numberOfInstallments)
+        : [];
 
     const resumoTratamentos = treatments
       .map((t) => {
@@ -918,10 +937,31 @@ export default function OrcamentoPage({
     const descricaoBase =
       resumoTratamentos.trim() !== "" ? resumoTratamentos : "Orçamento aprovado";
 
-    const financialRecords = installmentValues.map((installmentAmount, index) => {
-      const installmentDate = getMonthlyInstallmentDate(index);
+    const financialRecords: any[] = [];
 
-      return {
+    if (entryValue > 0) {
+      const entryDate = new Date();
+      entryDate.setHours(12, 0, 0, 0);
+
+      financialRecords.push({
+        patient_id: budget.patient_id,
+        patient_treatment_id: null,
+        budget_id: budget.id,
+        description: `${descricaoBase} • Entrada`,
+        amount: entryValue,
+        paid_amount: entryStatus === "pago" ? entryValue : 0,
+        installment_number: 0,
+        installments: numberOfInstallments,
+        status: entryStatus === "pago" ? "pago" : "pendente",
+        receipt_type: receipt,
+        created_at: entryDate.toISOString(),
+      });
+    }
+
+    installmentValues.forEach((installmentAmount, index) => {
+      const installmentDate = getMonthlyInstallmentDate(entryValue > 0 ? index + 1 : index);
+
+      financialRecords.push({
         patient_id: budget.patient_id,
         patient_treatment_id: null,
         budget_id: budget.id,
@@ -933,8 +973,12 @@ export default function OrcamentoPage({
         status: "pendente",
         receipt_type: receipt,
         created_at: installmentDate.toISOString(),
-      };
+      });
     });
+
+    if (financialRecords.length === 0) {
+      return;
+    }
 
     const { error: financialError } = await supabase
       .from("financial_records")
@@ -961,21 +1005,38 @@ export default function OrcamentoPage({
 
       const totalValue = Number(budget.total || 0);
       const parcelas = Math.max(1, Number(budget.installments || 1));
-      const installmentValues = splitIntoInstallments(totalValue, parcelas);
+      const entrada = Math.max(
+        0,
+        Math.min(Number(budget.entry_value || 0), totalValue)
+      );
+      const entradaStatus =
+        budget.entry_status === "pendente" ? "pendente" : "pago";
+      const restante = Math.max(0, Number((totalValue - entrada).toFixed(2)));
+      const installmentValues =
+        restante > 0 ? splitIntoInstallments(restante, parcelas) : [];
       const valorParcelaTexto =
-        parcelas === 1
-          ? formatCurrency(totalValue)
+        installmentValues.length === 0
+          ? "Sem parcelas restantes."
           : installmentValues
               .map((value, index) => {
-                const date = getMonthlyInstallmentDate(index).toLocaleDateString("pt-BR");
+                const date = getMonthlyInstallmentDate(
+                  entrada > 0 ? index + 1 : index
+                ).toLocaleDateString("pt-BR");
                 return `Parcela ${index + 1}: ${formatCurrency(value)} - ${date}`;
               })
               .join("\n");
+
+      const entradaTexto =
+        entrada > 0
+          ? `• Entrada: ${formatCurrency(entrada)} (${entradaStatus === "pago" ? "paga" : "pendente"})\n`
+          : "";
 
       const mensagem =
         `Este orçamento irá gerar:\n\n` +
         `• ${items.length} tratamento(s) no prontuário\n` +
         `• Total: ${formatCurrency(totalValue)}\n` +
+        entradaTexto +
+        `• Saldo a parcelar: ${formatCurrency(restante)}\n` +
         `• ${parcelas} parcela(s) no financeiro\n\n` +
         `${valorParcelaTexto}\n\n` +
         `Deseja continuar com a aprovação?`;
@@ -1273,10 +1334,10 @@ export default function OrcamentoPage({
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-3 mt-4">
             <div>
               <label className="block text-sm text-slate-500 mb-1">
-                Parcelas
+                Parcelas do saldo
               </label>
               <input
                 type="number"
@@ -1285,6 +1346,34 @@ export default function OrcamentoPage({
                 onChange={(e) => setInstallments(e.target.value)}
                 className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">
+                Entrada
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={entryValue}
+                onChange={(e) => setEntryValue(e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">
+                Status entrada
+              </label>
+              <select
+                value={entryStatus}
+                onChange={(e) => setEntryStatus(e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+              >
+                <option value="pago">Paga</option>
+                <option value="pendente">Pendente</option>
+              </select>
             </div>
 
             <div>
@@ -1333,6 +1422,8 @@ export default function OrcamentoPage({
             <div className="bg-[#f7ffff] border border-[#d9eeee] rounded-xl p-3 text-sm">
               <div>Subtotal: {formatCurrency(subtotal)}</div>
               <div>Desconto: {formatCurrency(computedDiscount)}</div>
+              <div>Entrada: {formatCurrency(Math.max(0, Math.min(parseMoney(entryValue), total)))}</div>
+              <div>Saldo: {formatCurrency(Math.max(0, total - Math.max(0, Math.min(parseMoney(entryValue), total))))}</div>
               <div className="font-semibold text-slate-800">
                 Total: {formatCurrency(total)}
               </div>
@@ -1402,7 +1493,10 @@ export default function OrcamentoPage({
                       Total: {formatCurrency(parseMoney(budget.total))}
                     </div>
                     <div className="text-sm text-slate-600">
-                      Parcelas: {budget.installments || 1}
+                      Entrada: {formatCurrency(parseMoney(budget.entry_value))} {budget.entry_value ? `(${budget.entry_status === "pendente" ? "pendente" : "paga"})` : ""}
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      Parcelas do saldo: {budget.installments || 1}
                     </div>
                   </div>
 
