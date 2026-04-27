@@ -26,6 +26,24 @@ export default function LoginPage() {
     router.push("/");
   }
 
+  async function handleResetPassword() {
+    if (!email.trim()) {
+      alert("Digite seu e-mail no campo de e-mail primeiro.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      alert("Erro ao enviar recuperação: " + error.message);
+      return;
+    }
+
+    alert("Enviamos um link de recuperação para seu e-mail.");
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f7ffff] to-[#dff3f2] p-6">
       <form
@@ -41,9 +59,7 @@ export default function LoginPage() {
             Acesso ao sistema
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
-            Gestor Odontológico
-          </p>
+          <p className="mt-2 text-sm text-slate-500">Gestor Odontológico</p>
         </div>
 
         <div className="mt-8 space-y-4">
@@ -68,6 +84,14 @@ export default function LoginPage() {
             className="w-full rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] py-3 font-black text-white shadow-sm"
           >
             Entrar
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            className="w-full text-sm font-bold text-[#239d9a] hover:underline"
+          >
+            Esqueci minha senha
           </button>
         </div>
       </form>
