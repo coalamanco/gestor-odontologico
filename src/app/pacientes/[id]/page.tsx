@@ -445,6 +445,7 @@ function PacienteProntuarioContent({
     PaymentTransaction[]
   >([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showCompletedTreatments, setShowCompletedTreatments] = useState(true);
@@ -599,6 +600,43 @@ function PacienteProntuarioContent({
     return String(value).replace(/\D/g, "");
   };
 
+  const auditActionLabel = (action?: string | null) => {
+    if (action === "INSERT") return "Criou";
+    if (action === "UPDATE") return "Alterou";
+    if (action === "DELETE") return "Excluiu";
+    return action || "Ação";
+  };
+
+  const auditTableLabel = (tableName?: string | null) => {
+    switch (tableName) {
+      case "patients":
+        return "Paciente";
+      case "appointments":
+        return "Agenda";
+      case "financial_records":
+        return "Financeiro";
+      case "payment_transactions":
+        return "Pagamento";
+      case "budgets":
+        return "Orçamento";
+      case "budget_items":
+        return "Item do orçamento";
+      case "clinical_notes":
+        return "Prontuário";
+      case "patient_treatments":
+        return "Tratamento";
+      default:
+        return tableName || "Registro";
+    }
+  };
+
+  const auditActionClass = (action?: string | null) => {
+    if (action === "INSERT") return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    if (action === "UPDATE") return "bg-blue-50 text-blue-700 border-blue-100";
+    if (action === "DELETE") return "bg-rose-50 text-rose-700 border-rose-100";
+    return "bg-slate-50 text-slate-700 border-slate-100";
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -660,6 +698,27 @@ function PacienteProntuarioContent({
 
       if (clinicalNotesError) throw clinicalNotesError;
 
+      const { data: auditData, error: auditError } = await supabase
+        .from("audit_logs")
+        .select("id, user_email, action, table_name, record_id, old_data, new_data, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (auditError) throw auditError;
+
+      const patientAuditLogs = (auditData || []).filter((log: any) => {
+        const oldData = log.old_data || {};
+        const newData = log.new_data || {};
+
+        return (
+          log.record_id === params.id ||
+          oldData.patient_id === params.id ||
+          newData.patient_id === params.id ||
+          oldData.id === params.id ||
+          newData.id === params.id
+        );
+      });
+
       let txs: PaymentTransaction[] = [];
 
       if (f && f.length > 0) {
@@ -685,6 +744,7 @@ function PacienteProntuarioContent({
       setFinancialRecords((f || []) as FinancialRecord[]);
       setPaymentTransactions(txs);
       setClinicalNotes((cn || []) as ClinicalNote[]);
+      setAuditLogs(patientAuditLogs);
     } catch (error: any) {
       alert("Erro ao carregar prontuário: " + error.message);
     } finally {
@@ -1583,6 +1643,62 @@ function PacienteProntuarioContent({
                       "-"}
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-base font-black text-slate-800">
+                      Histórico de segurança
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Últimas ações registradas neste prontuário.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
+                    Auditoria
+                  </span>
+                </div>
+
+                {auditLogs.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    Nenhuma ação registrada para este paciente.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                    {auditLogs.slice(0, 12).map((log) => (
+                      <div
+                        key={log.id}
+                        className="rounded-xl border border-[#e3f2f2] bg-white p-3 text-sm"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${auditActionClass(
+                                log.action
+                              )}`}
+                            >
+                              {auditActionLabel(log.action)}
+                            </span>
+                            <span className="truncate font-bold text-slate-700">
+                              {auditTableLabel(log.table_name)}
+                            </span>
+                          </div>
+
+                          <span className="text-xs text-slate-400">
+                            {log.created_at
+                              ? new Date(log.created_at).toLocaleString("pt-BR")
+                              : "-"}
+                          </span>
+                        </div>
+
+                        <div className="mt-1 text-xs text-slate-500">
+                          {log.user_email || "Usuário não identificado"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
