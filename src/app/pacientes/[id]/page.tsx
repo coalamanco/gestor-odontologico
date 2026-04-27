@@ -432,6 +432,7 @@ function PacienteProntuarioContent({
   params: { id: string };
 }) {
   const [activeTab, setActiveTab] = useState<TabId>("sobre");
+  const [showSecurityHistory, setShowSecurityHistory] = useState(false);
 
   const [patient, setPatient] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -1818,58 +1819,72 @@ function PacienteProntuarioContent({
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-4">
-                <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="mt-5 rounded-2xl border border-[#d8eeee] bg-[#fbffff] overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowSecurityHistory((current) => !current)}
+                  className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[#f5ffff] transition"
+                >
                   <div>
                     <h3 className="text-base font-black text-slate-800">
                       Histórico de segurança
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Últimas ações registradas neste prontuário.
+                      Clique para {showSecurityHistory ? "ocultar" : "ver"} as últimas ações registradas neste prontuário.
                     </p>
                   </div>
-                  <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
-                    Auditoria
-                  </span>
-                </div>
 
-                {auditLogs.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    Nenhuma ação registrada para este paciente.
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                    {auditLogs.slice(0, 12).map((log) => (
-                      <div
-                        key={log.id}
-                        className="rounded-xl border border-[#e3f2f2] bg-white p-3 text-sm"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span
-                              className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${auditActionClass(
-                                log.action
-                              )}`}
-                            >
-                              {auditActionLabel(log.action)}
-                            </span>
-                            <span className="truncate font-bold text-slate-700">
-                              {auditTableLabel(log.table_name)}
-                            </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
+                      Auditoria
+                    </span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#d8eeee] text-slate-500 text-lg font-black">
+                      {showSecurityHistory ? "−" : "+"}
+                    </span>
+                  </div>
+                </button>
+
+                {showSecurityHistory && (
+                  <div className="px-4 pb-4">
+                    {auditLogs.length === 0 ? (
+                      <p className="text-sm text-slate-500">
+                        Nenhuma ação registrada para este paciente.
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                        {auditLogs.slice(0, 12).map((log) => (
+                          <div
+                            key={log.id}
+                            className="rounded-xl border border-[#e3f2f2] bg-white p-3 text-sm"
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${auditActionClass(
+                                    log.action
+                                  )}`}
+                                >
+                                  {auditActionLabel(log.action)}
+                                </span>
+                                <span className="truncate font-bold text-slate-700">
+                                  {auditTableLabel(log.table_name)}
+                                </span>
+                              </div>
+
+                              <span className="text-xs text-slate-400">
+                                {log.created_at
+                                  ? new Date(log.created_at).toLocaleString("pt-BR")
+                                  : "-"}
+                              </span>
+                            </div>
+
+                            <div className="mt-1 text-xs text-slate-500">
+                              {log.user_email || "Usuário não identificado"}
+                            </div>
                           </div>
-
-                          <span className="text-xs text-slate-400">
-                            {log.created_at
-                              ? new Date(log.created_at).toLocaleString("pt-BR")
-                              : "-"}
-                          </span>
-                        </div>
-
-                        <div className="mt-1 text-xs text-slate-500">
-                          {log.user_email || "Usuário não identificado"}
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
