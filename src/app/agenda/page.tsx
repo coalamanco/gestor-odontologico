@@ -674,43 +674,71 @@ export default function AgendaPage() {
     const appointmentType = String(appointmentPayload?.type || "").toLowerCase();
 
     if (appointmentType !== "consulta") {
-      console.log("WhatsApp automático não enviado: tipo diferente de consulta.", {
+      console.log("WhatsApp automático ignorado: não é consulta.", {
         type: appointmentPayload?.type,
       });
-      return false;
+
+      return {
+        ok: false,
+        reason: "not_consulta",
+        message: "O envio automático só é feito para consultas.",
+      };
+    }
+
+    if (!appointmentPayload.patient_id) {
+      console.warn("WhatsApp automático não enviado: consulta sem paciente.");
+
+      return {
+        ok: false,
+        reason: "missing_patient",
+        message: "Consulta sem paciente vinculado.",
+      };
     }
 
     try {
-      console.log("Iniciando envio automático de WhatsApp para consulta.", {
+      console.log("Iniciando envio automático de WhatsApp.", {
         appointmentId,
         patientId: appointmentPayload.patient_id,
       });
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      let patientName =
+        selectedPatient?.name || appointmentPayload.patient_name || "paciente";
+      let patientPhone = selectedPatient?.phone || "";
 
-      if (!session?.access_token) {
-        console.warn("WhatsApp automático não enviado: usuário sem sessão ativa.");
-        return false;
+      if (!normalizePhone(patientPhone)) {
+        const { data: patientFromDb, error: patientError } = await supabase
+          .from("patients")
+          .select("name, phone")
+          .eq("id", appointmentPayload.patient_id)
+          .maybeSingle();
+
+        if (patientError) {
+          console.warn(
+            "WhatsApp automático não enviado: erro ao buscar paciente.",
+            patientError
+          );
+
+          return {
+            ok: false,
+            reason: "patient_error",
+            message: patientError.message || "Erro ao buscar paciente.",
+          };
+        }
+
+        patientName = patientFromDb?.name || patientName;
+        patientPhone = patientFromDb?.phone || "";
       }
 
-      const { data: patient, error: patientError } = await supabase
-        .from("patients")
-        .select("name, phone")
-        .eq("id", appointmentPayload.patient_id)
-        .single();
-
-      if (patientError) {
-        console.warn("WhatsApp automático não enviado: erro ao buscar paciente.", patientError);
-        return false;
-      }
-
-      const phoneDigits = normalizePhone(patient?.phone);
+      const phoneDigits = normalizePhone(patientPhone);
 
       if (!phoneDigits) {
         console.warn("WhatsApp automático não enviado: paciente sem telefone.");
-        return false;
+
+        return {
+          ok: false,
+          reason: "missing_phone",
+          message: "Paciente sem telefone/WhatsApp cadastrado.",
+        };
       }
 
       const phone = phoneDigits.startsWith("55")
@@ -719,14 +747,19 @@ export default function AgendaPage() {
 
       const message = buildAutomaticWhatsappMessage({
         ...appointmentPayload,
-        patient_name: patient?.name || appointmentPayload.patient_name,
+        patient_name: patientName,
+      });
+
+      console.log("Chamando API interna /api/whatsapp/send", {
+        appointmentId,
+        phone,
       });
 
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
+        cache: "no-store",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           phone,
@@ -734,7 +767,14 @@ export default function AgendaPage() {
         }),
       });
 
-      const result = await response.json().catch(() => null);
+      const responseText = await response.text();
+      let result: any = null;
+
+      try {
+        result = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        result = responseText;
+      }
 
       console.log("Resposta da API WhatsApp:", {
         ok: response.ok,
@@ -743,21 +783,46 @@ export default function AgendaPage() {
       });
 
       if (!response.ok) {
-        console.warn("WhatsApp automático não enviado:", result);
-        return false;
+        return {
+          ok: false,
+          reason: "api_error",
+          status: response.status,
+          message:
+            result?.error ||
+            result?.message ||
+            `Erro ${response.status} ao chamar API do WhatsApp.`,
+          details: result,
+        };
       }
 
       if (appointmentId) {
-        await supabase
+        const { error: updateError } = await supabase
           .from("appointments")
           .update({ reminder_sent_at: new Date().toISOString() })
           .eq("id", appointmentId);
+
+        if (updateError) {
+          console.warn(
+            "WhatsApp enviado, mas não consegui marcar como avisado.",
+            updateError
+          );
+        }
       }
 
-      return true;
-    } catch (error) {
+      return {
+        ok: true,
+        reason: "sent",
+        message: "WhatsApp enviado com sucesso.",
+        details: result,
+      };
+    } catch (error: any) {
       console.warn("Erro ao enviar WhatsApp automático:", error);
-      return false;
+
+      return {
+        ok: false,
+        reason: "unexpected_error",
+        message: error?.message || "Erro inesperado ao enviar WhatsApp.",
+      };
     }
   };
 
@@ -816,15 +881,30 @@ export default function AgendaPage() {
         return;
       }
 
-      if (String(mainType).toLowerCase() === "consulta" && reminderEnabled) {
-        const sent = await sendAutomaticWhatsappConfirmation(
-          payload,
-          createdAppointment?.id || null
-        );
+      if (String(mainType).toLowerCase() === "consulta") {
+        console.log("Tentando enviar WhatsApp automático após salvar consulta...");
 
-        if (!sent && selectedPatient?.phone) {
+        try {
+          const whatsappResult = await sendAutomaticWhatsappConfirmation(
+            payload,
+            createdAppointment?.id || null
+          );
+
+          console.log("Resultado final do envio WhatsApp:", whatsappResult);
+
+          if (!whatsappResult.ok) {
+            alert(
+              `Consulta salva, mas o WhatsApp automático não foi enviado.\n\nMotivo: ${
+                whatsappResult.message || "erro desconhecido"
+              }`
+            );
+          }
+        } catch (error: any) {
+          console.error("Erro ao chamar envio automático de WhatsApp:", error);
           alert(
-            "Consulta salva, mas o WhatsApp automático não foi enviado. Verifique os logs do Vercel em /api/whatsapp/send."
+            `Consulta salva, mas ocorreu erro ao tentar enviar WhatsApp.\n\nMotivo: ${
+              error?.message || "erro desconhecido"
+            }`
           );
         }
       }
