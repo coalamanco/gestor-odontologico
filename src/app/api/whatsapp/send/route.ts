@@ -1,60 +1,87 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 function normalizeBrazilPhone(phone: string) {
   const digits = String(phone || "").replace(/\D/g, "");
 
   if (!digits) return "";
-  if (digits.startsWith("55")) return digits;
+
+  if (digits.startsWith("55")) {
+    return digits;
+  }
 
   return `55${digits}`;
 }
 
+function getBearerToken(request: Request) {
+  const authHeader = request.headers.get("authorization") || "";
+  const [type, token] = authHeader.split(" ");
+
+  if (type?.toLowerCase() !== "bearer" || !token) {
+    return "";
+  }
+
+  return token;
+}
+
 export async function POST(request: Request) {
   try {
-    // 🔒 cria cliente autenticado
-    const cookieStore = cookies();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
-
-    // 🔒 pega usuário logado
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
-        { error: "Não autorizado" },
+        { error: "Supabase não configurado no servidor." },
+        { status: 500 }
+      );
+    }
+
+    const accessToken = getBearerToken(request);
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Não autorizado." },
         { status: 401 }
       );
     }
 
-    // 🔒 verifica se está na allowed_users
-    const { data: allowed } = await supabase
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Sessão inválida ou expirada." },
+        { status: 401 }
+      );
+    }
+
+    const { data: allowed, error: allowedError } = await supabase
       .from("allowed_users")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!allowed) {
+    if (allowedError || !allowed) {
       return NextResponse.json(
-        { error: "Usuário não autorizado" },
+        { error: "Usuário não autorizado." },
         { status: 403 }
       );
     }
 
-    // 🔁 resto do código (igual ao seu)
     const { phone, message } = await request.json();
 
     if (!phone || !message) {

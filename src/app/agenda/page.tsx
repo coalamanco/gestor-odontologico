@@ -128,7 +128,6 @@ export default function AgendaPage() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [confirmingAllToday, setConfirmingAllToday] = useState(false);
-  const [sendingReminders, setSendingReminders] = useState(false);
 
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [resizeStartY, setResizeStartY] = useState(0);
@@ -672,14 +671,40 @@ export default function AgendaPage() {
     appointmentPayload: any,
     appointmentId?: string | null
   ) => {
-    if (appointmentPayload.type !== "consulta") return false;
+    const appointmentType = String(appointmentPayload?.type || "").toLowerCase();
+
+    if (appointmentType !== "consulta") {
+      console.log("WhatsApp automático não enviado: tipo diferente de consulta.", {
+        type: appointmentPayload?.type,
+      });
+      return false;
+    }
 
     try {
-      const { data: patient } = await supabase
+      console.log("Iniciando envio automático de WhatsApp para consulta.", {
+        appointmentId,
+        patientId: appointmentPayload.patient_id,
+      });
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        console.warn("WhatsApp automático não enviado: usuário sem sessão ativa.");
+        return false;
+      }
+
+      const { data: patient, error: patientError } = await supabase
         .from("patients")
         .select("name, phone")
         .eq("id", appointmentPayload.patient_id)
         .single();
+
+      if (patientError) {
+        console.warn("WhatsApp automático não enviado: erro ao buscar paciente.", patientError);
+        return false;
+      }
 
       const phoneDigits = normalizePhone(patient?.phone);
 
@@ -692,29 +717,16 @@ export default function AgendaPage() {
         ? phoneDigits
         : `55${phoneDigits}`;
 
-      const patientName = patient?.name || "paciente";
-
-      const message =
-        `Olá, ${patientName}! Tudo bem? 😊
-
-` +
-        `Sua consulta foi agendada.
-
-` +
-        `📅 Data: ${formatDateBr(appointmentPayload.date)}
-` +
-        `⏰ Horário: ${appointmentPayload.start_time}
-
-` +
-        `Por favor, confirme sua presença.
-
-` +
-        `Obrigado(a)!`;
+      const message = buildAutomaticWhatsappMessage({
+        ...appointmentPayload,
+        patient_name: patient?.name || appointmentPayload.patient_name,
+      });
 
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           phone,
@@ -722,8 +734,15 @@ export default function AgendaPage() {
         }),
       });
 
+      const result = await response.json().catch(() => null);
+
+      console.log("Resposta da API WhatsApp:", {
+        ok: response.ok,
+        status: response.status,
+        result,
+      });
+
       if (!response.ok) {
-        const result = await response.json().catch(() => null);
         console.warn("WhatsApp automático não enviado:", result);
         return false;
       }
@@ -797,15 +816,15 @@ export default function AgendaPage() {
         return;
       }
 
-      if (mainType === "consulta") {
+      if (String(mainType).toLowerCase() === "consulta" && reminderEnabled) {
         const sent = await sendAutomaticWhatsappConfirmation(
           payload,
           createdAppointment?.id || null
         );
 
         if (!sent && selectedPatient?.phone) {
-          console.warn(
-            "Consulta salva, mas o WhatsApp automático não foi enviado. Verifique a configuração da API."
+          alert(
+            "Consulta salva, mas o WhatsApp automático não foi enviado. Verifique os logs do Vercel em /api/whatsapp/send."
           );
         }
       }
@@ -1027,114 +1046,6 @@ export default function AgendaPage() {
   }, []);
 
 
-
-  const sendPendingReminders = async () => {
-    const today = formatDate(new Date());
-    const tomorrow = formatDate(addDays(new Date(), 1));
-
-    const pendingAppointments = appointments
-      .filter((a) => a.type !== "compromisso")
-      .filter((a) => a.reminder_enabled && !a.reminder_sent_at)
-      .filter((a) => a.date === today || a.date === tomorrow);
-
-    if (pendingAppointments.length === 0) {
-      alert("Nenhum lembrete pendente para hoje ou amanhã.");
-      return;
-    }
-
-    const ok = window.confirm(
-      `Enviar ${pendingAppointments.length} lembrete(s) por WhatsApp?`
-    );
-
-    if (!ok) return;
-
-    try {
-      setSendingReminders(true);
-
-      let sentCount = 0;
-      let failedCount = 0;
-
-      for (const appointment of pendingAppointments) {
-        const patient = getPatientByAppointment(appointment);
-        const phoneDigits = normalizePhone(patient?.phone);
-
-        if (!phoneDigits) {
-          failedCount += 1;
-          continue;
-        }
-
-        const phone = phoneDigits.startsWith("55")
-          ? phoneDigits
-          : `55${phoneDigits}`;
-
-        const patientName =
-          patient?.name || appointment.patient_name || "paciente";
-
-        const procedureName =
-          appointment.title || appointment.type || "consulta";
-
-        const patientDebt = formatCurrency(getPatientDebt(appointment.patient_id));
-
-        const template =
-          messageTemplates.find((item) => item.type === "lembrete" && item.content) ||
-          messageTemplates.find((item) => item.type === "confirmacao" && item.content);
-
-        const fallbackMessage =
-          `Olá, ${patientName}! Tudo bem? 😊\n\n` +
-          `Passando para lembrar da sua ${procedureName} no consultório.\n\n` +
-          `📅 Data: ${formatDateBr(appointment.date)}\n` +
-          `⏰ Horário: ${appointment.start_time}\n\n` +
-          `Por favor, confirme sua presença.\n\n` +
-          `Obrigado(a)!`;
-
-        let message = template?.content || fallbackMessage;
-
-        message = message
-          .replaceAll("{{nome}}", patientName)
-          .replaceAll("{{data}}", formatDateBr(appointment.date))
-          .replaceAll("{{hora}}", appointment.start_time || "")
-          .replaceAll("{{valor}}", patientDebt)
-          .replaceAll("{{procedimento}}", procedureName);
-
-        const response = await fetch("/api/whatsapp/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone,
-            message,
-          }),
-        });
-
-        if (!response.ok) {
-          failedCount += 1;
-          continue;
-        }
-
-        await supabase
-          .from("appointments")
-          .update({ reminder_sent_at: new Date().toISOString() })
-          .eq("id", appointment.id);
-
-        sentCount += 1;
-      }
-
-      await loadData();
-
-      if (failedCount > 0) {
-        alert(
-          `Lembretes enviados: ${sentCount}. Não enviados: ${failedCount}. Verifique telefones ou configuração da Z-API.`
-        );
-      } else {
-        alert(`Lembretes enviados com sucesso: ${sentCount}.`);
-      }
-    } finally {
-      setSendingReminders(false);
-    }
-  };
-
-
   const confirmAllTodayAppointments = async () => {
     const appointmentsToConfirm = agendaAlerts.naoConfirmados;
 
@@ -1267,19 +1178,31 @@ export default function AgendaPage() {
                 }`}
           </button>
 
-          <button
-            type="button"
-            onClick={sendPendingReminders}
-            disabled={sendingReminders}
-            className={`px-4 py-2.5 rounded-xl font-semibold shadow-sm text-sm ${
-              sendingReminders
-                ? "bg-slate-300 text-slate-600 cursor-not-allowed"
-                : "bg-[#1fb36e] text-white hover:bg-[#18975d]"
-            }`}
-            title="Enviar lembretes de hoje e amanhã por WhatsApp"
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(
+              `Lembretes de consulta pendentes:\n\n${appointments
+                .filter((a) => a.type !== "compromisso")
+                .filter((a) => a.reminder_enabled && !a.reminder_sent_at)
+                .filter((a) => {
+                  const today = formatDate(new Date());
+                  const tomorrow = formatDate(addDays(new Date(), 1));
+                  return a.date === today || a.date === tomorrow;
+                })
+                .map(
+                  (a) =>
+                    `• ${a.patient_name || "Paciente"} - ${formatDateBr(
+                      a.date
+                    )} às ${a.start_time}`
+                )
+                .join("\n") || "Nenhum lembrete pendente para hoje ou amanhã."}`
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-[#1fb36e] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm text-sm"
+            title="Enviar lista de lembretes de hoje e amanhã"
           >
-            {sendingReminders ? "Enviando..." : "Lembretes"}
-          </button>
+            Lembretes
+          </a>
 
           <button
             onClick={() => openNew(days[0].date, `${pad(clinicSettings.start_hour)}:00`)}
