@@ -24,12 +24,24 @@ function getBearerToken(request: Request) {
   return token;
 }
 
+export async function GET() {
+  console.log("✅ ROTA WHATSAPP GET CHAMADA");
+
+  return NextResponse.json({
+    ok: true,
+    message: "Rota /api/whatsapp/send está ativa.",
+  });
+}
+
 export async function POST(request: Request) {
+  console.log("🔥 ROTA WHATSAPP POST CHAMADA");
+
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("❌ Supabase não configurado.");
       return NextResponse.json(
         { error: "Supabase não configurado no servidor." },
         { status: 500 }
@@ -39,6 +51,7 @@ export async function POST(request: Request) {
     const accessToken = getBearerToken(request);
 
     if (!accessToken) {
+      console.error("❌ Token de autorização ausente.");
       return NextResponse.json(
         { error: "Não autorizado. Faça login novamente no sistema." },
         { status: 401 }
@@ -63,11 +76,14 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser(accessToken);
 
     if (userError || !user) {
+      console.error("❌ Sessão inválida:", userError);
       return NextResponse.json(
         { error: "Sessão inválida ou expirada. Faça login novamente." },
         { status: 401 }
       );
     }
+
+    console.log("✅ Usuário autenticado:", user.id);
 
     const { data: allowed, error: allowedError } = await supabase
       .from("allowed_users")
@@ -76,15 +92,19 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (allowedError || !allowed) {
+      console.error("❌ Usuário não autorizado:", allowedError);
       return NextResponse.json(
         { error: "Usuário não autorizado." },
         { status: 403 }
       );
     }
 
-    const { phone, message } = await request.json();
+    const body = await request.json();
+    const phone = body?.phone;
+    const message = body?.message;
 
     if (!phone || !message) {
+      console.error("❌ Telefone ou mensagem ausente.");
       return NextResponse.json(
         { error: "Telefone e mensagem são obrigatórios." },
         { status: 400 }
@@ -95,7 +115,13 @@ export async function POST(request: Request) {
     const token = process.env.ZAPI_TOKEN;
     const clientToken = process.env.ZAPI_CLIENT_TOKEN;
 
-    if (!instanceId || !token) {
+    if (!instanceId || !token || !clientToken) {
+      console.error("❌ Z-API não configurada:", {
+        hasInstanceId: !!instanceId,
+        hasToken: !!token,
+        hasClientToken: !!clientToken,
+      });
+
       return NextResponse.json(
         { error: "Z-API não configurada no servidor." },
         { status: 500 }
@@ -104,13 +130,15 @@ export async function POST(request: Request) {
 
     const normalizedPhone = normalizeBrazilPhone(phone);
 
+    console.log("📲 Enviando WhatsApp para:", normalizedPhone);
+
     const response = await fetch(
       `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(clientToken ? { "Client-Token": clientToken } : {}),
+          "Client-Token": clientToken,
         },
         body: JSON.stringify({
           phone: normalizedPhone,
@@ -129,6 +157,11 @@ export async function POST(request: Request) {
       result = text;
     }
 
+    console.log("📩 Resposta Z-API:", {
+      status: response.status,
+      result,
+    });
+
     if (!response.ok) {
       return NextResponse.json(
         {
@@ -146,6 +179,8 @@ export async function POST(request: Request) {
       result,
     });
   } catch (error: any) {
+    console.error("💥 Erro inesperado WhatsApp:", error);
+
     return NextResponse.json(
       { error: error?.message || "Erro inesperado ao enviar WhatsApp." },
       { status: 500 }
