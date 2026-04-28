@@ -836,7 +836,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-4">
       <div className="max-w-7xl mx-auto space-y-4 pb-10">
-        <div className="sticky top-0 z-20 rounded-2xl border border-[#bde4e3] bg-white/95 shadow-sm backdrop-blur overflow-hidden">
+        <div className="rounded-2xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
           <div className="min-h-[72px] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-white">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
