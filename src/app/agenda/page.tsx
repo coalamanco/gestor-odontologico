@@ -882,31 +882,9 @@ export default function AgendaPage() {
       }
 
       if (String(mainType).toLowerCase() === "consulta") {
-        console.log("Tentando enviar WhatsApp automático após salvar consulta...");
-
-        try {
-          const whatsappResult = await sendAutomaticWhatsappConfirmation(
-            payload,
-            createdAppointment?.id || null
-          );
-
-          console.log("Resultado final do envio WhatsApp:", whatsappResult);
-
-          if (!whatsappResult.ok) {
-            alert(
-              `Consulta salva, mas o WhatsApp automático não foi enviado.\n\nMotivo: ${
-                whatsappResult.message || "erro desconhecido"
-              }`
-            );
-          }
-        } catch (error: any) {
-          console.error("Erro ao chamar envio automático de WhatsApp:", error);
-          alert(
-            `Consulta salva, mas ocorreu erro ao tentar enviar WhatsApp.\n\nMotivo: ${
-              error?.message || "erro desconhecido"
-            }`
-          );
-        }
+        console.log(
+          "Consulta salva. O lembrete será enviado automaticamente pelo Vercel Cron no horário configurado."
+        );
       }
     }
 
