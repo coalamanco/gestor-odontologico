@@ -954,6 +954,7 @@ export default function OrcamentoPage({
         installments: numberOfInstallments,
         status: entryStatus === "pago" ? "pago" : "pendente",
         receipt_type: receipt,
+        due_date: entryDate.toISOString().slice(0, 10),
         created_at: entryDate.toISOString(),
       });
     }
@@ -972,6 +973,7 @@ export default function OrcamentoPage({
         installments: numberOfInstallments,
         status: "pendente",
         receipt_type: receipt,
+        due_date: installmentDate.toISOString().slice(0, 10),
         created_at: installmentDate.toISOString(),
       });
     });
@@ -984,7 +986,21 @@ export default function OrcamentoPage({
       .from("financial_records")
       .insert(financialRecords);
 
-    if (financialError) throw financialError;
+    if (financialError) {
+      const message = String(financialError.message || "").toLowerCase();
+
+      if (message.includes("due_date") || message.includes("schema cache")) {
+        const fallbackRecords = financialRecords.map(({ due_date, ...record }) => record);
+
+        const { error: fallbackFinancialError } = await supabase
+          .from("financial_records")
+          .insert(fallbackRecords);
+
+        if (fallbackFinancialError) throw fallbackFinancialError;
+      } else {
+        throw financialError;
+      }
+    }
   };
 
 
