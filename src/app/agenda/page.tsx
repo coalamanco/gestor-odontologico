@@ -526,27 +526,18 @@ export default function AgendaPage() {
     targetDuration: number,
     ignoreId?: string | null
   ) => {
+    void targetDate;
+    void ignoreId;
+
+    // Permite encaixes no mesmo horário, como no Google Agenda.
+    // A validação agora bloqueia apenas horários fora do expediente.
     const start = timeToMinutes(targetTime);
     const end = start + targetDuration;
 
     const dayStart = clinicSettings.start_hour * 60;
     const dayEnd = clinicSettings.end_hour * 60;
 
-    if (start < dayStart || end > dayEnd) return false;
-
-    const sameDay = appointments.filter(
-      (a) => a.date === targetDate && a.id !== ignoreId
-    );
-
-    for (const appt of sameDay) {
-      const apptStart = timeToMinutes(appt.start_time);
-      const apptEnd = apptStart + Number(appt.duration || 30);
-
-      const overlaps = start < apptEnd && end > apptStart;
-      if (overlaps) return false;
-    }
-
-    return true;
+    return start >= dayStart && end <= dayEnd;
   };
 
   const findNextAvailableSlot = (
@@ -883,7 +874,7 @@ export default function AgendaPage() {
 
       if (String(mainType).toLowerCase() === "consulta") {
         console.log(
-          "Consulta salva. O lembrete será enviado automaticamente pelo Vercel Cron no horário configurado."
+          "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
         );
       }
     }
@@ -1437,7 +1428,12 @@ export default function AgendaPage() {
                       handleDropOnCell(d.date, h);
                     }}
                   >
-                    {ag.map((a) => (
+                    {ag.map((a, index) => {
+                      const overlapCount = Math.max(1, ag.length);
+                      const widthPercent = 100 / overlapCount;
+                      const leftPercent = index * widthPercent;
+
+                      return (
                       <div
                         key={a.id}
                         draggable
@@ -1453,9 +1449,11 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-2 ring-amber-300 ring-offset-1"
                             : ""
-                        } absolute left-1.5 right-1.5 top-1 z-[1] max-w-[calc(100%-0.75rem)] overflow-hidden text-white text-[10px] px-2.5 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
+                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
                         style={{
                           height: `${getDurationHeight(a.duration || 30)}px`,
+                          left: `calc(${leftPercent}% + 6px)`,
+                          width: `calc(${widthPercent}% - 12px)`,
                         }}
                         title="Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."
                       >
@@ -1538,7 +1536,8 @@ export default function AgendaPage() {
                           title="Arraste para aumentar ou diminuir a duração"
                         />
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })}
