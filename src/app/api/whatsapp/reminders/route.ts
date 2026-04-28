@@ -12,7 +12,9 @@ function normalizeBrazilPhone(phone: string) {
 
 function formatDateBr(dateString: string) {
   if (!dateString) return "";
+
   const [year, month, day] = dateString.split("-");
+
   return `${day}/${month}/${year}`;
 }
 
@@ -70,10 +72,28 @@ async function sendZapiMessage(phone: string, message: string) {
   return result;
 }
 
+function getBrazilNow() {
+  const now = new Date();
+
+  const brazilNow = new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "America/Sao_Paulo",
+    })
+  );
+
+  return brazilNow;
+}
+
+function createBrazilDate(date: string, time: string) {
+  return new Date(`${date}T${time}:00-03:00`);
+}
+
 export async function GET() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
@@ -87,23 +107,27 @@ export async function GET() {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const now = new Date();
+    const now = getBrazilNow();
 
     const today = now.toISOString().slice(0, 10);
 
     const limitDate = new Date(now);
+
     limitDate.setDate(limitDate.getDate() + 5);
 
-    const limitDateString = limitDate.toISOString().slice(0, 10);
+    const limitDateString = limitDate
+      .toISOString()
+      .slice(0, 10);
 
-    const { data: appointments, error: appointmentsError } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("type", "consulta")
-      .eq("reminder_enabled", true)
-      .is("reminder_sent_at", null)
-      .gte("date", today)
-      .lte("date", limitDateString);
+    const { data: appointments, error: appointmentsError } =
+      await supabase
+        .from("appointments")
+        .select("*")
+        .eq("type", "consulta")
+        .eq("reminder_enabled", true)
+        .is("reminder_sent_at", null)
+        .gte("date", today)
+        .lte("date", limitDateString);
 
     if (appointmentsError) {
       throw appointmentsError;
@@ -115,8 +139,10 @@ export async function GET() {
       .eq("active", true);
 
     const template =
-      templates?.find((item) => item.type === "lembrete")?.content ||
-      templates?.find((item) => item.type === "confirmacao")?.content ||
+      templates?.find((item) => item.type === "lembrete")
+        ?.content ||
+      templates?.find((item) => item.type === "confirmacao")
+        ?.content ||
       "Olá {{nome}}, lembrando da sua consulta no dia {{data}} às {{hora}}.";
 
     const patientIds = Array.from(
@@ -150,18 +176,28 @@ export async function GET() {
         appointment.reminder_before_hours || 24
       );
 
-      const appointmentDateTime = new Date(
-        `${appointment.date}T${appointment.start_time || "00:00"}:00`
+      const appointmentDateTime = createBrazilDate(
+        appointment.date,
+        appointment.start_time || "00:00"
       );
 
       const sendAt = new Date(appointmentDateTime);
 
-      sendAt.setHours(sendAt.getHours() - reminderBeforeHours);
+      sendAt.setHours(
+        sendAt.getHours() - reminderBeforeHours
+      );
+
+      console.log("==========");
+      console.log("Paciente:", appointment.patient_name);
+      console.log("Agora:", now);
+      console.log("Consulta:", appointmentDateTime);
+      console.log("Enviar em:", sendAt);
 
       if (now < sendAt) {
         skipped.push({
           id: appointment.id,
-          reason: "Ainda não chegou o horário do lembrete.",
+          reason:
+            "Ainda não chegou o horário do lembrete.",
         });
 
         continue;
@@ -176,9 +212,13 @@ export async function GET() {
         continue;
       }
 
-      const patient = patientMap.get(appointment.patient_id);
+      const patient = patientMap.get(
+        appointment.patient_id
+      );
 
-      const phone = normalizeBrazilPhone(patient?.phone || "");
+      const phone = normalizeBrazilPhone(
+        patient?.phone || ""
+      );
 
       if (!phone) {
         skipped.push({
@@ -198,7 +238,10 @@ export async function GET() {
       });
 
       try {
-        const result = await sendZapiMessage(phone, message);
+        const result = await sendZapiMessage(
+          phone,
+          message
+        );
 
         const { error: updateError } = await supabase
           .from("appointments")
@@ -221,7 +264,8 @@ export async function GET() {
         failed.push({
           id: appointment.id,
           patient: patient?.name,
-          error: error?.message || "Erro desconhecido.",
+          error:
+            error?.message || "Erro desconhecido.",
         });
       }
     }
@@ -234,13 +278,17 @@ export async function GET() {
       failed,
     });
   } catch (error: any) {
-    console.error("Erro no cron de lembretes:", error);
+    console.error(
+      "Erro no cron de lembretes:",
+      error
+    );
 
     return NextResponse.json(
       {
         ok: false,
         error:
-          error?.message || "Erro ao processar lembretes.",
+          error?.message ||
+          "Erro ao processar lembretes.",
       },
       { status: 500 }
     );
