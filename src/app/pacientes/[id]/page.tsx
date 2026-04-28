@@ -1076,22 +1076,14 @@ function PacienteProntuarioContent({
         "id"
       );
 
-      if (!existingFinancialRecord && valorTratamento > 0) {
-        const { error: financialInsertError } = await supabase
-          .from("financial_records")
-          .insert({
-            patient_id: params.id,
-            patient_treatment_id: selectedTreatment.id,
-            budget_id: selectedTreatment.budget_id || null,
-            description: `${nomeFinanceiro}${denteFinanceiro}${faceFinanceiro}`,
-            amount: valorTratamento,
-            paid_amount: 0,
-            status: "pendente",
-            installment_number: 1,
-            installments: 1,
-          });
 
-        if (financialInsertError) throw financialInsertError;
+      // O financeiro deve ser criado somente na aprovação do orçamento.
+      // A finalização do tratamento é apenas clínica e não deve gerar novo débito.
+      if (!existingFinancialRecord) {
+        console.warn(
+          "Tratamento finalizado sem financeiro vinculado ao orçamento/tratamento:",
+          selectedTreatment.id
+        );
       }
 
       const { error: treatmentNoteError } = await supabase
@@ -1240,6 +1232,39 @@ function PacienteProntuarioContent({
       await loadData();
     } catch (error: any) {
       alert("Erro ao preparar recebimento: " + error.message);
+    }
+  };
+
+  const deleteFinancialRecord = async (record: FinancialRecord) => {
+    const confirmed = window.confirm(
+      "Deseja realmente excluir este débito?\n\nEssa ação também remove pagamentos vinculados a ele e não pode ser desfeita."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error: txError } = await supabase
+        .from("payment_transactions")
+        .delete()
+        .eq("financial_record_id", record.id);
+
+      if (txError) throw txError;
+
+      const { error } = await supabase
+        .from("financial_records")
+        .delete()
+        .eq("id", record.id);
+
+      if (error) throw error;
+
+      if (detailRecord?.id === record.id) {
+        setDetailRecord(null);
+      }
+
+      alert("Débito excluído com sucesso.");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao excluir débito: " + error.message);
     }
   };
 
@@ -2104,13 +2129,6 @@ function PacienteProntuarioContent({
                             Evolução
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => receiveTreatment(treatment)}
-                            className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-                          >
-                            Receber
-                          </button>
 
                           {treatment.status !== "finalizado" && (
                             <button
@@ -2446,6 +2464,14 @@ function PacienteProntuarioContent({
                             </button>
                           </>
                         )}
+
+                        <button
+                          type="button"
+                          onClick={() => deleteFinancialRecord(record)}
+                          className="bg-rose-600 text-white px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-rose-700"
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   );
