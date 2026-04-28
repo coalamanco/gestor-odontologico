@@ -1188,108 +1188,146 @@ export default function AgendaPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#eefafa] via-[#f8ffff] to-[#e9f4f4]">
-      <div className="p-4 border-b border-[#c2dddd] bg-white/90 backdrop-blur-md flex justify-between items-center shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setWeekBaseDate((prev) => addDays(prev, -7))}
-            className="w-10 h-10 rounded-xl bg-[#eefafa] text-[#239d9a] font-bold hover:bg-[#dff3f2]"
-          >
-            ◀
-          </button>
+      <div className="border-b border-[#c2dddd] bg-white/95 px-3 py-1.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
+        <div className="flex min-h-[38px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              onClick={() => setWeekBaseDate((prev) => addDays(prev, -7))}
+              className="h-8 w-8 rounded-lg bg-[#eefafa] text-sm font-black text-[#239d9a] hover:bg-[#dff3f2]"
+              title="Semana anterior"
+            >
+              ◀
+            </button>
 
-          <button
-            onClick={() => setWeekBaseDate(new Date())}
-            className="px-4 h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] text-white font-bold shadow-sm"
-          >
-            Hoje
-          </button>
+            <button
+              onClick={() => setWeekBaseDate(new Date())}
+              className="h-8 rounded-lg bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] px-3 text-sm font-black text-white shadow-sm"
+            >
+              Hoje
+            </button>
 
-          <button
-            onClick={() => setWeekBaseDate((prev) => addDays(prev, 7))}
-            className="w-10 h-10 rounded-xl bg-[#eefafa] text-[#239d9a] font-bold hover:bg-[#dff3f2]"
-          >
-            ▶
-          </button>
+            <button
+              onClick={() => setWeekBaseDate((prev) => addDays(prev, 7))}
+              className="h-8 w-8 rounded-lg bg-[#eefafa] text-sm font-black text-[#239d9a] hover:bg-[#dff3f2]"
+              title="Próxima semana"
+            >
+              ▶
+            </button>
 
-          <div className="ml-2">
-            <h1 className="font-black text-2xl text-slate-800 leading-tight">Agenda Clínica</h1>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#239d9a]">
-              {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-        </div>
+            <div className="mx-1 hidden h-7 w-px bg-[#d9eeee] md:block" />
 
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-xl border border-[#c2dddd] bg-white text-sm font-semibold text-slate-700"
-            title="Filtrar agenda por status"
-          >
-            <option value="todos">Todos</option>
-            <option value="agendado">Agendado</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="em_atendimento">Em atendimento</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="faltou">Faltou</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={confirmAllTodayAppointments}
-            disabled={confirmingAllToday || agendaAlerts.naoConfirmados.length === 0}
-            className={`px-4 py-2.5 rounded-xl font-semibold shadow-sm text-sm ${
-              agendaAlerts.naoConfirmados.length > 0
-                ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-            }`}
-            title="Confirmar todas as consultas agendadas de hoje"
-          >
-            {confirmingAllToday
-              ? "Confirmando..."
-              : `Confirmar hoje${
-                  agendaAlerts.naoConfirmados.length > 0
-                    ? ` (${agendaAlerts.naoConfirmados.length})`
-                    : ""
-                }`}
-          </button>
-
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(
-              `Lembretes de consulta pendentes:\n\n${appointments
-                .filter((a) => a.type !== "compromisso")
-                .filter((a) => a.reminder_enabled && !a.reminder_sent_at)
-                .filter((a) => {
-                  const today = formatDate(new Date());
-                  const tomorrow = formatDate(addDays(new Date(), 1));
-                  return a.date === today || a.date === tomorrow;
+            <button
+              type="button"
+              onClick={() =>
+                setWeekBaseDate((prev) => {
+                  const next = new Date(prev);
+                  next.setMonth(next.getMonth() - 1);
+                  return next;
                 })
-                .map(
-                  (a) =>
-                    `• ${a.patient_name || "Paciente"} - ${formatDateBr(
-                      a.date
-                    )} às ${a.start_time}`
-                )
-                .join("\n") || "Nenhum lembrete pendente para hoje ou amanhã."}`
-            )}`}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-[#1fb36e] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm text-sm"
-            title="Enviar lista de lembretes de hoje e amanhã"
-          >
-            Lembretes
-          </a>
+              }
+              className="hidden h-8 rounded-lg bg-white px-3 text-[11px] font-black uppercase tracking-widest text-[#239d9a] ring-1 ring-[#d9eeee] hover:bg-[#f2fcfc] md:inline-flex md:items-center"
+              title="Mês anterior"
+            >
+              Mês -
+            </button>
 
-          <button
-            onClick={() => openNew(days[0].date, `${pad(clinicSettings.start_hour)}:00`)}
-            className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm"
-          >
-            Novo
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                setWeekBaseDate((prev) => {
+                  const next = new Date(prev);
+                  next.setMonth(next.getMonth() + 1);
+                  return next;
+                })
+              }
+              className="hidden h-8 rounded-lg bg-white px-3 text-[11px] font-black uppercase tracking-widest text-[#239d9a] ring-1 ring-[#d9eeee] hover:bg-[#f2fcfc] md:inline-flex md:items-center"
+              title="Próximo mês"
+            >
+              Mês +
+            </button>
+
+            <div className="ml-2 min-w-0">
+              <h1 className="truncate text-xl font-black leading-none text-slate-800">
+                Agenda Clínica
+              </h1>
+              <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.2em] text-[#239d9a]">
+                {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 w-[130px] rounded-lg border border-[#c2dddd] bg-white px-2 text-xs font-semibold text-slate-700 outline-none"
+              title="Filtrar agenda por status"
+            >
+              <option value="todos">Todos</option>
+              <option value="agendado">Agendado</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="em_atendimento">Em atendimento</option>
+              <option value="finalizado">Finalizado</option>
+              <option value="faltou">Faltou</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={confirmAllTodayAppointments}
+              disabled={confirmingAllToday || agendaAlerts.naoConfirmados.length === 0}
+              className={`h-8 rounded-lg px-3 text-xs font-black shadow-sm ${
+                agendaAlerts.naoConfirmados.length > 0
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              }`}
+              title="Confirmar todas as consultas agendadas de hoje"
+            >
+              {confirmingAllToday
+                ? "Confirmando..."
+                : `Confirmar hoje${
+                    agendaAlerts.naoConfirmados.length > 0
+                      ? ` (${agendaAlerts.naoConfirmados.length})`
+                      : ""
+                  }`}
+            </button>
+
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `Lembretes de consulta pendentes:\n\n${appointments
+                  .filter((a) => a.type !== "compromisso")
+                  .filter((a) => a.reminder_enabled && !a.reminder_sent_at)
+                  .filter((a) => {
+                    const today = formatDate(new Date());
+                    const tomorrow = formatDate(addDays(new Date(), 1));
+                    return a.date === today || a.date === tomorrow;
+                  })
+                  .map(
+                    (a) =>
+                      `• ${a.patient_name || "Paciente"} - ${formatDateBr(
+                        a.date
+                      )} às ${a.start_time}`
+                  )
+                  .join("\n") || "Nenhum lembrete pendente para hoje ou amanhã."}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="hidden h-8 items-center rounded-lg bg-[#1fb36e] px-3 text-xs font-black text-white shadow-sm hover:bg-[#199c5f] lg:inline-flex"
+              title="Enviar lista de lembretes de hoje e amanhã"
+            >
+              Lembretes
+            </a>
+
+            <button
+              onClick={() => openNew(days[0].date, `${pad(clinicSettings.start_hour)}:00`)}
+              className="h-8 rounded-lg bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] px-4 text-xs font-black text-white shadow-sm"
+            >
+              Novo
+            </button>
+          </div>
         </div>
       </div>
 
