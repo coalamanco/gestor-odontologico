@@ -1158,7 +1158,7 @@ export default function AgendaPage() {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#eefafa] via-[#f8ffff] to-[#e9f4f4]">
       <div className="border-b border-[#c2dddd] bg-white/95 px-3 py-1.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-        <div className="flex min-h-[38px] items-center justify-between gap-3">
+        <div className="grid min-h-[48px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <button
               onClick={() => setWeekBaseDate((prev) => addDays(prev, -7))}
@@ -1214,21 +1214,21 @@ export default function AgendaPage() {
             >
               Mês +
             </button>
-
-            <div className="ml-2 min-w-0">
-              <h1 className="truncate text-xl font-black leading-none text-slate-800">
-                Agenda Clínica
-              </h1>
-              <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.2em] text-[#239d9a]">
-                {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-[280px] flex-col items-center justify-center text-center">
+            <h1 className="truncate text-[30px] font-black leading-none text-slate-800 lg:text-[34px]">
+              Agenda Clínica
+            </h1>
+            <p className="mt-1 truncate text-[11px] font-black uppercase tracking-[0.35em] text-[#239d9a] lg:text-[12px]">
+              {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
