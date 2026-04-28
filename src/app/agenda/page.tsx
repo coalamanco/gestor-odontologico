@@ -59,6 +59,68 @@ function isTodayDate(dateString: string) {
   return dateString === formatDate(new Date());
 }
 
+
+type HolidayInfo = {
+  name: string;
+  scope: "nacional" | "municipal";
+};
+
+function getEasterDate(year: number) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+  return new Date(year, month - 1, day);
+}
+
+function addHoliday(holidays: Record<string, HolidayInfo>, date: Date, info: HolidayInfo) {
+  holidays[formatDate(date)] = info;
+}
+
+function getHolidayMap(year: number) {
+  const holidays: Record<string, HolidayInfo> = {};
+
+  // Feriados nacionais oficiais
+  holidays[`${year}-01-01`] = { name: "Confraternização Universal", scope: "nacional" };
+  holidays[`${year}-04-21`] = { name: "Tiradentes", scope: "nacional" };
+  holidays[`${year}-05-01`] = { name: "Dia do Trabalho", scope: "nacional" };
+  holidays[`${year}-09-07`] = { name: "Independência do Brasil", scope: "nacional" };
+  holidays[`${year}-10-12`] = { name: "Nossa Senhora Aparecida", scope: "nacional" };
+  holidays[`${year}-11-02`] = { name: "Finados", scope: "nacional" };
+  holidays[`${year}-11-15`] = { name: "Proclamação da República", scope: "nacional" };
+  holidays[`${year}-11-20`] = { name: "Consciência Negra", scope: "nacional" };
+  holidays[`${year}-12-25`] = { name: "Natal", scope: "nacional" };
+
+  const easter = getEasterDate(year);
+  const goodFriday = new Date(easter);
+  goodFriday.setDate(easter.getDate() - 2);
+  addHoliday(holidays, goodFriday, { name: "Sexta-feira Santa", scope: "nacional" });
+
+  // Feriados municipais de Araranguá-SC
+  holidays[`${year}-04-03`] = { name: "Aniversário de Araranguá", scope: "municipal" };
+  holidays[`${year}-05-04`] = { name: "Nossa Senhora Mãe dos Homens", scope: "municipal" };
+
+  return holidays;
+}
+
+function getHolidayInfo(dateString: string) {
+  if (!dateString) return null;
+  const year = Number(dateString.slice(0, 4));
+  if (!Number.isFinite(year)) return null;
+  return getHolidayMap(year)[dateString] || null;
+}
+
 function normalizePhone(value?: string | null) {
   if (!value) return "";
   return String(value).replace(/\D/g, "");
@@ -1382,20 +1444,43 @@ export default function AgendaPage() {
             <div className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-[0_8px_22px_rgba(15,23,42,0.08)]">
               <div className="p-3 text-slate-400 uppercase tracking-widest">Hora</div>
 
-              {days.map((d) => (
-                <div
-                  key={d.date}
-                  className={`text-center p-2.5 border-l border-[#c2dddd] leading-tight ${isTodayDate(d.date) ? "bg-[#e9fbfa]" : "bg-white/70"}` }
-                >
-                  <div className="text-slate-700 font-black text-xs">
-                    {d.label} {formatDateBr(d.date).slice(0, 5)}
-                  </div>
+              {days.map((d) => {
+                const holiday = getHolidayInfo(d.date);
 
-                  <div className={`mx-auto mt-1 w-fit rounded-full px-2 py-0.5 text-[10px] font-black ${isTodayDate(d.date) ? "bg-[#239d9a] text-white" : "bg-[#e8f7f6] text-[#239d9a]"}`}>
-                    {getDayOccupation(d.date).used}/{getDayOccupation(d.date).total} pacientes
+                return (
+                  <div
+                    key={d.date}
+                    className={`text-center p-2.5 border-l border-[#c2dddd] leading-tight ${
+                      holiday
+                        ? "bg-amber-50/90"
+                        : isTodayDate(d.date)
+                          ? "bg-[#e9fbfa]"
+                          : "bg-white/70"
+                    }`}
+                    title={holiday ? holiday.name : undefined}
+                  >
+                    <div className="text-slate-700 font-black text-xs">
+                      {d.label} {formatDateBr(d.date).slice(0, 5)}
+                    </div>
+
+                    {holiday && (
+                      <div className="mx-auto mt-1 max-w-[150px] truncate rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+                        Feriado • {holiday.scope === "municipal" ? "Araranguá" : "Brasil"}
+                      </div>
+                    )}
+
+                    <div className={`mx-auto mt-1 w-fit rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      holiday
+                        ? "bg-white text-amber-800 ring-1 ring-amber-200"
+                        : isTodayDate(d.date)
+                          ? "bg-[#239d9a] text-white"
+                          : "bg-[#e8f7f6] text-[#239d9a]"
+                    }`}>
+                      {getDayOccupation(d.date).used}/{getDayOccupation(d.date).total} pacientes
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="relative z-0">
@@ -1420,7 +1505,11 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className="border-l border-[#d7ebeb] min-h-[34px] cursor-pointer hover:bg-[#f6ffff] relative transition-colors min-w-0 overflow-visible group"
+                    className={`border-l border-[#d7ebeb] min-h-[34px] cursor-pointer relative transition-colors min-w-0 overflow-visible group ${
+                      getHolidayInfo(d.date)
+                        ? "bg-amber-50/30 hover:bg-amber-50/60"
+                        : "hover:bg-[#f6ffff]"
+                    }`}
                     onClick={() => openNew(d.date, h)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
