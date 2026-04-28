@@ -33,6 +33,7 @@ type FinancialRecord = {
   receipt_type?: string | null;
   paid_at?: string | null;
   status?: string | null;
+  due_date?: string | null;
   created_at?: string | null;
   installment_number?: number | null;
   installments?: number | null;
@@ -47,6 +48,16 @@ type PaymentTransaction = {
   receipt_type?: string | null;
   note?: string | null;
   received_at?: string | null;
+  created_at?: string | null;
+};
+
+type Expense = {
+  id: string;
+  description?: string | null;
+  category?: string | null;
+  amount?: number | string | null;
+  payment_date?: string | null;
+  status?: string | null;
   created_at?: string | null;
 };
 
@@ -69,6 +80,7 @@ type PeriodoFiltro =
 export default function FinanceiroPage() {
   const [registros, setRegistros] = useState<FinancialRecord[]>([]);
   const [pagamentos, setPagamentos] = useState<PaymentTransaction[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [saldosPorPaciente, setSaldosPorPaciente] = useState<
     Array<{ patient_id: string; name: string; total: number; paid: number; balance: number }>
@@ -203,6 +215,14 @@ export default function FinanceiroPage() {
     return date >= start && date <= end;
   };
 
+  const isExpensePaid = (expense: Expense) => {
+    return String(expense.status || "").trim().toLowerCase() === "pago";
+  };
+
+  const getExpenseDate = (expense: Expense) => {
+    return expense.payment_date || expense.created_at || null;
+  };
+
   const applyPeriodo = (periodo: PeriodoFiltro) => {
     setPeriodoFiltro(periodo);
 
@@ -293,17 +313,72 @@ export default function FinanceiroPage() {
     return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
   };
 
+  const getFinancialDueDate = (record: FinancialRecord) => {
+    if (record.due_date) return record.due_date;
+
+    if (!record.created_at) return null;
+
+    const baseDate = getDateAtNoon(record.created_at);
+    if (!baseDate) return record.created_at;
+
+    const installmentNumber = Math.max(1, Number(record.installment_number || 1));
+    baseDate.setMonth(baseDate.getMonth() + installmentNumber - 1);
+
+    return baseDate.toISOString().slice(0, 10);
+  };
+
+  const getDateAtNoon = (dateString?: string | null) => {
+    if (!dateString) return null;
+
+    const date = new Date(
+      String(dateString).includes("T") ? dateString : `${dateString}T12:00:00`
+    );
+
+    if (Number.isNaN(date.getTime())) return null;
+
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const isFinancialOverdue = (record: FinancialRecord) => {
+    const total = parseMoney(record.amount);
+    const paid = parseMoney(record.paid_amount);
+    const balance = Math.max(0, total - paid);
+
+    if (balance <= 0 || record.status === "pago") return false;
+
+    const dueDate = getDateAtNoon(getFinancialDueDate(record));
+    if (!dueDate) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return dueDate < today;
+  };
+
+  const getDaysOverdue = (record: FinancialRecord) => {
+    if (!isFinancialOverdue(record)) return 0;
+
+    const dueDate = getDateAtNoon(getFinancialDueDate(record));
+    if (!dueDate) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return Math.max(
+      0,
+      Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
+    );
+  };
+
   const getVisualFinancialStatus = (record: FinancialRecord) => {
     const total = parseMoney(record.amount);
     const paid = parseMoney(record.paid_amount);
     const balance = Math.max(0, total - paid);
 
     if (balance <= 0 || record.status === "pago") return "pago";
-    if (record.status === "parcial") return "parcial";
-
-    const daysOpen = getDaysSince(record.created_at);
-
-    if (daysOpen >= 30) return "em_atraso";
+    if (isFinancialOverdue(record)) return "em_atraso";
+    if (paid > 0 || record.status === "parcial") return "parcial";
 
     return "pendente";
   };
@@ -385,10 +460,10 @@ export default function FinanceiroPage() {
   const registrosFiltradosBase = useMemo(() => {
     return registros.filter((r) => {
       if (r.status === "pago") {
-        return isWithinPeriodo(r.paid_at || r.created_at);
+        return isWithinPeriodo(r.paid_at || getFinancialDueDate(r));
       }
 
-      return isWithinPeriodo(r.created_at);
+      return isWithinPeriodo(getFinancialDueDate(r));
     });
   }, [registros, periodoFiltro, dataInicio, dataFim]);
 
@@ -417,6 +492,10 @@ export default function FinanceiroPage() {
     });
   }, [registrosFiltradosBase, searchTerm, patientNameById]);
 
+  const despesasFiltradas = useMemo(() => {
+    return expenses.filter((expense) => isWithinPeriodo(getExpenseDate(expense)));
+  }, [expenses, periodoFiltro, dataInicio, dataFim]);
+
   const summary = useMemo(() => {
     const totalLancado = registrosFiltradosBase.reduce(
       (acc, curr) => acc + parseMoney(curr.amount),
@@ -434,15 +513,25 @@ export default function FinanceiroPage() {
       return acc + Math.max(0, total - paid);
     }, 0);
 
-    const saldo = totalRecebido - 0;
+    const despesasPagas = despesasFiltradas
+      .filter((expense) => isExpensePaid(expense))
+      .reduce((acc, expense) => acc + parseMoney(expense.amount), 0);
+
+    const despesasPendentes = expenses
+      .filter((expense) => !isExpensePaid(expense))
+      .reduce((acc, expense) => acc + parseMoney(expense.amount), 0);
+
+    const saldo = totalRecebido - despesasPagas;
 
     return {
       totalLancado,
       totalRecebido,
       totalAReceber,
+      despesasPagas,
+      despesasPendentes,
       saldo,
     };
-  }, [registrosFiltradosBase, pagamentosFiltrados]);
+  }, [registrosFiltradosBase, pagamentosFiltrados, despesasFiltradas, expenses]);
 
   const intelligentSummary = useMemo(() => {
     const now = new Date();
@@ -473,15 +562,13 @@ export default function FinanceiroPage() {
     }, 0);
 
     const registrosComValor = registros.filter((record) => parseMoney(record.amount) > 0);
-    const registrosAbertos = registrosComValor.filter((record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      return Math.max(0, amount - paid) > 0;
-    });
+    const registrosInadimplentes = registrosComValor.filter((record) =>
+      isFinancialOverdue(record)
+    );
 
     const taxaInadimplencia =
       registrosComValor.length > 0
-        ? (registrosAbertos.length / registrosComValor.length) * 100
+        ? (registrosInadimplentes.length / registrosComValor.length) * 100
         : 0;
 
     const pacientesPagantes = new Set(
@@ -554,7 +641,7 @@ export default function FinanceiroPage() {
         const patientName = record.patient_id
           ? patientNameById.get(String(record.patient_id)) || "Paciente"
           : "Paciente";
-        const daysOpen = getDaysSince(record.created_at);
+        const daysOpen = getDaysOverdue(record);
         const visualStatus = getVisualFinancialStatus(record);
 
         return {
@@ -621,8 +708,8 @@ export default function FinanceiroPage() {
     const lines = patientsToCharge.map((item, index) => {
       const status =
         item.visualStatus === "em_atraso"
-          ? `em atraso há ${item.daysOpen} dia(s)`
-          : `pendente há ${item.daysOpen} dia(s)`;
+          ? `vencido há ${item.daysOpen} dia(s)`
+          : "pendente dentro do prazo";
 
       return `${index + 1}. ${item.patientName} - ${formatCurrency(
         item.balance
@@ -689,6 +776,21 @@ export default function FinanceiroPage() {
     setPagamentos((pagamentosData || []) as PaymentTransaction[]);
   }
 
+  async function fetchExpenses() {
+    const { data, error } = await supabaseNoSchemaCache
+      .from("expenses")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.warn("Erro ao carregar despesas:", error.message);
+      setExpenses([]);
+      return;
+    }
+
+    setExpenses((data || []) as Expense[]);
+  }
+
   async function fetchSaldosPorPaciente() {
     const [patientsRes, recordsRes] = await Promise.all([
       supabaseNoSchemaCache.from("patients").select("id, name").order("name", { ascending: true }),
@@ -735,7 +837,12 @@ export default function FinanceiroPage() {
   }
 
   async function reloadAll() {
-    await Promise.all([fetchPatients(), fetchRegistros(), fetchSaldosPorPaciente()]);
+    await Promise.all([
+      fetchPatients(),
+      fetchRegistros(),
+      fetchSaldosPorPaciente(),
+      fetchExpenses(),
+    ]);
   }
 
   useEffect(() => {
@@ -769,6 +876,9 @@ export default function FinanceiroPage() {
       const installmentAmount = isLast
         ? Number((amountNumeric - accumulatedBefore).toFixed(2))
         : baseInstallmentValue;
+      const dueDate = new Date();
+      dueDate.setHours(12, 0, 0, 0);
+      dueDate.setMonth(dueDate.getMonth() + index);
 
       return {
         patient_id: formData.patient_id,
@@ -779,6 +889,7 @@ export default function FinanceiroPage() {
         amount: installmentAmount,
         paid_amount: 0,
         status: "pendente",
+        due_date: dueDate.toISOString().slice(0, 10),
         installment_number: index + 1,
         installments: installmentsNumeric,
       };
@@ -1300,7 +1411,7 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <div className="rounded-2xl border border-[#d5eeee] bg-white px-5 py-4 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-[#eefafa] p-3 text-[#28aaa8]">
@@ -1349,6 +1460,22 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
+        <div className="rounded-2xl border border-rose-100 bg-white px-5 py-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="rounded-2xl bg-rose-50 p-3 text-rose-700">
+              <Trash2 size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Despesas pagas
+              </p>
+              <p className="text-lg font-black text-rose-700">
+                {formatCurrency(summary.despesasPagas)}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-sky-100 bg-white px-5 py-4 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
@@ -1356,7 +1483,7 @@ export default function FinanceiroPage() {
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Saldo do período
+                Saldo real
               </p>
               <p className="text-lg font-black text-sky-700">
                 {formatCurrency(summary.saldo)}
@@ -1364,6 +1491,62 @@ export default function FinanceiroPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-lg font-black text-slate-800">
+              Despesas da clínica
+            </h2>
+            <p className="text-sm text-slate-500">
+              Saídas registradas em Financeiro &gt; Despesas, consideradas no saldo real.
+            </p>
+          </div>
+
+          <div className="text-xs font-semibold text-rose-700 bg-rose-50 px-3 py-2 rounded-xl">
+            Pendentes: {formatCurrency(summary.despesasPendentes)}
+          </div>
+        </div>
+
+        {despesasFiltradas.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-sm text-slate-500">
+            Nenhuma despesa encontrada neste período.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {despesasFiltradas.slice(0, 6).map((expense) => (
+              <div
+                key={expense.id}
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-2xl border border-[#eefafa] bg-[#fbffff] p-3"
+              >
+                <div>
+                  <div className="font-bold text-slate-800">
+                    {expense.description || "Despesa"}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {expense.category || "Sem categoria"} • {getExpenseDate(expense) ? new Date(String(getExpenseDate(expense))).toLocaleDateString("pt-BR") : "Sem data"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                      isExpensePaid(expense)
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                        : "bg-rose-50 text-rose-700 border border-rose-100"
+                    }`}
+                  >
+                    {isExpensePaid(expense) ? "Pago" : "Pendente"}
+                  </span>
+                  <span className="font-black text-rose-700">
+                    {formatCurrency(expense.amount)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
@@ -1839,7 +2022,7 @@ export default function FinanceiroPage() {
                         }`}
                       >
                         <TableCell className="px-6 py-2 text-sm font-medium text-slate-700">
-                          {t.created_at ? new Date(t.created_at).toLocaleDateString("pt-BR") : "-"}
+                          {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
                         </TableCell>
 
                         <TableCell className="text-sm font-medium text-slate-800">

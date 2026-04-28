@@ -47,6 +47,9 @@ type FinancialRecord = {
   status?: string | null;
   created_at?: string | null;
   paid_at?: string | null;
+  due_date?: string | null;
+  installment_number?: number | null;
+  installments?: number | null;
   payment_method?: string | null;
   receipt_type?: string | null;
   description?: string | null;
@@ -174,6 +177,49 @@ function isExpensePaid(expense: Expense) {
 
 function getExpenseDate(expense: Expense) {
   return expense.payment_date || expense.created_at || null;
+}
+
+function getFinancialDueDate(record: FinancialRecord) {
+  if (record.due_date) return record.due_date;
+
+  if (!record.created_at) return null;
+
+  const baseDate = getDateAtStart(record.created_at);
+  if (!baseDate) return record.created_at;
+
+  const installmentNumber = Math.max(1, Number(record.installment_number || 1));
+  baseDate.setMonth(baseDate.getMonth() + installmentNumber - 1);
+
+  return baseDate.toISOString().slice(0, 10);
+}
+
+function getDateAtStart(dateString?: string | null) {
+  if (!dateString) return null;
+
+  const date = new Date(
+    String(dateString).includes("T") ? dateString : `${dateString}T12:00:00`
+  );
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function isFinancialOverdue(record: FinancialRecord) {
+  const amount = parseMoney(record.amount);
+  const paid = parseMoney(record.paid_amount);
+  const remaining = Math.max(0, amount - paid);
+
+  if (remaining <= 0 || record.status === "pago") return false;
+
+  const dueDate = getDateAtStart(getFinancialDueDate(record));
+  if (!dueDate) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return dueDate < today;
 }
 
 
@@ -506,22 +552,9 @@ export default function Dashboard() {
   const intelligentInsights = useMemo(() => {
     const now = new Date();
 
-    const overdueRecords = financialRecords.filter((record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      const remaining = Math.max(0, amount - paid);
-
-      if (remaining <= 0) return false;
-
-      const createdAt = record.created_at ? new Date(record.created_at) : null;
-      if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
-
-      const daysOpen = Math.floor(
-        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      return daysOpen >= 30;
-    });
+    const overdueRecords = financialRecords.filter((record) =>
+      isFinancialOverdue(record)
+    );
 
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -563,11 +596,11 @@ export default function Dashboard() {
     return [
       {
         id: "overdue",
-        title: "Cobranças com mais de 30 dias",
+        title: "Parcelas vencidas em aberto",
         description:
           overdueRecords.length > 0
-            ? `${overdueRecords.length} débito(s) somando ${formatCurrency(totalOverdue)}.`
-            : "Nenhuma cobrança antiga em aberto.",
+            ? `${overdueRecords.length} parcela(s) vencida(s) somando ${formatCurrency(totalOverdue)}.`
+            : "Nenhuma parcela vencida em aberto.",
         level: overdueRecords.length > 0 ? "warning" : "success",
         action: "Abrir financeiro",
         href: "/financeiro",
