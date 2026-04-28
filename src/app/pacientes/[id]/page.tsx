@@ -492,6 +492,20 @@ function PacienteProntuarioContent({
   const [paymentNote, setPaymentNote] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
+  const [showEditPaymentModal, setShowEditPaymentModal] = useState(false);
+  const [selectedPaymentTransaction, setSelectedPaymentTransaction] =
+    useState<PaymentTransaction | null>(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState("");
+  const [editPaymentMethod, setEditPaymentMethod] =
+    useState<PaymentMethod>("pix");
+  const [editReceiptType, setEditReceiptType] =
+    useState<ReceiptType>("nenhum");
+  const [editReceivedAt, setEditReceivedAt] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [editPaymentNote, setEditPaymentNote] = useState("");
+  const [submittingEditPayment, setSubmittingEditPayment] = useState(false);
+
   const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(null);
 
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
@@ -1265,6 +1279,119 @@ function PacienteProntuarioContent({
       await loadData();
     } catch (error: any) {
       alert("Erro ao excluir débito: " + error.message);
+    }
+  };
+
+  const openEditPaymentModal = (transaction: PaymentTransaction) => {
+    setSelectedPaymentTransaction(transaction);
+    setEditPaymentAmount(String(parseMoney(transaction.amount).toFixed(2)));
+    setEditPaymentMethod((transaction.payment_method as PaymentMethod) || "pix");
+    setEditReceiptType((transaction.receipt_type as ReceiptType) || "nenhum");
+    setEditReceivedAt(
+      transaction.received_at
+        ? String(transaction.received_at).slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
+    );
+    setEditPaymentNote(transaction.note || "");
+    setShowEditPaymentModal(true);
+  };
+
+  const closeEditPaymentModal = () => {
+    if (submittingEditPayment) return;
+
+    setShowEditPaymentModal(false);
+    setSelectedPaymentTransaction(null);
+    setEditPaymentAmount("");
+    setEditPaymentMethod("pix");
+    setEditReceiptType("nenhum");
+    setEditReceivedAt(new Date().toISOString().slice(0, 10));
+    setEditPaymentNote("");
+  };
+
+  const confirmEditPayment = async () => {
+    if (!selectedPaymentTransaction) return;
+
+    const editedAmount = Number(String(editPaymentAmount).replace(",", "."));
+
+    if (isNaN(editedAmount) || editedAmount <= 0) {
+      alert("Informe um valor válido.");
+      return;
+    }
+
+    const record =
+      financialRecords.find(
+        (item) => item.id === selectedPaymentTransaction.financial_record_id
+      ) || detailRecord;
+
+    if (!record) {
+      alert("Não encontrei o débito vinculado a este pagamento.");
+      return;
+    }
+
+    const relatedTransactions = paymentTransactions.filter(
+      (transaction) =>
+        transaction.financial_record_id ===
+        selectedPaymentTransaction.financial_record_id
+    );
+
+    const updatedPaidAmount = relatedTransactions.reduce((acc, transaction) => {
+      if (transaction.id === selectedPaymentTransaction.id) {
+        return acc + editedAmount;
+      }
+
+      return acc + parseMoney(transaction.amount);
+    }, 0);
+
+    const totalAmount = parseMoney(record.amount);
+
+    if (updatedPaidAmount > totalAmount) {
+      alert("A soma dos pagamentos não pode ser maior que o valor total do débito.");
+      return;
+    }
+
+    let newStatus = "pendente";
+    if (updatedPaidAmount === 0) newStatus = "pendente";
+    else if (updatedPaidAmount < totalAmount) newStatus = "parcial";
+    else newStatus = "pago";
+
+    try {
+      setSubmittingEditPayment(true);
+
+      const receivedAtIso = new Date(editReceivedAt + "T12:00:00").toISOString();
+
+      const { error: transactionError } = await supabase
+        .from("payment_transactions")
+        .update({
+          amount: editedAmount,
+          payment_method: editPaymentMethod,
+          receipt_type: editReceiptType,
+          note: editPaymentNote || null,
+          received_at: receivedAtIso,
+        })
+        .eq("id", selectedPaymentTransaction.id);
+
+      if (transactionError) throw transactionError;
+
+      const { error: recordError } = await supabase
+        .from("financial_records")
+        .update({
+          paid_amount: updatedPaidAmount,
+          status: newStatus,
+          payment_method: editPaymentMethod,
+          receipt_type: editReceiptType,
+          paid_at: receivedAtIso,
+        })
+        .eq("id", selectedPaymentTransaction.financial_record_id);
+
+      if (recordError) throw recordError;
+
+      alert("Pagamento editado com sucesso.");
+      closeEditPaymentModal();
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao editar pagamento: " + error.message);
+    } finally {
+      setSubmittingEditPayment(false);
     }
   };
 
@@ -2963,9 +3090,19 @@ function PacienteProntuarioContent({
                           {new Date(tx.received_at).toLocaleDateString("pt-BR")}
                         </div>
 
-                        <div className="text-slate-500">
-                          {paymentMethodLabel(tx.payment_method)} •{" "}
-                          {receiptLabel(tx.receipt_type)}
+                        <div className="flex flex-wrap items-center gap-2 text-slate-500">
+                          <span>
+                            {paymentMethodLabel(tx.payment_method)} •{" "}
+                            {receiptLabel(tx.receipt_type)}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => openEditPaymentModal(tx)}
+                            className="rounded-lg border border-[#d8eeee] bg-[#fbffff] px-2 py-1 text-[11px] font-bold text-[#239d9a] hover:bg-[#eefafa]"
+                          >
+                            Editar
+                          </button>
                         </div>
                       </div>
 
@@ -3167,6 +3304,145 @@ function PacienteProntuarioContent({
                 disabled={submittingFinalize}
               >
                 {submittingFinalize ? "Finalizando..." : "Finalizar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditPaymentModal && selectedPaymentTransaction && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-[#d8eeee] overflow-hidden">
+            <div className="p-5 border-b">
+              <h3 className="text-xl font-bold text-slate-800">
+                Editar pagamento recebido
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Ajuste valor, forma de pagamento, recibo, data ou observação.
+              </p>
+            </div>
+
+            <div className="p-5 space-y-5">
+              <div>
+                <h4 className="text-lg font-semibold text-slate-800 mb-3">
+                  Meio de pagamento
+                </h4>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 border rounded-xl overflow-hidden text-sm">
+                  {[
+                    ["dinheiro", "Dinheiro"],
+                    ["cartao_credito", "Crédito"],
+                    ["cartao_debito", "Débito"],
+                    ["pix", "Pix"],
+                    ["transferencia", "Transferência"],
+                    ["boleto", "Boleto"],
+                    ["cheque", "Cheque"],
+                  ].map(([value, label], index, array) => {
+                    const active = editPaymentMethod === value;
+                    const last = index === array.length - 1;
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() =>
+                          setEditPaymentMethod(value as PaymentMethod)
+                        }
+                        className={`px-3 py-3 transition ${
+                          !last ? "border-r" : ""
+                        } ${
+                          active
+                            ? "bg-cyan-50 text-cyan-700 font-semibold"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <label className="block mb-1 text-slate-500">
+                    Valor pago
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editPaymentAmount}
+                    onChange={(e) => setEditPaymentAmount(e.target.value)}
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    placeholder="0,00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500">
+                    Data de recebimento
+                  </label>
+                  <input
+                    type="date"
+                    value={editReceivedAt}
+                    onChange={(e) => setEditReceivedAt(e.target.value)}
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500">
+                    Tipo de recibo
+                  </label>
+                  <select
+                    value={editReceiptType}
+                    onChange={(e) =>
+                      setEditReceiptType(e.target.value as ReceiptType)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  >
+                    <option value="nenhum">Sem recibo</option>
+                    <option value="simples">Imprimir recibo simples</option>
+                    <option value="imposto_renda">Imprimir recibo IR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1 text-slate-500">
+                  Observação
+                </label>
+                <textarea
+                  value={editPaymentNote}
+                  onChange={(e) => setEditPaymentNote(e.target.value)}
+                  className="w-full min-h-[120px] border rounded-xl p-3 text-sm text-slate-800"
+                  placeholder="Observações do recebimento"
+                  maxLength={500}
+                />
+                <div className="text-right text-sm text-slate-400 mt-1">
+                  {editPaymentNote.length} / 500
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeEditPaymentModal}
+                className="px-4 py-2 border rounded-xl text-sm"
+                disabled={submittingEditPayment}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmEditPayment}
+                className="px-4 py-2 bg-[#239d9a] text-white rounded-xl text-sm disabled:opacity-60"
+                disabled={submittingEditPayment}
+              >
+                {submittingEditPayment ? "Salvando..." : "Salvar alterações"}
               </button>
             </div>
           </div>
