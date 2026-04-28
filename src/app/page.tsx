@@ -47,6 +47,9 @@ type FinancialRecord = {
   status?: string | null;
   created_at?: string | null;
   paid_at?: string | null;
+  due_date?: string | null;
+  installment_number?: number | null;
+  installments?: number | null;
   payment_method?: string | null;
   receipt_type?: string | null;
   description?: string | null;
@@ -74,9 +77,21 @@ type Patient = {
   created_at?: string | null;
 };
 
+type Expense = {
+  id: string;
+  description?: string | null;
+  category?: string | null;
+  amount?: number | string | null;
+  payment_date?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+};
+
 type DashboardStats = {
   recebidoHoje: number;
   recebidoMes: number;
+  despesasMes: number;
+  lucroMes: number;
   aReceber: number;
   saldoPrevisto: number;
   pacientes: number;
@@ -156,6 +171,57 @@ function paymentMethodLabel(value?: string | null) {
   }
 }
 
+function isExpensePaid(expense: Expense) {
+  return String(expense.status || "").trim().toLowerCase() === "pago";
+}
+
+function getExpenseDate(expense: Expense) {
+  return expense.payment_date || expense.created_at || null;
+}
+
+function getFinancialDueDate(record: FinancialRecord) {
+  if (record.due_date) return record.due_date;
+
+  if (!record.created_at) return null;
+
+  const baseDate = getDateAtStart(record.created_at);
+  if (!baseDate) return record.created_at;
+
+  const installmentNumber = Math.max(1, Number(record.installment_number || 1));
+  baseDate.setMonth(baseDate.getMonth() + installmentNumber - 1);
+
+  return baseDate.toISOString().slice(0, 10);
+}
+
+function getDateAtStart(dateString?: string | null) {
+  if (!dateString) return null;
+
+  const date = new Date(
+    String(dateString).includes("T") ? dateString : `${dateString}T12:00:00`
+  );
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function isFinancialOverdue(record: FinancialRecord) {
+  const amount = parseMoney(record.amount);
+  const paid = parseMoney(record.paid_amount);
+  const remaining = Math.max(0, amount - paid);
+
+  if (remaining <= 0 || record.status === "pago") return false;
+
+  const dueDate = getDateAtStart(getFinancialDueDate(record));
+  if (!dueDate) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return dueDate < today;
+}
+
 
 function normalizeLabel(value?: string | null) {
   const label = String(value || "").trim();
@@ -211,6 +277,7 @@ function CheckCircleIcon() {
 
 export default function Dashboard() {
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,10 +292,18 @@ export default function Dashboard() {
         const currentRole = await getUserRole();
         setRole(currentRole || "admin");
 
-        const [{ data: financial }, { data: appointmentsData }, { data: patientsData }] =
-          await Promise.all([
+        const [
+          { data: financial },
+          { data: expensesData },
+          { data: appointmentsData },
+          { data: patientsData },
+        ] = await Promise.all([
             supabaseNoSchemaCache
               .from("financial_records")
+              .select("*")
+              .order("created_at", { ascending: false }),
+            supabaseNoSchemaCache
+              .from("expenses")
               .select("*")
               .order("created_at", { ascending: false }),
             supabaseNoSchemaCache
@@ -243,6 +318,7 @@ export default function Dashboard() {
           ]);
 
         setFinancialRecords((financial || []) as FinancialRecord[]);
+        setExpenses((expensesData || []) as Expense[]);
         setAppointments((appointmentsData || []) as Appointment[]);
         setPatients((patientsData || []) as Patient[]);
       } catch (error) {
@@ -277,6 +353,17 @@ export default function Dashboard() {
 
       return acc;
     }, 0);
+
+    const despesasMes = expenses.reduce((acc, expense) => {
+      if (!isExpensePaid(expense)) return acc;
+      const expenseDate = getExpenseDate(expense);
+      if (isSameMonth(expenseDate, new Date())) {
+        return acc + parseMoney(expense.amount);
+      }
+      return acc;
+    }, 0);
+
+    const lucroMes = recebidoMes - despesasMes;
 
     const aReceber = financialRecords.reduce((acc, record) => {
       const amount = parseMoney(record.amount);
@@ -337,8 +424,10 @@ export default function Dashboard() {
     return {
       recebidoHoje,
       recebidoMes,
+      despesasMes,
+      lucroMes,
       aReceber,
-      saldoPrevisto: recebidoMes + aReceber,
+      saldoPrevisto: recebidoMes + aReceber - despesasMes,
       pacientes: patients.length,
       novosPacientesMes,
       consultasHoje: consultasHojeList.length,
@@ -349,7 +438,7 @@ export default function Dashboard() {
       taxaFaltas,
       ticketMedio,
     };
-  }, [financialRecords, appointments, patients]);
+  }, [financialRecords, expenses, appointments, patients]);
 
   const weeklyRevenue = useMemo(() => {
     const now = new Date();
@@ -463,22 +552,9 @@ export default function Dashboard() {
   const intelligentInsights = useMemo(() => {
     const now = new Date();
 
-    const overdueRecords = financialRecords.filter((record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      const remaining = Math.max(0, amount - paid);
-
-      if (remaining <= 0) return false;
-
-      const createdAt = record.created_at ? new Date(record.created_at) : null;
-      if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
-
-      const daysOpen = Math.floor(
-        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      return daysOpen >= 30;
-    });
+    const overdueRecords = financialRecords.filter((record) =>
+      isFinancialOverdue(record)
+    );
 
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -520,11 +596,11 @@ export default function Dashboard() {
     return [
       {
         id: "overdue",
-        title: "Cobranças com mais de 30 dias",
+        title: "Parcelas vencidas em aberto",
         description:
           overdueRecords.length > 0
-            ? `${overdueRecords.length} débito(s) somando ${formatCurrency(totalOverdue)}.`
-            : "Nenhuma cobrança antiga em aberto.",
+            ? `${overdueRecords.length} parcela(s) vencida(s) somando ${formatCurrency(totalOverdue)}.`
+            : "Nenhuma parcela vencida em aberto.",
         level: overdueRecords.length > 0 ? "warning" : "success",
         action: "Abrir financeiro",
         href: "/financeiro",
@@ -673,6 +749,22 @@ export default function Dashboard() {
       description: "Pagamentos do mês atual",
     },
     {
+      title: "Despesas no mês",
+      value: formatCurrency(stats.despesasMes),
+      icon: Wallet,
+      color: "text-rose-700",
+      bg: "bg-rose-50",
+      description: "Saídas pagas da clínica",
+    },
+    {
+      title: "Lucro real",
+      value: formatCurrency(stats.lucroMes),
+      icon: Zap,
+      color: stats.lucroMes >= 0 ? "text-emerald-700" : "text-rose-700",
+      bg: stats.lucroMes >= 0 ? "bg-emerald-50" : "bg-rose-50",
+      description: "Recebido no mês - despesas pagas",
+    },
+    {
       title: "A receber",
       value: formatCurrency(stats.aReceber),
       icon: AlertCircle,
@@ -734,80 +826,77 @@ export default function Dashboard() {
     return ![
       "Recebido hoje",
       "Recebido no mês",
+      "Despesas no mês",
+      "Lucro real",
       "A receber",
       "Ticket médio",
     ].includes(card.title);
   });
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6">
-      <div className="max-w-7xl mx-auto space-y-6 pb-12">
-        <div className="rounded-3xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] p-6 md:p-8 text-white">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-widest border border-white/20">
+    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-4">
+      <div className="max-w-7xl mx-auto space-y-4 pb-10">
+        <div className="rounded-2xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
+          <div className="min-h-[72px] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-white">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-50/90">
                   Dashboard da clínica
                 </div>
-                <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">
-                  Visão geral do consultório
-                </h1>
-                <p className="mt-2 text-sm md:text-base text-cyan-50 max-w-2xl">
-                  Acompanhe agenda, recebimentos, pendências e indicadores principais em um só lugar.
-                </p>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <h1 className="text-xl md:text-2xl font-black tracking-tight">
+                    Visão geral do consultório
+                  </h1>
+                  <span className="hidden md:inline text-xs font-medium text-cyan-50/90">
+                    Agenda, recebimentos e indicadores principais.
+                  </span>
+                </div>
               </div>
 
-              {isAdminUser && (
-                <div className="rounded-2xl bg-white/15 border border-white/25 p-4 min-w-[260px]">
-                  <div className="text-xs font-black uppercase tracking-widest text-cyan-50">
-                    Saldo previsto
-                  </div>
-                  <div className="mt-1 text-3xl font-black">
-                    {formatCurrency(stats.saldoPrevisto)}
-                  </div>
-                  <div className="mt-1 text-xs text-cyan-50">
-                    Recebido no mês + valores em aberto
-                  </div>
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <div className="flex items-center gap-1.5 rounded-xl bg-white/15 p-1 border border-white/20">
+                  {(["hoje", "semana", "mes"] as const).map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setPeriod(item)}
+                      className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${
+                        period === item
+                          ? "bg-white text-[#239d9a] shadow-sm"
+                          : "text-cyan-50 hover:bg-white/15"
+                      }`}
+                    >
+                      {item === "hoje" ? "Hoje" : item === "semana" ? "Semana" : "Mês"}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {(["hoje", "semana", "mes"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setPeriod(item)}
-                  className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
-                    period === item
-                      ? "bg-[#239d9a] text-white"
-                      : "bg-[#eefafa] text-[#239d9a] hover:bg-[#def5f4]"
-                  }`}
-                >
-                  {item === "hoje" ? "Hoje" : item === "semana" ? "Semana" : "Mês"}
-                </button>
-              ))}
-            </div>
-
-            <div className="text-xs font-semibold text-slate-400">
-              {loading ? "Carregando dados..." : "Dados atualizados do sistema"}
+                {isAdminUser && (
+                  <div className="rounded-xl bg-white/15 border border-white/25 px-3 py-2 text-right min-w-[190px]">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-cyan-50/90">
+                      Saldo previsto
+                    </div>
+                    <div className="text-lg font-black leading-tight">
+                      {formatCurrency(stats.saldoPrevisto)}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {isAdminUser && stats.aReceber > 0 && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-amber-100 p-3 text-amber-700">
-                <AlertCircle size={22} />
+              <div className="rounded-xl bg-amber-100 p-2.5 text-amber-700">
+                <AlertCircle size={18} />
               </div>
               <div>
-                <div className="font-black text-amber-800">
+                <div className="font-bold text-amber-800">
                   Atenção: existem valores pendentes para receber
                 </div>
-                <div className="text-sm text-amber-700">
+                <div className="text-xs text-amber-700">
                   Total em aberto: {formatCurrency(stats.aReceber)}
                 </div>
               </div>
@@ -815,38 +904,38 @@ export default function Dashboard() {
 
             <a
               href="/financeiro"
-              className="rounded-xl bg-amber-600 px-4 py-2 text-center text-sm font-black text-white hover:bg-amber-700"
+              className="rounded-lg bg-amber-600 px-3 py-2 text-center text-xs font-bold text-white hover:bg-amber-700"
             >
               Abrir financeiro
             </a>
           </div>
         )}
 
-        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-          <CardHeader className="px-6 pt-6">
-            <CardTitle className="text-xl font-black text-slate-800">
+        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+          <CardHeader className="px-5 pt-5 pb-3">
+            <CardTitle className="text-lg font-bold text-slate-800">
               Ações rápidas
             </CardTitle>
-            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
               Atalhos principais do consultório
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
             {quickActions.map((action) => (
               <a
                 key={action.title}
                 href={action.href}
-                className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
               >
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
-                    <action.icon size={20} />
+                  <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
+                    <action.icon size={18} />
                   </div>
 
                   <div>
-                    <div className="font-black text-slate-800">{action.title}</div>
-                    <div className="mt-1 text-xs font-medium text-slate-500">
+                    <div className="font-bold text-slate-800">{action.title}</div>
+                    <div className="mt-1 text-xs text-slate-500">
                       {action.description}
                     </div>
                   </div>
@@ -856,29 +945,29 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {cards.map((card) => (
             <Card
               key={card.title}
-              className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden"
+              className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden"
             >
-              <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+              <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2 px-5 pt-5">
                 <div>
-                  <CardTitle className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                     {card.title}
                   </CardTitle>
-                  <div className={`mt-3 text-3xl font-black tracking-tight ${card.color}`}>
+                  <div className={`mt-2 text-2xl font-bold tracking-tight ${card.color}`}>
                     {card.value}
                   </div>
                 </div>
 
-                <div className={`rounded-2xl p-3 ${card.bg} ${card.color}`}>
-                  <card.icon size={22} />
+                <div className={`rounded-xl p-2.5 ${card.bg} ${card.color}`}>
+                  <card.icon size={18} />
                 </div>
               </CardHeader>
 
               <CardContent>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-xs text-slate-500">
                   {card.description}
                 </p>
               </CardContent>
@@ -886,25 +975,25 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-          <CardHeader className="px-6 pt-6">
+        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+          <CardHeader className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-xl font-black text-slate-800">
+                <CardTitle className="text-lg font-bold text-slate-800">
                   Indicadores inteligentes
                 </CardTitle>
-                <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
                   Alertas automáticos para decisões rápidas
                 </CardDescription>
               </div>
 
-              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
-                <Zap size={22} />
+              <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
+                <Zap size={18} />
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
             {intelligentInsights.map((item) => {
               const classes =
                 item.level === "danger"
@@ -918,14 +1007,14 @@ export default function Dashboard() {
               return (
                 <div
                   key={item.id}
-                  className={`rounded-2xl border p-4 ${classes}`}
+                  className={`rounded-xl border p-3 ${classes}`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5">
                       {item.level === "success" ? (
                         <CheckCircleIcon />
                       ) : (
-                        <AlertTriangle size={18} />
+                        <AlertTriangle size={16} />
                       )}
                     </div>
 
@@ -939,7 +1028,7 @@ export default function Dashboard() {
 
                       <a
                         href={item.href}
-                        className="mt-3 inline-flex rounded-xl bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest hover:bg-white"
+                        className="mt-2 inline-flex rounded-lg bg-white/70 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest hover:bg-white"
                       >
                         {item.action}
                       </a>
@@ -951,28 +1040,28 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {isAdminUser && (
-            <Card className="xl:col-span-2 rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-              <CardHeader className="px-6 pt-6">
+            <Card className="xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+              <CardHeader className="px-5 pt-5 pb-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="text-xl font-black text-slate-800">
+                    <CardTitle className="text-lg font-bold text-slate-800">
                       Evolução financeira
                     </CardTitle>
-                  <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
                     Recebimentos dos últimos meses
                   </CardDescription>
                 </div>
 
-                <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+                <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
                   <LineChartIcon size={22} />
                 </div>
               </div>
             </CardHeader>
 
             <CardContent className="px-4 pb-6">
-              <div className="h-[320px] min-h-[320px] min-w-0 w-full">
+              <div className="h-[220px] min-h-[220px] min-w-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={monthlyRevenue}>
                     <defs>
@@ -1006,7 +1095,7 @@ export default function Dashboard() {
                       type="monotone"
                       dataKey="amount"
                       stroke="#239d9a"
-                      strokeWidth={4}
+                      strokeWidth={3}
                       fill="url(#financialGradient)"
                     />
                   </AreaChart>
@@ -1016,9 +1105,9 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-black text-slate-800">
+          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader className="px-5 pt-5 pb-3">
+              <CardTitle className="text-lg font-bold text-slate-800">
                 Agenda de hoje
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1026,9 +1115,9 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 px-5 pb-5">
               {todayAppointments.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                <div className="rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
                   Nenhuma consulta para hoje.
                 </div>
               )}
@@ -1036,11 +1125,11 @@ export default function Dashboard() {
               {todayAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="font-black text-slate-800 truncate">
+                      <div className="font-bold text-slate-800 truncate">
                         {appointment.patient_name || appointment.title || "Paciente"}
                       </div>
                       <div className="text-sm text-slate-500">
@@ -1049,7 +1138,7 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-[#eefafa] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#239d9a]">
+                    <span className="rounded-full bg-[#eefafa] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#239d9a]">
                       {appointment.status || "agendado"}
                     </span>
                   </div>
@@ -1059,11 +1148,11 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {isAdminUser && (
-            <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-black text-slate-800">
+            <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-3">
+                <CardTitle className="text-lg font-bold text-slate-800">
                   Recebimentos da semana
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1072,7 +1161,7 @@ export default function Dashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="h-[260px] min-h-[260px] min-w-0 w-full">
+              <div className="h-[220px] min-h-[220px] min-w-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyRevenue}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d9eeee" />
@@ -1090,7 +1179,7 @@ export default function Dashboard() {
                         border: "1px solid #d9eeee",
                       }}
                     />
-                    <Bar dataKey="amount" radius={[10, 10, 0, 0]}>
+                    <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
                       {weeklyRevenue.map((_, index) => (
                         <Cell key={`cell-${index}`} fill="#239d9a" />
                       ))}
@@ -1103,9 +1192,9 @@ export default function Dashboard() {
           )}
 
           {isAdminUser && (
-            <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-black text-slate-800">
+            <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-3">
+                <CardTitle className="text-lg font-bold text-slate-800">
                   Pacientes com saldo em aberto
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1113,9 +1202,9 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 px-5 pb-5">
               {debtors.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                <div className="rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
                   Nenhum saldo em aberto.
                 </div>
               )}
@@ -1123,14 +1212,14 @@ export default function Dashboard() {
               {debtors.map((debtor, index) => (
                 <div
                   key={debtor.patientId}
-                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 flex items-center justify-between gap-3"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-9 w-9 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-black">
+                    <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-black">
                       {index + 1}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-black text-slate-800 truncate">
+                      <div className="font-bold text-slate-800 truncate">
                         {debtor.name}
                       </div>
                       <div className="text-xs text-slate-500">
@@ -1149,11 +1238,11 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {isAdminUser && (
-            <Card className="xl:col-span-2 rounded-3xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-xl font-black text-slate-800">
+            <Card className="xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+              <CardHeader className="px-5 pt-5 pb-3">
+                <CardTitle className="text-lg font-bold text-slate-800">
                   Produção da clínica
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1163,7 +1252,7 @@ export default function Dashboard() {
 
             <CardContent>
               {productionByProcedure.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                <div className="rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
                   Nenhuma produção registrada neste mês.
                 </div>
               ) : (
@@ -1175,14 +1264,14 @@ export default function Dashboard() {
                     return (
                       <div
                         key={item.name}
-                        className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4"
+                        className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
                             <div className="text-xs font-black uppercase tracking-widest text-slate-400">
                               #{index + 1} • {item.count} lançamento(s)
                             </div>
-                            <div className="mt-1 truncate font-black text-slate-800">
+                            <div className="mt-1 truncate font-bold text-slate-800">
                               {item.name}
                             </div>
                           </div>
@@ -1192,7 +1281,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#eefafa]">
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eefafa]">
                           <div
                             className="h-full rounded-full bg-[#239d9a]"
                             style={{ width: `${percent}%` }}
@@ -1207,9 +1296,9 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-black text-slate-800">
+          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader className="px-5 pt-5 pb-3">
+              <CardTitle className="text-lg font-bold text-slate-800">
                 Status da agenda
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1218,7 +1307,7 @@ export default function Dashboard() {
             </CardHeader>
 
             <CardContent>
-              <div className="h-[260px] min-h-[260px] min-w-0 w-full">
+              <div className="h-[220px] min-h-[220px] min-w-0 w-full">
                 {appointmentStatusData.length === 0 ? (
                   <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] text-center text-sm text-slate-400">
                     Nenhuma consulta no mês.
@@ -1230,8 +1319,8 @@ export default function Dashboard() {
                         data={appointmentStatusData}
                         dataKey="value"
                         nameKey="name"
-                        innerRadius={56}
-                        outerRadius={88}
+                        innerRadius={48}
+                        outerRadius={76}
                         paddingAngle={3}
                       >
                         {appointmentStatusData.map((entry) => (
@@ -1264,9 +1353,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-black text-slate-800">
+        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+          <CardHeader className="px-5 pt-5 pb-3">
+            <CardTitle className="text-lg font-bold text-slate-800">
               Movimento da agenda
             </CardTitle>
             <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1275,7 +1364,7 @@ export default function Dashboard() {
           </CardHeader>
 
           <CardContent>
-            <div className="h-[280px] min-h-[280px] min-w-0 w-full">
+            <div className="h-[230px] min-h-[230px] min-w-0 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={appointmentsByWeekday}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d9eeee" />
@@ -1293,7 +1382,7 @@ export default function Dashboard() {
                       border: "1px solid #d9eeee",
                     }}
                   />
-                  <Bar dataKey="total" radius={[10, 10, 0, 0]}>
+                  <Bar dataKey="total" radius={[8, 8, 0, 0]}>
                     {appointmentsByWeekday.map((_, index) => (
                       <Cell key={`agenda-cell-${index}`} fill="#239d9a" />
                     ))}
@@ -1305,9 +1394,9 @@ export default function Dashboard() {
         </Card>
 
         {isAdminUser && (
-          <Card className="rounded-3xl border border-[#d9eeee] bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-black text-slate-800">
+          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+            <CardHeader className="px-5 pt-5 pb-3">
+              <CardTitle className="text-lg font-bold text-slate-800">
                 Formas de pagamento
             </CardTitle>
             <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -1318,7 +1407,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {paymentMethods.length === 0 && (
-                <div className="md:col-span-5 rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-sm text-slate-400">
+                <div className="md:col-span-5 rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
                   Nenhum pagamento registrado ainda.
                 </div>
               )}
@@ -1326,12 +1415,12 @@ export default function Dashboard() {
               {paymentMethods.map((method) => (
                 <div
                   key={method.name}
-                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3"
                 >
                   <div className="text-xs font-black uppercase tracking-widest text-slate-400">
                     {method.name}
                   </div>
-                  <div className="mt-2 text-lg font-black text-[#239d9a]">
+                  <div className="mt-2 text-base font-bold text-[#239d9a]">
                     {formatCurrency(method.amount)}
                   </div>
                 </div>
