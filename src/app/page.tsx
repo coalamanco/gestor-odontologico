@@ -74,9 +74,21 @@ type Patient = {
   created_at?: string | null;
 };
 
+type Expense = {
+  id: string;
+  description?: string | null;
+  category?: string | null;
+  amount?: number | string | null;
+  payment_date?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+};
+
 type DashboardStats = {
   recebidoHoje: number;
   recebidoMes: number;
+  despesasMes: number;
+  lucroMes: number;
   aReceber: number;
   saldoPrevisto: number;
   pacientes: number;
@@ -156,6 +168,14 @@ function paymentMethodLabel(value?: string | null) {
   }
 }
 
+function isExpensePaid(expense: Expense) {
+  return String(expense.status || "").trim().toLowerCase() === "pago";
+}
+
+function getExpenseDate(expense: Expense) {
+  return expense.payment_date || expense.created_at || null;
+}
+
 
 function normalizeLabel(value?: string | null) {
   const label = String(value || "").trim();
@@ -211,6 +231,7 @@ function CheckCircleIcon() {
 
 export default function Dashboard() {
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,10 +246,18 @@ export default function Dashboard() {
         const currentRole = await getUserRole();
         setRole(currentRole || "admin");
 
-        const [{ data: financial }, { data: appointmentsData }, { data: patientsData }] =
-          await Promise.all([
+        const [
+          { data: financial },
+          { data: expensesData },
+          { data: appointmentsData },
+          { data: patientsData },
+        ] = await Promise.all([
             supabaseNoSchemaCache
               .from("financial_records")
+              .select("*")
+              .order("created_at", { ascending: false }),
+            supabaseNoSchemaCache
+              .from("expenses")
               .select("*")
               .order("created_at", { ascending: false }),
             supabaseNoSchemaCache
@@ -243,6 +272,7 @@ export default function Dashboard() {
           ]);
 
         setFinancialRecords((financial || []) as FinancialRecord[]);
+        setExpenses((expensesData || []) as Expense[]);
         setAppointments((appointmentsData || []) as Appointment[]);
         setPatients((patientsData || []) as Patient[]);
       } catch (error) {
@@ -277,6 +307,17 @@ export default function Dashboard() {
 
       return acc;
     }, 0);
+
+    const despesasMes = expenses.reduce((acc, expense) => {
+      if (!isExpensePaid(expense)) return acc;
+      const expenseDate = getExpenseDate(expense);
+      if (isSameMonth(expenseDate, new Date())) {
+        return acc + parseMoney(expense.amount);
+      }
+      return acc;
+    }, 0);
+
+    const lucroMes = recebidoMes - despesasMes;
 
     const aReceber = financialRecords.reduce((acc, record) => {
       const amount = parseMoney(record.amount);
@@ -337,8 +378,10 @@ export default function Dashboard() {
     return {
       recebidoHoje,
       recebidoMes,
+      despesasMes,
+      lucroMes,
       aReceber,
-      saldoPrevisto: recebidoMes + aReceber,
+      saldoPrevisto: recebidoMes + aReceber - despesasMes,
       pacientes: patients.length,
       novosPacientesMes,
       consultasHoje: consultasHojeList.length,
@@ -349,7 +392,7 @@ export default function Dashboard() {
       taxaFaltas,
       ticketMedio,
     };
-  }, [financialRecords, appointments, patients]);
+  }, [financialRecords, expenses, appointments, patients]);
 
   const weeklyRevenue = useMemo(() => {
     const now = new Date();
@@ -673,6 +716,22 @@ export default function Dashboard() {
       description: "Pagamentos do mês atual",
     },
     {
+      title: "Despesas no mês",
+      value: formatCurrency(stats.despesasMes),
+      icon: Wallet,
+      color: "text-rose-700",
+      bg: "bg-rose-50",
+      description: "Saídas pagas da clínica",
+    },
+    {
+      title: "Lucro real",
+      value: formatCurrency(stats.lucroMes),
+      icon: Zap,
+      color: stats.lucroMes >= 0 ? "text-emerald-700" : "text-rose-700",
+      bg: stats.lucroMes >= 0 ? "bg-emerald-50" : "bg-rose-50",
+      description: "Recebido no mês - despesas pagas",
+    },
+    {
       title: "A receber",
       value: formatCurrency(stats.aReceber),
       icon: AlertCircle,
@@ -734,6 +793,8 @@ export default function Dashboard() {
     return ![
       "Recebido hoje",
       "Recebido no mês",
+      "Despesas no mês",
+      "Lucro real",
       "A receber",
       "Ticket médio",
     ].includes(card.title);
@@ -766,7 +827,7 @@ export default function Dashboard() {
                     {formatCurrency(stats.saldoPrevisto)}
                   </div>
                   <div className="mt-1 text-xs text-cyan-50">
-                    Recebido no mês + valores em aberto
+                    Recebido no mês + valores em aberto - despesas pagas
                   </div>
                 </div>
               )}
