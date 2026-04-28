@@ -836,57 +836,52 @@ export default function Dashboard() {
   return (
     <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-4">
       <div className="max-w-7xl mx-auto space-y-4 pb-10">
-        <div className="rounded-2xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] p-5 md:p-6 text-white">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest border border-white/20">
+        <div className="sticky top-0 z-20 rounded-2xl border border-[#bde4e3] bg-white/95 shadow-sm backdrop-blur overflow-hidden">
+          <div className="min-h-[72px] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-white">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-50/90">
                   Dashboard da clínica
                 </div>
-                <h1 className="mt-3 text-2xl md:text-3xl font-black tracking-tight">
-                  Visão geral do consultório
-                </h1>
-                <p className="mt-1.5 text-sm text-cyan-50 max-w-2xl">
-                  Acompanhe agenda, recebimentos, pendências e indicadores principais em um só lugar.
-                </p>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <h1 className="text-xl md:text-2xl font-black tracking-tight">
+                    Visão geral do consultório
+                  </h1>
+                  <span className="hidden md:inline text-xs font-medium text-cyan-50/90">
+                    Agenda, recebimentos e indicadores principais.
+                  </span>
+                </div>
               </div>
 
-              {isAdminUser && (
-                <div className="rounded-xl bg-white/15 border border-white/25 p-3 min-w-[240px]">
-                  <div className="text-xs font-black uppercase tracking-widest text-cyan-50">
-                    Saldo previsto
-                  </div>
-                  <div className="mt-1 text-2xl font-black">
-                    {formatCurrency(stats.saldoPrevisto)}
-                  </div>
-                  <div className="mt-1 text-xs text-cyan-50">
-                    Recebido no mês + valores em aberto - despesas pagas
-                  </div>
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <div className="flex items-center gap-1.5 rounded-xl bg-white/15 p-1 border border-white/20">
+                  {(["hoje", "semana", "mes"] as const).map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setPeriod(item)}
+                      className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${
+                        period === item
+                          ? "bg-white text-[#239d9a] shadow-sm"
+                          : "text-cyan-50 hover:bg-white/15"
+                      }`}
+                    >
+                      {item === "hoje" ? "Hoje" : item === "semana" ? "Semana" : "Mês"}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className="p-3 bg-white flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {(["hoje", "semana", "mes"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setPeriod(item)}
-                  className={`rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest transition ${
-                    period === item
-                      ? "bg-[#239d9a] text-white"
-                      : "bg-[#eefafa] text-[#239d9a] hover:bg-[#def5f4]"
-                  }`}
-                >
-                  {item === "hoje" ? "Hoje" : item === "semana" ? "Semana" : "Mês"}
-                </button>
-              ))}
-            </div>
-
-            <div className="text-xs font-semibold text-slate-400">
-              {loading ? "Carregando dados..." : "Dados atualizados do sistema"}
+                {isAdminUser && (
+                  <div className="rounded-xl bg-white/15 border border-white/25 px-3 py-2 text-right min-w-[190px]">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-cyan-50/90">
+                      Saldo previsto
+                    </div>
+                    <div className="text-lg font-black leading-tight">
+                      {formatCurrency(stats.saldoPrevisto)}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
