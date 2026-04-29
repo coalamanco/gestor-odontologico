@@ -143,65 +143,6 @@ function parsePositiveNumber(value: any, fallback: number) {
   return parsed;
 }
 
-const PROFESSIONAL_COLORS = [
-  "#239d9a",
-  "#2563eb",
-  "#7c3aed",
-  "#ea580c",
-  "#16a34a",
-  "#db2777",
-  "#0891b2",
-  "#9333ea",
-  "#ca8a04",
-  "#475569",
-];
-
-function getStableColorIndex(value?: string | null) {
-  if (!value) return 0;
-
-  let hash = 0;
-
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-
-  return hash % PROFESSIONAL_COLORS.length;
-}
-
-function getProfessionalColor(professionalId?: string | null) {
-  if (!professionalId) return "#239d9a";
-  return PROFESSIONAL_COLORS[getStableColorIndex(professionalId)];
-}
-
-function getProfessionalInitials(name?: string | null) {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (parts.length === 0) return "TP";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
-
-function getFallbackAppointmentColor(status?: string | null, type?: string | null, title?: string | null) {
-  if (type === "compromisso") return "#64748b";
-
-  if (status === "confirmado") return "#10b981";
-  if (status === "em_atendimento") return "#2563eb";
-  if (status === "finalizado") return "#475569";
-  if (status === "faltou") return "#dc2626";
-  if (status === "cancelado") return "#71717a";
-
-  const motivo = String(title || "").toLowerCase();
-
-  if (motivo === "retorno") return "#10b981";
-  if (motivo === "tratamento") return "#14b8a6";
-
-  return "#06b6d4";
-}
-
 export default function AgendaPage() {
   const router = useRouter();
 
@@ -1363,28 +1304,14 @@ export default function AgendaPage() {
   }, [appointments, selectedAgendaProfessionalId]);
 
   const selectedProfessionalInitials = useMemo(() => {
-    return selectedAgendaProfessionalId
-      ? getProfessionalInitials(selectedAgendaProfessional?.name)
-      : "TP";
-  }, [selectedAgendaProfessional, selectedAgendaProfessionalId]);
+    const name = selectedAgendaProfessional?.name || "Todos";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
 
-  const selectedProfessionalColor = useMemo(() => {
-    return selectedAgendaProfessionalId
-      ? getProfessionalColor(selectedAgendaProfessionalId)
-      : "#239d9a";
-  }, [selectedAgendaProfessionalId]);
+    if (parts.length === 0) return "TP";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
-  const getAppointmentStyle = (appointment: any) => {
-    const backgroundColor = appointment?.professional_id
-      ? getProfessionalColor(appointment.professional_id)
-      : getFallbackAppointmentColor(
-          appointment?.status,
-          appointment?.type,
-          appointment?.title
-        );
-
-    return { backgroundColor };
-  };
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [selectedAgendaProfessional]);
 
 
   const confirmAllTodayAppointments = async () => {
@@ -1479,10 +1406,7 @@ export default function AgendaPage() {
 
 
             <div className="hidden min-w-[210px] items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-2 py-1 shadow-sm lg:flex">
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
-                style={{ backgroundColor: selectedProfessionalColor }}
-              >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1db7b3] to-[#7ccfce] text-[10px] font-black text-white">
                 {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
               </div>
               <select
@@ -1590,10 +1514,7 @@ export default function AgendaPage() {
 
       <div className="px-3 pt-2 lg:hidden">
         <div className="flex items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
-            style={{ backgroundColor: selectedProfessionalColor }}
-          >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1db7b3] to-[#7ccfce] text-[10px] font-black text-white">
             {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
           </div>
           <select
@@ -1611,56 +1532,6 @@ export default function AgendaPage() {
           </select>
         </div>
       </div>
-
-      {activeProfessionals.length > 0 && (
-        <div className="px-3 pt-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#d9eeee] bg-white/75 px-3 py-2 text-xs shadow-sm">
-            <span className="font-black uppercase tracking-widest text-slate-400">
-              Profissionais
-            </span>
-
-            <button
-              type="button"
-              onClick={() => setSelectedAgendaProfessionalId("")}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-black transition ${
-                !selectedAgendaProfessionalId
-                  ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#b9dddd]"
-                  : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-[#239d9a]" />
-              Todos
-            </button>
-
-            {activeProfessionals.map((professional) => {
-              const professionalColor = getProfessionalColor(professional.id);
-              const selected = selectedAgendaProfessionalId === professional.id;
-
-              return (
-                <button
-                  key={professional.id}
-                  type="button"
-                  onClick={() => setSelectedAgendaProfessionalId(professional.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-black transition ${
-                    selected
-                      ? "bg-[#e8f7f6] text-slate-800 ring-1 ring-[#b9dddd]"
-                      : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
-                  }`}
-                  title={`Ver agenda de ${professional.name}`}
-                >
-                  <span
-                    className="flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black text-white"
-                    style={{ backgroundColor: professionalColor }}
-                  >
-                    {getProfessionalInitials(professional.name)}
-                  </span>
-                  {professional.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {(agendaAlerts.naoConfirmados.length > 0 ||
         agendaAlerts.faltaram.length > 0 ||
@@ -1834,13 +1705,12 @@ export default function AgendaPage() {
                           e.stopPropagation();
                           setSelectedAppointmentDetails(a);
                         }}
-                        className={`${!a.professional_id ? getColor(a) : ""} ${
+                        className={`${getColor(a)} ${
                           hasDebt(a.patient_id)
                             ? "ring-2 ring-amber-300 ring-offset-1"
                             : ""
                         } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
                         style={{
-                          ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
                           left: `calc(${leftPercent}% + 6px)`,
                           width: `calc(${widthPercent}% - 12px)`,
@@ -1863,16 +1733,8 @@ export default function AgendaPage() {
                         </div>
 
                         {a.professional_id && (
-                          <div className="mt-1 flex items-center gap-1 truncate pl-1 pr-1 text-[8px] font-bold leading-tight opacity-95">
-                            <span
-                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/25 text-[7px] font-black text-white ring-1 ring-white/30"
-                              title={getProfessionalLabel(a.professional_id)}
-                            >
-                              {getProfessionalInitials(getProfessionalById(a.professional_id)?.name)}
-                            </span>
-                            <span className="truncate">
-                              {getProfessionalLabel(a.professional_id)}
-                            </span>
+                          <div className="opacity-95 truncate mt-1 pl-1 pr-1 leading-tight text-[8px] font-bold">
+                            {getProfessionalLabel(a.professional_id)}
                           </div>
                         )}
 
@@ -1960,10 +1822,7 @@ export default function AgendaPage() {
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
           <div className="w-full max-w-[560px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
-            <div
-              className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
-              style={getAppointmentStyle(selectedAppointmentDetails)}
-            >
+            <div className={`${getColor(selectedAppointmentDetails)} text-white p-5 shadow-inner`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black leading-tight">
