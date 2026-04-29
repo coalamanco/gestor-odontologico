@@ -1990,7 +1990,7 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-300"
                             : ""
-                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-lg cursor-pointer shadow-sm border border-white/25 transition-opacity duration-150 hover:opacity-95`}
+                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-md cursor-pointer border border-white/10`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
