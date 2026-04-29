@@ -1854,86 +1854,10 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {(agendaAlerts.naoConfirmados.length > 0 ||
-        agendaAlerts.faltaram.length > 0 ||
-        agendaAlerts.comDebito.length > 0) && (
-        <div className="px-4 pt-1">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-1">
-            {agendaAlerts.naoConfirmados.length > 0 && (
-              <div className="flex items-center justify-between gap-2 rounded-lg border border-yellow-200/70 bg-yellow-50/70 px-2 py-0.5 shadow-sm min-h-[28px]">
-                <div className="min-w-0 flex items-center gap-2">
-                  <span className="text-xs">⚠️</span>
-                  <span className="truncate text-[11px] font-bold text-yellow-800">
-                    {agendaAlerts.naoConfirmados.length} sem confirmação
-                  </span>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("agendado")}
-                    className="rounded-md bg-yellow-100 px-2 py-[2px] text-[9px] font-black uppercase tracking-wide text-yellow-800 hover:bg-yellow-200"
-                  >
-                    Ver
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={confirmAllTodayAppointments}
-                    disabled={confirmingAllToday}
-                    className="rounded-md bg-emerald-600 px-2 py-[2px] text-[9px] font-black uppercase tracking-wide text-white hover:bg-emerald-700 disabled:opacity-60"
-                  >
-                    {confirmingAllToday ? "..." : "OK"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {agendaAlerts.comDebito.length > 0 && (
-              <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-amber-50/70 px-2 py-0.5 shadow-sm min-h-[28px]">
-                <div className="min-w-0 flex items-center gap-2">
-                  <span className="text-xs">💰</span>
-                  <span className="truncate text-[11px] font-bold text-amber-800">
-                    {agendaAlerts.comDebito.length} com débito hoje
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => router.push("/financeiro")}
-                  className="shrink-0 rounded-md bg-amber-100 px-2 py-[2px] text-[9px] font-black uppercase tracking-wide text-amber-800 hover:bg-amber-200"
-                >
-                  Cobrar
-                </button>
-              </div>
-            )}
-
-            {agendaAlerts.faltaram.length > 0 && (
-              <div className="flex items-center justify-between gap-2 rounded-lg border border-red-200/70 bg-red-50/70 px-2 py-0.5 shadow-sm min-h-[28px] xl:col-span-2">
-                <div className="min-w-0 flex items-center gap-2">
-                  <span className="text-xs">🚫</span>
-                  <span className="truncate text-[11px] font-bold text-red-800">
-                    {agendaAlerts.faltaram.length} falta(s) hoje
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter("faltou")}
-                  className="shrink-0 rounded-md bg-red-100 px-2 py-[2px] text-[9px] font-black uppercase tracking-wide text-red-800 hover:bg-red-200"
-                >
-                  Ver
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       <div className="flex-1 flex flex-col min-h-0 p-3">
-        <div className="bg-white/95 rounded-[28px] border border-[#c2dddd] shadow-[0_18px_55px_rgba(15,23,42,0.10)] overflow-hidden flex flex-col min-h-0 ring-1 ring-white/70">
+        <div className="bg-white/95 rounded-[24px] border border-[#c2dddd] shadow-sm overflow-hidden flex flex-col min-h-0 ring-1 ring-white/70">
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
-            <div className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-[0_8px_22px_rgba(15,23,42,0.08)]">
+            <div className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm">
               <div className="p-3 text-slate-400 uppercase tracking-widest">Hora</div>
 
               {days.map((d) => {
@@ -2020,7 +1944,7 @@ export default function AgendaPage() {
                             e.stopPropagation();
                             setSelectedBlockDetails(block);
                           }}
-                          className="absolute left-[6px] right-[6px] top-1 z-[2] overflow-hidden rounded-xl border border-white/40 px-2 py-2 text-[10px] text-white shadow-[0_10px_26px_rgba(15,23,42,0.18)] cursor-pointer"
+                          className="absolute left-[6px] right-[6px] top-1 z-[2] overflow-hidden rounded-lg border border-slate-200/60 px-2 py-2 text-[10px] text-white shadow-sm cursor-pointer"
                           style={{
                             height: `${getScheduleBlockHeight(block)}px`,
                             backgroundColor: blockColor,
@@ -2064,9 +1988,9 @@ export default function AgendaPage() {
                         }}
                         className={`${!a.professional_id ? getColor(a) : ""} ${
                           hasDebt(a.patient_id)
-                            ? "ring-2 ring-amber-300 ring-offset-1"
+                            ? "ring-1 ring-amber-300"
                             : ""
-                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
+                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-lg cursor-pointer shadow-sm border border-white/25 transition-opacity duration-150 hover:opacity-95`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
@@ -2187,7 +2111,7 @@ export default function AgendaPage() {
 
       {selectedBlockDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[520px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
+          <div className="w-full max-w-[520px] rounded-[24px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
             <div
               className="p-5 text-white"
               style={{ backgroundColor: selectedBlockDetails.color || getBlockColor(selectedBlockDetails.block_type) }}
@@ -2246,7 +2170,7 @@ export default function AgendaPage() {
 
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[560px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
+          <div className="w-full max-w-[560px] rounded-[24px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
             <div
               className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
               style={getAppointmentStyle(selectedAppointmentDetails)}
