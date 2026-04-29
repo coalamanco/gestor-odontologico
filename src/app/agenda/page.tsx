@@ -1715,6 +1715,66 @@ export default function AgendaPage() {
       <div className="border-b border-[#d7e7e7] bg-white/95 px-3 py-1 shadow-sm">
         <div className="grid min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowMiniCalendar(false);
+                setWeekBaseDate((prev) => addDays(prev, -7));
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eefafa] text-sm font-black text-[#239d9a] hover:bg-[#dff3f2]"
+              title="Semana anterior"
+            >
+              ◀
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMiniCalendar(false);
+                setWeekBaseDate(new Date());
+                setMiniCalendarDate(new Date());
+              }}
+              className="h-7 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white shadow-sm hover:opacity-90"
+            >
+              Hoje
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMiniCalendar(false);
+                setWeekBaseDate((prev) => addDays(prev, 7));
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eefafa] text-sm font-black text-[#239d9a] hover:bg-[#dff3f2]"
+              title="Próxima semana"
+            >
+              ▶
+            </button>
+
+            <div className="mx-1 hidden h-7 w-px bg-[#d7e7e7] md:block" />
+
+            <div className="hidden min-w-[210px] items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-2 py-1 shadow-sm md:flex">
+              <div
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
+                style={{ backgroundColor: selectedProfessionalColor }}
+              >
+                {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
+              </div>
+
+              <select
+                value={selectedAgendaProfessionalId}
+                onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
+                className="h-7 min-w-[190px] bg-transparent text-xs font-black text-slate-700 outline-none"
+                title="Selecionar agenda do profissional"
+              >
+                <option value="">Todos os profissionais</option>
+                {activeProfessionals.map((professional) => (
+                  <option key={professional.id} value={professional.id}>
+                    {professional.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="relative hidden md:block">
               <button
