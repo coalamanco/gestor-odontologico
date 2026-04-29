@@ -10,16 +10,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const appointmentId = body?.appointmentId;
-    const userId = body?.userId;
+    const userId = body?.userId || null;
 
-    if (!appointmentId || !userId) {
+    if (!appointmentId) {
       return NextResponse.json(
-        {
-          error: "appointmentId e userId são obrigatórios.",
-        },
-        {
-          status: 400,
-        }
+        { error: "appointmentId é obrigatório." },
+        { status: 400 }
       );
     }
 
@@ -30,17 +26,13 @@ export async function POST(request: NextRequest) {
       throw new Error("Supabase service role não configurado.");
     }
 
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      serviceRoleKey
-    );
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: appointment, error: appointmentError } =
-      await supabaseAdmin
-        .from("appointments")
-        .select("google_event_id")
-        .eq("id", appointmentId)
-        .maybeSingle();
+    const { data: appointment, error: appointmentError } = await supabaseAdmin
+      .from("appointments")
+      .select("google_event_id")
+      .eq("id", appointmentId)
+      .maybeSingle();
 
     if (appointmentError) {
       throw appointmentError;
@@ -50,28 +42,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         skipped: true,
+        reason: "Este agendamento não possui google_event_id.",
       });
     }
 
-    const { data: connection, error: connectionError } =
-      await supabaseAdmin
-        .from("google_calendar_connections")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+    let connectionQuery = supabaseAdmin
+      .from("google_calendar_connections")
+      .select("*");
+
+    if (userId) {
+      connectionQuery = connectionQuery.eq("user_id", userId);
+    }
+
+    const { data: connections, error: connectionError } = await connectionQuery
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
     if (connectionError) {
       throw connectionError;
     }
 
+    const connection = connections?.[0];
+
     if (!connection?.refresh_token) {
       return NextResponse.json(
-        {
-          error: "Google Agenda não conectado.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Google Agenda não conectado." },
+        { status: 400 }
       );
     }
 
@@ -88,34 +84,42 @@ export async function POST(request: NextRequest) {
       auth: oauth2Client,
     });
 
-    await calendar.events.delete({
-      calendarId: connection.calendar_id || "primary",
-      eventId: appointment.google_event_id,
-    });
+    try {
+      await calendar.events.delete({
+        calendarId: connection.calendar_id || "primary",
+        eventId: appointment.google_event_id,
+      });
+    } catch (googleError: any) {
+      const status = googleError?.code || googleError?.response?.status;
 
-    await supabaseAdmin
+      if (status !== 404 && status !== 410) {
+        throw googleError;
+      }
+    }
+
+    const { error: updateError } = await supabaseAdmin
       .from("appointments")
       .update({
         google_event_id: null,
+        google_calendar_synced_at: new Date().toISOString(),
+        google_calendar_sync_error: null,
       })
       .eq("id", appointmentId);
 
-    return NextResponse.json({
-      success: true,
-    });
-  } catch (error) {
-    console.error(
-      "Erro ao excluir evento Google:",
-      error
-    );
+    if (updateError) {
+      throw updateError;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Erro ao excluir evento Google:", error);
 
     return NextResponse.json(
       {
         error: "Erro ao excluir evento Google.",
+        details: error?.message || String(error),
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

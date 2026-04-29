@@ -491,21 +491,24 @@ export default function AgendaPage() {
     if (!ok) return;
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const response = await fetch("/api/google/calendar/delete-event", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointmentId,
+        }),
+      });
 
-      if (user) {
-        await fetch("/api/google/calendar/delete-event", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            appointmentId,
-            userId: user.id,
-          }),
-        });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+
+        console.warn(
+          "Não foi possível excluir o evento do Google Agenda:",
+          result
+        );
       }
     } catch (googleError) {
       console.error(
