@@ -1406,7 +1406,7 @@ export default function AgendaPage() {
           </div>
 
           <div className="flex min-w-[280px] flex-col items-center justify-center text-center">
-            <h1 className="truncate text-[30px] font-black leading-none text-slate-800 lg:text-[34px]">
+            <h1 className="truncate text-[28px] font-black leading-none text-slate-800 lg:text-[32px]">
               Agenda Clínica
             </h1>
             <p className="mt-1 truncate text-[11px] font-black uppercase tracking-[0.35em] text-[#239d9a] lg:text-[12px]">
@@ -1417,7 +1417,7 @@ export default function AgendaPage() {
             </p>
           </div>
 
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -1433,51 +1433,9 @@ export default function AgendaPage() {
               <option value="cancelado">Cancelado</option>
             </select>
 
-            <button
-              type="button"
-              onClick={confirmAllTodayAppointments}
-              disabled={confirmingAllToday || agendaAlerts.naoConfirmados.length === 0}
-              className={`h-8 rounded-lg px-3 text-xs font-black shadow-sm ${
-                agendaAlerts.naoConfirmados.length > 0
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
-              }`}
-              title="Confirmar todas as consultas agendadas de hoje"
-            >
-              {confirmingAllToday
-                ? "Confirmando..."
-                : `Confirmar hoje${
-                    agendaAlerts.naoConfirmados.length > 0
-                      ? ` (${agendaAlerts.naoConfirmados.length})`
-                      : ""
-                  }`}
-            </button>
 
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(
-                `Lembretes de consulta pendentes:\n\n${appointments
-                  .filter((a) => a.type !== "compromisso")
-                  .filter((a) => a.reminder_enabled && !a.reminder_sent_at)
-                  .filter((a) => {
-                    const today = formatDate(new Date());
-                    const tomorrow = formatDate(addDays(new Date(), 1));
-                    return a.date === today || a.date === tomorrow;
-                  })
-                  .map(
-                    (a) =>
-                      `• ${a.patient_name || "Paciente"} - ${formatDateBr(
-                        a.date
-                      )} às ${a.start_time}`
-                  )
-                  .join("\n") || "Nenhum lembrete pendente para hoje ou amanhã."}`
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="hidden h-8 items-center rounded-lg bg-[#1fb36e] px-3 text-xs font-black text-white shadow-sm hover:bg-[#199c5f] lg:inline-flex"
-              title="Enviar lista de lembretes de hoje e amanhã"
-            >
-              Lembretes
-            </a>
+
+
 
             <button
               type="button"
@@ -1497,12 +1455,7 @@ export default function AgendaPage() {
               Google Agenda
             </button>
 
-            <button
-              onClick={() => openNew(days[0].date, `${pad(clinicSettings.start_hour)}:00`)}
-              className="h-8 rounded-lg bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] px-4 text-xs font-black text-white shadow-sm"
-            >
-              Novo
-            </button>
+
           </div>
         </div>
       </div>

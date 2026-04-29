@@ -20,6 +20,9 @@ type ProfessionalItem = {
   phone: string | null;
   email: string | null;
   active: boolean | null;
+  google_calendar_id: string | null;
+  google_calendar_email: string | null;
+  google_connected: boolean | null;
 };
 
 type AnamnesisItem = {
@@ -40,6 +43,23 @@ type MessageTemplateItem = {
 
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<ConfigTab>("clinica");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab") as ConfigTab | null;
+    const allowedTabs: ConfigTab[] = [
+      "clinica",
+      "procedimentos",
+      "equipe",
+      "anamnese",
+      "comunicacao",
+      "financeiro",
+    ];
+
+    if (tabParam && allowedTabs.includes(tabParam)) {
+      setTab(tabParam);
+    }
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -192,7 +212,7 @@ export default function ConfiguracoesPage() {
 
     const { data, error } = await supabase
       .from("professionals")
-      .select("id, name, cro, specialty, phone, email, active")
+      .select("id, name, cro, specialty, phone, email, active, google_calendar_id, google_calendar_email, google_connected")
       .order("name");
 
     if (error) {
@@ -444,6 +464,50 @@ export default function ConfiguracoesPage() {
 
     if (error) {
       alert("Erro ao excluir profissional: " + error.message);
+      setTeamLoading(false);
+      return;
+    }
+
+    await loadTeam();
+    setTeamLoading(false);
+  };
+
+  const connectProfessionalGoogle = (item: ProfessionalItem) => {
+    if (!item.id) {
+      alert("Salve o profissional antes de conectar ao Google Agenda.");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      professional_id: item.id,
+      professionalId: item.id,
+      redirect: "/configuracoes?tab=equipe",
+      origin: "professional_settings",
+    });
+
+    window.location.href = `/api/google/calendar/connect?${params.toString()}`;
+  };
+
+  const removeProfessionalGoogleConnection = async (item: ProfessionalItem) => {
+    const ok = window.confirm(
+      `Remover a conexão do Google Agenda de "${item.name}"? As consultas já criadas no Google não serão apagadas automaticamente.`
+    );
+
+    if (!ok) return;
+
+    setTeamLoading(true);
+
+    const { error } = await supabase
+      .from("professionals")
+      .update({
+        google_calendar_id: null,
+        google_calendar_email: null,
+        google_connected: false,
+      })
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Erro ao remover conexão com o Google Agenda: " + error.message);
       setTeamLoading(false);
       return;
     }
@@ -1263,7 +1327,7 @@ export default function ConfiguracoesPage() {
                   Cadastro da equipe
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Profissionais que poderão ser vinculados futuramente à agenda, prontuário e financeiro.
+                  Profissionais que poderão ser vinculados à agenda, prontuário, financeiro e Google Agenda individual.
                 </p>
               </div>
 
@@ -1363,12 +1427,18 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
 
+          <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+            <span className="font-black text-[#239d9a]">Google Agenda individual:</span>{" "}
+            conecte cada profissional ao próprio calendário. Na próxima etapa, cada consulta poderá ser enviada para o calendário do profissional selecionado.
+          </div>
+
           <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+            <div className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
               <div className="p-3">Profissional</div>
               <div className="p-3">CRO</div>
               <div className="p-3">Especialidade</div>
               <div className="p-3">Contato</div>
+              <div className="p-3">Google Agenda</div>
               <div className="p-3 text-right">Ações</div>
             </div>
 
@@ -1377,52 +1447,100 @@ export default function ConfiguracoesPage() {
                 Nenhum profissional encontrado.
               </div>
             ) : (
-              filteredTeam.map((item) => (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-[1.6fr_1fr_1fr_1fr_150px] border-b border-slate-100 text-sm last:border-b-0"
-                >
-                  <div className="p-3">
-                    <div className="font-black text-slate-700">
-                      {item.name}
+              filteredTeam.map((item) => {
+                const isGoogleConnected = item.google_connected === true;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] border-b border-slate-100 text-sm last:border-b-0"
+                  >
+                    <div className="p-3">
+                      <div className="font-black text-slate-700">
+                        {item.name}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {item.active === false ? "Inativo" : "Ativo"}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-400">
-                      {item.active === false ? "Inativo" : "Ativo"}
+
+                    <div className="p-3 text-slate-600">
+                      {item.cro || "-"}
+                    </div>
+
+                    <div className="p-3 text-slate-600">
+                      {item.specialty || "-"}
+                    </div>
+
+                    <div className="p-3 text-slate-600">
+                      <div>{item.phone || "-"}</div>
+                      <div className="text-xs text-slate-400">{item.email || ""}</div>
+                    </div>
+
+                    <div className="p-3">
+                      <div
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                          isGoogleConnected
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {isGoogleConnected ? "Conectado" : "Desconectado"}
+                      </div>
+
+                      <div className="mt-2 text-xs text-slate-500 break-all">
+                        {item.google_calendar_email || "Nenhum e-mail Google vinculado"}
+                      </div>
+
+                      {item.google_calendar_id && (
+                        <div className="mt-1 text-[11px] text-slate-400 break-all">
+                          Calendário: {item.google_calendar_id}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3 flex flex-col items-end gap-2">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => editMember(item)}
+                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteMember(item)}
+                          className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => connectProfessionalGoogle(item)}
+                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                        >
+                          {isGoogleConnected ? "Reconectar Google" : "Conectar Google"}
+                        </button>
+
+                        {isGoogleConnected && (
+                          <button
+                            type="button"
+                            onClick={() => removeProfessionalGoogleConnection(item)}
+                            className="rounded-lg bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 hover:bg-amber-100"
+                          >
+                            Remover Google
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="p-3 text-slate-600">
-                    {item.cro || "-"}
-                  </div>
-
-                  <div className="p-3 text-slate-600">
-                    {item.specialty || "-"}
-                  </div>
-
-                  <div className="p-3 text-slate-600">
-                    <div>{item.phone || "-"}</div>
-                    <div className="text-xs text-slate-400">{item.email || ""}</div>
-                  </div>
-
-                  <div className="p-3 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => editMember(item)}
-                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => deleteMember(item)}
-                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
