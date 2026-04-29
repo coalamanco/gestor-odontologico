@@ -683,6 +683,42 @@ export default function AgendaPage() {
     );
   };
 
+  const syncGoogleCalendarEvent = async (appointmentId?: string | null) => {
+    if (!appointmentId) return;
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.warn("Google Agenda não sincronizado: usuário não autenticado.");
+        return;
+      }
+
+      const response = await fetch("/api/google/calendar/update-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointmentId,
+          userId: user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        console.warn(
+          "Não foi possível sincronizar alteração com Google Agenda:",
+          result
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar Google Agenda:", error);
+    }
+  };
+
   const updateAppointment = async (id: string, payload: any) => {
     const { error } = await supabase
       .from("appointments")
@@ -694,6 +730,7 @@ export default function AgendaPage() {
       return false;
     }
 
+    await syncGoogleCalendarEvent(id);
     await loadData();
     return true;
   };
@@ -940,6 +977,10 @@ export default function AgendaPage() {
         alert("Erro ao editar: " + error.message);
         return;
       }
+
+      if (String(mainType).toLowerCase() === "consulta") {
+        await syncGoogleCalendarEvent(editingId);
+      }
     } else {
       const { data: createdAppointment, error } = await supabase
         .from("appointments")
@@ -957,37 +998,7 @@ export default function AgendaPage() {
           "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
         );
 
-        try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-
-          if (user && createdAppointment?.id) {
-            const googleResponse = await fetch("/api/google/calendar/create-event", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                appointmentId: createdAppointment.id,
-                userId: user.id,
-              }),
-            });
-
-            if (!googleResponse.ok) {
-              const googleResult = await googleResponse.json().catch(() => null);
-              console.warn(
-                "Consulta salva, mas não foi possível sincronizar com Google Agenda:",
-                googleResult
-              );
-            }
-          }
-        } catch (googleError) {
-          console.error(
-            "Erro ao sincronizar consulta com Google Agenda:",
-            googleError
-          );
-        }
+        await syncGoogleCalendarEvent(createdAppointment?.id);
       }
     }
 
