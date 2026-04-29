@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleOAuthClient, GOOGLE_CALENDAR_SCOPES } from "@/lib/googleCalendar";
+import {
+  getGoogleOAuthClient,
+  GOOGLE_CALENDAR_SCOPES,
+} from "@/lib/googleCalendar";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {

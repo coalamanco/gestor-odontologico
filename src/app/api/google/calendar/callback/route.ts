@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getGoogleOAuthClient } from "@/lib/googleCalendar";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -21,6 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
     const oauth2Client = getGoogleOAuthClient();
 
     const { tokens } = await oauth2Client.getToken(code);
@@ -55,12 +58,20 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Erro ao salvar conexão Google:", error);
-      return NextResponse.redirect(`${appUrl}/agenda?googleCalendar=erro`);
+
+      return NextResponse.redirect(
+        `${appUrl}/agenda?googleCalendar=erro`
+      );
     }
 
-    return NextResponse.redirect(`${appUrl}/agenda?googleCalendar=conectado`);
+    return NextResponse.redirect(
+      `${appUrl}/agenda?googleCalendar=conectado`
+    );
   } catch (error) {
     console.error("Erro no callback Google Calendar:", error);
-    return NextResponse.redirect(`${appUrl}/agenda?googleCalendar=erro`);
+
+    return NextResponse.redirect(
+      `${appUrl}/agenda?googleCalendar=erro`
+    );
   }
 }
