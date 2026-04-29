@@ -164,6 +164,46 @@ export default function AgendaPage() {
     }
   };
 
+  const syncExistingGoogleAppointments = async () => {
+    const ok = window.confirm(
+      "Deseja sincronizar as consultas existentes com o Google Agenda? Isso pode levar alguns segundos."
+    );
+
+    if (!ok) return;
+
+    try {
+      const response = await fetch("/api/google/calendar/sync-existing", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Erro ao sincronizar consultas antigas:", result);
+        alert(
+          result?.error ||
+            result?.details ||
+            "Erro ao sincronizar consultas antigas com Google Agenda."
+        );
+        return;
+      }
+
+      alert(
+        `Sincronização concluída. Criados: ${result?.created || 0}. Vinculados: ${result?.linked || 0}. Ignorados: ${result?.skipped || 0}. Erros: ${result?.errors || 0}.`
+      );
+
+      await loadData();
+    } catch (error) {
+      console.error("Erro inesperado ao sincronizar consultas antigas:", error);
+      alert("Erro inesperado ao sincronizar consultas antigas.");
+    }
+  };
+
   const [patients, setPatients] = useState<any[]>([]);
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -491,7 +531,7 @@ export default function AgendaPage() {
     if (!ok) return;
 
     try {
-      const response = await fetch("/api/google/calendar/delete-event", {
+      const response = await fetch("/api/google/calendar/delete-appointment", {
         method: "POST",
         cache: "no-store",
         headers: {
@@ -502,33 +542,32 @@ export default function AgendaPage() {
         }),
       });
 
-      if (!response.ok) {
-        const result = await response.json().catch(() => null);
+      const result = await response.json().catch(() => null);
 
+      if (!response.ok) {
+        console.error("Erro ao excluir agendamento:", result);
+        alert(
+          result?.error ||
+            result?.details ||
+            "Erro ao excluir agendamento."
+        );
+        return;
+      }
+
+      if (result?.googleDeleted === false) {
         console.warn(
-          "Não foi possível excluir o evento do Google Agenda:",
+          "Agendamento excluído do sistema, mas o evento Google não foi encontrado.",
           result
         );
       }
-    } catch (googleError) {
-      console.error(
-        "Erro ao excluir evento do Google Agenda:",
-        googleError
-      );
+
+      setSelectedAppointmentDetails(null);
+
+      await loadData();
+    } catch (error) {
+      console.error("Erro inesperado ao excluir agendamento:", error);
+      alert("Erro inesperado ao excluir agendamento.");
     }
-
-    const { error } = await supabase
-      .from("appointments")
-      .delete()
-      .eq("id", appointmentId);
-
-    if (error) {
-      alert("Erro ao excluir agendamento: " + error.message);
-      return;
-    }
-
-    setSelectedAppointmentDetails(null);
-    await loadData();
   };
 
   const getDurationHeight = (mins: number) => {
@@ -1025,38 +1064,7 @@ export default function AgendaPage() {
           "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
         );
 
-        try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-
-          if (user && createdAppointment?.id) {
-            const googleResponse = await fetch("/api/google/calendar/create-event", {
-              method: "POST",
-              cache: "no-store",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                appointmentId: createdAppointment.id,
-                userId: user.id,
-              }),
-            });
-
-            if (!googleResponse.ok) {
-              const result = await googleResponse.json().catch(() => null);
-              console.warn(
-                "Consulta criada, mas não foi possível criar/salvar o evento no Google Agenda:",
-                result
-              );
-            }
-          }
-        } catch (googleError) {
-          console.error(
-            "Erro ao criar evento no Google Agenda:",
-            googleError
-          );
-        }
+        await syncGoogleCalendarEvent(createdAppointment?.id);
       }
     }
 
@@ -1470,6 +1478,15 @@ export default function AgendaPage() {
             >
               Lembretes
             </a>
+
+            <button
+              type="button"
+              onClick={syncExistingGoogleAppointments}
+              className="hidden h-8 rounded-lg border border-[#c2dddd] bg-white px-3 text-[11px] font-black text-[#239d9a] shadow-sm hover:bg-[#f4ffff] xl:inline-flex xl:items-center"
+              title="Sincronizar consultas existentes com Google Agenda"
+            >
+              Sincronizar
+            </button>
 
             <button
               type="button"
