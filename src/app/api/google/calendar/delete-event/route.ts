@@ -5,10 +5,19 @@ import { getGoogleOAuthClient } from "@/lib/googleCalendar";
 
 export const dynamic = "force-dynamic";
 
+function buildDateTime(date: string, time: string) {
+  return `${date}T${time}:00-03:00`;
+}
+
+function addMinutes(dateTime: string, minutes: number) {
+  const date = new Date(dateTime);
+  date.setMinutes(date.getMinutes() + minutes);
+  return date.toISOString();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     const appointmentId = body?.appointmentId;
     const userId = body?.userId || null;
 
@@ -30,20 +39,17 @@ export async function POST(request: NextRequest) {
 
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
-      .select("google_event_id")
+      .select("*")
       .eq("id", appointmentId)
       .maybeSingle();
 
-    if (appointmentError) {
-      throw appointmentError;
-    }
+    if (appointmentError) throw appointmentError;
 
-    if (!appointment?.google_event_id) {
-      return NextResponse.json({
-        success: true,
-        skipped: true,
-        reason: "Este agendamento não possui google_event_id.",
-      });
+    if (!appointment) {
+      return NextResponse.json(
+        { error: "Agendamento não encontrado." },
+        { status: 404 }
+      );
     }
 
     let connectionQuery = supabaseAdmin
@@ -58,9 +64,7 @@ export async function POST(request: NextRequest) {
       .order("updated_at", { ascending: false })
       .limit(1);
 
-    if (connectionError) {
-      throw connectionError;
-    }
+    if (connectionError) throw connectionError;
 
     const connection = connections?.[0];
 
@@ -84,33 +88,88 @@ export async function POST(request: NextRequest) {
       auth: oauth2Client,
     });
 
-    try {
-      await calendar.events.delete({
-        calendarId: connection.calendar_id || "primary",
-        eventId: appointment.google_event_id,
-      });
-    } catch (googleError: any) {
-      const status = googleError?.code || googleError?.response?.status;
+    let deleted = false;
 
-      if (status !== 404 && status !== 410) {
-        throw googleError;
+    if (appointment.google_event_id) {
+      try {
+        await calendar.events.delete({
+          calendarId: connection.calendar_id || "primary",
+          eventId: appointment.google_event_id,
+        });
+
+        deleted = true;
+      } catch (googleError: any) {
+        const status = googleError?.code || googleError?.response?.status;
+
+        if (status === 404 || status === 410) {
+          deleted = true;
+        } else {
+          throw googleError;
+        }
       }
     }
 
-    const { error: updateError } = await supabaseAdmin
+    if (!deleted && appointment.date && appointment.start_time) {
+      const startDateTime = buildDateTime(
+        appointment.date,
+        appointment.start_time
+      );
+
+      const endDateTime = addMinutes(
+        startDateTime,
+        Number(appointment.duration || 30)
+      );
+
+      const events = await calendar.events.list({
+        calendarId: connection.calendar_id || "primary",
+        timeMin: startDateTime,
+        timeMax: endDateTime,
+        singleEvents: true,
+        q: appointment.patient_name || undefined,
+      });
+
+      const items = events.data.items || [];
+
+      for (const event of items) {
+        const eventStart = event.start?.dateTime || "";
+        const eventSummary = event.summary || "";
+
+        const sameTime = eventStart.startsWith(
+          `${appointment.date}T${appointment.start_time}`
+        );
+
+        const samePatient =
+          appointment.patient_name &&
+          eventSummary
+            .toLowerCase()
+            .includes(String(appointment.patient_name).toLowerCase());
+
+        if (event.id && sameTime && samePatient) {
+          await calendar.events.delete({
+            calendarId: connection.calendar_id || "primary",
+            eventId: event.id,
+          });
+
+          deleted = true;
+        }
+      }
+    }
+
+    await supabaseAdmin
       .from("appointments")
       .update({
         google_event_id: null,
         google_calendar_synced_at: new Date().toISOString(),
-        google_calendar_sync_error: null,
+        google_calendar_sync_error: deleted
+          ? null
+          : "Nenhum evento correspondente encontrado no Google Agenda.",
       })
       .eq("id", appointmentId);
 
-    if (updateError) {
-      throw updateError;
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      deleted,
+    });
   } catch (error: any) {
     console.error("Erro ao excluir evento Google:", error);
 
