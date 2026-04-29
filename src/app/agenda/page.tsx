@@ -956,6 +956,38 @@ export default function AgendaPage() {
         console.log(
           "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
         );
+
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (user && createdAppointment?.id) {
+            const googleResponse = await fetch("/api/google/calendar/create-event", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                appointmentId: createdAppointment.id,
+                userId: user.id,
+              }),
+            });
+
+            if (!googleResponse.ok) {
+              const googleResult = await googleResponse.json().catch(() => null);
+              console.warn(
+                "Consulta salva, mas não foi possível sincronizar com Google Agenda:",
+                googleResult
+              );
+            }
+          }
+        } catch (googleError) {
+          console.error(
+            "Erro ao sincronizar consulta com Google Agenda:",
+            googleError
+          );
+        }
       }
     }
 
