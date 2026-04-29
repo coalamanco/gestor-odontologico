@@ -2230,7 +2230,7 @@ export default function AgendaPage() {
             <div className="p-5 space-y-4">
               {selectedAppointmentDetails.type !== "compromisso" && (
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                     Status da consulta
                   </label>
                   <select
@@ -2241,7 +2241,7 @@ export default function AgendaPage() {
                         e.target.value as AppointmentStatus
                       )
                     }
-                    className="w-full border border-[#c2dddd] p-3 rounded-xl bg-white text-slate-700 font-semibold"
+                    className="w-full rounded-xl border border-[#d4e8e8] bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#239d9a] focus:ring-2 focus:ring-[#239d9a]/10"
                   >
                     <option value="agendado">Agendada</option>
                     <option value="confirmado">Confirmada</option>
@@ -2360,24 +2360,24 @@ export default function AgendaPage() {
       )}
 
       {showBlockModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 pt-8 z-50">
-          <div className="bg-white w-full max-w-[560px] max-h-[90vh] rounded-2xl border border-[#c2dddd] shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center p-5 border-b border-[#c2dddd] bg-white">
-              <h2 className="font-bold text-xl text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+          <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
+              <h2 className="text-lg font-black tracking-tight text-slate-800">
                 {blockForm.id ? "Editar bloqueio" : "Bloquear horário"}
               </h2>
 
               <button
                 onClick={() => setShowBlockModal(false)}
-                className="w-9 h-9 rounded-full border border-[#c2dddd] text-slate-500 hover:bg-slate-50"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4e8e8] bg-white text-slate-500 transition hover:bg-[#f4fbfb]"
               >
                 ✕
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto bg-[#fbfefe] p-5">
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Tipo de bloqueio
                 </label>
                 <select
@@ -2405,7 +2405,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Título
                 </label>
                 <input
@@ -2417,7 +2417,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Profissional
                 </label>
                 <select
@@ -2436,7 +2436,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Data
                 </label>
                 <input
@@ -2459,7 +2459,7 @@ export default function AgendaPage() {
               {!blockForm.all_day && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-600">
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Início
                     </label>
                     <input
@@ -2477,7 +2477,7 @@ export default function AgendaPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-600">
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Fim
                     </label>
                     <input
@@ -2491,7 +2491,7 @@ export default function AgendaPage() {
               )}
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Observação
                 </label>
                 <textarea
@@ -2541,22 +2541,22 @@ export default function AgendaPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 pt-8 z-50">
-          <div className="bg-white w-full max-w-[640px] max-h-[90vh] rounded-2xl border border-[#c2dddd] shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center p-5 border-b border-[#c2dddd] bg-white">
-              <h2 className="font-bold text-xl text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+          <div className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
+              <h2 className="text-lg font-black tracking-tight text-slate-800">
                 {editingId ? "Editar agendamento" : "Novo agendamento"}
               </h2>
 
               <button
                 onClick={() => setShowModal(false)}
-                className="w-9 h-9 rounded-full border border-[#c2dddd] text-slate-500 hover:bg-slate-50"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4e8e8] bg-white text-slate-500 transition hover:bg-[#f4fbfb]"
               >
                 ✕
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto bg-[#fbfefe] p-5">
             <div className="flex gap-2">
               <button
                 onClick={() => setMainType("consulta")}
@@ -2584,7 +2584,7 @@ export default function AgendaPage() {
             {mainType === "consulta" && (
               <>
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-600">
+                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                     Paciente
                   </label>
                   <input
@@ -2614,7 +2614,7 @@ export default function AgendaPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-600">
+                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                     Motivo
                   </label>
                   <select
@@ -2633,7 +2633,7 @@ export default function AgendaPage() {
             )}
 
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-600">
+              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                 Profissional responsável
               </label>
               <select
@@ -2653,7 +2653,7 @@ export default function AgendaPage() {
 
             {mainType === "compromisso" && (
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Título
                 </label>
                 <input
@@ -2666,7 +2666,7 @@ export default function AgendaPage() {
             )}
 
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-600">
+              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                 Descrição
               </label>
               <textarea
@@ -2679,7 +2679,7 @@ export default function AgendaPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Data
                 </label>
                 <input
@@ -2691,7 +2691,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Hora
                 </label>
                 <input
@@ -2704,7 +2704,7 @@ export default function AgendaPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-600">
+              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                 Duração
               </label>
               <select
@@ -2723,7 +2723,7 @@ export default function AgendaPage() {
 
             {mainType === "consulta" && (
               <div>
-                <label className="block text-xs font-bold mb-1 text-slate-600">
+                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Status
                 </label>
                 <select
@@ -2768,7 +2768,7 @@ export default function AgendaPage() {
 
                 {reminderEnabled && (
                   <div>
-                    <label className="block text-xs font-bold mb-1 text-slate-600">
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Enviar lembrete
                     </label>
                     <select
@@ -2800,7 +2800,7 @@ export default function AgendaPage() {
 
               <button
                 onClick={handleSave}
-                className="bg-[#239d9a] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm"
+                className="rounded-xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8c89]"
               >
                 Salvar
               </button>
