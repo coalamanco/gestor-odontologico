@@ -143,6 +143,106 @@ function parsePositiveNumber(value: any, fallback: number) {
   return parsed;
 }
 
+const PROFESSIONAL_COLORS = [
+  "#239d9a",
+  "#2563eb",
+  "#7c3aed",
+  "#ea580c",
+  "#16a34a",
+  "#db2777",
+  "#0891b2",
+  "#9333ea",
+  "#ca8a04",
+  "#475569",
+];
+
+function getStableColorIndex(value?: string | null) {
+  if (!value) return 0;
+
+  let hash = 0;
+
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+
+  return hash % PROFESSIONAL_COLORS.length;
+}
+
+function getProfessionalColor(professionalId?: string | null) {
+  if (!professionalId) return "#239d9a";
+  return PROFESSIONAL_COLORS[getStableColorIndex(professionalId)];
+}
+
+function getProfessionalInitials(name?: string | null) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) return "TP";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+
+function addMinutesToTime(time: string, minutes: number) {
+  const [hour, minute] = String(time || "08:00").split(":").map(Number);
+  const date = new Date(2000, 0, 1, hour || 8, minute || 0, 0, 0);
+  date.setMinutes(date.getMinutes() + minutes);
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function minutesBetweenTimes(startTime?: string | null, endTime?: string | null) {
+  if (!startTime || !endTime) return 60;
+  const start = timeToMinutes(startTime);
+  const end = timeToMinutes(endTime);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 60;
+  return end - start;
+}
+
+function getBlockTypeLabel(type?: string | null) {
+  if (type === "almoco") return "Almoço";
+  if (type === "ferias") return "Férias";
+  if (type === "reuniao") return "Reunião";
+  if (type === "curso") return "Curso/Congresso";
+  if (type === "pessoal") return "Pessoal";
+  if (type === "manutencao") return "Manutenção";
+  return "Bloqueio";
+}
+
+function getDefaultBlockTitle(type?: string | null) {
+  const label = getBlockTypeLabel(type);
+  return label === "Bloqueio" ? "Horário bloqueado" : label;
+}
+
+function getBlockColor(type?: string | null) {
+  if (type === "almoco") return "#78716c";
+  if (type === "ferias") return "#475569";
+  if (type === "reuniao") return "#4b5563";
+  if (type === "curso") return "#6d28d9";
+  if (type === "pessoal") return "#9f1239";
+  if (type === "manutencao") return "#92400e";
+  return "#6b7280";
+}
+
+function getFallbackAppointmentColor(status?: string | null, type?: string | null, title?: string | null) {
+  if (type === "compromisso") return "#64748b";
+
+  if (status === "confirmado") return "#10b981";
+  if (status === "em_atendimento") return "#2563eb";
+  if (status === "finalizado") return "#475569";
+  if (status === "faltou") return "#dc2626";
+  if (status === "cancelado") return "#71717a";
+
+  const motivo = String(title || "").toLowerCase();
+
+  if (motivo === "retorno") return "#10b981";
+  if (motivo === "tratamento") return "#14b8a6";
+
+  return "#06b6d4";
+}
+
 export default function AgendaPage() {
   const router = useRouter();
 
@@ -207,6 +307,7 @@ export default function AgendaPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [scheduleBlocks, setScheduleBlocks] = useState<any[]>([]);
   const [financialRecords, setFinancialRecords] = useState<any[]>([]);
   const [messageTemplates, setMessageTemplates] = useState<any[]>([]);
   const [clinicSettings, setClinicSettings] = useState({
@@ -219,6 +320,8 @@ export default function AgendaPage() {
   const [now, setNow] = useState(new Date());
 
   const [showModal, setShowModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedBlockDetails, setSelectedBlockDetails] = useState<any | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedAppointmentDetails, setSelectedAppointmentDetails] =
     useState<any | null>(null);
@@ -242,6 +345,18 @@ export default function AgendaPage() {
 
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderBeforeHours, setReminderBeforeHours] = useState("24");
+
+  const [blockForm, setBlockForm] = useState({
+    id: "",
+    professional_id: "",
+    block_type: "bloqueio",
+    title: "Horário bloqueado",
+    description: "",
+    date: "",
+    start_time: "12:00",
+    end_time: "13:00",
+    all_day: false,
+  });
 
   const [weekBaseDate, setWeekBaseDate] = useState<Date>(new Date());
 
@@ -267,6 +382,12 @@ export default function AgendaPage() {
       .order("date")
       .order("start_time");
 
+    const { data: blocks } = await supabase
+      .from("schedule_blocks")
+      .select("*")
+      .order("date")
+      .order("start_time");
+
     const { data: f } = await supabase
       .from("financial_records")
       .select("*");
@@ -285,6 +406,7 @@ export default function AgendaPage() {
     if (p) setPatients(p);
     if (profs) setProfessionals(profs);
     if (a) setAppointments(a);
+    if (blocks) setScheduleBlocks(blocks);
     if (f) setFinancialRecords(f);
     if (templates) setMessageTemplates(templates);
 
@@ -326,6 +448,120 @@ export default function AgendaPage() {
     setAppointmentStatus("agendado");
     setReminderEnabled(true);
     setReminderBeforeHours("24");
+  };
+
+
+  const resetBlockForm = () => {
+    const defaultStart = `${pad(clinicSettings.start_hour)}:00`;
+    setBlockForm({
+      id: "",
+      professional_id: selectedAgendaProfessionalId || "",
+      block_type: "bloqueio",
+      title: "Horário bloqueado",
+      description: "",
+      date: "",
+      start_time: defaultStart,
+      end_time: addMinutesToTime(defaultStart, 60),
+      all_day: false,
+    });
+  };
+
+  const openNewBlock = (selectedDate?: string, selectedTime?: string) => {
+    const nextStart = selectedTime || `${pad(clinicSettings.start_hour)}:00`;
+    setBlockForm({
+      id: "",
+      professional_id: selectedAgendaProfessionalId || "",
+      block_type: "bloqueio",
+      title: "Horário bloqueado",
+      description: "",
+      date: selectedDate || formatDate(new Date()),
+      start_time: nextStart,
+      end_time: addMinutesToTime(nextStart, 60),
+      all_day: false,
+    });
+    setShowBlockModal(true);
+  };
+
+  const saveScheduleBlock = async () => {
+    if (!blockForm.date) {
+      alert("Informe a data do bloqueio.");
+      return;
+    }
+
+    const title = blockForm.title.trim() || getDefaultBlockTitle(blockForm.block_type);
+    const startTime = blockForm.all_day
+      ? `${pad(clinicSettings.start_hour)}:00`
+      : blockForm.start_time;
+    const endTime = blockForm.all_day
+      ? `${pad(clinicSettings.end_hour)}:00`
+      : blockForm.end_time;
+
+    if (!blockForm.all_day && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      alert("O horário final precisa ser maior que o horário inicial.");
+      return;
+    }
+
+    const payload = {
+      professional_id: blockForm.professional_id || null,
+      title,
+      description: blockForm.description.trim() || null,
+      block_type: blockForm.block_type,
+      date: blockForm.date,
+      start_time: startTime,
+      end_time: endTime,
+      all_day: blockForm.all_day,
+      color: getBlockColor(blockForm.block_type),
+    };
+
+    const query = blockForm.id
+      ? supabase.from("schedule_blocks").update(payload).eq("id", blockForm.id)
+      : supabase.from("schedule_blocks").insert([payload]);
+
+    const { error } = await query;
+
+    if (error) {
+      alert("Erro ao salvar bloqueio: " + error.message);
+      return;
+    }
+
+    setShowBlockModal(false);
+    resetBlockForm();
+    await loadData();
+  };
+
+  const deleteScheduleBlock = async (blockId: string) => {
+    const ok = window.confirm("Remover este bloqueio de horário?");
+    if (!ok) return;
+
+    const { error } = await supabase
+      .from("schedule_blocks")
+      .delete()
+      .eq("id", blockId);
+
+    if (error) {
+      alert("Erro ao remover bloqueio: " + error.message);
+      return;
+    }
+
+    setSelectedBlockDetails(null);
+    setShowBlockModal(false);
+    await loadData();
+  };
+
+  const editScheduleBlock = (block: any) => {
+    setSelectedBlockDetails(null);
+    setBlockForm({
+      id: block.id || "",
+      professional_id: block.professional_id || "",
+      block_type: block.block_type || "bloqueio",
+      title: block.title || getDefaultBlockTitle(block.block_type),
+      description: block.description || "",
+      date: block.date || "",
+      start_time: block.start_time || `${pad(clinicSettings.start_hour)}:00`,
+      end_time: block.end_time || addMinutesToTime(block.start_time || `${pad(clinicSettings.start_hour)}:00`, 60),
+      all_day: block.all_day === true,
+    });
+    setShowBlockModal(true);
   };
 
   const days = useMemo(() => {
@@ -671,20 +907,43 @@ export default function AgendaPage() {
     targetDate: string,
     targetTime: string,
     targetDuration: number,
-    ignoreId?: string | null
+    ignoreId?: string | null,
+    targetProfessionalId?: string | null
   ) => {
-    void targetDate;
     void ignoreId;
 
-    // Permite encaixes no mesmo horário, como no Google Agenda.
-    // A validação agora bloqueia apenas horários fora do expediente.
+    // Permite encaixes entre consultas no mesmo horário, como no Google Agenda.
+    // Agora bloqueia horários fora do expediente e horários bloqueados manualmente.
     const start = timeToMinutes(targetTime);
     const end = start + targetDuration;
 
     const dayStart = clinicSettings.start_hour * 60;
     const dayEnd = clinicSettings.end_hour * 60;
 
-    return start >= dayStart && end <= dayEnd;
+    if (start < dayStart || end > dayEnd) return false;
+
+    const hasBlockingScheduleBlock = scheduleBlocks.some((block) => {
+      if (block.date !== targetDate) return false;
+
+      const blockAppliesToProfessional = !block.professional_id
+        ? true
+        : targetProfessionalId
+          ? block.professional_id === targetProfessionalId
+          : false;
+
+      if (!blockAppliesToProfessional) return false;
+
+      const blockStart = block.all_day
+        ? dayStart
+        : timeToMinutes(block.start_time || `${pad(clinicSettings.start_hour)}:00`);
+      const blockEnd = block.all_day
+        ? dayEnd
+        : timeToMinutes(block.end_time || `${pad(clinicSettings.end_hour)}:00`);
+
+      return start < blockEnd && end > blockStart;
+    });
+
+    return !hasBlockingScheduleBlock;
   };
 
   const findNextAvailableSlot = (
@@ -713,7 +972,8 @@ export default function AgendaPage() {
             candidateDateKey,
             candidateTime,
             targetDuration,
-            ignoreId
+            ignoreId,
+            selectedAgendaProfessionalId
           )
         ) {
           return {
@@ -1014,7 +1274,7 @@ export default function AgendaPage() {
 
     const parsedDuration = parseInt(duration);
 
-    if (!isSlotAvailable(date, time, parsedDuration, editingId)) {
+    if (!isSlotAvailable(date, time, parsedDuration, editingId, selectedProfessionalId)) {
       alert("Esse horário já está ocupado ou ultrapassa o fim do expediente.");
       return;
     }
@@ -1145,7 +1405,8 @@ export default function AgendaPage() {
         targetDate,
         targetTime,
         Number(current.duration || 30),
-        draggingId
+        draggingId,
+        current.professional_id
       )
     ) {
       alert("Esse horário está ocupado ou ultrapassa o fim do expediente.");
@@ -1195,7 +1456,8 @@ export default function AgendaPage() {
           appt.date,
           appt.start_time,
           Number(appt.duration || 30),
-          resizingId
+          resizingId,
+          appt.professional_id
         )
       ) {
         await loadData();
@@ -1304,15 +1566,59 @@ export default function AgendaPage() {
   }, [appointments, selectedAgendaProfessionalId]);
 
   const selectedProfessionalInitials = useMemo(() => {
-    const name = selectedAgendaProfessional?.name || "Todos";
-    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return selectedAgendaProfessionalId
+      ? getProfessionalInitials(selectedAgendaProfessional?.name)
+      : "TP";
+  }, [selectedAgendaProfessional, selectedAgendaProfessionalId]);
 
-    if (parts.length === 0) return "TP";
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  const selectedProfessionalColor = useMemo(() => {
+    return selectedAgendaProfessionalId
+      ? getProfessionalColor(selectedAgendaProfessionalId)
+      : "#239d9a";
+  }, [selectedAgendaProfessionalId]);
 
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }, [selectedAgendaProfessional]);
+  const getAppointmentStyle = (appointment: any) => {
+    const backgroundColor = appointment?.professional_id
+      ? getProfessionalColor(appointment.professional_id)
+      : getFallbackAppointmentColor(
+          appointment?.status,
+          appointment?.type,
+          appointment?.title
+        );
 
+    return { backgroundColor };
+  };
+
+
+
+  const filteredScheduleBlocksByProfessional = useMemo(() => {
+    if (!selectedAgendaProfessionalId) return scheduleBlocks;
+
+    return scheduleBlocks.filter(
+      (block) => !block.professional_id || block.professional_id === selectedAgendaProfessionalId
+    );
+  }, [scheduleBlocks, selectedAgendaProfessionalId]);
+
+  const getScheduleBlocksForSlot = (targetDate: string, targetTime: string) => {
+    return filteredScheduleBlocksByProfessional.filter((block) => {
+      if (block.date !== targetDate) return false;
+
+      if (block.all_day) {
+        return targetTime === `${pad(clinicSettings.start_hour)}:00`;
+      }
+
+      return block.start_time === targetTime;
+    });
+  };
+
+  const getScheduleBlockHeight = (block: any) => {
+    const durationMinutes = block.all_day
+      ? (clinicSettings.end_hour - clinicSettings.start_hour) * 60
+      : minutesBetweenTimes(block.start_time, block.end_time);
+
+    const slots = Math.max(1, Math.ceil(durationMinutes / 15));
+    return slots * SLOT_HEIGHT - 6;
+  };
 
   const confirmAllTodayAppointments = async () => {
     const appointmentsToConfirm = agendaAlerts.naoConfirmados;
@@ -1406,7 +1712,10 @@ export default function AgendaPage() {
 
 
             <div className="hidden min-w-[210px] items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-2 py-1 shadow-sm lg:flex">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1db7b3] to-[#7ccfce] text-[10px] font-black text-white">
+              <div
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
+                style={{ backgroundColor: selectedProfessionalColor }}
+              >
                 {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
               </div>
               <select
@@ -1491,6 +1800,15 @@ export default function AgendaPage() {
 
             <button
               type="button"
+              onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
+              className="h-8 rounded-lg bg-slate-700 px-3 text-[11px] font-black text-white shadow-sm hover:bg-slate-800"
+              title="Bloquear horário na agenda"
+            >
+              Bloquear
+            </button>
+
+            <button
+              type="button"
               onClick={syncExistingGoogleAppointments}
               className="hidden h-8 rounded-lg border border-[#c2dddd] bg-white px-3 text-[11px] font-black text-[#239d9a] shadow-sm hover:bg-[#f4ffff] xl:inline-flex xl:items-center"
               title="Sincronizar consultas existentes com Google Agenda"
@@ -1514,7 +1832,10 @@ export default function AgendaPage() {
 
       <div className="px-3 pt-2 lg:hidden">
         <div className="flex items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1db7b3] to-[#7ccfce] text-[10px] font-black text-white">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
+            style={{ backgroundColor: selectedProfessionalColor }}
+          >
             {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
           </div>
           <select
@@ -1688,6 +2009,42 @@ export default function AgendaPage() {
                       handleDropOnCell(d.date, h);
                     }}
                   >
+                    {getScheduleBlocksForSlot(d.date, h).map((block) => {
+                      const blockProfessional = getProfessionalById(block.professional_id);
+                      const blockColor = block.color || getBlockColor(block.block_type);
+
+                      return (
+                        <div
+                          key={block.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedBlockDetails(block);
+                          }}
+                          className="absolute left-[6px] right-[6px] top-1 z-[2] overflow-hidden rounded-xl border border-white/40 px-2 py-2 text-[10px] text-white shadow-[0_10px_26px_rgba(15,23,42,0.18)] cursor-pointer"
+                          style={{
+                            height: `${getScheduleBlockHeight(block)}px`,
+                            backgroundColor: blockColor,
+                            backgroundImage:
+                              "repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 8px, transparent 8px, transparent 16px)",
+                          }}
+                          title="Horário bloqueado. Clique para ver detalhes."
+                        >
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/55" />
+                          <div className="pl-1 font-black uppercase tracking-wide leading-tight truncate">
+                            {block.title || getDefaultBlockTitle(block.block_type)}
+                          </div>
+                          <div className="mt-0.5 pl-1 text-[9px] font-bold opacity-95 truncate">
+                            {block.all_day
+                              ? "Dia inteiro"
+                              : `${block.start_time} - ${block.end_time}`}
+                          </div>
+                          <div className="mt-1 pl-1 text-[8px] font-bold opacity-90 truncate">
+                            {blockProfessional?.name || "Todos os profissionais"}
+                          </div>
+                        </div>
+                      );
+                    })}
+
                     {ag.map((a, index) => {
                       const overlapCount = Math.max(1, ag.length);
                       const widthPercent = 100 / overlapCount;
@@ -1705,12 +2062,13 @@ export default function AgendaPage() {
                           e.stopPropagation();
                           setSelectedAppointmentDetails(a);
                         }}
-                        className={`${getColor(a)} ${
+                        className={`${!a.professional_id ? getColor(a) : ""} ${
                           hasDebt(a.patient_id)
                             ? "ring-2 ring-amber-300 ring-offset-1"
                             : ""
                         } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-xl cursor-pointer shadow-[0_10px_26px_rgba(15,23,42,0.20)] border border-white/30 transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.24)]`}
                         style={{
+                          ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
                           left: `calc(${leftPercent}% + 6px)`,
                           width: `calc(${widthPercent}% - 12px)`,
@@ -1733,8 +2091,16 @@ export default function AgendaPage() {
                         </div>
 
                         {a.professional_id && (
-                          <div className="opacity-95 truncate mt-1 pl-1 pr-1 leading-tight text-[8px] font-bold">
-                            {getProfessionalLabel(a.professional_id)}
+                          <div className="mt-1 flex items-center gap-1 truncate pl-1 pr-1 text-[8px] font-bold leading-tight opacity-95">
+                            <span
+                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/25 text-[7px] font-black text-white ring-1 ring-white/30"
+                              title={getProfessionalLabel(a.professional_id)}
+                            >
+                              {getProfessionalInitials(getProfessionalById(a.professional_id)?.name)}
+                            </span>
+                            <span className="truncate">
+                              {getProfessionalLabel(a.professional_id)}
+                            </span>
                           </div>
                         )}
 
@@ -1819,10 +2185,72 @@ export default function AgendaPage() {
         </div>
       </div>
 
+      {selectedBlockDetails && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
+          <div className="w-full max-w-[520px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
+            <div
+              className="p-5 text-white"
+              style={{ backgroundColor: selectedBlockDetails.color || getBlockColor(selectedBlockDetails.block_type) }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black leading-tight">
+                    {selectedBlockDetails.title || getDefaultBlockTitle(selectedBlockDetails.block_type)}
+                  </h2>
+                  <p className="mt-1 text-sm opacity-95">
+                    {formatDateBr(selectedBlockDetails.date)} • {selectedBlockDetails.all_day ? "Dia inteiro" : `${selectedBlockDetails.start_time} - ${selectedBlockDetails.end_time}`}
+                  </p>
+                  <p className="mt-1 text-sm font-bold opacity-95">
+                    Profissional: {getProfessionalLabel(selectedBlockDetails.professional_id) || "Todos os profissionais"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBlockDetails(null)}
+                  className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white text-xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {selectedBlockDetails.description && (
+                <div className="rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 text-sm text-slate-700 whitespace-pre-wrap">
+                  {selectedBlockDetails.description}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => editScheduleBlock(selectedBlockDetails)}
+                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#f6ffff]"
+                >
+                  Editar bloqueio
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deleteScheduleBlock(selectedBlockDetails.id)}
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 hover:bg-red-100"
+                >
+                  Remover bloqueio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
           <div className="w-full max-w-[560px] rounded-[28px] overflow-hidden bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] border border-[#c2dddd]">
-            <div className={`${getColor(selectedAppointmentDetails)} text-white p-5 shadow-inner`}>
+            <div
+              className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
+              style={getAppointmentStyle(selectedAppointmentDetails)}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black leading-tight">
@@ -2002,6 +2430,187 @@ export default function AgendaPage() {
                       Confirmar por WhatsApp
                     </a>
                   )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBlockModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 pt-8 z-50">
+          <div className="bg-white w-full max-w-[560px] max-h-[90vh] rounded-2xl border border-[#c2dddd] shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-5 border-b border-[#c2dddd] bg-white">
+              <h2 className="font-bold text-xl text-slate-800">
+                {blockForm.id ? "Editar bloqueio" : "Bloquear horário"}
+              </h2>
+
+              <button
+                onClick={() => setShowBlockModal(false)}
+                className="w-9 h-9 rounded-full border border-[#c2dddd] text-slate-500 hover:bg-slate-50"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-600">
+                  Tipo de bloqueio
+                </label>
+                <select
+                  value={blockForm.block_type}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    setBlockForm((prev) => ({
+                      ...prev,
+                      block_type: nextType,
+                      title: prev.title && prev.title !== getDefaultBlockTitle(prev.block_type)
+                        ? prev.title
+                        : getDefaultBlockTitle(nextType),
+                    }));
+                  }}
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl bg-white"
+                >
+                  <option value="bloqueio">Bloqueio</option>
+                  <option value="almoco">Almoço</option>
+                  <option value="ferias">Férias</option>
+                  <option value="reuniao">Reunião</option>
+                  <option value="curso">Curso/Congresso</option>
+                  <option value="pessoal">Pessoal</option>
+                  <option value="manutencao">Manutenção</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-600">
+                  Título
+                </label>
+                <input
+                  value={blockForm.title}
+                  onChange={(e) => setBlockForm((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="Ex.: Almoço, Férias, Reunião"
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-600">
+                  Profissional
+                </label>
+                <select
+                  value={blockForm.professional_id}
+                  onChange={(e) => setBlockForm((prev) => ({ ...prev, professional_id: e.target.value }))}
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl bg-white"
+                >
+                  <option value="">Todos os profissionais</option>
+                  {activeProfessionals.map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.name}
+                      {professional.specialty ? ` • ${professional.specialty}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-600">
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={blockForm.date}
+                  onChange={(e) => setBlockForm((prev) => ({ ...prev, date: e.target.value }))}
+                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={blockForm.all_day}
+                  onChange={(e) => setBlockForm((prev) => ({ ...prev, all_day: e.target.checked }))}
+                />
+                Bloquear o dia inteiro
+              </label>
+
+              {!blockForm.all_day && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-600">
+                      Início
+                    </label>
+                    <input
+                      type="time"
+                      value={blockForm.start_time}
+                      onChange={(e) => setBlockForm((prev) => ({
+                        ...prev,
+                        start_time: e.target.value,
+                        end_time: timeToMinutes(prev.end_time) <= timeToMinutes(e.target.value)
+                          ? addMinutesToTime(e.target.value, 60)
+                          : prev.end_time,
+                      }))}
+                      className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-600">
+                      Fim
+                    </label>
+                    <input
+                      type="time"
+                      value={blockForm.end_time}
+                      onChange={(e) => setBlockForm((prev) => ({ ...prev, end_time: e.target.value }))}
+                      className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-600">
+                  Observação
+                </label>
+                <textarea
+                  value={blockForm.description}
+                  onChange={(e) => setBlockForm((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Observação interna opcional"
+                  className="min-h-[100px] w-full border border-[#c2dddd] p-3 rounded-xl"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-3 text-xs text-slate-600">
+                Este bloqueio impede novos agendamentos no período selecionado.
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-[#c2dddd] p-4 flex justify-between gap-2 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
+              <div>
+                {blockForm.id && (
+                  <button
+                    type="button"
+                    onClick={() => deleteScheduleBlock(blockForm.id)}
+                    className="px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-sm font-black text-red-700 hover:bg-red-100"
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowBlockModal(false)}
+                  className="px-4 py-2 rounded-xl border border-[#c2dddd] bg-white hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={saveScheduleBlock}
+                  className="bg-slate-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-slate-800"
+                >
+                  Salvar bloqueio
+                </button>
               </div>
             </div>
           </div>
