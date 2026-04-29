@@ -1730,7 +1730,7 @@ export default function AgendaPage() {
 
             <div className="hidden w-[250px] items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-2 py-1 shadow-sm md:flex">
               <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-black text-white shadow-sm"
                 style={{ backgroundColor: selectedProfessionalColor }}
               >
                 {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
@@ -1874,10 +1874,10 @@ export default function AgendaPage() {
           </div>
 
           <div className="flex min-w-[280px] flex-col items-center justify-center text-center">
-            <h1 className="truncate text-[24px] font-black leading-none text-slate-800 lg:text-[28px]">
+            <h1 className="truncate text-[18px] font-black leading-none text-slate-800 lg:text-[22px]">
               Agenda Clínica
             </h1>
-            <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.32em] text-[#239d9a] lg:text-[11px]">
+            <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.32em] text-[#239d9a] lg:text-[10px]">
               {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
                 month: "long",
                 year: "numeric",
