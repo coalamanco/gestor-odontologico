@@ -14,7 +14,7 @@ type AppointmentStatus =
   | "faltou"
   | "cancelado";
 
-const SLOT_HEIGHT = 34;
+const SLOT_HEIGHT = 30;
 const START_HOUR = 8;
 const END_HOUR = 20;
 
@@ -1681,8 +1681,8 @@ export default function AgendaPage() {
   }, [filteredAppointmentsByProfessional, financialRecords]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-[#eefafa] via-[#f8ffff] to-[#e9f4f4]">
-      <div className="border-b border-[#c2dddd] bg-white/95 px-3 py-1.5 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
+    <div className="h-screen flex flex-col bg-[#f5f7f8]">
+      <div className="border-b border-[#c2dddd] bg-white/95 px-3 py-1.5 shadow-sm">
         <div className="grid min-h-[48px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -1695,7 +1695,7 @@ export default function AgendaPage() {
 
             <button
               onClick={() => setWeekBaseDate(new Date())}
-              className="h-8 rounded-lg bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] px-3 text-sm font-black text-white shadow-sm"
+              className="h-8 rounded-lg bg-[#239d9a] px-3 text-sm font-black text-white shadow-sm"
             >
               Hoje
             </button>
@@ -1855,7 +1855,7 @@ export default function AgendaPage() {
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 p-3">
-        <div className="bg-white/95 rounded-[24px] border border-[#c2dddd] shadow-sm overflow-hidden flex flex-col min-h-0 ring-1 ring-white/70">
+        <div className="bg-white/95 rounded-[18px] border border-[#c2dddd] shadow-sm overflow-hidden flex flex-col min-h-0">
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
             <div className="grid grid-cols-[76px_repeat(6,1fr)] border-b border-[#c7e4e4] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm">
               <div className="p-3 text-slate-400 uppercase tracking-widest">Hora</div>
@@ -1944,12 +1944,11 @@ export default function AgendaPage() {
                             e.stopPropagation();
                             setSelectedBlockDetails(block);
                           }}
-                          className="absolute left-[6px] right-[6px] top-1 z-[2] overflow-hidden rounded-lg border border-slate-200/60 px-2 py-2 text-[10px] text-white shadow-sm cursor-pointer"
+                          className="absolute left-[6px] right-[6px] top-1 z-[2] overflow-hidden rounded-md border border-slate-300/40 px-2 py-1.5 text-[10px] text-white cursor-pointer opacity-90"
                           style={{
                             height: `${getScheduleBlockHeight(block)}px`,
                             backgroundColor: blockColor,
-                            backgroundImage:
-                              "repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 8px, transparent 8px, transparent 16px)",
+                            
                           }}
                           title="Horário bloqueado. Clique para ver detalhes."
                         >
@@ -1990,7 +1989,7 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-300"
                             : ""
-                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-2 rounded-md cursor-pointer border border-white/10`}
+                        } absolute top-1 z-[1] overflow-hidden text-white text-[10px] px-2 py-1.5 rounded-md cursor-pointer border border-black/5`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
@@ -2009,7 +2008,7 @@ export default function AgendaPage() {
                               {a.type === "compromisso" ? "Compromisso" : a.title}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[8px] font-black leading-none">
+                          <span className="shrink-0 rounded-md bg-black/10 px-1.5 py-0.5 text-[8px] font-black leading-none">
                             {a.start_time}
                           </span>
                         </div>
@@ -2017,7 +2016,7 @@ export default function AgendaPage() {
                         {a.professional_id && (
                           <div className="mt-1 flex items-center gap-1 truncate pl-1 pr-1 text-[8px] font-bold leading-tight opacity-95">
                             <span
-                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/25 text-[7px] font-black text-white ring-1 ring-white/30"
+                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[7px] font-black text-white ring-0"
                               title={getProfessionalLabel(a.professional_id)}
                             >
                               {getProfessionalInitials(getProfessionalById(a.professional_id)?.name)}
@@ -2082,7 +2081,7 @@ export default function AgendaPage() {
                             setResizeStartY(e.clientY);
                             setResizeStartDuration(Number(a.duration || 30));
                           }}
-                          className="absolute bottom-0 left-0 right-0 h-2 bg-black/15 cursor-ns-resize rounded-b-xl hover:bg-white/30 transition-colors"
+                          className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/10 cursor-ns-resize rounded-b-md"
                           title="Arraste para aumentar ou diminuir a duração"
                         />
                       </div>
@@ -2111,7 +2110,7 @@ export default function AgendaPage() {
 
       {selectedBlockDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[520px] rounded-[24px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
+          <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
             <div
               className="p-5 text-white"
               style={{ backgroundColor: selectedBlockDetails.color || getBlockColor(selectedBlockDetails.block_type) }}
@@ -2132,7 +2131,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedBlockDetails(null)}
-                  className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white text-xl"
+                  className="w-9 h-9 rounded-full bg-black/10 hover:bg-white/30 text-white text-xl"
                 >
                   ×
                 </button>
@@ -2170,7 +2169,7 @@ export default function AgendaPage() {
 
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[560px] rounded-[24px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
+          <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
             <div
               className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
               style={getAppointmentStyle(selectedAppointmentDetails)}
@@ -2207,7 +2206,7 @@ export default function AgendaPage() {
                       onClick={() =>
                         openPatientFinance(selectedAppointmentDetails.patient_id)
                       }
-                      className="mt-3 inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-white hover:bg-white/30"
+                      className="mt-3 inline-flex items-center rounded-full bg-black/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-white hover:bg-white/30"
                       title="Abrir financeiro do paciente"
                     >
                       💰 Débito:{" "}
@@ -2221,7 +2220,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedAppointmentDetails(null)}
-                  className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white text-xl"
+                  className="w-9 h-9 rounded-full bg-black/10 hover:bg-white/30 text-white text-xl"
                 >
                   ×
                 </button>
@@ -2801,7 +2800,7 @@ export default function AgendaPage() {
 
               <button
                 onClick={handleSave}
-                className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm"
+                className="bg-[#239d9a] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm"
               >
                 Salvar
               </button>
