@@ -231,8 +231,8 @@ function getFallbackAppointmentColor(status?: string | null, type?: string | nul
 
   if (status === "confirmado") return "#10b981";
   if (status === "em_atendimento") return "#2563eb";
-  if (status === "finalizado") return "#475569";
-  if (status === "faltou") return "#dc2626";
+  if (status === "finalizado") return "#64748b";
+  if (status === "faltou") return "#ef4444";
   if (status === "cancelado") return "#94a3b8";
 
   const motivo = String(title || "").toLowerCase();
@@ -240,7 +240,7 @@ function getFallbackAppointmentColor(status?: string | null, type?: string | nul
   if (motivo === "retorno") return "#10b981";
   if (motivo === "tratamento") return "#14b8a6";
 
-  return "#06b6d4";
+  return "#0ea5a4";
 }
 
 export default function AgendaPage() {
@@ -761,12 +761,12 @@ export default function AgendaPage() {
   };
 
   const statusBadgeClass = (status?: string | null) => {
-    if (status === "confirmado") return "bg-emerald-100 text-emerald-700";
-    if (status === "em_atendimento") return "bg-blue-100 text-blue-700";
-    if (status === "finalizado") return "bg-slate-100 text-slate-700";
-    if (status === "faltou") return "bg-red-100 text-red-700";
-    if (status === "cancelado") return "bg-zinc-100 text-zinc-700";
-    return "bg-white/85 text-slate-700";
+    if (status === "confirmado") return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70";
+    if (status === "em_atendimento") return "bg-blue-50 text-blue-700 ring-1 ring-blue-200/70";
+    if (status === "finalizado") return "bg-slate-50 text-slate-600 ring-1 ring-slate-200/70";
+    if (status === "faltou") return "bg-red-50 text-red-700 ring-1 ring-red-200/70";
+    if (status === "cancelado") return "bg-zinc-50 text-zinc-600 ring-1 ring-zinc-200/70";
+    return "bg-white/80 text-slate-600 ring-1 ring-white/70";
   };
 
   const updateAppointmentStatus = async (
@@ -2010,7 +2010,7 @@ export default function AgendaPage() {
           {hours.map((h) => (
             <div
               key={h}
-              className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#e3eeee] text-xs"
+              className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#edf4f4] text-xs"
             >
               <div className="px-3 py-1.5 bg-[#fbffff] font-bold text-[10px] text-slate-400 tracking-tight">{h}</div>
 
@@ -2028,10 +2028,10 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className={`border-l border-[#e3eeee] min-h-[28px] cursor-pointer relative transition-colors min-w-0 overflow-visible group ${
+                    className={`border-l border-[#edf4f4] min-h-[28px] cursor-pointer relative transition-colors min-w-0 overflow-visible group ${
                       getHolidayInfo(d.date)
                         ? "bg-amber-50/30 hover:bg-amber-50/60"
-                        : "hover:bg-[#f6ffff]"
+                        : "hover:bg-[#fbffff]"
                     }`}
                     onClick={() => openNew(d.date, h)}
                     onDragOver={(e) => e.preventDefault()}
@@ -2051,7 +2051,7 @@ export default function AgendaPage() {
                             e.stopPropagation();
                             setSelectedBlockDetails(block);
                           }}
-                          className="absolute left-[5px] right-[5px] top-0.5 z-[2] overflow-hidden rounded-md border border-slate-300/30 px-2 py-1 text-[9px] text-white cursor-pointer opacity-80"
+                          className="absolute left-[5px] right-[5px] top-0.5 z-[2] overflow-hidden rounded-lg border border-slate-300/30 px-2 py-1 text-[9px] text-white cursor-pointer opacity-70 shadow-sm"
                           style={{
                             height: `${getScheduleBlockHeight(block)}px`,
                             backgroundColor: blockColor,
@@ -2059,7 +2059,7 @@ export default function AgendaPage() {
                           }}
                           title="Horário bloqueado. Clique para ver detalhes."
                         >
-                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-white/45" />
+                          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                           <div className="pl-1 font-black uppercase tracking-wide leading-tight truncate text-[9px]">
                             {block.title || getDefaultBlockTitle(block.block_type)}
                           </div>
@@ -2094,9 +2094,9 @@ export default function AgendaPage() {
                         }}
                         className={`${!a.professional_id ? getColor(a) : ""} ${
                           hasDebt(a.patient_id)
-                            ? "ring-1 ring-amber-300"
+                            ? "ring-1 ring-amber-200"
                             : ""
-                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[10px] px-2 py-1 rounded-md cursor-pointer border border-black/5`}
+                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[10px] px-2 py-1 rounded-[7px] cursor-pointer border border-white/20 shadow-sm`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
@@ -2105,25 +2105,25 @@ export default function AgendaPage() {
                         }}
                         title="Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-white/45" />
+                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                         <div className="flex items-start justify-between gap-1 pl-1">
                           <div className="min-w-0">
-                            <div className="font-black truncate pr-1 leading-tight text-[10px]">
+                            <div className="truncate pr-1 text-[10px] font-black leading-tight tracking-tight">
                               {a.patient_name || a.title}
                             </div>
-                            <div className="opacity-85 truncate mt-0.5 pr-1 leading-tight text-[8px]">
+                            <div className="mt-0.5 truncate pr-1 text-[8px] font-semibold leading-tight opacity-70">
                               {a.type === "compromisso" ? "Compromisso" : a.title}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded bg-black/10 px-1 py-0.5 text-[7px] font-black leading-none">
+                          <span className="shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 text-[7px] font-black leading-none text-white/90">
                             {a.start_time}
                           </span>
                         </div>
 
                         {a.professional_id && (
-                          <div className="mt-0.5 flex items-center gap-1 truncate pl-1 pr-1 text-[7px] font-bold leading-tight opacity-90">
+                          <div className="mt-0.5 flex items-center gap-1 truncate pl-1 pr-1 text-[7px] font-semibold leading-tight opacity-70">
                             <span
-                              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-black/10 text-[6px] font-black text-white ring-0"
+                              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[6px] font-black text-white ring-0"
                               title={getProfessionalLabel(a.professional_id)}
                             >
                               {getProfessionalInitials(getProfessionalById(a.professional_id)?.name)}
@@ -2134,10 +2134,10 @@ export default function AgendaPage() {
                           </div>
                         )}
 
-                        <div className="mt-1 flex items-center gap-1 flex-nowrap overflow-hidden pl-1">
+                        <div className="mt-1 flex items-center gap-0.5 flex-nowrap overflow-hidden pl-1">
                           {a.type !== "compromisso" && (
                             <span
-                              className={`shrink-0 rounded px-1 py-0.5 text-[7px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
+                              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
                                 a.status
                               )}`}
                             >
@@ -2147,7 +2147,7 @@ export default function AgendaPage() {
 
                           {a.reminder_enabled && !a.reminder_sent_at && (
                             <span
-                              className="shrink-0 rounded bg-yellow-100 px-1 py-0.5 text-[7px] font-black uppercase tracking-tight text-yellow-700 whitespace-nowrap leading-none"
+                              className="shrink-0 rounded-md bg-yellow-50 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-yellow-700 whitespace-nowrap leading-none ring-1 ring-yellow-200/70"
                               title={`Lembrete pendente: ${a.reminder_before_hours || 24}h antes`}
                             >
                               Lemb.
@@ -2156,7 +2156,7 @@ export default function AgendaPage() {
 
                           {a.reminder_sent_at && (
                             <span
-                              className="shrink-0 rounded bg-green-100 px-1 py-0.5 text-[7px] font-black uppercase tracking-tight text-green-700 whitespace-nowrap leading-none"
+                              className="shrink-0 rounded-md bg-green-50 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-green-700 whitespace-nowrap leading-none ring-1 ring-green-200/70"
                               title="Lembrete enviado"
                             >
                               Avisado
@@ -2170,7 +2170,7 @@ export default function AgendaPage() {
                                 e.stopPropagation();
                                 openPatientFinance(a.patient_id);
                               }}
-                              className="shrink-0 rounded bg-amber-100 px-1 py-0.5 text-[7px] font-black text-amber-700 whitespace-nowrap leading-none hover:bg-amber-200"
+                              className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[6px] font-black text-amber-700 whitespace-nowrap leading-none ring-1 ring-amber-200/70 hover:bg-amber-100"
                               title={`Abrir financeiro do paciente. Débito: ${formatCurrency(
                                 getPatientDebt(a.patient_id)
                               )}`}
@@ -2188,7 +2188,7 @@ export default function AgendaPage() {
                             setResizeStartY(e.clientY);
                             setResizeStartDuration(Number(a.duration || 30));
                           }}
-                          className="absolute bottom-0 left-0 right-0 h-1 bg-black/10 cursor-ns-resize rounded-b-md"
+                          className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize rounded-b-md bg-black/5 hover:bg-white/20"
                           title="Arraste para aumentar ou diminuir a duração"
                         />
                       </div>
@@ -2256,7 +2256,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => editScheduleBlock(selectedBlockDetails)}
-                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#f6ffff]"
+                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
                 >
                   Editar bloqueio
                 </button>
@@ -2409,7 +2409,7 @@ export default function AgendaPage() {
                         `/pacientes/${selectedAppointmentDetails.patient_id}`
                       )
                     }
-                    className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#f6ffff]"
+                    className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
                   >
                     Abrir prontuário
                   </button>
@@ -2432,7 +2432,7 @@ export default function AgendaPage() {
                     setSelectedAppointmentDetails(null);
                     openEdit(appointmentToEdit);
                   }}
-                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#f6ffff]"
+                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
                 >
                   Editar
                 </button>
@@ -2713,7 +2713,7 @@ export default function AgendaPage() {
                         setSelectedPatient(p);
                         setSearch(p.name);
                       }}
-                      className="p-3 hover:bg-[#f6ffff] cursor-pointer"
+                      className="p-3 hover:bg-[#fbffff] cursor-pointer"
                     >
                       {p.name}
                     </div>
