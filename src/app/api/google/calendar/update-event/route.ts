@@ -5,6 +5,21 @@ import { getGoogleOAuthClient } from "@/lib/googleCalendar";
 
 export const dynamic = "force-dynamic";
 
+type GoogleConnection = {
+  refresh_token?: string | null;
+  access_token?: string | null;
+  expiry_date?: number | null;
+  calendar_id?: string | null;
+};
+
+type ProfessionalGoogleInfo = {
+  id: string;
+  name: string | null;
+  google_calendar_id: string | null;
+  google_calendar_email: string | null;
+  google_connected: boolean | null;
+};
+
 function buildDateTime(date: string, time: string) {
   return `${date}T${time}:00-03:00`;
 }
@@ -13,6 +28,39 @@ function addMinutes(dateTime: string, minutes: number) {
   const date = new Date(dateTime);
   date.setMinutes(date.getMinutes() + minutes);
   return date.toISOString();
+}
+
+function getCalendarIdForAppointment(
+  appointment: any,
+  professional: ProfessionalGoogleInfo | null,
+  fallbackConnection: GoogleConnection
+) {
+  if (
+    appointment?.professional_id &&
+    professional?.google_connected === true &&
+    professional?.google_calendar_id
+  ) {
+    return professional.google_calendar_id;
+  }
+
+  return fallbackConnection.calendar_id || "primary";
+}
+
+async function getProfessionalForAppointment(
+  supabaseAdmin: any,
+  professionalId?: string | null
+) {
+  if (!professionalId) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("professionals")
+    .select("id, name, google_calendar_id, google_calendar_email, google_connected")
+    .eq("id", professionalId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return (data || null) as ProfessionalGoogleInfo | null;
 }
 
 export async function POST(request: NextRequest) {
@@ -76,6 +124,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const professional = await getProfessionalForAppointment(
+      supabaseAdmin,
+      appointment.professional_id
+    );
+
+    const calendarId = getCalendarIdForAppointment(
+      appointment,
+      professional,
+      connection
+    );
+
     const oauth2Client = getGoogleOAuthClient();
 
     oauth2Client.setCredentials({
@@ -105,6 +164,10 @@ export async function POST(request: NextRequest) {
       "Criado pelo Gestor Odontológico",
       `Paciente: ${appointment.patient_name || "Não informado"}`,
       `Tipo: ${appointment.title || "consulta"}`,
+      professional?.name ? `Profissional: ${professional.name}` : "",
+      professional?.google_calendar_email
+        ? `Google do profissional: ${professional.google_calendar_email}`
+        : "",
       appointment.description ? `Observação: ${appointment.description}` : "",
     ].filter(Boolean);
 
@@ -126,7 +189,7 @@ export async function POST(request: NextRequest) {
     if (googleEventId) {
       try {
         const updatedEvent = await calendar.events.update({
-          calendarId: connection.calendar_id || "primary",
+          calendarId,
           eventId: googleEventId,
           requestBody,
         });
@@ -145,7 +208,7 @@ export async function POST(request: NextRequest) {
 
     if (!googleEventId) {
       const createdEvent = await calendar.events.insert({
-        calendarId: connection.calendar_id || "primary",
+        calendarId,
         requestBody,
       });
 
@@ -170,6 +233,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       googleEventId,
+      calendarId,
+      professionalCalendarUsed:
+        Boolean(appointment.professional_id) &&
+        professional?.google_connected === true &&
+        Boolean(professional?.google_calendar_id),
     });
   } catch (error: any) {
     console.error("Erro ao atualizar evento no Google Agenda:", error);
