@@ -1,1 +1,25 @@
-{}
+{
+  "/_not-found": "app/_not-found.js",
+  "/api/google/calendar/callback/route": "app/api/google/calendar/callback/route.js",
+  "/api/google/calendar/disconnect/route": "app/api/google/calendar/disconnect/route.js",
+  "/agenda/page": "app/agenda/page.js",
+  "/api/google/calendar/status/route": "app/api/google/calendar/status/route.js",
+  "/api/google/calendar/connect/route": "app/api/google/calendar/connect/route.js",
+  "/api/whatsapp/send/route": "app/api/whatsapp/send/route.js",
+  "/financeiro/despesas/page": "app/financeiro/despesas/page.js",
+  "/configuracoes/page": "app/configuracoes/page.js",
+  "/login/page": "app/login/page.js",
+  "/estoque/page": "app/estoque/page.js",
+  "/pacientes/[id]/orcamento/page": "app/pacientes/[id]/orcamento/page.js",
+  "/pacientes/page": "app/pacientes/page.js",
+  "/pacientes/[id]/page": "app/pacientes/[id]/page.js",
+  "/page": "app/page.js",
+  "/financeiro/page": "app/financeiro/page.js",
+  "/print/prontuario/[id]/page": "app/print/prontuario/[id]/page.js",
+  "/print/recibo/[id]/page": "app/print/recibo/[id]/page.js",
+  "/reset-password/page": "app/reset-password/page.js",
+  "/teste-whatsapp/page": "app/teste-whatsapp/page.js",
+  "/relatorios/page": "app/relatorios/page.js",
+  "/print/termo/[id]/page": "app/print/termo/[id]/page.js",
+  "/api/whatsapp/reminders/route": "app/api/whatsapp/reminders/route.js"
+}

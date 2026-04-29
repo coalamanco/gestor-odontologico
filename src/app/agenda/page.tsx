@@ -146,6 +146,24 @@ function parsePositiveNumber(value: any, fallback: number) {
 export default function AgendaPage() {
   const router = useRouter();
 
+  const connectGoogleCalendar = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("Usuário não autenticado.");
+        return;
+      }
+
+      window.location.href = `/api/google/calendar/connect?userId=${user.id}`;
+    } catch (error) {
+      console.error("Erro ao conectar Google Agenda:", error);
+      alert("Erro ao conectar Google Agenda.");
+    }
+  };
+
   const [patients, setPatients] = useState<any[]>([]);
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -1351,6 +1369,15 @@ export default function AgendaPage() {
             >
               Lembretes
             </a>
+
+            <button
+              type="button"
+              onClick={connectGoogleCalendar}
+              className="h-8 rounded-lg border border-[#c2dddd] bg-white px-4 text-xs font-black text-[#239d9a] shadow-sm hover:bg-[#f4ffff]"
+              title="Conectar sua conta ao Google Agenda"
+            >
+              Google Agenda
+            </button>
 
             <button
               onClick={() => openNew(days[0].date, `${pad(clinicSettings.start_hour)}:00`)}
