@@ -1025,7 +1025,38 @@ export default function AgendaPage() {
           "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
         );
 
-        await syncGoogleCalendarEvent(createdAppointment?.id);
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (user && createdAppointment?.id) {
+            const googleResponse = await fetch("/api/google/calendar/create-event", {
+              method: "POST",
+              cache: "no-store",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                appointmentId: createdAppointment.id,
+                userId: user.id,
+              }),
+            });
+
+            if (!googleResponse.ok) {
+              const result = await googleResponse.json().catch(() => null);
+              console.warn(
+                "Consulta criada, mas não foi possível criar/salvar o evento no Google Agenda:",
+                result
+              );
+            }
+          }
+        } catch (googleError) {
+          console.error(
+            "Erro ao criar evento no Google Agenda:",
+            googleError
+          );
+        }
       }
     }
 
