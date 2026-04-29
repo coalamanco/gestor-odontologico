@@ -490,6 +490,30 @@ export default function AgendaPage() {
 
     if (!ok) return;
 
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await fetch("/api/google/calendar/delete-event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            appointmentId,
+            userId: user.id,
+          }),
+        });
+      }
+    } catch (googleError) {
+      console.error(
+        "Erro ao excluir evento do Google Agenda:",
+        googleError
+      );
+    }
+
     const { error } = await supabase
       .from("appointments")
       .delete()
