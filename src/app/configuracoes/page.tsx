@@ -472,20 +472,40 @@ export default function ConfiguracoesPage() {
     setTeamLoading(false);
   };
 
-  const connectProfessionalGoogle = (item: ProfessionalItem) => {
+  const connectProfessionalGoogle = async (item: ProfessionalItem) => {
     if (!item.id) {
       alert("Salve o profissional antes de conectar ao Google Agenda.");
       return;
     }
 
-    const params = new URLSearchParams({
-      professional_id: item.id,
-      professionalId: item.id,
-      redirect: "/configuracoes?tab=equipe",
-      origin: "professional_settings",
-    });
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    window.location.href = `/api/google/calendar/connect?${params.toString()}`;
+      if (error) {
+        throw error;
+      }
+
+      if (!user?.id) {
+        alert("Usuário não autenticado. Faça login novamente antes de conectar o Google Agenda.");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        userId: user.id,
+        professionalId: item.id,
+        professional_id: item.id,
+        redirect: "/configuracoes?tab=equipe",
+        origin: "professional_settings",
+      });
+
+      window.location.href = `/api/google/calendar/connect?${params.toString()}`;
+    } catch (error: any) {
+      console.error("Erro ao iniciar conexão Google do profissional:", error);
+      alert(error?.message || "Erro ao iniciar conexão com Google Agenda.");
+    }
   };
 
   const removeProfessionalGoogleConnection = async (item: ProfessionalItem) => {
