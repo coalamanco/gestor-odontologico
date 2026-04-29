@@ -73,19 +73,39 @@ async function sendZapiMessage(phone: string, message: string) {
 }
 
 function getBrazilNow() {
-  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
 
-  const brazilNow = new Date(
-    now.toLocaleString("en-US", {
-      timeZone: "America/Sao_Paulo",
-    })
+  const parts = formatter.formatToParts(new Date());
+
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value || "00";
+
+  return new Date(
+    `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get(
+      "minute"
+    )}:${get("second")}-03:00`
   );
-
-  return brazilNow;
 }
 
 function createBrazilDate(date: string, time: string) {
-  return new Date(`${date}T${time}:00-03:00`);
+  const safeTime = time?.length === 5 ? `${time}:00` : time || "00:00:00";
+
+  return new Date(`${date}T${safeTime}-03:00`);
+}
+
+function formatDateKey(date: Date) {
+  return date.toLocaleDateString("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+  });
 }
 
 export async function GET() {
@@ -109,15 +129,13 @@ export async function GET() {
 
     const now = getBrazilNow();
 
-    const today = now.toISOString().slice(0, 10);
+    const today = formatDateKey(now);
 
     const limitDate = new Date(now);
 
     limitDate.setDate(limitDate.getDate() + 5);
 
-    const limitDateString = limitDate
-      .toISOString()
-      .slice(0, 10);
+    const limitDateString = formatDateKey(limitDate);
 
     const { data: appointments, error: appointmentsError } =
       await supabase
