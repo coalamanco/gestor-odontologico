@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
   FileText,
   MessageCircle,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 
 type FinancialRecord = {
@@ -1155,6 +1157,69 @@ export default function FinanceiroPage() {
     }
   }
 
+
+  function exportFinanceiroExcel() {
+    try {
+      const rows = registrosFiltrados.map((record) => {
+        const total = parseMoney(record.amount);
+        const paid = parseMoney(record.paid_amount);
+        const balance = Math.max(0, total - paid);
+        const patientName = record.patient_id
+          ? patientNameById.get(String(record.patient_id)) || ""
+          : "";
+
+        return {
+          Paciente: patientName,
+          Descricao: record.description || "",
+          Valor_total: total,
+          Valor_pago: paid,
+          Saldo_aberto: balance,
+          Status: labelVisualFinancialStatus(record),
+          Forma_pagamento: labelFormaPagamento(record.payment_method),
+          Recibo: labelRecibo(record.receipt_type),
+          Parcela: record.installment_number || "",
+          Parcelas: record.installments || "",
+          Vencimento: getFinancialDueDate(record) || "",
+          Data_pagamento: record.paid_at
+            ? new Date(record.paid_at).toLocaleDateString("pt-BR")
+            : "",
+          Criado_em: record.created_at
+            ? new Date(record.created_at).toLocaleDateString("pt-BR")
+            : "",
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Financeiro");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const fileData = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(fileData);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `financeiro-${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao exportar Excel do financeiro.");
+    }
+  }
+
   return (
     <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#edf8f8] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-6 shadow-lg shadow-cyan-900/10">
@@ -1227,6 +1292,15 @@ export default function FinanceiroPage() {
                 placeholder="Busque por paciente, procedimento, status ou valor..."
                 className="h-11 rounded-xl border-[#d9eeee] bg-[#fbffff]"
               />
+
+              <Button
+                type="button"
+                onClick={exportFinanceiroExcel}
+                className="h-11 rounded-xl bg-[#239d9a] px-4 text-sm font-black text-white hover:bg-[#1f8f8c]"
+              >
+                <Download size={16} className="mr-2" />
+                Exportar Excel
+              </Button>
 
               {searchTerm && (
                 <Button
