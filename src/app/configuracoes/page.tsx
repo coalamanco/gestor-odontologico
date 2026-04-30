@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type ConfigTab = "clinica" | "procedimentos" | "equipe" | "anamnese" | "comunicacao" | "financeiro";
+type ConfigTab = "clinica" | "procedimentos" | "equipe" | "anamnese" | "comunicacao" | "financeiro" | "backup";
 
 type ProcedureItem = {
   id: string;
@@ -54,6 +54,7 @@ export default function ConfiguracoesPage() {
       "anamnese",
       "comunicacao",
       "financeiro",
+      "backup",
     ];
 
     if (tabParam && allowedTabs.includes(tabParam)) {
@@ -845,6 +846,71 @@ export default function ConfiguracoesPage() {
     setFinancialLoading(false);
   };
 
+
+  const generateSystemBackup = async () => {
+    try {
+      const [
+        patients,
+        appointments,
+        financial,
+        budgets,
+        budgetItems,
+        treatments,
+        images,
+        expenses,
+        settings,
+      ] = await Promise.all([
+        supabase.from("patients").select("*"),
+        supabase.from("appointments").select("*"),
+        supabase.from("financial_records").select("*"),
+        supabase.from("budgets").select("*"),
+        supabase.from("budget_items").select("*"),
+        supabase.from("patient_treatments").select("*"),
+        supabase.from("patient_files").select("*"),
+        supabase.from("expenses").select("*"),
+        supabase.from("clinic_settings").select("*"),
+      ]);
+
+      const backup = {
+        generated_at: new Date().toISOString(),
+        version: "1.0",
+        patients: patients.data || [],
+        appointments: appointments.data || [],
+        financial_records: financial.data || [],
+        budgets: budgets.data || [],
+        budget_items: budgetItems.data || [],
+        treatments: treatments.data || [],
+        images: images.data || [],
+        expenses: expenses.data || [],
+        settings: settings.data || [],
+      };
+
+      const blob = new Blob(
+        [JSON.stringify(backup, null, 2)],
+        { type: "application/json;charset=utf-8" }
+      );
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `backup-consultorio-${new Date()
+        .toISOString()
+        .slice(0, 10)}.json`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      alert("Backup completo gerado com sucesso.");
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao gerar backup.");
+    }
+  };
+
   const filteredProcedures = useMemo(() => {
     const term = procedureSearch.trim().toLowerCase();
 
@@ -1013,6 +1079,18 @@ export default function ConfiguracoesPage() {
           }`}
         >
           Financeiro/Fiscal
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("backup")}
+          className={`px-4 py-3 text-sm font-black border-b-2 ${
+            tab === "backup"
+              ? "border-[#239d9a] text-[#239d9a]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Backup
         </button>
       </div>
 
