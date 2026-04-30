@@ -22,6 +22,7 @@ type TabId =
   | "orcamentos"
   | "financeiro"
   | "linha_tempo"
+  | "imagens_rx"
   | "documentos";
 
 type FinancialRecord = {
@@ -88,6 +89,16 @@ type TreatmentNote = {
   created_at?: string | null;
 };
 
+type PatientFile = {
+  id: string;
+  patient_id: string;
+  file_name?: string | null;
+  file_url?: string | null;
+  file_type?: string | null;
+  storage_path?: string | null;
+  created_at?: string | null;
+};
+
 const TABS: { id: TabId; label: string }[] = [
   { id: "sobre", label: "Sobre" },
   { id: "tratamentos", label: "Tratamentos" },
@@ -95,6 +106,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "orcamentos", label: "Orçamentos" },
   { id: "financeiro", label: "Financeiro" },
   { id: "linha_tempo", label: "Linha do tempo" },
+  { id: "imagens_rx", label: "Imagens e RX" },
   { id: "documentos", label: "Documentos" },
 ];
 
@@ -448,6 +460,9 @@ function PacienteProntuarioContent({
     PaymentTransaction[]
   >([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
+  const [patientFiles, setPatientFiles] = useState<PatientFile[]>([]);
+  const [uploadingPatientFile, setUploadingPatientFile] = useState(false);
+  const [selectedPatientFile, setSelectedPatientFile] = useState<PatientFile | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -715,6 +730,14 @@ function PacienteProntuarioContent({
 
       if (clinicalNotesError) throw clinicalNotesError;
 
+      const { data: pf, error: patientFilesError } = await supabase
+        .from("patient_files")
+        .select("*")
+        .eq("patient_id", params.id)
+        .order("created_at", { ascending: false });
+
+      if (patientFilesError) throw patientFilesError;
+
       const { data: auditData, error: auditError } = await supabase
         .from("audit_logs")
         .select("id, user_email, action, table_name, record_id, old_data, new_data, created_at")
@@ -761,6 +784,7 @@ function PacienteProntuarioContent({
       setFinancialRecords((f || []) as FinancialRecord[]);
       setPaymentTransactions(txs);
       setClinicalNotes((cn || []) as ClinicalNote[]);
+      setPatientFiles((pf || []) as PatientFile[]);
       setAuditLogs(patientAuditLogs);
     } catch (error: any) {
       alert("Erro ao carregar prontuário: " + error.message);
@@ -784,6 +808,7 @@ function PacienteProntuarioContent({
         "orcamentos",
         "financeiro",
         "linha_tempo",
+        "imagens_rx",
         "documentos",
       ];
 
@@ -1814,6 +1839,108 @@ function PacienteProntuarioContent({
     }
   };
 
+
+  const isImageFile = (file?: PatientFile | null) => {
+    return Boolean(file?.file_type?.startsWith("image/"));
+  };
+
+  const safeFileName = (name: string) => {
+    return String(name || "arquivo")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "-")
+      .replace(/-+/g, "-")
+      .toLowerCase();
+  };
+
+  const uploadPatientFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      setUploadingPatientFile(true);
+
+      const storagePath = `${params.id}/${Date.now()}-${safeFileName(file.name)}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("patient-files")
+        .upload(storagePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from("patient-files")
+        .getPublicUrl(storagePath);
+
+      const publicUrl = publicData?.publicUrl;
+
+      if (!publicUrl) {
+        throw new Error("Não foi possível gerar o link público do arquivo.");
+      }
+
+      const { error: insertError } = await supabase.from("patient_files").insert({
+        patient_id: params.id,
+        file_name: file.name,
+        file_url: publicUrl,
+        file_type: file.type || "application/octet-stream",
+        storage_path: storagePath,
+      });
+
+      if (insertError) throw insertError;
+
+      event.target.value = "";
+
+      await loadData();
+
+      alert("Arquivo enviado com sucesso.");
+    } catch (error: any) {
+      alert("Erro ao enviar arquivo: " + (error?.message || "erro inesperado"));
+    } finally {
+      setUploadingPatientFile(false);
+    }
+  };
+
+  const deletePatientFile = async (file: PatientFile) => {
+    const confirmed = window.confirm(
+      "Deseja realmente excluir este arquivo do prontuário?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      if (file.storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from("patient-files")
+          .remove([file.storage_path]);
+
+        if (storageError) {
+          console.warn("Arquivo removido do registro, mas houve erro no Storage:", storageError);
+        }
+      }
+
+      const { error } = await supabase
+        .from("patient_files")
+        .delete()
+        .eq("id", file.id);
+
+      if (error) throw error;
+
+      if (selectedPatientFile?.id === file.id) {
+        setSelectedPatientFile(null);
+      }
+
+      await loadData();
+
+      alert("Arquivo excluído com sucesso.");
+    } catch (error: any) {
+      alert("Erro ao excluir arquivo: " + (error?.message || "erro inesperado"));
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -2706,6 +2833,120 @@ function PacienteProntuarioContent({
           </div>
         )}
 
+
+        {activeTab === "imagens_rx" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-[#d8eeee] p-5 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-black text-slate-800">
+                    Imagens e RX
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Envie radiografias, fotografias intraorais, panorâmicas e outros arquivos do paciente.
+                  </p>
+                </div>
+
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]">
+                  {uploadingPatientFile ? "Enviando..." : "Enviar imagem/RX"}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    disabled={uploadingPatientFile}
+                    onChange={uploadPatientFile}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {patientFiles.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-dashed border-[#d8eeee] p-8 text-center shadow-sm">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-[#eefafa] text-2xl">
+                  🩻
+                </div>
+                <h3 className="mt-4 text-base font-black text-slate-800">
+                  Nenhuma imagem ou RX enviado
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Use o botão acima para anexar arquivos ao prontuário deste paciente.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {patientFiles.map((file) => (
+                  <div
+                    key={file.id}
+                    className="overflow-hidden rounded-2xl border border-[#d8eeee] bg-white shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPatientFile(file)}
+                      className="block w-full bg-[#f7ffff] text-left"
+                    >
+                      {isImageFile(file) ? (
+                        <img
+                          src={file.file_url || ""}
+                          alt={file.file_name || "Arquivo do paciente"}
+                          className="h-48 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-48 w-full items-center justify-center bg-[#eefafa]">
+                          <div className="text-center">
+                            <div className="text-4xl">📄</div>
+                            <div className="mt-2 text-xs font-black uppercase tracking-widest text-[#239d9a]">
+                              Documento/PDF
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+
+                    <div className="p-4">
+                      <div className="truncate text-sm font-black text-slate-800">
+                        {file.file_name || "Arquivo"}
+                      </div>
+
+                      <div className="mt-1 text-xs text-slate-400">
+                        {file.created_at
+                          ? new Date(file.created_at).toLocaleString("pt-BR")
+                          : "Data não informada"}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <a
+                          href={file.file_url || "#"}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-xl border border-[#d8eeee] bg-[#fbffff] px-3 py-2 text-xs font-black text-[#239d9a] hover:bg-[#eefafa]"
+                        >
+                          Abrir
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPatientFile(file)}
+                          className="rounded-xl border border-[#d8eeee] bg-white px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50"
+                        >
+                          Visualizar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deletePatientFile(file)}
+                          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 hover:bg-rose-100"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "documentos" && (
           <div className="bg-white rounded-2xl border border-[#d8eeee] p-5 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -2768,6 +3009,60 @@ function PacienteProntuarioContent({
           </div>
         )}
       </div>
+
+
+      {selectedPatientFile && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-[#d8eeee]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#d8eeee] p-4">
+              <div className="min-w-0">
+                <h3 className="truncate text-lg font-black text-slate-800">
+                  {selectedPatientFile.file_name || "Arquivo do paciente"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Imagens e RX do prontuário
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPatientFile(null)}
+                className="rounded-xl border border-[#d8eeee] bg-white px-4 py-2 text-sm font-black text-slate-600 hover:bg-slate-50"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="max-h-[76vh] overflow-auto bg-[#f8ffff] p-4">
+              {isImageFile(selectedPatientFile) ? (
+                <img
+                  src={selectedPatientFile.file_url || ""}
+                  alt={selectedPatientFile.file_name || "Arquivo do paciente"}
+                  className="mx-auto max-h-[72vh] max-w-full rounded-2xl object-contain shadow-sm"
+                />
+              ) : (
+                <div className="rounded-2xl border border-[#d8eeee] bg-white p-8 text-center">
+                  <div className="text-5xl">📄</div>
+                  <h4 className="mt-4 text-lg font-black text-slate-800">
+                    Visualização direta disponível em nova aba
+                  </h4>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Clique em abrir para visualizar este documento.
+                  </p>
+                  <a
+                    href={selectedPatientFile.file_url || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 inline-flex rounded-xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white hover:bg-[#1f8f8c]"
+                  >
+                    Abrir arquivo
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEditPatientModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
