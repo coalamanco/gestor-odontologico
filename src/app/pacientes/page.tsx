@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Search, Plus, Users, RefreshCw, AlertTriangle } from "lucide-react";
+import { Search, Plus, Users, RefreshCw, AlertTriangle, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 type Patient = {
   id: string;
@@ -65,6 +66,59 @@ export default function PacientesPage() {
     }
   };
 
+
+  const exportPatientsExcel = () => {
+    try {
+      const exportData = patients.map((patient) => ({
+        Nome: patient.name || "",
+        Telefone: patient.phone || "",
+        CPF: patient.cpf || "",
+        Email: patient.email || "",
+        Endereco: patient.address || "",
+        Observacoes: patient.notes || "",
+        Cadastro: patient.created_at
+          ? new Date(patient.created_at).toLocaleDateString("pt-BR")
+          : "",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Pacientes"
+      );
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const fileData = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(fileData);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `pacientes-${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao exportar Excel.");
+    }
+  };
+
   useEffect(() => {
     loadPatients();
   }, []);
@@ -119,6 +173,15 @@ export default function PacientesPage() {
                 Atualizar
               </button>
 
+              <button
+                type="button"
+                onClick={exportPatientsExcel}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white border border-white/25 backdrop-blur-sm hover:bg-white/25 transition"
+              >
+                <Download size={18} />
+                Exportar Excel
+              </button>
+
               <Link
                 href="/pacientes/novo"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/20 px-5 py-3 text-sm font-bold text-white border border-white/30 backdrop-blur-sm hover:bg-white/25 transition"
@@ -162,15 +225,26 @@ export default function PacientesPage() {
           </div>
 
           <div className="md:col-span-2 rounded-2xl border border-[#d5eeee] bg-white px-5 py-4 shadow-sm">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Buscar por nome, telefone ou CPF..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 rounded-2xl border border-[#d9eeee] bg-[#fbffff] text-sm text-slate-700 outline-none focus:bg-white focus:border-[#84d5d3]"
-              />
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, telefone ou CPF..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full h-12 pl-12 pr-4 rounded-2xl border border-[#d9eeee] bg-[#fbffff] text-sm text-slate-700 outline-none focus:bg-white focus:border-[#84d5d3]"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={exportPatientsExcel}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#239d9a] px-5 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]"
+              >
+                <Download size={18} />
+                Exportar Excel
+              </button>
             </div>
           </div>
         </div>
