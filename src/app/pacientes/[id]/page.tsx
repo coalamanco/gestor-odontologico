@@ -2843,20 +2843,34 @@ function PacienteProntuarioContent({
                     Imagens e RX
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    Envie radiografias, fotografias intraorais, panorâmicas e outros arquivos do paciente.
+                    Tire fotos pela câmera do celular ou envie radiografias, fotografias intraorais, panorâmicas e PDFs.
                   </p>
                 </div>
 
-                <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]">
-                  {uploadingPatientFile ? "Enviando..." : "Enviar imagem/RX"}
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    className="hidden"
-                    disabled={uploadingPatientFile}
-                    onChange={uploadPatientFile}
-                  />
-                </label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]">
+                    {uploadingPatientFile ? "Enviando..." : "Tirar foto"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      disabled={uploadingPatientFile}
+                      onChange={uploadPatientFile}
+                    />
+                  </label>
+
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-[#d8eeee] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa]">
+                    {uploadingPatientFile ? "Enviando..." : "Enviar arquivo"}
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      disabled={uploadingPatientFile}
+                      onChange={uploadPatientFile}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -2869,7 +2883,7 @@ function PacienteProntuarioContent({
                   Nenhuma imagem ou RX enviado
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Use o botão acima para anexar arquivos ao prontuário deste paciente.
+                  Use “Tirar foto” no celular ou “Enviar arquivo” para anexar imagens e RX ao prontuário.
                 </p>
               </div>
             ) : (
