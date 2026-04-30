@@ -371,6 +371,7 @@ export default function AgendaPage() {
   const [isMobileAgenda, setIsMobileAgenda] = useState(false);
   const [showMiniCalendar, setShowMiniCalendar] = useState(false);
   const [miniCalendarDate, setMiniCalendarDate] = useState<Date>(new Date());
+  const [showMobileAgendaSheet, setShowMobileAgendaSheet] = useState(false);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
@@ -1783,7 +1784,7 @@ export default function AgendaPage() {
 
   return (
     <div className="h-screen flex flex-col bg-[#f5f7f8]">
-      <div className="border-b border-[#d7e7e7] bg-white/95 px-3 py-1 shadow-sm">
+      <div className="hidden border-b border-[#d7e7e7] bg-white/95 px-3 py-1 shadow-sm md:block">
         <div className="grid min-h-[38px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
 
@@ -2008,96 +2009,100 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      <div className="px-3 pt-2 lg:hidden">
-        <div className="flex items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
-            style={{ backgroundColor: selectedProfessionalColor }}
-          >
-            {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
+      <div className="border-b border-[#d7e7e7] bg-white/95 px-2 py-1.5 shadow-sm md:hidden">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+          <button type="button" onClick={() => { setShowMiniCalendar(false); setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); }} className="h-9 rounded-2xl bg-[#239d9a] px-4 text-[13px] font-black text-white shadow-sm active:scale-[0.98]">Hoje</button>
+          <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-[#c2dddd] bg-white px-2 shadow-sm">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
+            <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-9 min-w-0 flex-1 bg-transparent text-[13px] font-black text-slate-700 outline-none" title="Selecionar agenda do profissional">
+              <option value="">Todos</option>
+              {activeProfessionals.map((professional) => (<option key={professional.id} value={professional.id}>{professional.name}</option>))}
+            </select>
           </div>
-          <select
-            value={selectedAgendaProfessionalId}
-            onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
-            className="h-9 min-w-0 flex-1 bg-transparent text-sm font-black text-slate-700 outline-none"
-            title="Selecionar agenda do profissional"
-          >
-            <option value="">Todos os profissionais</option>
-            {activeProfessionals.map((professional) => (
-              <option key={professional.id} value={professional.id}>
-                {professional.name}
-              </option>
-            ))}
-          </select>
+          <button type="button" onClick={() => { setShowMiniCalendar(false); setMiniCalendarDate(weekBaseDate); setShowMobileAgendaSheet(true); }} className="h-9 rounded-2xl border border-[#c2dddd] bg-white px-3 text-[12px] font-black text-[#239d9a] shadow-sm active:scale-[0.98]">⚙ Agenda</button>
         </div>
-
-        <div className="mt-2 rounded-xl border border-[#c2dddd] bg-white p-2 shadow-sm">
-          <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-[#c2dddd] bg-[#f7ffff]">
-            <button
-              type="button"
-              onClick={() => setMobileView("day")}
-              className={`h-9 text-xs font-black transition ${
-                mobileView === "day"
-                  ? "bg-[#239d9a] text-white"
-                  : "text-slate-600"
-              }`}
-            >
-              Dia
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMobileView("week")}
-              className={`h-9 text-xs font-black transition ${
-                mobileView === "week"
-                  ? "bg-[#239d9a] text-white"
-                  : "text-slate-600"
-              }`}
-            >
-              Semana
-            </button>
-          </div>
-
-          {mobileView === "day" && (
-            <>
-              <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                <button
-                  type="button"
-                  onClick={goToPreviousDay}
-                  className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
-                >
-                  ◀ Dia anterior
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setWeekBaseDate(new Date());
-                    setMiniCalendarDate(new Date());
-                  }}
-                  className="h-9 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white"
-                >
-                  Hoje
-                </button>
-
-                <button
-                  type="button"
-                  onClick={goToNextDay}
-                  className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
-                >
-                  Próximo dia ▶
-                </button>
-              </div>
-
-              <div className="mt-2 rounded-xl border border-[#d9eeee] bg-white/80 px-3 py-2 text-center text-[11px] font-bold text-slate-500">
-                Deslize a agenda para os lados para trocar de dia.
-              </div>
-            </>
-          )}
+        <div className="mt-1 flex items-center justify-center gap-2 text-center">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{mobileView === "day" ? "Modo dia" : "Modo semana"}</span>
+          <span className="h-1 w-1 rounded-full bg-slate-300" />
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#239d9a]">{new Date(weekBaseDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0 p-2.5">
+      {showMobileAgendaSheet && (
+        <div className="fixed inset-0 z-[90] bg-slate-900/35 md:hidden" onClick={() => setShowMobileAgendaSheet(false)}>
+          <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] border border-[#d7e7e7] bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-200" />
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div><h2 className="text-lg font-black text-slate-800">Controles da agenda</h2><p className="text-xs font-semibold text-slate-500">Ajuste a visualização sem ocupar espaço da agenda.</p></div>
+              <button type="button" onClick={() => setShowMobileAgendaSheet(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-600">✕</button>
+            </div>
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-[#c2dddd] bg-[#fbffff] p-3">
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Profissional</label>
+                <div className="flex items-center gap-2 rounded-2xl border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
+                  <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-10 min-w-0 flex-1 bg-transparent text-sm font-black text-slate-700 outline-none" title="Selecionar agenda do profissional">
+                    <option value="">Todos os profissionais</option>
+                    {activeProfessionals.map((professional) => (<option key={professional.id} value={professional.id}>{professional.name}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Visualização</label>
+                <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-[#c2dddd] bg-[#f7ffff]">
+                  <button type="button" onClick={() => setMobileView("day")} className={`h-10 text-sm font-black transition ${mobileView === "day" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Dia</button>
+                  <button type="button" onClick={() => setMobileView("week")} className={`h-10 text-sm font-black transition ${mobileView === "week" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Semana</button>
+                </div>
+              </div>
+              {mobileView === "day" && (
+                <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
+                  <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Navegação</label>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <button type="button" onClick={() => { goToPreviousDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl border border-[#c2dddd] bg-white px-2 text-xs font-black text-[#239d9a]">◀ Anterior</button>
+                    <button type="button" onClick={() => { setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl bg-[#239d9a] px-4 text-xs font-black text-white">Hoje</button>
+                    <button type="button" onClick={() => { goToNextDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl border border-[#c2dddd] bg-white px-2 text-xs font-black text-[#239d9a]">Próximo ▶</button>
+                  </div>
+                  <button type="button" onClick={() => { setMiniCalendarDate(weekBaseDate); setShowMiniCalendar((prev) => !prev); }} className="mt-2 h-10 w-full rounded-2xl bg-[#eefafa] text-sm font-black text-[#239d9a]">📅 Escolher outro dia</button>
+                  <div className="mt-2 rounded-2xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2 text-center text-[11px] font-bold text-slate-500">Dica: também pode deslizar a agenda para os lados.</div>
+                </div>
+              )}
+              {showMiniCalendar && (
+                <div className="rounded-2xl border border-[#d4e8e8] bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() - 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-xs font-black text-[#239d9a]">◀</button>
+                    <div className="text-center"><div className="text-sm font-black capitalize text-slate-800">{miniCalendarDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</div><div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">escolher dia</div></div>
+                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() + 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-xs font-black text-[#239d9a]">▶</button>
+                  </div>
+                  <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase text-slate-400">{["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (<div key={`${item}-${index}`} className="py-1">{item}</div>))}</div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {miniCalendarDays.map((item) => {
+                      const selected = item.dateKey === formatDate(weekBaseDate);
+                      const holiday = getHolidayInfo(item.dateKey);
+                      return (
+                        <button key={item.dateKey} type="button" onClick={() => { selectMiniCalendarDay(item.date); setShowMobileAgendaSheet(false); }} title={holiday?.name || formatDateBr(item.dateKey)} className={`relative flex h-9 items-center justify-center rounded-xl text-xs font-black transition ${selected ? "bg-[#239d9a] text-white" : item.today ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20" : item.currentMonth ? "text-slate-700 hover:bg-[#f2fcfc]" : "text-slate-300 hover:bg-slate-50"}`}>
+                          {item.day}{holiday && (<span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-white" : "bg-amber-400"}`} />)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => { openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`); setShowMobileAgendaSheet(false); }} className="h-11 rounded-2xl bg-slate-700 px-3 text-xs font-black text-white shadow-sm">Bloquear horário</button>
+                <button type="button" onClick={connectGoogleCalendar} className="h-11 rounded-2xl border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a] shadow-sm">Google Agenda</button>
+              </div>
+              <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Filtro de status</label>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-11 w-full rounded-2xl border border-[#c2dddd] bg-white px-3 text-sm font-black text-slate-700 outline-none" title="Filtrar agenda por status">
+                  <option value="todos">Todos</option><option value="agendado">Agendado</option><option value="confirmado">Confirmado</option><option value="em_atendimento">Em atendimento</option><option value="finalizado">Finalizado</option><option value="faltou">Faltou</option><option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-h-0 p-1.5 md:p-2.5">
         <div
           className="bg-white rounded-[16px] border border-[#d1e5e5] shadow-sm overflow-hidden flex flex-col min-h-0"
           onTouchStart={handleAgendaTouchStart}
