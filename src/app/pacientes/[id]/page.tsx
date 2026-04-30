@@ -215,12 +215,12 @@ function NovoPacientePage() {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-32 sm:p-3 md:p-6">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-1.5 pb-28 sm:p-3 md:p-6">
       <div className="max-w-5xl mx-auto space-y-5 pb-20">
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-xl font-black leading-tight text-slate-800 md:text-3xl">Novo paciente</h1>
+              <h1 className="text-base font-black leading-tight text-slate-800 md:text-3xl">Novo paciente</h1>
               <p className="text-sm text-slate-500 mt-1">
                 Cadastre um novo paciente no sistema.
               </p>
@@ -238,7 +238,7 @@ function NovoPacientePage() {
 
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
           <div>
-            <h2 className="text-lg font-black text-slate-800">Dados principais</h2>
+            <h2 className="text-base font-black text-slate-800">Dados principais</h2>
             <p className="text-sm text-slate-500">
               O nome é obrigatório. Os demais campos podem ser preenchidos depois.
             </p>
@@ -332,7 +332,7 @@ function NovoPacientePage() {
 
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
           <div>
-            <h2 className="text-lg font-black text-slate-800">Endereço</h2>
+            <h2 className="text-base font-black text-slate-800">Endereço</h2>
             <p className="text-sm text-slate-500">Campos opcionais.</p>
           </div>
 
@@ -1950,20 +1950,20 @@ function PacienteProntuarioContent({
   }
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-32 sm:p-3 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-3 pb-32 md:space-y-4 md:pb-24">
-        <div className="flex flex-col gap-3 rounded-[1.35rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:flex-row md:items-start md:justify-between md:p-5">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-1.5 pb-28 sm:p-3 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-2.5 pb-28 md:space-y-4 md:pb-24">
+        <div className="flex flex-col gap-3 rounded-[1.15rem] border border-[#d8eeee] bg-white p-2.5 shadow-sm md:flex-row md:items-start md:justify-between md:p-5">
           <div className="flex items-start gap-3 md:gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dfeff0] text-lg font-semibold text-[#5f7f84] md:h-20 md:w-20 md:text-2xl">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dfeff0] text-lg font-semibold text-[#5f7f84] md:h-20 md:w-20 md:text-2xl">
               {patient.name?.charAt(0)?.toUpperCase() || "P"}
             </div>
 
             <div>
-              <h1 className="text-xl font-black leading-tight text-slate-800 md:text-3xl">
+              <h1 className="text-base font-black leading-tight text-slate-800 md:text-3xl">
                 {patient.name}
               </h1>
 
-              <div className="mt-1 space-y-0.5 text-xs text-slate-600 md:mt-2 md:space-y-1 md:text-sm">
+              <div className="mt-0.5 space-y-0.5 text-[11px] text-slate-600 md:mt-2 md:space-y-1 md:text-sm">
                 {patient.phone && <p>{patient.phone}</p>}
                 {patient.cpf && <p>CPF: {patient.cpf}</p>}
               </div>
@@ -1986,7 +1986,7 @@ function PacienteProntuarioContent({
             <button
               type="button"
               onClick={openEditPatientModal}
-              className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-200 md:flex-none md:px-4 md:text-sm"
+              className="flex-1 rounded-xl bg-slate-100 px-3 py-1.5 text-center text-xs font-bold text-slate-700 hover:bg-slate-200 md:flex-none md:px-4 md:text-sm"
             >
               Editar
             </button>
@@ -1996,7 +1996,7 @@ function PacienteProntuarioContent({
                 href={whatsappHref}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 rounded-xl bg-[#1fb36e] px-3 py-2 text-center text-xs font-bold text-white md:flex-none md:px-4 md:text-sm"
+                className="flex-1 rounded-xl bg-[#1fb36e] px-3 py-1.5 text-center text-xs font-bold text-white md:flex-none md:px-4 md:text-sm"
               >
                 WhatsApp
               </a>
@@ -2012,20 +2012,20 @@ function PacienteProntuarioContent({
 
             <Link
               href={`/pacientes/${params.id}/orcamento`}
-              className="flex-1 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3 py-2 text-center text-xs font-black text-white shadow-sm md:flex-none md:px-4 md:text-sm"
+              className="flex-1 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3 py-1.5 text-center text-xs font-black text-white shadow-sm md:flex-none md:px-4 md:text-sm"
             >
               Abrir orçamento
             </Link>
           </div>
         </div>
 
-        <div className="sticky top-0 z-20 rounded-[1.25rem] border border-[#d8eeee] bg-white/95 px-2 pt-2 shadow-sm backdrop-blur md:static md:px-5 md:pt-3">
-          <div className="flex gap-2 overflow-x-auto pb-1 md:gap-6 md:pb-0">
+        <div className="sticky top-0 z-20 rounded-[1.05rem] border border-[#d8eeee] bg-white/95 px-1.5 pt-1.5 shadow-sm backdrop-blur md:static md:px-5 md:pt-3">
+          <div className="flex gap-1.5 overflow-x-auto scroll-smooth pb-1 md:gap-6 md:pb-0">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap rounded-t-xl border-b-2 px-2 pb-2 pt-1 text-xs transition md:px-0 md:pb-3 md:pt-0 md:text-sm ${
+                className={`whitespace-nowrap rounded-t-xl border-b-2 px-2 pb-1.5 pt-0.5 text-[11px] transition md:px-0 md:pb-3 md:pt-0 md:text-sm ${
                   activeTab === tab.id
                     ? "border-[#2ab7b3] text-[#239d9a] font-semibold"
                     : "border-transparent text-slate-500 hover:text-slate-700"
@@ -2042,13 +2042,13 @@ function PacienteProntuarioContent({
           </div>
         </div>
 
-        <div className="fixed bottom-4 right-3 z-40 flex flex-col items-end gap-2 md:hidden">
+        <div className="fixed bottom-20 right-3 z-40 flex flex-col items-end gap-2 md:hidden">
           {phoneDigits && (
             <a
               href={whatsappHref}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-[#1fb36e] px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-900/10"
+              className="rounded-full bg-[#1fb36e] px-3.5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-900/10"
             >
               WhatsApp
             </a>
@@ -2057,14 +2057,14 @@ function PacienteProntuarioContent({
           <button
             type="button"
             onClick={() => setActiveTab("financeiro")}
-            className="rounded-full border border-[#d8eeee] bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-[#239d9a] shadow-lg shadow-slate-900/10"
+            className="rounded-full border border-[#d8eeee] bg-white px-3.5 py-2.5 text-xs font-black uppercase tracking-widest text-[#239d9a] shadow-lg shadow-slate-900/10"
           >
             Financeiro
           </button>
 
           <Link
             href={`/pacientes/${params.id}/orcamento`}
-            className="rounded-full bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-cyan-900/10"
+            className="rounded-full bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3.5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-cyan-900/10"
           >
             Orçamento
           </Link>
@@ -2072,8 +2072,8 @@ function PacienteProntuarioContent({
 
         {activeTab === "sobre" && (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:gap-4">
-            <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+              <h2 className="text-base font-bold text-slate-800 mb-4">
                 Dados pessoais
 
 <button
@@ -2170,7 +2170,7 @@ function PacienteProntuarioContent({
                     <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
                       Auditoria
                     </span>
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#d8eeee] text-slate-500 text-lg font-black">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#d8eeee] text-slate-500 text-base font-black">
                       {showSecurityHistory ? "−" : "+"}
                     </span>
                   </div>
@@ -2223,8 +2223,8 @@ function PacienteProntuarioContent({
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-                <h2 className="text-lg font-bold text-slate-800 mb-4">
+              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+                <h2 className="text-base font-bold text-slate-800 mb-4">
                   Última evolução
                 </h2>
 
@@ -2253,12 +2253,12 @@ function PacienteProntuarioContent({
                 )}
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-                <h2 className="text-lg font-bold text-slate-800 mb-4">
+              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+                <h2 className="text-base font-bold text-slate-800 mb-4">
                   Consultas
                 </h2>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {recentAppointments.length === 0 && (
                     <p className="text-sm text-slate-500">
                       Nenhuma consulta encontrada.
@@ -2292,10 +2292,10 @@ function PacienteProntuarioContent({
 
         {activeTab === "tratamentos" && (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5 xl:col-span-2">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5 xl:col-span-2">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">
+                  <h2 className="text-base font-bold text-slate-800">
                     Tratamentos em andamento
                   </h2>
                   <p className="text-sm text-slate-500">
@@ -2313,9 +2313,9 @@ function PacienteProntuarioContent({
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {activeTreatments.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-6 text-center">
+                  <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-center">
                     <p className="text-sm text-slate-500">
                       Nenhum tratamento em andamento.
                     </p>
@@ -2332,7 +2332,7 @@ function PacienteProntuarioContent({
                 return (
                   <div
                     key={treatment.id}
-                    className={`border rounded-xl p-3 space-y-3 ${
+                    className={`border rounded-xl p-3 space-y-2.5 ${
                       treatment.status === "finalizado"
                         ? "bg-slate-50 opacity-70"
                         : "bg-white shadow-sm border-[#d9eeee]"
@@ -2469,10 +2469,10 @@ function PacienteProntuarioContent({
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5 xl:col-span-1">
-              <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5 xl:col-span-1">
+              <div className="flex items-center justify-between gap-2 mb-3">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">
+                  <h2 className="text-base font-bold text-slate-800">
                     Evolução do tratamento
                   </h2>
                   <p className="text-sm text-slate-500">
@@ -2481,7 +2481,7 @@ function PacienteProntuarioContent({
                 </div>
               </div>
 
-              <div className="space-y-3 max-h-[720px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
                 {clinicalTimeline.length === 0 && (
                   <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-5 text-center">
                     <p className="text-sm text-slate-500">
@@ -2518,8 +2518,8 @@ function PacienteProntuarioContent({
         )}
 
         {activeTab === "agendamentos" && (
-          <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-            <h2 className="text-lg font-bold text-slate-800 mb-3">
+          <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+            <h2 className="text-base font-bold text-slate-800 mb-3">
               Histórico de agendamentos
             </h2>
 
@@ -2565,9 +2565,9 @@ function PacienteProntuarioContent({
         )}
 
         {activeTab === "orcamentos" && (
-          <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
+          <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-slate-800">Orçamentos</h2>
+              <h2 className="text-base font-bold text-slate-800">Orçamentos</h2>
 
               <Link
                 href={`/pacientes/${params.id}/orcamento`}
@@ -2649,8 +2649,8 @@ function PacienteProntuarioContent({
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+              <h2 className="text-base font-bold text-slate-800 mb-4">
                 Débitos do paciente
               </h2>
 
@@ -2719,7 +2719,7 @@ function PacienteProntuarioContent({
                           <button
                             type="button"
                             onClick={() => window.location.href = `/print/recibo/${record.id}`}
-                            className="bg-[#eefafa] text-[#239d9a] px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-[#d8eeee] hover:bg-[#dff3f2]"
+                            className="bg-[#eefafa] text-[#239d9a] px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em] border border-[#d8eeee] hover:bg-[#dff3f2]"
                           >
                             Imprimir recibo
                           </button>
@@ -2732,7 +2732,7 @@ function PacienteProntuarioContent({
                                 href={buildChargeWhatsappHref(record)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="bg-[#1fb36e] text-white px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest"
+                                className="bg-[#1fb36e] text-white px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em]"
                               >
                                 Cobrar
                               </a>
@@ -2740,7 +2740,7 @@ function PacienteProntuarioContent({
 
                             <button
                               onClick={() => openPaymentModal(record)}
-                              className="bg-[#239d9a] text-white px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest"
+                              className="bg-[#239d9a] text-white px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em]"
                             >
                               Receber
                             </button>
@@ -2750,7 +2750,7 @@ function PacienteProntuarioContent({
                         <button
                           type="button"
                           onClick={() => deleteFinancialRecord(record)}
-                          className="bg-rose-600 text-white px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-rose-700"
+                          className="bg-rose-600 text-white px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em] hover:bg-rose-700"
                         >
                           Excluir
                         </button>
@@ -2765,10 +2765,10 @@ function PacienteProntuarioContent({
 
 
         {activeTab === "linha_tempo" && (
-          <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+          <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
               <div>
-                <h2 className="text-lg font-black text-slate-800">
+                <h2 className="text-base font-black text-slate-800">
                   Linha do tempo completa
                 </h2>
                 <p className="text-sm text-slate-500">
@@ -2788,7 +2788,7 @@ function PacienteProntuarioContent({
                 </p>
               </div>
             ) : (
-              <div className="relative space-y-3 md:space-y-4">
+              <div className="relative space-y-2.5 md:space-y-4">
                 <div className="absolute left-[15px] top-2 bottom-2 w-px bg-[#d8eeee]" />
 
                 {completeTimeline.map((event) => (
@@ -2864,10 +2864,10 @@ function PacienteProntuarioContent({
 
         {activeTab === "imagens_rx" && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-base font-black text-slate-800">
                     Imagens e RX
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
@@ -2990,10 +2990,10 @@ function PacienteProntuarioContent({
         )}
 
         {activeTab === "documentos" && (
-          <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-5">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Documentos</h2>
+                <h2 className="text-base font-bold text-slate-800">Documentos</h2>
                 <p className="text-sm text-slate-500">
                   Impressão de prontuário, termos e documentos do paciente.
                 </p>
@@ -3009,7 +3009,7 @@ function PacienteProntuarioContent({
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
                   Prontuário
                 </div>
-                <div className="mt-2 text-lg font-bold text-slate-800">
+                <div className="mt-2 text-base font-bold text-slate-800">
                   Imprimir prontuário
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
@@ -3025,7 +3025,7 @@ function PacienteProntuarioContent({
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
                   Termo
                 </div>
-                <div className="mt-2 text-lg font-bold text-slate-800">
+                <div className="mt-2 text-base font-bold text-slate-800">
                   Gerar termo
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
@@ -3040,7 +3040,7 @@ function PacienteProntuarioContent({
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
                   Orçamento
                 </div>
-                <div className="mt-2 text-lg font-bold text-slate-800">
+                <div className="mt-2 text-base font-bold text-slate-800">
                   Abrir orçamento
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
@@ -3058,7 +3058,7 @@ function PacienteProntuarioContent({
           <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-[#d8eeee]">
             <div className="flex items-center justify-between gap-3 border-b border-[#d8eeee] p-4">
               <div className="min-w-0">
-                <h3 className="truncate text-lg font-black text-slate-800">
+                <h3 className="truncate text-base font-black text-slate-800">
                   {selectedPatientFile.file_name || "Arquivo do paciente"}
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -3085,7 +3085,7 @@ function PacienteProntuarioContent({
               ) : (
                 <div className="rounded-2xl border border-[#d8eeee] bg-white p-8 text-center">
                   <div className="text-5xl">📄</div>
-                  <h4 className="mt-4 text-lg font-black text-slate-800">
+                  <h4 className="mt-4 text-base font-black text-slate-800">
                     Visualização direta disponível em nova aba
                   </h4>
                   <p className="mt-1 text-sm text-slate-500">
@@ -3355,7 +3355,7 @@ function PacienteProntuarioContent({
               </button>
             </div>
 
-            <div className="p-5 space-y-3 text-sm">
+            <div className="p-5 space-y-2.5 text-sm">
               <div className="rounded-xl border bg-slate-50 p-4 space-y-2">
                 <div>
                   <span className="font-semibold text-slate-700">Descrição:</span>{" "}
