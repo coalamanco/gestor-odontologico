@@ -322,6 +322,9 @@ export default function AgendaPage() {
   });
 
   const agendaScrollRef = useRef<HTMLDivElement | null>(null);
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const touchStartTimeRef = useRef(0);
   const [now, setNow] = useState(new Date());
 
   const [showModal, setShowModal] = useState(false);
@@ -634,6 +637,46 @@ export default function AgendaPage() {
     setWeekBaseDate(selectedDate);
     setMiniCalendarDate(selectedDate);
     setShowMiniCalendar(false);
+  };
+
+  const goToPreviousDay = () => {
+    setWeekBaseDate((prev) => addDays(prev, -1));
+  };
+
+  const goToNextDay = () => {
+    setWeekBaseDate((prev) => addDays(prev, 1));
+  };
+
+  const handleAgendaTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobileAgenda || mobileView !== "day") return;
+
+    const touch = event.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+    touchStartTimeRef.current = Date.now();
+  };
+
+  const handleAgendaTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobileAgenda || mobileView !== "day") return;
+    if (showModal || showBlockModal || selectedAppointmentDetails || selectedBlockDetails) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+    const elapsed = Date.now() - touchStartTimeRef.current;
+
+    const isHorizontalSwipe =
+      Math.abs(deltaX) > 70 &&
+      Math.abs(deltaX) > Math.abs(deltaY) * 1.4 &&
+      elapsed < 900;
+
+    if (!isHorizontalSwipe) return;
+
+    if (deltaX < 0) {
+      goToNextDay();
+    } else {
+      goToPreviousDay();
+    }
   };
 
   const filteredPatients = useMemo(() => {
@@ -2016,40 +2059,50 @@ export default function AgendaPage() {
           </div>
 
           {mobileView === "day" && (
-            <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setWeekBaseDate((prev) => addDays(prev, -1))}
-                className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
-              >
-                ◀ Dia anterior
-              </button>
+            <>
+              <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <button
+                  type="button"
+                  onClick={goToPreviousDay}
+                  className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
+                >
+                  ◀ Dia anterior
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setWeekBaseDate(new Date());
-                  setMiniCalendarDate(new Date());
-                }}
-                className="h-9 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white"
-              >
-                Hoje
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWeekBaseDate(new Date());
+                    setMiniCalendarDate(new Date());
+                  }}
+                  className="h-9 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white"
+                >
+                  Hoje
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setWeekBaseDate((prev) => addDays(prev, 1))}
-                className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
-              >
-                Próximo dia ▶
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={goToNextDay}
+                  className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
+                >
+                  Próximo dia ▶
+                </button>
+              </div>
+
+              <div className="mt-2 rounded-xl border border-[#d9eeee] bg-white/80 px-3 py-2 text-center text-[11px] font-bold text-slate-500">
+                Deslize a agenda para os lados para trocar de dia.
+              </div>
+            </>
           )}
         </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 p-2.5">
-        <div className="bg-white rounded-[16px] border border-[#d1e5e5] shadow-sm overflow-hidden flex flex-col min-h-0">
+        <div
+          className="bg-white rounded-[16px] border border-[#d1e5e5] shadow-sm overflow-hidden flex flex-col min-h-0"
+          onTouchStart={handleAgendaTouchStart}
+          onTouchEnd={handleAgendaTouchEnd}
+        >
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
             <div
               className="grid border-b border-[#d7e7e7] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm"
@@ -2123,7 +2176,7 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className={`border-l border-[#edf4f4] min-h-[28px] cursor-pointer relative transition-colors min-w-0 overflow-visible group ${
+                    className={`border-l border-[#edf4f4] cursor-pointer relative transition-colors min-w-0 overflow-visible group touch-manipulation ${isMobileAgenda && mobileView === "day" ? "min-h-[34px]" : "min-h-[28px]"} ${
                       getHolidayInfo(d.date)
                         ? "bg-amber-50/30 hover:bg-amber-50/60"
                         : "hover:bg-[#fbffff]"
@@ -2178,9 +2231,10 @@ export default function AgendaPage() {
                       return (
                       <div
                         key={a.id}
-                        draggable
+                        draggable={!isMobileAgenda}
                         onDragStart={(e) => {
                           e.stopPropagation();
+                          if (isMobileAgenda) return;
                           setDraggingId(a.id);
                         }}
                         onClick={(e) => {
@@ -2191,14 +2245,14 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-200"
                             : ""
-                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[10px] px-2 py-1 rounded-[7px] cursor-pointer border border-white/20 shadow-sm`}
+                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[10px] px-2 py-1 rounded-[9px] cursor-pointer border border-white/20 shadow-sm touch-manipulation active:scale-[0.99]`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
                           left: `calc(${leftPercent}% + 5px)`,
                           width: `calc(${widthPercent}% - 10px)`,
                         }}
-                        title="Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."
+                        title={isMobileAgenda ? "Toque para ver detalhes." : "Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."}
                       >
                         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                         <div className="flex items-start justify-between gap-1 pl-1">
