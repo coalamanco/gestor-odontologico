@@ -41,6 +41,31 @@ type MessageTemplateItem = {
   active: boolean | null;
 };
 
+
+type BackupTableSummary = {
+  key: string;
+  label: string;
+  count: number;
+  required: boolean;
+  present: boolean;
+};
+
+type BackupValidationSummary = {
+  fileName: string;
+  fileSize: string;
+  valid: boolean;
+  version: string;
+  generatedAt: string;
+  generatedAtLabel: string;
+  totalRecords: number;
+  patientsCount: number;
+  appointmentsCount: number;
+  financialCount: number;
+  tables: BackupTableSummary[];
+  warnings: string[];
+  errors: string[];
+};
+
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<ConfigTab>("clinica");
 
@@ -142,6 +167,10 @@ export default function ConfiguracoesPage() {
     default_due_days: "0",
   });
   const [financialLoading, setFinancialLoading] = useState(false);
+
+  const [backupFileName, setBackupFileName] = useState("");
+  const [backupChecking, setBackupChecking] = useState(false);
+  const [backupValidation, setBackupValidation] = useState<BackupValidationSummary | null>(null);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -847,48 +876,100 @@ export default function ConfiguracoesPage() {
   };
 
 
+  const backupTables = [
+    { key: "patients", label: "Pacientes", required: true },
+    { key: "appointments", label: "Consultas / agenda", required: true },
+    { key: "financial_records", label: "Financeiro", required: true },
+    { key: "payment_transactions", label: "Pagamentos recebidos", required: false },
+    { key: "budgets", label: "Orçamentos", required: true },
+    { key: "budget_items", label: "Itens dos orçamentos", required: true },
+    { key: "patient_treatments", label: "Tratamentos", required: true },
+    { key: "treatment_notes", label: "Evoluções dos tratamentos", required: false },
+    { key: "clinical_notes", label: "Anotações clínicas", required: false },
+    { key: "patient_files", label: "Imagens e RX", required: false },
+    { key: "expenses", label: "Despesas", required: false },
+    { key: "procedures", label: "Procedimentos", required: false },
+    { key: "professionals", label: "Profissionais", required: false },
+    { key: "clinic_settings", label: "Configurações da clínica", required: false },
+    { key: "message_templates", label: "Mensagens", required: false },
+    { key: "anamnesis_templates", label: "Anamnese", required: false },
+    { key: "financial_settings", label: "Configurações financeiras", required: false },
+  ];
+
+  const formatBackupDate = (value: string) => {
+    if (!value) return "Data não informada";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Data inválida ou não reconhecida";
+    }
+
+    return date.toLocaleString("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  };
+
+  const getBackupArray = (backup: any, key: string) => {
+    if (Array.isArray(backup?.[key])) return backup[key];
+
+    if (key === "patient_treatments" && Array.isArray(backup?.treatments)) {
+      return backup.treatments;
+    }
+
+    if (key === "patient_files" && Array.isArray(backup?.images)) {
+      return backup.images;
+    }
+
+    if (key === "clinic_settings" && Array.isArray(backup?.settings)) {
+      return backup.settings;
+    }
+
+    return null;
+  };
+
   const generateSystemBackup = async () => {
     try {
-      const [
-        patients,
-        appointments,
-        financial,
-        budgets,
-        budgetItems,
-        treatments,
-        images,
-        expenses,
-        settings,
-      ] = await Promise.all([
-        supabase.from("patients").select("*"),
-        supabase.from("appointments").select("*"),
-        supabase.from("financial_records").select("*"),
-        supabase.from("budgets").select("*"),
-        supabase.from("budget_items").select("*"),
-        supabase.from("patient_treatments").select("*"),
-        supabase.from("patient_files").select("*"),
-        supabase.from("expenses").select("*"),
-        supabase.from("clinic_settings").select("*"),
-      ]);
+      const backupResponses = await Promise.all(
+        backupTables.map((item) => supabase.from(item.key).select("*"))
+      );
 
-      const backup = {
+      const errors = backupResponses
+        .map((response, index) => ({ response, table: backupTables[index] }))
+        .filter(({ response, table }) => response.error && table.required);
+
+      if (errors.length > 0) {
+        alert(
+          "Erro ao gerar backup nas tabelas obrigatórias: " +
+            errors.map(({ table }) => table.label).join(", ")
+        );
+        return;
+      }
+
+      const backup: Record<string, any> = {
         generated_at: new Date().toISOString(),
-        version: "1.0",
-        patients: patients.data || [],
-        appointments: appointments.data || [],
-        financial_records: financial.data || [],
-        budgets: budgets.data || [],
-        budget_items: budgetItems.data || [],
-        treatments: treatments.data || [],
-        images: images.data || [],
-        expenses: expenses.data || [],
-        settings: settings.data || [],
+        version: "1.1",
+        app: "Gestor Odontológico",
       };
 
-      const blob = new Blob(
-        [JSON.stringify(backup, null, 2)],
-        { type: "application/json;charset=utf-8" }
-      );
+      backupResponses.forEach((response, index) => {
+        backup[backupTables[index].key] = response.data || [];
+      });
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -908,6 +989,121 @@ export default function ConfiguracoesPage() {
     } catch (error) {
       console.error(error);
       alert("Erro ao gerar backup.");
+    }
+  };
+
+  const verifyBackupFile = async (file: File | null) => {
+    setBackupValidation(null);
+    setBackupFileName(file?.name || "");
+
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".json")) {
+      setBackupValidation({
+        fileName: file.name,
+        fileSize: formatFileSize(file.size),
+        valid: false,
+        version: "Não identificada",
+        generatedAt: "",
+        generatedAtLabel: "Não identificada",
+        totalRecords: 0,
+        patientsCount: 0,
+        appointmentsCount: 0,
+        financialCount: 0,
+        tables: [],
+        warnings: [],
+        errors: ["Selecione um arquivo no formato .json."],
+      });
+      return;
+    }
+
+    setBackupChecking(true);
+
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      if (!backup || typeof backup !== "object" || Array.isArray(backup)) {
+        errors.push("O arquivo não possui uma estrutura JSON válida de backup.");
+      }
+
+      const version = String(backup?.version || "");
+      const generatedAt = String(backup?.generated_at || backup?.generatedAt || "");
+
+      if (!version) {
+        errors.push("Versão do backup não encontrada.");
+      }
+
+      if (!generatedAt) {
+        warnings.push("Data de geração do backup não encontrada.");
+      }
+
+      const tables = backupTables.map((table) => {
+        const rows = getBackupArray(backup, table.key);
+        const present = Array.isArray(rows);
+
+        if (table.required && !present) {
+          errors.push(`Tabela obrigatória ausente: ${table.label}.`);
+        }
+
+        if (!table.required && !present) {
+          warnings.push(`Tabela opcional não encontrada: ${table.label}.`);
+        }
+
+        return {
+          key: table.key,
+          label: table.label,
+          count: present ? rows.length : 0,
+          required: table.required,
+          present,
+        };
+      });
+
+      const totalRecords = tables.reduce((sum, table) => sum + table.count, 0);
+      const patientsCount = tables.find((item) => item.key === "patients")?.count || 0;
+      const appointmentsCount = tables.find((item) => item.key === "appointments")?.count || 0;
+      const financialCount = tables.find((item) => item.key === "financial_records")?.count || 0;
+
+      if (totalRecords === 0) {
+        errors.push("Nenhum registro foi encontrado dentro do backup.");
+      }
+
+      setBackupValidation({
+        fileName: file.name,
+        fileSize: formatFileSize(file.size),
+        valid: errors.length === 0,
+        version: version || "Não identificada",
+        generatedAt,
+        generatedAtLabel: formatBackupDate(generatedAt),
+        totalRecords,
+        patientsCount,
+        appointmentsCount,
+        financialCount,
+        tables,
+        warnings,
+        errors,
+      });
+    } catch (error) {
+      console.error(error);
+      setBackupValidation({
+        fileName: file.name,
+        fileSize: formatFileSize(file.size),
+        valid: false,
+        version: "Não identificada",
+        generatedAt: "",
+        generatedAtLabel: "Não identificada",
+        totalRecords: 0,
+        patientsCount: 0,
+        appointmentsCount: 0,
+        financialCount: 0,
+        tables: [],
+        warnings: [],
+        errors: ["Não foi possível ler o arquivo. Verifique se ele é um JSON válido."],
+      });
+    } finally {
+      setBackupChecking(false);
     }
   };
 
@@ -2203,6 +2399,196 @@ export default function ConfiguracoesPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">
+                  Verificar backup
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                  Selecione um arquivo .json para validar a versão, a estrutura e as tabelas do backup.
+                  Esta etapa é apenas uma leitura de segurança e não altera nenhuma informação do banco de dados.
+                </p>
+              </div>
+
+              <label className="cursor-pointer rounded-2xl border border-[#c2dddd] bg-[#f7ffff] px-6 py-4 text-center text-sm font-black text-[#239d9a] hover:bg-[#eefafa]">
+                Selecionar arquivo JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={(event) => verifyBackupFile(event.target.files?.[0] || null)}
+                />
+              </label>
+            </div>
+
+            {backupFileName && (
+              <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+                <span className="font-black text-[#239d9a]">Arquivo selecionado:</span>{" "}
+                {backupFileName}
+              </div>
+            )}
+
+            {backupChecking && (
+              <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm font-black text-[#239d9a]">
+                Verificando backup...
+              </div>
+            )}
+
+            {backupValidation && !backupChecking && (
+              <div className="mt-6 space-y-4">
+                <div
+                  className={`rounded-2xl border p-4 ${
+                    backupValidation.valid
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-red-200 bg-red-50"
+                  }`}
+                >
+                  <div
+                    className={`text-sm font-black ${
+                      backupValidation.valid ? "text-emerald-800" : "text-red-800"
+                    }`}
+                  >
+                    {backupValidation.valid
+                      ? "Backup válido para a próxima etapa de restauração."
+                      : "Backup com problemas. Não restaure este arquivo antes de corrigir."}
+                  </div>
+
+                  <p
+                    className={`mt-1 text-xs ${
+                      backupValidation.valid ? "text-emerald-700" : "text-red-700"
+                    }`}
+                  >
+                    A verificação foi feita apenas no navegador. Nenhum dado foi enviado ou alterado no banco.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Data do backup
+                    </div>
+                    <div className="mt-1 text-sm font-black text-slate-800">
+                      {backupValidation.generatedAtLabel}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Versão
+                    </div>
+                    <div className="mt-1 text-sm font-black text-slate-800">
+                      {backupValidation.version}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Pacientes
+                    </div>
+                    <div className="mt-1 text-2xl font-black text-slate-800">
+                      {backupValidation.patientsCount}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Consultas
+                    </div>
+                    <div className="mt-1 text-2xl font-black text-slate-800">
+                      {backupValidation.appointmentsCount}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Financeiro
+                    </div>
+                    <div className="mt-1 text-2xl font-black text-slate-800">
+                      {backupValidation.financialCount}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#c2dddd] bg-white overflow-hidden">
+                  <div className="grid grid-cols-[1fr_120px_120px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+                    <div className="p-3">Tabela</div>
+                    <div className="p-3 text-center">Registros</div>
+                    <div className="p-3 text-right">Status</div>
+                  </div>
+
+                  {backupValidation.tables.map((item) => (
+                    <div
+                      key={item.key}
+                      className="grid grid-cols-[1fr_120px_120px] border-b border-slate-100 text-sm last:border-b-0"
+                    >
+                      <div className="p-3">
+                        <div className="font-black text-slate-700">{item.label}</div>
+                        <div className="text-xs text-slate-400">
+                          {item.required ? "Obrigatória" : "Opcional"}
+                        </div>
+                      </div>
+
+                      <div className="p-3 text-center font-black text-slate-700">
+                        {item.count}
+                      </div>
+
+                      <div className="p-3 text-right">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ${
+                            item.present
+                              ? "bg-emerald-100 text-emerald-700"
+                              : item.required
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {item.present ? "OK" : item.required ? "Ausente" : "Opcional"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {(backupValidation.errors.length > 0 || backupValidation.warnings.length > 0) && (
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {backupValidation.errors.length > 0 && (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                        <div className="text-sm font-black text-red-800">
+                          Erros encontrados
+                        </div>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-red-700">
+                          {backupValidation.errors.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {backupValidation.warnings.length > 0 && (
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                        <div className="text-sm font-black text-amber-800">
+                          Avisos
+                        </div>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-700">
+                          {backupValidation.warnings.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+                  <span className="font-black text-[#239d9a]">Próxima etapa:</span>{" "}
+                  depois desta validação, será possível criar uma restauração segura com confirmação dupla, prévia dos dados e proteção contra importação acidental.
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
