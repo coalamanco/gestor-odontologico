@@ -66,6 +66,15 @@ type BackupValidationSummary = {
   errors: string[];
 };
 
+type BackupRestoreResult = {
+  key: string;
+  label: string;
+  count: number;
+  success: boolean;
+  message: string;
+};
+
+
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<ConfigTab>("clinica");
 
@@ -171,6 +180,11 @@ export default function ConfiguracoesPage() {
   const [backupFileName, setBackupFileName] = useState("");
   const [backupChecking, setBackupChecking] = useState(false);
   const [backupValidation, setBackupValidation] = useState<BackupValidationSummary | null>(null);
+  const [backupDataToRestore, setBackupDataToRestore] = useState<any | null>(null);
+  const [restoreConfirmation, setRestoreConfirmation] = useState("");
+  const [restoreModeAccepted, setRestoreModeAccepted] = useState(false);
+  const [backupRestoring, setBackupRestoring] = useState(false);
+  const [backupRestoreResults, setBackupRestoreResults] = useState<BackupRestoreResult[]>([]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -896,6 +910,26 @@ export default function ConfiguracoesPage() {
     { key: "financial_settings", label: "Configurações financeiras", required: false },
   ];
 
+  const backupRestoreOrder = [
+    "clinic_settings",
+    "financial_settings",
+    "professionals",
+    "procedures",
+    "patients",
+    "message_templates",
+    "anamnesis_templates",
+    "budgets",
+    "budget_items",
+    "patient_treatments",
+    "treatment_notes",
+    "clinical_notes",
+    "appointments",
+    "financial_records",
+    "payment_transactions",
+    "patient_files",
+    "expenses",
+  ];
+
   const formatBackupDate = (value: string) => {
     if (!value) return "Data não informada";
 
@@ -994,6 +1028,10 @@ export default function ConfiguracoesPage() {
 
   const verifyBackupFile = async (file: File | null) => {
     setBackupValidation(null);
+    setBackupDataToRestore(null);
+    setRestoreConfirmation("");
+    setRestoreModeAccepted(false);
+    setBackupRestoreResults([]);
     setBackupFileName(file?.name || "");
 
     if (!file) return;
@@ -1085,6 +1123,10 @@ export default function ConfiguracoesPage() {
         warnings,
         errors,
       });
+
+      if (errors.length === 0) {
+        setBackupDataToRestore(backup);
+      }
     } catch (error) {
       console.error(error);
       setBackupValidation({
@@ -1104,6 +1146,105 @@ export default function ConfiguracoesPage() {
       });
     } finally {
       setBackupChecking(false);
+    }
+  };
+
+  const restoreVerifiedBackup = async () => {
+    if (!backupValidation?.valid || !backupDataToRestore) {
+      alert("Antes de restaurar, selecione e verifique um backup válido.");
+      return;
+    }
+
+    if (!restoreModeAccepted) {
+      alert("Marque a confirmação de segurança antes de restaurar.");
+      return;
+    }
+
+    if (restoreConfirmation.trim().toUpperCase() !== "RESTAURAR") {
+      alert("Digite RESTAURAR no campo de confirmação para continuar.");
+      return;
+    }
+
+    const finalConfirm = window.confirm(
+      "Confirma a restauração segura deste backup?\n\n" +
+        "Modo atual: importar/atualizar registros do backup.\n" +
+        "Este processo NÃO apaga automaticamente registros que já existem no banco.\n\n" +
+        "Mesmo assim, esta ação grava informações no banco de produção."
+    );
+
+    if (!finalConfirm) return;
+
+    setBackupRestoring(true);
+    setBackupRestoreResults([]);
+
+    const results: BackupRestoreResult[] = [];
+
+    try {
+      for (const key of backupRestoreOrder) {
+        const table = backupTables.find((item) => item.key === key);
+        if (!table) continue;
+
+        const rows = getBackupArray(backupDataToRestore, table.key);
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+          results.push({
+            key: table.key,
+            label: table.label,
+            count: 0,
+            success: true,
+            message: "Sem registros para restaurar.",
+          });
+          setBackupRestoreResults([...results]);
+          continue;
+        }
+
+        const { error } = await supabase.from(table.key).upsert(rows, {
+          onConflict: "id",
+          ignoreDuplicates: false,
+        });
+
+        if (error) {
+          results.push({
+            key: table.key,
+            label: table.label,
+            count: rows.length,
+            success: false,
+            message: error.message,
+          });
+          setBackupRestoreResults([...results]);
+          throw error;
+        }
+
+        results.push({
+          key: table.key,
+          label: table.label,
+          count: rows.length,
+          success: true,
+          message: "Restaurado com sucesso.",
+        });
+        setBackupRestoreResults([...results]);
+      }
+
+      alert("Restauração concluída com sucesso. Recarregue o sistema para conferir os dados.");
+      setRestoreConfirmation("");
+      setRestoreModeAccepted(false);
+
+      await Promise.all([
+        loadSettings(),
+        loadProcedures(),
+        loadTeam(),
+        loadAnamnesis(),
+        loadMessages(),
+        loadFinancialSettings(),
+      ]);
+    } catch (error: any) {
+      console.error("Erro ao restaurar backup:", error);
+      alert(
+        "A restauração foi interrompida. Confira a lista de resultados abaixo.\n\n" +
+          (error?.message || "Erro desconhecido ao restaurar backup.")
+      );
+    } finally {
+      setBackupRestoring(false);
     }
   };
 
@@ -2583,10 +2724,95 @@ export default function ConfiguracoesPage() {
                   </div>
                 )}
 
-                <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
-                  <span className="font-black text-[#239d9a]">Próxima etapa:</span>{" "}
-                  depois desta validação, será possível criar uma restauração segura com confirmação dupla, prévia dos dados e proteção contra importação acidental.
-                </div>
+                {backupValidation.valid && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 space-y-4">
+                    <div>
+                      <h3 className="text-lg font-black text-amber-900">
+                        Restaurar backup
+                      </h3>
+                      <p className="mt-1 text-sm text-amber-800">
+                        Esta restauração usa modo seguro: importa/atualiza os registros do backup, mas não apaga automaticamente registros que já existem no banco e não estão no arquivo.
+                      </p>
+                    </div>
+
+                    <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-white/70 p-4 text-sm text-amber-900">
+                      <input
+                        type="checkbox"
+                        checked={restoreModeAccepted}
+                        onChange={(event) => setRestoreModeAccepted(event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>
+                        Entendo que esta ação grava dados no banco de produção. Já conferi o resumo acima e quero continuar com a restauração segura.
+                      </span>
+                    </label>
+
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
+                      <input
+                        value={restoreConfirmation}
+                        onChange={(event) => setRestoreConfirmation(event.target.value)}
+                        placeholder="Digite RESTAURAR para liberar o botão"
+                        className="rounded-xl border border-amber-200 bg-white p-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={restoreVerifiedBackup}
+                        disabled={
+                          backupRestoring ||
+                          !restoreModeAccepted ||
+                          restoreConfirmation.trim().toUpperCase() !== "RESTAURAR"
+                        }
+                        className="rounded-xl bg-amber-600 px-6 py-3 text-sm font-black text-white shadow-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {backupRestoring ? "Restaurando..." : "Restaurar backup seguro"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-2xl border border-amber-200 bg-white/70 p-4 text-xs text-amber-800">
+                      <span className="font-black">Importante:</span>{" "}
+                      se alguma tabela falhar, o processo será interrompido e mostrará exatamente onde parou. Por segurança, o ideal é gerar um novo backup antes de qualquer restauração.
+                    </div>
+                  </div>
+                )}
+
+                {backupRestoreResults.length > 0 && (
+                  <div className="rounded-2xl border border-[#c2dddd] bg-white overflow-hidden">
+                    <div className="grid grid-cols-[1fr_120px_160px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+                      <div className="p-3">Restauração</div>
+                      <div className="p-3 text-center">Registros</div>
+                      <div className="p-3 text-right">Resultado</div>
+                    </div>
+
+                    {backupRestoreResults.map((item) => (
+                      <div
+                        key={item.key}
+                        className="grid grid-cols-[1fr_120px_160px] border-b border-slate-100 text-sm last:border-b-0"
+                      >
+                        <div className="p-3">
+                          <div className="font-black text-slate-700">{item.label}</div>
+                          <div className="text-xs text-slate-400">{item.message}</div>
+                        </div>
+
+                        <div className="p-3 text-center font-black text-slate-700">
+                          {item.count}
+                        </div>
+
+                        <div className="p-3 text-right">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-black ${
+                              item.success
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {item.success ? "OK" : "Erro"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
