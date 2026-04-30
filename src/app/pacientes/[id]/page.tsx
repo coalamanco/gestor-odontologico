@@ -215,12 +215,12 @@ function NovoPacientePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6 overflow-y-auto">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-6">
       <div className="max-w-5xl mx-auto space-y-5 pb-20">
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-black text-slate-800">Novo paciente</h1>
+              <h1 className="text-2xl font-black text-slate-800 md:text-3xl">Novo paciente</h1>
               <p className="text-sm text-slate-500 mt-1">
                 Cadastre um novo paciente no sistema.
               </p>
@@ -1950,16 +1950,16 @@ function PacienteProntuarioContent({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-4 pb-24">
-        <div className="bg-white rounded-2xl border border-[#d8eeee] p-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4 shadow-sm">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-4 pb-28 md:pb-24">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[#d8eeee] bg-white p-4 shadow-sm md:flex-row md:items-start md:justify-between md:p-5">
           <div className="flex items-start gap-4">
-            <div className="h-20 w-20 rounded-full bg-[#dfeff0] flex items-center justify-center text-[#5f7f84] text-2xl font-semibold">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#dfeff0] text-xl font-semibold text-[#5f7f84] md:h-20 md:w-20 md:text-2xl">
               {patient.name?.charAt(0)?.toUpperCase() || "P"}
             </div>
 
             <div>
-              <h1 className="text-3xl font-black text-slate-800">
+              <h1 className="text-2xl font-black text-slate-800 md:text-3xl">
                 {patient.name}
               </h1>
 
@@ -2019,13 +2019,13 @@ function PacienteProntuarioContent({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#d8eeee] px-5 pt-3 shadow-sm">
-          <div className="flex gap-6 overflow-x-auto">
+        <div className="sticky top-0 z-20 rounded-2xl border border-[#d8eeee] bg-white px-3 pt-3 shadow-sm md:static md:px-5">
+          <div className="flex gap-4 overflow-x-auto md:gap-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 text-sm whitespace-nowrap border-b-2 transition ${
+                className={`whitespace-nowrap border-b-2 pb-3 text-xs transition md:text-sm ${
                   activeTab === tab.id
                     ? "border-[#2ab7b3] text-[#239d9a] font-semibold"
                     : "border-transparent text-slate-500 hover:text-slate-700"
@@ -2847,8 +2847,8 @@ function PacienteProntuarioContent({
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-2xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c] sm:w-auto">
                     {uploadingPatientFile ? "Enviando..." : "Tirar foto"}
                     <input
                       type="file"
@@ -2860,7 +2860,7 @@ function PacienteProntuarioContent({
                     />
                   </label>
 
-                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-[#d8eeee] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa]">
+                  <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-2xl border border-[#d8eeee] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa] sm:w-auto">
                     {uploadingPatientFile ? "Enviando..." : "Enviar arquivo"}
                     <input
                       type="file"
@@ -2887,7 +2887,7 @@ function PacienteProntuarioContent({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {patientFiles.map((file) => (
                   <div
                     key={file.id}
@@ -2902,10 +2902,10 @@ function PacienteProntuarioContent({
                         <img
                           src={file.file_url || ""}
                           alt={file.file_name || "Arquivo do paciente"}
-                          className="h-48 w-full object-cover"
+                          className="h-44 w-full object-cover md:h-48"
                         />
                       ) : (
-                        <div className="flex h-48 w-full items-center justify-center bg-[#eefafa]">
+                        <div className="flex h-44 w-full items-center justify-center bg-[#eefafa] md:h-48">
                           <div className="text-center">
                             <div className="text-4xl">📄</div>
                             <div className="mt-2 text-xs font-black uppercase tracking-widest text-[#239d9a]">
