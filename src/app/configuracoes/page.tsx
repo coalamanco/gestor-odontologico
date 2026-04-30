@@ -80,6 +80,13 @@ type BackupRestoreResult = {
   message: string;
 };
 
+type CloudBackupFile = {
+  name: string;
+  path: string;
+  size: number;
+  createdAt: string;
+};
+
 
 export default function ConfiguracoesPage() {
   const [tab, setTab] = useState<ConfigTab>("clinica");
@@ -191,6 +198,8 @@ export default function ConfiguracoesPage() {
   const [restoreModeAccepted, setRestoreModeAccepted] = useState(false);
   const [backupRestoring, setBackupRestoring] = useState(false);
   const [backupRestoreResults, setBackupRestoreResults] = useState<BackupRestoreResult[]>([]);
+  const [cloudBackupLoading, setCloudBackupLoading] = useState(false);
+  const [cloudBackups, setCloudBackups] = useState<CloudBackupFile[]>([]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -351,6 +360,12 @@ export default function ConfiguracoesPage() {
     loadMessages();
     loadFinancialSettings();
   }, []);
+
+  useEffect(() => {
+    if (tab === "backup") {
+      loadCloudBackups();
+    }
+  }, [tab]);
 
   const saveClinicSettings = async () => {
     setLoading(true);
@@ -979,33 +994,39 @@ export default function ConfiguracoesPage() {
     return null;
   };
 
+  const buildSystemBackup = async () => {
+    const backupResponses = await Promise.all(
+      backupTables.map((item) => supabase.from(item.key).select("*"))
+    );
+
+    const errors = backupResponses
+      .map((response, index) => ({ response, table: backupTables[index] }))
+      .filter(({ response, table }) => response.error && table.required);
+
+    if (errors.length > 0) {
+      throw new Error(
+        "Erro ao gerar backup nas tabelas obrigatórias: " +
+          errors.map(({ table }) => table.label).join(", ")
+      );
+    }
+
+    const backup: Record<string, any> = {
+      generated_at: new Date().toISOString(),
+      version: "1.2",
+      app: "Gestor Odontológico",
+      backup_type: "manual",
+    };
+
+    backupResponses.forEach((response, index) => {
+      backup[backupTables[index].key] = response.data || [];
+    });
+
+    return backup;
+  };
+
   const generateSystemBackup = async () => {
     try {
-      const backupResponses = await Promise.all(
-        backupTables.map((item) => supabase.from(item.key).select("*"))
-      );
-
-      const errors = backupResponses
-        .map((response, index) => ({ response, table: backupTables[index] }))
-        .filter(({ response, table }) => response.error && table.required);
-
-      if (errors.length > 0) {
-        alert(
-          "Erro ao gerar backup nas tabelas obrigatórias: " +
-            errors.map(({ table }) => table.label).join(", ")
-        );
-        return;
-      }
-
-      const backup: Record<string, any> = {
-        generated_at: new Date().toISOString(),
-        version: "1.1",
-        app: "Gestor Odontológico",
-      };
-
-      backupResponses.forEach((response, index) => {
-        backup[backupTables[index].key] = response.data || [];
-      });
+      const backup = await buildSystemBackup();
 
       const blob = new Blob([JSON.stringify(backup, null, 2)], {
         type: "application/json;charset=utf-8",
@@ -1026,10 +1047,112 @@ export default function ConfiguracoesPage() {
       window.URL.revokeObjectURL(url);
 
       alert("Backup completo gerado com sucesso.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Erro ao gerar backup.");
+      alert(error?.message || "Erro ao gerar backup.");
     }
+  };
+
+  const loadCloudBackups = async () => {
+    setCloudBackupLoading(true);
+
+    const { data, error } = await supabase.storage
+      .from("backups")
+      .list("manuais", {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: "created_at", order: "desc" },
+      });
+
+    if (error) {
+      console.error("Erro ao carregar backups online:", error);
+      setCloudBackups([]);
+      setCloudBackupLoading(false);
+      return;
+    }
+
+    const files = (data || [])
+      .filter((item) => item.name.toLowerCase().endsWith(".json"))
+      .map((item) => ({
+        name: item.name,
+        path: `manuais/${item.name}`,
+        size: item.metadata?.size || 0,
+        createdAt: item.created_at || item.updated_at || "",
+      }));
+
+    setCloudBackups(files);
+    setCloudBackupLoading(false);
+  };
+
+  const generateCloudBackupNow = async () => {
+    try {
+      setCloudBackupLoading(true);
+
+      const backup = await buildSystemBackup();
+      backup.backup_type = "manual_online";
+
+      const fileName = `backup-consultorio-${new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")}.json`;
+      const path = `manuais/${fileName}`;
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
+
+      const { error } = await supabase.storage
+        .from("backups")
+        .upload(path, blob, {
+          contentType: "application/json;charset=utf-8",
+          upsert: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      await loadCloudBackups();
+      alert("Backup online salvo com sucesso no Supabase Storage.");
+    } catch (error: any) {
+      console.error("Erro ao salvar backup online:", error);
+      alert(
+        error?.message ||
+          "Erro ao salvar backup online. Confira se o bucket backups existe e se as políticas do Storage estão liberadas para usuário autenticado."
+      );
+    } finally {
+      setCloudBackupLoading(false);
+    }
+  };
+
+  const downloadCloudBackup = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from("backups")
+      .createSignedUrl(path, 60);
+
+    if (error || !data?.signedUrl) {
+      alert("Não foi possível gerar o link de download do backup.");
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const deleteCloudBackup = async (path: string) => {
+    const ok = window.confirm("Excluir este backup online? Esta ação não altera os dados do sistema, apenas remove o arquivo do Storage.");
+    if (!ok) return;
+
+    setCloudBackupLoading(true);
+
+    const { error } = await supabase.storage.from("backups").remove([path]);
+
+    if (error) {
+      alert("Erro ao excluir backup online: " + error.message);
+      setCloudBackupLoading(false);
+      return;
+    }
+
+    await loadCloudBackups();
+    setCloudBackupLoading(false);
   };
 
   const verifyBackupFile = async (file: File | null) => {
@@ -2570,6 +2693,98 @@ export default function ConfiguracoesPage() {
                   Faça um backup semanal e guarde em local seguro, como HD externo ou nuvem.
                 </p>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">
+                  Backup online
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                  Salve uma cópia do backup no Supabase Storage. O bucket usado é privado e se chama backups.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={loadCloudBackups}
+                  disabled={cloudBackupLoading}
+                  className="rounded-2xl border border-[#c2dddd] bg-[#f7ffff] px-5 py-3 text-sm font-black text-[#239d9a] hover:bg-[#eefafa] disabled:opacity-60"
+                >
+                  Atualizar histórico
+                </button>
+
+                <button
+                  type="button"
+                  onClick={generateCloudBackupNow}
+                  disabled={cloudBackupLoading}
+                  className="rounded-2xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-3 text-sm font-black text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+                >
+                  {cloudBackupLoading ? "Processando..." : "Gerar backup online agora"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
+              <span className="font-black text-[#239d9a]">Modo atual:</span>{" "}
+              backup manual online. A automação por horário será feita na próxima etapa com rota segura e agendamento.
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-[#c2dddd] bg-white">
+              <div className="grid grid-cols-[1fr_130px_170px_180px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+                <div className="p-3">Arquivo</div>
+                <div className="p-3 text-center">Tamanho</div>
+                <div className="p-3 text-center">Criado em</div>
+                <div className="p-3 text-right">Ações</div>
+              </div>
+
+              {cloudBackups.length === 0 ? (
+                <div className="p-6 text-center text-sm text-slate-500">
+                  {cloudBackupLoading ? "Carregando backups online..." : "Nenhum backup online encontrado ainda."}
+                </div>
+              ) : (
+                cloudBackups.map((item) => (
+                  <div
+                    key={item.path}
+                    className="grid grid-cols-[1fr_130px_170px_180px] border-b border-slate-100 text-sm last:border-b-0"
+                  >
+                    <div className="p-3">
+                      <div className="font-black text-slate-700 break-all">{item.name}</div>
+                      <div className="text-xs text-slate-400 break-all">{item.path}</div>
+                    </div>
+
+                    <div className="p-3 text-center font-bold text-slate-700">
+                      {formatFileSize(item.size)}
+                    </div>
+
+                    <div className="p-3 text-center text-slate-600">
+                      {formatBackupDate(item.createdAt)}
+                    </div>
+
+                    <div className="p-3 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => downloadCloudBackup(item.path)}
+                        className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                      >
+                        Download
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteCloudBackup(item.path)}
+                        className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
