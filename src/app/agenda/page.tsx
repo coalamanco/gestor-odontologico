@@ -59,6 +59,11 @@ function isTodayDate(dateString: string) {
   return dateString === formatDate(new Date());
 }
 
+function getWeekdayLabel(date: Date) {
+  const labels = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+  return labels[date.getDay()] || "DIA";
+}
+
 
 type HolidayInfo = {
   name: string;
@@ -359,6 +364,8 @@ export default function AgendaPage() {
   });
 
   const [weekBaseDate, setWeekBaseDate] = useState<Date>(new Date());
+  const [mobileView, setMobileView] = useState<"day" | "week">("day");
+  const [isMobileAgenda, setIsMobileAgenda] = useState(false);
   const [showMiniCalendar, setShowMiniCalendar] = useState(false);
   const [miniCalendarDate, setMiniCalendarDate] = useState<Date>(new Date());
 
@@ -433,6 +440,17 @@ export default function AgendaPage() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const updateMobileAgenda = () => {
+      setIsMobileAgenda(window.innerWidth < 768);
+    };
+
+    updateMobileAgenda();
+    window.addEventListener("resize", updateMobileAgenda);
+
+    return () => window.removeEventListener("resize", updateMobileAgenda);
   }, []);
 
   const resetForm = () => {
@@ -567,6 +585,16 @@ export default function AgendaPage() {
   };
 
   const days = useMemo(() => {
+    if (isMobileAgenda && mobileView === "day") {
+      return [
+        {
+          date: formatDate(weekBaseDate),
+          label: getWeekdayLabel(weekBaseDate),
+          num: pad(weekBaseDate.getDate()),
+        },
+      ];
+    }
+
     const start = startOfWeek(weekBaseDate);
     const labels = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -578,7 +606,7 @@ export default function AgendaPage() {
         num: pad(d.getDate()),
       };
     });
-  }, [weekBaseDate]);
+  }, [weekBaseDate, isMobileAgenda, mobileView]);
 
   const miniCalendarDays = useMemo(() => {
     const year = miniCalendarDate.getFullYear();
@@ -1959,12 +1987,76 @@ export default function AgendaPage() {
             ))}
           </select>
         </div>
+
+        <div className="mt-2 rounded-xl border border-[#c2dddd] bg-white p-2 shadow-sm">
+          <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-[#c2dddd] bg-[#f7ffff]">
+            <button
+              type="button"
+              onClick={() => setMobileView("day")}
+              className={`h-9 text-xs font-black transition ${
+                mobileView === "day"
+                  ? "bg-[#239d9a] text-white"
+                  : "text-slate-600"
+              }`}
+            >
+              Dia
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileView("week")}
+              className={`h-9 text-xs font-black transition ${
+                mobileView === "week"
+                  ? "bg-[#239d9a] text-white"
+                  : "text-slate-600"
+              }`}
+            >
+              Semana
+            </button>
+          </div>
+
+          {mobileView === "day" && (
+            <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setWeekBaseDate((prev) => addDays(prev, -1))}
+                className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
+              >
+                ◀ Dia anterior
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setWeekBaseDate(new Date());
+                  setMiniCalendarDate(new Date());
+                }}
+                className="h-9 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white"
+              >
+                Hoje
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setWeekBaseDate((prev) => addDays(prev, 1))}
+                className="h-9 rounded-lg border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a]"
+              >
+                Próximo dia ▶
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 p-2.5">
         <div className="bg-white rounded-[16px] border border-[#d1e5e5] shadow-sm overflow-hidden flex flex-col min-h-0">
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
-            <div className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#d7e7e7] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm">
+            <div
+              className="grid border-b border-[#d7e7e7] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm"
+              style={{
+                gridTemplateColumns: `70px repeat(${days.length}, minmax(0, 1fr))`,
+              }}
+            >
               <div className="px-3 py-2 text-[10px] text-slate-400 uppercase tracking-widest">Hora</div>
 
               {days.map((d) => {
@@ -2010,7 +2102,10 @@ export default function AgendaPage() {
           {hours.map((h) => (
             <div
               key={h}
-              className="grid grid-cols-[70px_repeat(6,1fr)] border-b border-[#edf4f4] text-xs"
+              className="grid border-b border-[#edf4f4] text-xs"
+              style={{
+                gridTemplateColumns: `70px repeat(${days.length}, minmax(0, 1fr))`,
+              }}
             >
               <div className="px-3 py-1.5 bg-[#fbffff] font-bold text-[10px] text-slate-400 tracking-tight">{h}</div>
 
