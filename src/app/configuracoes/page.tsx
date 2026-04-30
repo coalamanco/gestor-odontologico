@@ -2149,6 +2149,63 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
       )}
+
+
+      {tab === "backup" && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">
+                  Backup completo do sistema
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                  Gere uma cópia completa dos principais dados do consultório em arquivo JSON.
+                  Esse backup não altera o banco de dados e serve como cópia de segurança local.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={generateSystemBackup}
+                className="rounded-2xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-4 text-sm font-black text-white shadow-sm hover:opacity-90"
+              >
+                Gerar backup completo
+              </button>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                <div className="text-sm font-black text-slate-800">
+                  Dados incluídos
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Pacientes, agenda, financeiro, pagamentos, orçamentos, tratamentos, imagens/RX e configurações.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
+                <div className="text-sm font-black text-slate-800">
+                  Formato
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Arquivo .json, ideal para guarda, auditoria e futura restauração.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <div className="text-sm font-black text-amber-800">
+                  Recomendação
+                </div>
+                <p className="mt-1 text-xs text-amber-700">
+                  Faça um backup semanal e guarde em local seguro, como HD externo ou nuvem.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
