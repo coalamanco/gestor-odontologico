@@ -61,6 +61,12 @@ type BackupValidationSummary = {
   patientsCount: number;
   appointmentsCount: number;
   financialCount: number;
+  requiredPresentCount: number;
+  requiredTotalCount: number;
+  optionalPresentCount: number;
+  optionalTotalCount: number;
+  optionalMissingCount: number;
+  compatibilityPercent: number;
   tables: BackupTableSummary[];
   warnings: string[];
   errors: string[];
@@ -1048,6 +1054,12 @@ export default function ConfiguracoesPage() {
         patientsCount: 0,
         appointmentsCount: 0,
         financialCount: 0,
+        requiredPresentCount: 0,
+        requiredTotalCount: 0,
+        optionalPresentCount: 0,
+        optionalTotalCount: 0,
+        optionalMissingCount: 0,
+        compatibilityPercent: 0,
         tables: [],
         warnings: [],
         errors: ["Selecione um arquivo no formato .json."],
@@ -1086,9 +1098,6 @@ export default function ConfiguracoesPage() {
           errors.push(`Tabela obrigatória ausente: ${table.label}.`);
         }
 
-        if (!table.required && !present) {
-          warnings.push(`Tabela opcional não encontrada: ${table.label}.`);
-        }
 
         return {
           key: table.key,
@@ -1103,6 +1112,16 @@ export default function ConfiguracoesPage() {
       const patientsCount = tables.find((item) => item.key === "patients")?.count || 0;
       const appointmentsCount = tables.find((item) => item.key === "appointments")?.count || 0;
       const financialCount = tables.find((item) => item.key === "financial_records")?.count || 0;
+      const requiredTables = tables.filter((item) => item.required);
+      const optionalTables = tables.filter((item) => !item.required);
+      const requiredPresentCount = requiredTables.filter((item) => item.present).length;
+      const optionalPresentCount = optionalTables.filter((item) => item.present).length;
+      const requiredTotalCount = requiredTables.length;
+      const optionalTotalCount = optionalTables.length;
+      const optionalMissingCount = Math.max(optionalTotalCount - optionalPresentCount, 0);
+      const compatibilityPercent = requiredTotalCount > 0
+        ? Math.round((requiredPresentCount / requiredTotalCount) * 100)
+        : 0;
 
       if (totalRecords === 0) {
         errors.push("Nenhum registro foi encontrado dentro do backup.");
@@ -1119,6 +1138,12 @@ export default function ConfiguracoesPage() {
         patientsCount,
         appointmentsCount,
         financialCount,
+        requiredPresentCount,
+        requiredTotalCount,
+        optionalPresentCount,
+        optionalTotalCount,
+        optionalMissingCount,
+        compatibilityPercent,
         tables,
         warnings,
         errors,
@@ -1140,6 +1165,12 @@ export default function ConfiguracoesPage() {
         patientsCount: 0,
         appointmentsCount: 0,
         financialCount: 0,
+        requiredPresentCount: 0,
+        requiredTotalCount: 0,
+        optionalPresentCount: 0,
+        optionalTotalCount: 0,
+        optionalMissingCount: 0,
+        compatibilityPercent: 0,
         tables: [],
         warnings: [],
         errors: ["Não foi possível ler o arquivo. Verifique se ele é um JSON válido."],
@@ -2654,6 +2685,48 @@ export default function ConfiguracoesPage() {
                   </div>
                 </div>
 
+                <div className="rounded-2xl border border-[#c2dddd] bg-white p-5 shadow-sm">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-slate-800">
+                        Compatibilidade do backup
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Tabelas obrigatórias: {backupValidation.requiredPresentCount} de {backupValidation.requiredTotalCount} encontradas.
+                        {backupValidation.optionalMissingCount > 0
+                          ? ` ${backupValidation.optionalMissingCount} tabelas opcionais não vieram neste arquivo, mas isso não impede a restauração segura.`
+                          : " Todas as tabelas opcionais previstas também foram encontradas."}
+                      </p>
+                    </div>
+
+                    <div className="rounded-full bg-[#eefafa] px-4 py-2 text-sm font-black text-[#239d9a]">
+                      {backupValidation.compatibilityPercent}% compatível
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={backupValidation.valid ? "h-full rounded-full bg-[#239d9a]" : "h-full rounded-full bg-red-500"}
+                      style={{ width: `${Math.max(backupValidation.compatibilityPercent, 6)}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
+                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Total</div>
+                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.totalRecords}</div>
+                    </div>
+                    <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
+                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Obrigatórias OK</div>
+                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.requiredPresentCount}/{backupValidation.requiredTotalCount}</div>
+                    </div>
+                    <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
+                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Opcionais presentes</div>
+                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.optionalPresentCount}/{backupValidation.optionalTotalCount}</div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="rounded-2xl border border-[#c2dddd] bg-white overflow-hidden">
                   <div className="grid grid-cols-[1fr_120px_120px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
                     <div className="p-3">Tabela</div>
@@ -2694,6 +2767,13 @@ export default function ConfiguracoesPage() {
                   ))}
                 </div>
 
+                {backupValidation.optionalMissingCount > 0 && backupValidation.valid && (
+                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+                    <span className="font-black text-[#239d9a]">Observação:</span>{" "}
+                    este backup não contém algumas tabelas opcionais. Isso é normal em backups antigos ou quando essas áreas ainda não tinham registros.
+                  </div>
+                )}
+
                 {(backupValidation.errors.length > 0 || backupValidation.warnings.length > 0) && (
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {backupValidation.errors.length > 0 && (
@@ -2712,7 +2792,7 @@ export default function ConfiguracoesPage() {
                     {backupValidation.warnings.length > 0 && (
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                         <div className="text-sm font-black text-amber-800">
-                          Avisos
+                          Alertas importantes
                         </div>
                         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-700">
                           {backupValidation.warnings.map((item) => (
