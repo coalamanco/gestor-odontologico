@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -8,7 +9,9 @@ import Sidebar from "@/components/Sidebar";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+
   const [checking, setChecking] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isLoginPage = pathname === "/login";
 
@@ -34,6 +37,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     checkUser();
   }, [pathname, router, isLoginPage]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f7ffff] text-slate-500">
@@ -47,11 +65,38 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar />
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+      <Sidebar
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+      />
 
-      <main className="flex-1 flex flex-col min-h-0 bg-slate-50">
-        <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#d9eeee] bg-white/95 px-4 shadow-sm backdrop-blur md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d4e8e8] bg-[#f7ffff] text-[#239d9a] shadow-sm"
+            aria-label="Abrir menu"
+          >
+            <Menu size={22} />
+          </button>
+
+          <div className="min-w-0 text-center">
+            <div className="truncate text-sm font-black text-slate-800">
+              Gestor Odontológico
+            </div>
+            <div className="truncate text-[11px] font-bold uppercase tracking-wide text-[#239d9a]">
+              Sistema ativo
+            </div>
+          </div>
+
+          <div className="h-10 w-10 shrink-0" />
+        </header>
+
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto pb-20 md:pb-0">
+          {children}
+        </div>
       </main>
     </div>
   );
