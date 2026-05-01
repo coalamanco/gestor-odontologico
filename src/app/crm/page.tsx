@@ -97,10 +97,51 @@ function toDateKey(date: Date) {
 
 function getDateAtNoon(value?: string | null) {
   if (!value) return null;
-  const clean = String(value).split("T")[0];
-  const date = new Date(`${clean}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const clean = raw.split("T")[0].trim();
+
+  // Formato brasileiro: DD/MM/YYYY
+  // Exemplo: 25/05/1985
+  if (clean.includes("/")) {
+    const parts = clean.split("/").map((part) => part.trim());
+
+    if (parts.length === 3) {
+      const day = Number(parts[0]);
+      const month = Number(parts[1]);
+      const year = Number(parts[2]);
+
+      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year > 1800) {
+        const date = new Date(year, month - 1, day, 12, 0, 0);
+
+        if (!Number.isNaN(date.getTime())) {
+          return date;
+        }
+      }
+    }
+  }
+
+  // Formato ISO usado pelo Supabase: YYYY-MM-DD
+  // Exemplo: 1985-05-25
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const date = new Date(`${clean}T12:00:00`);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // Última tentativa para formatos já aceitos pelo JavaScript
+  const fallbackDate = new Date(raw);
+
+  if (Number.isNaN(fallbackDate.getTime())) {
+    return null;
+  }
+
+  fallbackDate.setHours(12, 0, 0, 0);
+  return fallbackDate;
 }
 
 function daysBetween(from: Date, to: Date) {
