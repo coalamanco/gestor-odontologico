@@ -11,6 +11,7 @@ import {
 import {
   AlertTriangle,
   AlertCircle,
+  BarChart3,
   CalendarCheck,
   Clock,
   DollarSign,
@@ -826,12 +827,20 @@ export default function Dashboard() {
       icon: Wallet,
     },
     {
+      title: "BI Executivo",
+      description: "Abrir análise comercial e previsão financeira",
+      href: "/dashboard/executivo",
+      icon: BarChart3,
+    },
+    {
       title: "Relatórios",
       description: "Analisar financeiro da clínica",
       href: "/relatorios",
       icon: LineChartIcon,
     },
-  ].filter((action) => isAdminUser || action.title !== "Relatórios");
+  ].filter((action) =>
+    isAdminUser || !["Relatórios", "BI Executivo"].includes(action.title)
+  );
 
   const cards = [
     {
