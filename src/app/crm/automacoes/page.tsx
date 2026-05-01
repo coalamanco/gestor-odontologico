@@ -76,6 +76,13 @@ type CampaignType =
   | "tratamento"
   | "sem_retorno";
 
+type CrmFunnelStatus =
+  | "nao_respondeu"
+  | "conversando"
+  | "interessado"
+  | "retorno_agendado"
+  | "tratamento_iniciado";
+
 type CampaignRow = {
   patient: Patient;
   reason: string;
@@ -85,6 +92,8 @@ type CampaignRow = {
   stoppedTreatments?: PatientTreatment[];
   lastCrmContact?: ClinicalNote | null;
   daysSinceLastCrmContact?: number | null;
+  crmFunnelStatus?: CrmFunnelStatus | null;
+  crmFunnelStatusLabel?: string | null;
   message: string;
 };
 
@@ -172,6 +181,71 @@ function crmContactBadgeClass(days?: number | null) {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
+const CRM_FUNNEL_OPTIONS: {
+  value: CrmFunnelStatus;
+  label: string;
+  shortLabel: string;
+  className: string;
+}[] = [
+  {
+    value: "nao_respondeu",
+    label: "Não respondeu",
+    shortLabel: "Não respondeu",
+    className: "border-rose-100 bg-rose-50 text-rose-700",
+  },
+  {
+    value: "conversando",
+    label: "Conversando",
+    shortLabel: "Conversando",
+    className: "border-orange-100 bg-orange-50 text-orange-700",
+  },
+  {
+    value: "interessado",
+    label: "Interessado",
+    shortLabel: "Interessado",
+    className: "border-amber-100 bg-amber-50 text-amber-700",
+  },
+  {
+    value: "retorno_agendado",
+    label: "Retorno agendado",
+    shortLabel: "Agendado",
+    className: "border-emerald-100 bg-emerald-50 text-emerald-700",
+  },
+  {
+    value: "tratamento_iniciado",
+    label: "Tratamento iniciado",
+    shortLabel: "Iniciado",
+    className: "border-cyan-100 bg-cyan-50 text-cyan-700",
+  },
+];
+
+function funnelStatusLabel(value?: CrmFunnelStatus | null) {
+  return (
+    CRM_FUNNEL_OPTIONS.find((item) => item.value === value)?.label ||
+    "Sem status"
+  );
+}
+
+function funnelStatusClass(value?: CrmFunnelStatus | null) {
+  return (
+    CRM_FUNNEL_OPTIONS.find((item) => item.value === value)?.className ||
+    "border-slate-200 bg-slate-50 text-slate-600"
+  );
+}
+
+function extractFunnelStatus(note?: ClinicalNote | null): CrmFunnelStatus | null {
+  const content = String(note?.content || "");
+  const match = content.match(/STATUS_CRM:\s*([a-z_]+)/i);
+  const value = match?.[1] as CrmFunnelStatus | undefined;
+
+  if (CRM_FUNNEL_OPTIONS.some((option) => option.value === value)) {
+    return value || null;
+  }
+
+  return null;
+}
+
+
 function patientFirstName(patient?: Patient | null) {
   return String(patient?.name || "Paciente").trim().split(" ")[0] || "Paciente";
 }
@@ -196,6 +270,7 @@ export default function CrmAutomacoesPage() {
   const [activeCampaign, setActiveCampaign] = useState<CampaignType>("revisao");
   const [search, setSearch] = useState("");
   const [loggingContactId, setLoggingContactId] = useState<string | null>(null);
+  const [updatingFunnelPatientId, setUpdatingFunnelPatientId] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -222,7 +297,7 @@ export default function CrmAutomacoesPage() {
         supabase
           .from("clinical_notes")
           .select("*")
-          .ilike("title", "CRM -%")
+          .ilike("title", "CRM%")
           .order("created_at", { ascending: false }),
       ]);
 
@@ -307,11 +382,23 @@ export default function CrmAutomacoesPage() {
           return bDate - aDate;
         });
 
-      const lastCrmContact = patientCrmNotes[0] || null;
+      const patientCrmContactNotes = patientCrmNotes.filter((note) =>
+        String(note.title || "").startsWith("CRM -")
+      );
+
+      const patientCrmFunnelNotes = patientCrmNotes.filter((note) =>
+        String(note.title || "").startsWith("CRM STATUS -")
+      );
+
+      const lastCrmContact = patientCrmContactNotes[0] || null;
       const lastCrmDate = getDateAtNoon(lastCrmContact?.created_at);
       const daysSinceLastCrmContact = lastCrmDate
         ? daysBetween(lastCrmDate, new Date())
         : null;
+
+      const latestFunnelNote = patientCrmFunnelNotes[0] || null;
+      const crmFunnelStatus = extractFunnelStatus(latestFunnelNote);
+      const crmFunnelStatusLabel = funnelStatusLabel(crmFunnelStatus);
 
       return {
         patient,
@@ -323,6 +410,8 @@ export default function CrmAutomacoesPage() {
         stoppedTreatments,
         lastCrmContact,
         daysSinceLastCrmContact,
+        crmFunnelStatus,
+        crmFunnelStatusLabel,
       };
     });
   }, [patients, appointments, budgets, treatments, clinicalNotes]);
@@ -529,6 +618,53 @@ export default function CrmAutomacoesPage() {
     }
   };
 
+  const updateFunnelStatus = async (row: CampaignRow, status: CrmFunnelStatus) => {
+    if (!row?.patient?.id) return;
+
+    const selectedStatus = CRM_FUNNEL_OPTIONS.find((option) => option.value === status);
+
+    if (!selectedStatus) return;
+
+    try {
+      setUpdatingFunnelPatientId(row.patient.id);
+
+      const now = new Date();
+
+      const content =
+        `Status do funil CRM atualizado em ${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}.\n\n` +
+        `STATUS_CRM: ${status}\n` +
+        `Status visual: ${selectedStatus.label}\n` +
+        `Campanha relacionada: ${row.reason}\n` +
+        `Detalhe: ${row.detail}`;
+
+      const { error } = await supabase.from("clinical_notes").insert({
+        patient_id: row.patient.id,
+        title: `CRM STATUS - ${selectedStatus.label}`,
+        content,
+      });
+
+      if (error) throw error;
+
+      setClinicalNotes((current) => [
+        {
+          id: `temp-status-${Date.now()}`,
+          patient_id: row.patient.id,
+          title: `CRM STATUS - ${selectedStatus.label}`,
+          content,
+          created_at: new Date().toISOString(),
+        },
+        ...current,
+      ]);
+    } catch (error: any) {
+      alert("Não foi possível atualizar o funil CRM: " + (error?.message || "erro inesperado"));
+    } finally {
+      setUpdatingFunnelPatientId(null);
+    }
+  };
+
   return (
     <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-28 md:p-6 md:pb-10">
       <div className="mx-auto max-w-7xl space-y-4">
@@ -724,10 +860,36 @@ export default function CrmAutomacoesPage() {
                         {row.detail}
                       </div>
 
-                      <div
-                        className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${crmContactBadgeClass(row.daysSinceLastCrmContact)}`}
-                      >
-                        {crmContactLabel(row.daysSinceLastCrmContact)}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <div
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${crmContactBadgeClass(row.daysSinceLastCrmContact)}`}
+                        >
+                          {crmContactLabel(row.daysSinceLastCrmContact)}
+                        </div>
+
+                        <div
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${funnelStatusClass(row.crmFunnelStatus)}`}
+                        >
+                          Funil: {row.crmFunnelStatusLabel || "Sem status"}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {CRM_FUNNEL_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => updateFunnelStatus(row, option.value)}
+                            disabled={updatingFunnelPatientId === row.patient.id}
+                            className={`rounded-full border px-2.5 py-1 text-[10px] font-black transition hover:scale-[1.02] disabled:opacity-60 ${
+                              row.crmFunnelStatus === option.value
+                                ? option.className
+                                : "border-[#d9eeee] bg-white text-slate-500 hover:bg-[#fbffff]"
+                            }`}
+                          >
+                            {option.shortLabel}
+                          </button>
+                        ))}
                       </div>
 
                       {row.lastAppointment && (
