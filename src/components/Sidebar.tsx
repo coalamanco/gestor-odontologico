@@ -1,19 +1,20 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
+  BarChart3,
   Calendar,
-  Users,
   DollarSign,
-  Package,
-  Settings,
-  Receipt,
-  MonitorSmartphone,
+  LayoutDashboard,
   Megaphone,
+  MonitorSmartphone,
+  Package,
+  Receipt,
+  Settings,
+  Users,
+  X,
 } from "lucide-react";
 import { getUserRole } from "@/lib/getUserRole";
 
@@ -28,6 +29,12 @@ const menu = [
     href: "/",
     icon: LayoutDashboard,
     roles: ["admin", "secretaria"],
+  },
+  {
+    label: "BI Executivo",
+    href: "/dashboard/executivo",
+    icon: BarChart3,
+    roles: ["admin"],
   },
   {
     label: "Agenda",
@@ -123,6 +130,8 @@ function SidebarContent({
             pathname === item.href ||
             (item.href !== "/" && pathname.startsWith(item.href));
 
+          const Icon = item.icon;
+
           return (
             <Link
               key={item.href}
@@ -132,7 +141,7 @@ function SidebarContent({
                 active ? "bg-white text-[#239d9a]" : "hover:bg-white/20"
               }`}
             >
-              <item.icon size={18} />
+              <Icon size={18} />
               {item.label}
             </Link>
           );
@@ -140,9 +149,7 @@ function SidebarContent({
       </nav>
 
       <div className="border-t border-white/20 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="text-xs opacity-80">
-          Sistema ativo
-        </div>
+        <div className="text-xs opacity-80">Sistema ativo</div>
       </div>
     </div>
   );
@@ -180,7 +187,9 @@ export default function Sidebar({
 
       <div
         className={`fixed inset-0 z-[70] bg-slate-950/45 backdrop-blur-sm transition-opacity duration-200 md:hidden ${
-          mobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          mobileOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
         onClick={onCloseMobile}
       />
@@ -204,6 +213,8 @@ export default function Sidebar({
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));
 
+            const Icon = item.icon;
+
             return (
               <Link
                 key={item.href}
@@ -217,11 +228,10 @@ export default function Sidebar({
                     active ? "bg-[#e7f8f7]" : "bg-transparent"
                   }`}
                 >
-                  <item.icon size={17} />
+                  <Icon size={17} />
                 </span>
-                <span className="truncate">
-                  {item.label}
-                </span>
+
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
