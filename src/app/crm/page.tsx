@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  Bot,
   CalendarClock,
   Cake,
   CheckCircle2,
-  Clock3,
   FileText,
   Megaphone,
   MessageCircle,
@@ -97,31 +97,24 @@ function toDateKey(date: Date) {
 
 function getDateAtNoon(value?: string | null) {
   if (!value) return null;
-
   const clean = String(value).split("T")[0];
   const date = new Date(`${clean}T12:00:00`);
-
   if (Number.isNaN(date.getTime())) return null;
-
   return date;
 }
 
 function daysBetween(from: Date, to: Date) {
   const start = new Date(from);
   start.setHours(0, 0, 0, 0);
-
   const end = new Date(to);
   end.setHours(0, 0, 0, 0);
-
   const diff = end.getTime() - start.getTime();
-
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
 function formatDateBr(value?: string | null) {
   const date = getDateAtNoon(value);
   if (!date) return "-";
-
   return date.toLocaleDateString("pt-BR");
 }
 
@@ -135,11 +128,8 @@ function normalizePhone(value?: string | null) {
 
 function buildWhatsappHref(phoneValue: string | null | undefined, message: string) {
   const digits = normalizePhone(phoneValue);
-
   if (!digits) return "#";
-
   const phone = digits.startsWith("55") ? digits : `55${digits}`;
-
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
@@ -154,19 +144,13 @@ function getBirthDate(patient: Patient) {
 function isBirthdayThisMonth(patient: Patient, base = new Date()) {
   const birth = getDateAtNoon(getBirthDate(patient));
   if (!birth) return false;
-
   return birth.getMonth() === base.getMonth();
 }
 
 function isBirthdayToday(patient: Patient, base = new Date()) {
   const birth = getDateAtNoon(getBirthDate(patient));
   if (!birth) return false;
-
   return birth.getMonth() === base.getMonth() && birth.getDate() === base.getDate();
-}
-
-function sortByPatientName(a: CrmPatientRow, b: CrmPatientRow) {
-  return String(a.patient.name || "").localeCompare(String(b.patient.name || ""), "pt-BR");
 }
 
 export default function CrmPage() {
@@ -179,8 +163,6 @@ export default function CrmPage() {
   const [search, setSearch] = useState("");
   const [daysThreshold, setDaysThreshold] = useState(90);
 
-  const today = useMemo(() => new Date(), []);
-
   const loadData = async () => {
     try {
       setLoading(true);
@@ -191,23 +173,10 @@ export default function CrmPage() {
         { data: budgetsData, error: budgetsError },
         { data: treatmentsData, error: treatmentsError },
       ] = await Promise.all([
-        supabase
-          .from("patients")
-          .select("*")
-          .order("name", { ascending: true }),
-        supabase
-          .from("appointments")
-          .select("*")
-          .order("date", { ascending: false })
-          .order("start_time", { ascending: false }),
-        supabase
-          .from("budgets")
-          .select("*")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("patient_treatments")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        supabase.from("patients").select("*").order("name", { ascending: true }),
+        supabase.from("appointments").select("*").order("date", { ascending: false }).order("start_time", { ascending: false }),
+        supabase.from("budgets").select("*").order("created_at", { ascending: false }),
+        supabase.from("patient_treatments").select("*").order("created_at", { ascending: false }),
       ]);
 
       if (patientsError) throw patientsError;
@@ -260,7 +229,6 @@ export default function CrmPage() {
 
       const lastAppointment = pastAppointments[0] || null;
       const nextAppointment = futureAppointments[0] || null;
-
       const lastDate = getDateAtNoon(lastAppointment?.date || patient.created_at);
       const daysWithoutReturn = lastDate ? daysBetween(lastDate, new Date()) : null;
 
@@ -269,22 +237,14 @@ export default function CrmPage() {
         return budget.patient_id === patient.id && status !== "aprovado" && status !== "reprovado" && status !== "cancelado";
       });
 
-      const openBudgetTotal = patientOpenBudgets.reduce(
-        (acc, budget) => acc + parseMoney(budget.total),
-        0
-      );
+      const openBudgetTotal = patientOpenBudgets.reduce((acc, budget) => acc + parseMoney(budget.total), 0);
 
       const stoppedTreatments = treatments.filter((treatment) => {
         if (treatment.patient_id !== patient.id) return false;
-
         const status = normalizeStatus(treatment.status);
-        if (status === "finalizado" || status === "concluido" || status === "concluído") {
-          return false;
-        }
-
+        if (status === "finalizado" || status === "concluido" || status === "concluído") return false;
         const created = getDateAtNoon(treatment.created_at);
         if (!created) return false;
-
         return daysBetween(created, new Date()) >= 30;
       });
 
@@ -302,10 +262,7 @@ export default function CrmPage() {
 
   const returnRows = useMemo(() => {
     return patientRows
-      .filter((row) => {
-        if (row.nextAppointment) return false;
-        return Number(row.daysWithoutReturn || 0) >= daysThreshold;
-      })
+      .filter((row) => !row.nextAppointment && Number(row.daysWithoutReturn || 0) >= daysThreshold)
       .sort((a, b) => Number(b.daysWithoutReturn || 0) - Number(a.daysWithoutReturn || 0));
   }, [patientRows, daysThreshold]);
 
@@ -340,124 +297,40 @@ export default function CrmPage() {
     if (activeFilter === "tratamentos") base = stoppedTreatmentRows;
 
     const term = search.trim().toLowerCase();
-
     if (!term) return base;
 
     return base.filter((row) => {
-      return [
-        row.patient.name,
-        row.patient.phone,
-        row.patient.email,
-        row.patient.cpf,
-      ]
+      return [row.patient.name, row.patient.phone, row.patient.email, row.patient.cpf]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(term));
     });
-  }, [
-    activeFilter,
-    returnRows,
-    birthdayRows,
-    openBudgetRows,
-    stoppedTreatmentRows,
-    search,
-  ]);
+  }, [activeFilter, returnRows, birthdayRows, openBudgetRows, stoppedTreatmentRows, search]);
 
   const stats = [
-    {
-      title: "Sem retorno",
-      value: returnRows.length,
-      description: `${daysThreshold}+ dias sem nova consulta`,
-      icon: CalendarClock,
-      filter: "retorno" as CrmFilter,
-      tone: "text-amber-700 bg-amber-50 border-amber-100",
-    },
-    {
-      title: "Aniversariantes",
-      value: birthdayRows.length,
-      description: "Pacientes do mês",
-      icon: Cake,
-      filter: "aniversariantes" as CrmFilter,
-      tone: "text-pink-700 bg-pink-50 border-pink-100",
-    },
-    {
-      title: "Orçamentos pendentes",
-      value: openBudgetRows.length,
-      description: formatCurrency(
-        openBudgetRows.reduce((acc, row) => acc + Number(row.openBudgetTotal || 0), 0)
-      ),
-      icon: FileText,
-      filter: "orcamentos" as CrmFilter,
-      tone: "text-cyan-700 bg-cyan-50 border-cyan-100",
-    },
-    {
-      title: "Tratamentos parados",
-      value: stoppedTreatmentRows.length,
-      description: "Há mais de 30 dias",
-      icon: Stethoscope,
-      filter: "tratamentos" as CrmFilter,
-      tone: "text-purple-700 bg-purple-50 border-purple-100",
-    },
+    { title: "Sem retorno", value: returnRows.length, description: `${daysThreshold}+ dias sem nova consulta`, icon: CalendarClock, filter: "retorno" as CrmFilter, tone: "text-amber-700 bg-amber-50 border-amber-100" },
+    { title: "Aniversariantes", value: birthdayRows.length, description: "Pacientes do mês", icon: Cake, filter: "aniversariantes" as CrmFilter, tone: "text-pink-700 bg-pink-50 border-pink-100" },
+    { title: "Orçamentos pendentes", value: openBudgetRows.length, description: formatCurrency(openBudgetRows.reduce((acc, row) => acc + Number(row.openBudgetTotal || 0), 0)), icon: FileText, filter: "orcamentos" as CrmFilter, tone: "text-cyan-700 bg-cyan-50 border-cyan-100" },
+    { title: "Tratamentos parados", value: stoppedTreatmentRows.length, description: "Há mais de 30 dias", icon: Stethoscope, filter: "tratamentos" as CrmFilter, tone: "text-purple-700 bg-purple-50 border-purple-100" },
   ];
-
-  const crmInsight = useMemo(() => {
-    if (returnRows.length > 0) {
-      return `${returnRows.length} paciente(s) estão sem retorno há pelo menos ${daysThreshold} dias.`;
-    }
-
-    if (openBudgetRows.length > 0) {
-      return `${openBudgetRows.length} paciente(s) possuem orçamento pendente para acompanhamento.`;
-    }
-
-    if (birthdayRows.length > 0) {
-      return `${birthdayRows.length} aniversariante(s) no mês para ação de relacionamento.`;
-    }
-
-    return "Seu CRM está organizado. Nenhuma ação crítica encontrada agora.";
-  }, [returnRows.length, openBudgetRows.length, birthdayRows.length, daysThreshold]);
 
   const buildMessage = (row: CrmPatientRow) => {
     const firstName = patientFirstName(row.patient);
 
     if (activeFilter === "aniversariantes") {
-      return (
-        `Olá, ${firstName}! Tudo bem?\n\n` +
-        `A equipe do consultório deseja um feliz aniversário! 🎉\n` +
-        `Que seu novo ciclo seja cheio de saúde, alegria e muitos motivos para sorrir.\n\n` +
-        `Um abraço, Dr. Henrique S. Pasquali.`
-      );
+      return `Olá, ${firstName}! Tudo bem?\n\nA equipe do consultório deseja um feliz aniversário! 🎉\nQue seu novo ciclo seja cheio de saúde, alegria e muitos motivos para sorrir.\n\nUm abraço, Dr. Henrique S. Pasquali.`;
     }
 
     if (activeFilter === "orcamentos") {
-      return (
-        `Olá, ${firstName}! Tudo bem?\n\n` +
-        `Passando para saber se ficou alguma dúvida sobre o orçamento odontológico que conversamos.\n\n` +
-        `Podemos te ajudar a organizar o melhor plano de tratamento e forma de pagamento.\n\n` +
-        `Ficamos à disposição 🙂`
-      );
+      return `Olá, ${firstName}! Tudo bem?\n\nPassando para saber se ficou alguma dúvida sobre o orçamento odontológico que conversamos.\n\nPodemos te ajudar a organizar o melhor plano de tratamento e forma de pagamento.\n\nFicamos à disposição 🙂`;
     }
 
     if (activeFilter === "tratamentos") {
       const treatment = row.stoppedTreatments?.[0];
-      const treatmentName =
-        treatment?.procedure_name ||
-        treatment?.treatment_name ||
-        treatment?.title ||
-        "tratamento";
-
-      return (
-        `Olá, ${firstName}! Tudo bem?\n\n` +
-        `Estamos entrando em contato para dar continuidade ao seu tratamento odontológico: ${treatmentName}.\n\n` +
-        `Quando puder, nos responda para organizarmos o melhor horário para seu retorno.\n\n` +
-        `Ficamos à disposição 🙂`
-      );
+      const treatmentName = treatment?.procedure_name || treatment?.treatment_name || treatment?.title || "tratamento";
+      return `Olá, ${firstName}! Tudo bem?\n\nEstamos entrando em contato para dar continuidade ao seu tratamento odontológico: ${treatmentName}.\n\nQuando puder, nos responda para organizarmos o melhor horário para seu retorno.\n\nFicamos à disposição 🙂`;
     }
 
-    return (
-      `Olá, ${firstName}! Tudo bem?\n\n` +
-      `Sentimos sua falta por aqui e gostaríamos de saber como está sua saúde bucal.\n\n` +
-      `Se desejar, podemos organizar um horário de retorno para avaliação e acompanhamento.\n\n` +
-      `Ficamos à disposição 🙂`
-    );
+    return `Olá, ${firstName}! Tudo bem?\n\nSentimos sua falta por aqui e gostaríamos de saber como está sua saúde bucal.\n\nSe desejar, podemos organizar um horário de retorno para avaliação e acompanhamento.\n\nFicamos à disposição 🙂`;
   };
 
   const activeTitle = {
@@ -478,24 +351,32 @@ export default function CrmPage() {
                   <Sparkles size={13} />
                   CRM inteligente
                 </div>
-
                 <h1 className="mt-3 text-2xl font-black tracking-tight md:text-4xl">
                   Relacionamento e Marketing
                 </h1>
-
                 <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-cyan-50">
                   Acompanhe pacientes sem retorno, aniversariantes, orçamentos pendentes e tratamentos parados com mensagens prontas para WhatsApp.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={loadData}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-3 text-sm font-black text-white shadow-sm backdrop-blur hover:bg-white/20"
-              >
-                <RefreshCw size={17} />
-                Atualizar
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Link
+                  href="/crm/automacoes"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
+                >
+                  <Bot size={17} />
+                  Automações
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={loadData}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-3 text-sm font-black text-white shadow-sm backdrop-blur hover:bg-white/20"
+                >
+                  <RefreshCw size={17} />
+                  Atualizar
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -512,19 +393,10 @@ export default function CrmPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                    {item.title}
-                  </div>
-
-                  <div className="mt-2 text-3xl font-black text-slate-800">
-                    {item.value}
-                  </div>
-
-                  <div className="mt-1 text-xs font-semibold text-slate-500">
-                    {item.description}
-                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{item.title}</div>
+                  <div className="mt-2 text-3xl font-black text-slate-800">{item.value}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-500">{item.description}</div>
                 </div>
-
                 <div className={`rounded-2xl border p-2.5 ${item.tone}`}>
                   <item.icon size={20} />
                 </div>
@@ -539,15 +411,9 @@ export default function CrmPage() {
               <div className="rounded-2xl bg-[#eefafa] p-2.5 text-[#239d9a]">
                 <Megaphone size={20} />
               </div>
-
               <div>
-                <h2 className="text-base font-black text-slate-800">
-                  Painel de ação
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {crmInsight}
-                </p>
+                <h2 className="text-base font-black text-slate-800">Painel de ação</h2>
+                <p className="mt-1 text-sm text-slate-500">Use esta tela para campanhas manuais rápidas. Para listas automáticas, clique em Automações.</p>
               </div>
             </div>
 
@@ -559,9 +425,7 @@ export default function CrmPage() {
                     type="button"
                     onClick={() => setDaysThreshold(days)}
                     className={`rounded-xl px-3 py-2 text-xs font-black ${
-                      daysThreshold === days
-                        ? "bg-[#239d9a] text-white"
-                        : "border border-[#d9eeee] bg-[#fbffff] text-slate-600"
+                      daysThreshold === days ? "bg-[#239d9a] text-white" : "border border-[#d9eeee] bg-[#fbffff] text-slate-600"
                     }`}
                   >
                     {days}+ dias
@@ -573,7 +437,6 @@ export default function CrmPage() {
 
           <div className="mt-4 flex items-center gap-2 rounded-2xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2">
             <Search size={17} className="text-slate-400" />
-
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -587,15 +450,9 @@ export default function CrmPage() {
           <div className="border-b border-[#e8f5f5] px-4 py-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-lg font-black text-slate-800">
-                  {activeTitle}
-                </h2>
-
-                <p className="mt-1 text-xs font-black uppercase tracking-widest text-slate-400">
-                  {visibleRows.length} paciente(s) encontrado(s)
-                </p>
+                <h2 className="text-lg font-black text-slate-800">{activeTitle}</h2>
+                <p className="mt-1 text-xs font-black uppercase tracking-widest text-slate-400">{visibleRows.length} paciente(s) encontrado(s)</p>
               </div>
-
               <div className="inline-flex items-center gap-2 rounded-full bg-[#f7ffff] px-3 py-1.5 text-xs font-bold text-[#239d9a] ring-1 ring-[#d9eeee]">
                 <CheckCircle2 size={14} />
                 Mensagens prontas
@@ -604,25 +461,15 @@ export default function CrmPage() {
           </div>
 
           <div className="divide-y divide-[#edf7f7]">
-            {loading && (
-              <div className="p-6 text-center text-sm font-semibold text-slate-500">
-                Carregando CRM...
-              </div>
-            )}
+            {loading && <div className="p-6 text-center text-sm font-semibold text-slate-500">Carregando CRM...</div>}
 
             {!loading && visibleRows.length === 0 && (
               <div className="p-8 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eefafa] text-[#239d9a]">
                   <CheckCircle2 size={22} />
                 </div>
-
-                <h3 className="mt-3 text-base font-black text-slate-800">
-                  Nenhum paciente nesta lista
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Tudo certo para este filtro no momento.
-                </p>
+                <h3 className="mt-3 text-base font-black text-slate-800">Nenhum paciente nesta lista</h3>
+                <p className="mt-1 text-sm text-slate-500">Tudo certo para este filtro no momento.</p>
               </div>
             )}
 
@@ -634,26 +481,16 @@ export default function CrmPage() {
                 const whatsappHref = buildWhatsappHref(patient.phone, message);
 
                 return (
-                  <div
-                    key={patient.id}
-                    className="grid grid-cols-1 gap-4 p-4 transition hover:bg-[#fbffff] xl:grid-cols-[1fr_1.1fr_auto]"
-                  >
+                  <div key={patient.id} className="grid grid-cols-1 gap-4 p-4 transition hover:bg-[#fbffff] xl:grid-cols-[1fr_1.1fr_auto]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/pacientes/${patient.id}`}
-                          className="truncate text-base font-black text-slate-800 hover:text-[#239d9a]"
-                        >
+                        <Link href={`/pacientes/${patient.id}`} className="truncate text-base font-black text-slate-800 hover:text-[#239d9a]">
                           {patient.name || "Paciente"}
                         </Link>
-
                         {activeFilter === "aniversariantes" && isBirthdayToday(patient, new Date()) && (
-                          <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-pink-700">
-                            Hoje
-                          </span>
+                          <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-pink-700">Hoje</span>
                         )}
                       </div>
-
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-slate-500">
                         <span>Telefone: {patient.phone || "-"}</span>
                         {patient.cpf && <span>CPF: {patient.cpf}</span>}
@@ -662,60 +499,36 @@ export default function CrmPage() {
 
                     <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-2">
                       <div className="rounded-2xl border border-[#e8f5f5] bg-[#fbffff] p-3">
-                        <div className="font-black uppercase tracking-widest text-slate-400">
-                          Última consulta
-                        </div>
-
+                        <div className="font-black uppercase tracking-widest text-slate-400">Última consulta</div>
                         <div className="mt-1 font-bold text-slate-700">
-                          {row.lastAppointment
-                            ? `${formatDateBr(row.lastAppointment.date)} • ${row.lastAppointment.status || "agendado"}`
-                            : "Sem consulta registrada"}
+                          {row.lastAppointment ? `${formatDateBr(row.lastAppointment.date)} • ${row.lastAppointment.status || "agendado"}` : "Sem consulta registrada"}
                         </div>
                       </div>
 
                       <div className="rounded-2xl border border-[#e8f5f5] bg-[#fbffff] p-3">
-                        <div className="font-black uppercase tracking-widest text-slate-400">
-                          Motivo do contato
-                        </div>
-
+                        <div className="font-black uppercase tracking-widest text-slate-400">Motivo do contato</div>
                         <div className="mt-1 font-bold text-slate-700">
-                          {activeFilter === "retorno" &&
-                            `${row.daysWithoutReturn || 0} dias sem retorno`}
-                          {activeFilter === "aniversariantes" &&
-                            `Aniversário: ${formatDateBr(getBirthDate(patient))}`}
-                          {activeFilter === "orcamentos" &&
-                            `${row.openBudgetCount || 0} orçamento(s) • ${formatCurrency(row.openBudgetTotal || 0)}`}
-                          {activeFilter === "tratamentos" &&
-                            `${row.stoppedTreatments?.length || 0} tratamento(s) parado(s)`}
+                          {activeFilter === "retorno" && `${row.daysWithoutReturn || 0} dias sem retorno`}
+                          {activeFilter === "aniversariantes" && `Aniversário: ${formatDateBr(getBirthDate(patient))}`}
+                          {activeFilter === "orcamentos" && `${row.openBudgetCount || 0} orçamento(s) • ${formatCurrency(row.openBudgetTotal || 0)}`}
+                          {activeFilter === "tratamentos" && `${row.stoppedTreatments?.length || 0} tratamento(s) parado(s)`}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row xl:flex-col xl:items-stretch">
-                      <Link
-                        href={`/pacientes/${patient.id}`}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-[#fbffff]"
-                      >
+                      <Link href={`/pacientes/${patient.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-[#fbffff]">
                         <Users size={15} />
                         Prontuário
                       </Link>
 
                       {hasPhone ? (
-                        <a
-                          href={whatsappHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1c9f63]"
-                        >
+                        <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1c9f63]">
                           <MessageCircle size={15} />
                           WhatsApp
                         </a>
                       ) : (
-                        <button
-                          type="button"
-                          disabled
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-4 py-2 text-xs font-black text-slate-500"
-                        >
+                        <button type="button" disabled className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-4 py-2 text-xs font-black text-slate-500">
                           <AlertCircle size={15} />
                           Sem telefone
                         </button>
@@ -724,53 +537,6 @@ export default function CrmPage() {
                   </div>
                 );
               })}
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-          <div className="rounded-[1.25rem] border border-[#d9eeee] bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-amber-50 p-2.5 text-amber-700">
-                <Clock3 size={19} />
-              </div>
-
-              <div>
-                <div className="font-black text-slate-800">Rotina sugerida</div>
-                <div className="text-sm text-slate-500">
-                  Revisar esta página 2x por semana.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.25rem] border border-[#d9eeee] bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-cyan-50 p-2.5 text-cyan-700">
-                <MessageCircle size={19} />
-              </div>
-
-              <div>
-                <div className="font-black text-slate-800">WhatsApp</div>
-                <div className="text-sm text-slate-500">
-                  Cada botão já abre com texto pronto.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.25rem] border border-[#d9eeee] bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-emerald-50 p-2.5 text-emerald-700">
-                <CheckCircle2 size={19} />
-              </div>
-
-              <div>
-                <div className="font-black text-slate-800">Sem automação invasiva</div>
-                <div className="text-sm text-slate-500">
-                  Você escolhe quem vai receber mensagem.
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </div>
