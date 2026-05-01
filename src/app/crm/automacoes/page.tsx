@@ -161,6 +161,7 @@ export default function CrmAutomacoesPage() {
   const [loading, setLoading] = useState(true);
   const [activeCampaign, setActiveCampaign] = useState<CampaignType>("revisao");
   const [search, setSearch] = useState("");
+  const [loggingContactId, setLoggingContactId] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -428,6 +429,37 @@ export default function CrmAutomacoesPage() {
     }
   };
 
+  const registerCrmContact = async (row: CampaignRow) => {
+    if (!row?.patient?.id) return;
+
+    try {
+      setLoggingContactId(row.patient.id);
+
+      const now = new Date();
+
+      const content =
+        `Contato registrado pelo CRM em ${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}.\n\n` +
+        `Campanha: ${row.reason}\n` +
+        `Detalhe: ${row.detail}\n\n` +
+        `Mensagem preparada:\n${row.message}`;
+
+      const { error } = await supabase.from("clinical_notes").insert({
+        patient_id: row.patient.id,
+        title: `CRM - ${row.reason}`,
+        content,
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      alert("Não foi possível registrar o contato no prontuário: " + (error?.message || "erro inesperado"));
+    } finally {
+      setLoggingContactId(null);
+    }
+  };
+
   return (
     <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-28 md:p-6 md:pb-10">
       <div className="mx-auto max-w-7xl space-y-4">
@@ -644,10 +676,11 @@ export default function CrmAutomacoesPage() {
                           href={whatsappHref}
                           target="_blank"
                           rel="noreferrer"
+                          onClick={() => registerCrmContact(row)}
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1c9f63]"
                         >
                           <MessageCircle size={15} />
-                          Enviar WhatsApp
+                          {loggingContactId === row.patient.id ? "Registrando..." : "Enviar WhatsApp"}
                         </a>
                       ) : (
                         <button
