@@ -12,6 +12,9 @@ import {
   Activity,
   Medal,
   Crown,
+  Target,
+  AlertTriangle,
+  Brain,
 } from "lucide-react";
 
 import {
@@ -55,6 +58,13 @@ interface VIPPatient {
   level: string;
 }
 
+interface SmartPatient {
+  id: string;
+  name: string;
+  score: number;
+  reason: string;
+}
+
 export default function CRMDashboardPage() {
   const [loading, setLoading] = useState(true);
 
@@ -70,9 +80,16 @@ export default function CRMDashboardPage() {
   });
 
   const [funnel, setFunnel] = useState<FunnelItem[]>([]);
+
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
   const [conversionData, setConversionData] = useState<any[]>([]);
+
   const [vipPatientsList, setVipPatientsList] = useState<VIPPatient[]>([]);
+
+  const [hotPatients, setHotPatients] = useState<SmartPatient[]>([]);
+  const [riskPatients, setRiskPatients] = useState<SmartPatient[]>([]);
+
+  const monthlyGoal = 50000;
 
   useEffect(() => {
     loadDashboard();
@@ -92,17 +109,25 @@ export default function CRMDashboardPage() {
         .select("*")
         .eq("status", "paid");
 
-      const { data: notes } = await supabase.from("clinical_notes").select("*");
+      const { data: notes } = await supabase
+        .from("clinical_notes")
+        .select("*");
 
       const { data: treatments } = await supabase
         .from("patient_treatments")
         .select("*");
 
-      const { data: patients } = await supabase.from("patients").select("*");
+      const { data: patients } = await supabase
+        .from("patients")
+        .select("*");
 
       const { data: appointments } = await supabase
         .from("appointments")
         .select("*");
+
+      // =========================
+      // MÉTRICAS
+      // =========================
 
       const recoveredPatients =
         notes?.filter(
@@ -118,29 +143,42 @@ export default function CRMDashboardPage() {
         ) || 0;
 
       const negotiations =
-        notes?.filter((item: any) => item.note?.includes("🟠 Conversando"))
-          .length || 0;
+        notes?.filter((item: any) =>
+          item.note?.includes("🟠 Conversando")
+        ).length || 0;
 
       const interested =
-        notes?.filter((item: any) => item.note?.includes("🟡 Interessado"))
-          .length || 0;
+        notes?.filter((item: any) =>
+          item.note?.includes("🟡 Interessado")
+        ).length || 0;
 
       const coldPatients =
-        notes?.filter((item: any) => item.note?.includes("🔴 Não respondeu"))
-          .length || 0;
+        notes?.filter((item: any) =>
+          item.note?.includes("🔴 Não respondeu")
+        ).length || 0;
 
       const startedTreatments =
-        treatments?.filter((item: any) => item.status !== "cancelled").length ||
-        0;
+        treatments?.filter(
+          (item: any) => item.status !== "cancelled"
+        ).length || 0;
 
       const closedBudgets = approvedBudgets?.length || 0;
+
+      const conversionRate =
+        negotiations > 0
+          ? Math.round((interested / negotiations) * 100)
+          : 0;
+
+      // =========================
+      // VIP
+      // =========================
 
       const vipMap = new Map<string, VIPPatient>();
 
       patients?.forEach((patient: any) => {
         vipMap.set(patient.id, {
           id: patient.id,
-          name: patient.name || "Paciente sem nome",
+          name: patient.name || "Paciente",
           totalPaid: 0,
           appointments: 0,
           treatments: 0,
@@ -151,29 +189,39 @@ export default function CRMDashboardPage() {
 
       financial?.forEach((item: any) => {
         const patientId = item.patient_id;
+
         if (!patientId || !vipMap.has(patientId)) return;
 
         const current = vipMap.get(patientId)!;
+
         current.totalPaid += Number(item.amount || 0);
       });
 
       treatments?.forEach((item: any) => {
         const patientId = item.patient_id;
+
         if (!patientId || !vipMap.has(patientId)) return;
 
         const current = vipMap.get(patientId)!;
+
         current.treatments += 1;
       });
 
       appointments?.forEach((item: any) => {
         const patientId = item.patient_id;
+
         if (!patientId || !vipMap.has(patientId)) return;
 
         const current = vipMap.get(patientId)!;
+
         current.appointments += 1;
 
         const appointmentDate = item.date || item.created_at || "";
-        if (!current.lastVisit || appointmentDate > current.lastVisit) {
+
+        if (
+          !current.lastVisit ||
+          appointmentDate > current.lastVisit
+        ) {
           current.lastVisit = appointmentDate;
         }
       });
@@ -199,8 +247,38 @@ export default function CRMDashboardPage() {
         (patient) => patient.totalPaid >= 3000
       ).length;
 
-      const conversionRate =
-        negotiations > 0 ? Math.round((interested / negotiations) * 100) : 0;
+      // =========================
+      // PACIENTES QUENTES
+      // =========================
+
+      const hotList: SmartPatient[] = vipRanking
+        .slice(0, 5)
+        .map((patient) => ({
+          id: patient.id,
+          name: patient.name,
+          score: Math.min(
+            98,
+            Math.round(patient.totalPaid / 150)
+          ),
+          reason: "Alto potencial de fechamento",
+        }));
+
+      // =========================
+      // PACIENTES EM RISCO
+      // =========================
+
+      const riskList: SmartPatient[] = vipRanking
+        .filter((patient) => patient.appointments <= 1)
+        .slice(0, 5)
+        .map((patient) => ({
+          id: patient.id,
+          name: patient.name,
+          score: 85,
+          reason: "Pouco retorno recente",
+        }));
+
+      setHotPatients(hotList);
+      setRiskPatients(riskList);
 
       setStats({
         recoveredPatients,
@@ -260,7 +338,7 @@ export default function CRMDashboardPage() {
 
       setVipPatientsList(vipRanking);
     } catch (error) {
-      console.error("Erro ao carregar Dashboard Comercial CRM:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -276,10 +354,9 @@ export default function CRMDashboardPage() {
       },
       {
         title: "Valor Recuperado",
-        value: `R$ ${stats.recoveredValue.toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        value: `R$ ${stats.recoveredValue.toLocaleString(
+          "pt-BR"
+        )}`,
         icon: DollarSign,
         color: "from-green-500 to-emerald-500",
       },
@@ -290,40 +367,22 @@ export default function CRMDashboardPage() {
         color: "from-cyan-500 to-sky-500",
       },
       {
-        title: "Em Negociação",
-        value: stats.negotiations,
-        icon: MessageCircle,
-        color: "from-orange-500 to-amber-500",
-      },
-      {
-        title: "Pacientes Frios",
-        value: stats.coldPatients,
-        icon: Users,
-        color: "from-red-500 to-rose-500",
-      },
-      {
         title: "Pacientes VIP",
         value: stats.vipPatients,
         icon: Star,
         color: "from-yellow-400 to-orange-400",
       },
-      {
-        title: "Orçamentos Fechados",
-        value: stats.closedBudgets,
-        icon: CalendarCheck,
-        color: "from-indigo-500 to-violet-500",
-      },
-      {
-        title: "Tratamentos Iniciados",
-        value: stats.startedTreatments,
-        icon: Activity,
-        color: "from-blue-500 to-cyan-500",
-      },
     ],
     [stats]
   );
 
-  const totalFunnel = funnel.reduce((sum, item) => sum + item.total, 0) || 1;
+  const goalPercentage = Math.min(
+    100,
+    Math.round((stats.recoveredValue / monthlyGoal) * 100)
+  );
+
+  const totalFunnel =
+    funnel.reduce((sum, item) => sum + item.total, 0) || 1;
 
   function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", {
@@ -336,15 +395,22 @@ export default function CRMDashboardPage() {
     if (!value) return "Sem registro";
 
     const date = new Date(value);
+
     if (Number.isNaN(date.getTime())) return "Sem registro";
 
     return date.toLocaleDateString("pt-BR");
   }
 
   function getVipBadge(level: string) {
-    if (level === "Diamante") return "bg-cyan-50 text-cyan-700";
-    if (level === "Ouro") return "bg-yellow-50 text-yellow-700";
-    if (level === "Prata") return "bg-slate-100 text-slate-700";
+    if (level === "Diamante")
+      return "bg-cyan-50 text-cyan-700";
+
+    if (level === "Ouro")
+      return "bg-yellow-50 text-yellow-700";
+
+    if (level === "Prata")
+      return "bg-slate-100 text-slate-700";
+
     return "bg-orange-50 text-orange-700";
   }
 
@@ -360,6 +426,7 @@ export default function CRMDashboardPage() {
         </p>
       </div>
 
+      {/* CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {cards.map((card, index) => {
           const Icon = card.icon;
@@ -369,9 +436,11 @@ export default function CRMDashboardPage() {
               key={index}
               className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100"
             >
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">{card.title}</p>
+                  <p className="text-sm text-slate-500">
+                    {card.title}
+                  </p>
 
                   <h2 className="mt-2 text-2xl font-bold text-slate-800">
                     {loading ? "..." : card.value}
@@ -389,6 +458,59 @@ export default function CRMDashboardPage() {
         })}
       </div>
 
+      {/* META */}
+      <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+            <Target size={22} />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">
+              Meta Comercial do Mês
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              Acompanhamento de faturamento CRM
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm text-slate-500">
+            Meta:
+          </span>
+
+          <span className="font-bold text-slate-800">
+            {formatCurrency(monthlyGoal)}
+          </span>
+        </div>
+
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm text-slate-500">
+            Atual:
+          </span>
+
+          <span className="font-bold text-emerald-600">
+            {formatCurrency(stats.recoveredValue)}
+          </span>
+        </div>
+
+        <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-700"
+            style={{
+              width: `${goalPercentage}%`,
+            }}
+          />
+        </div>
+
+        <p className="mt-3 text-sm text-slate-500">
+          {goalPercentage}% da meta atingida
+        </p>
+      </div>
+
+      {/* GRÁFICOS */}
       <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
           <div className="mb-6">
@@ -397,7 +519,7 @@ export default function CRMDashboardPage() {
             </h2>
 
             <p className="text-sm text-slate-500">
-              Evolução comercial mensal
+              Evolução mensal
             </p>
           </div>
 
@@ -412,15 +534,31 @@ export default function CRMDashboardPage() {
                     x2="0"
                     y2="1"
                   >
-                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="#14b8a6"
+                      stopOpacity={0.4}
+                    />
+
+                    <stop
+                      offset="95%"
+                      stopColor="#14b8a6"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
 
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  opacity={0.1}
+                />
+
                 <XAxis dataKey="month" />
+
                 <YAxis />
+
                 <Tooltip />
+
                 <Area
                   type="monotone"
                   dataKey="value"
@@ -439,16 +577,25 @@ export default function CRMDashboardPage() {
               Conversão Comercial
             </h2>
 
-            <p className="text-sm text-slate-500">Jornada do paciente</p>
+            <p className="text-sm text-slate-500">
+              Pipeline CRM
+            </p>
           </div>
 
           <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={conversionData}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  opacity={0.1}
+                />
+
                 <XAxis dataKey="stage" />
+
                 <YAxis />
+
                 <Tooltip />
+
                 <Bar
                   dataKey="total"
                   radius={[12, 12, 0, 0]}
@@ -460,130 +607,91 @@ export default function CRMDashboardPage() {
         </div>
       </div>
 
-      <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-slate-800">
-            Funil Comercial
-          </h2>
+      {/* IA */}
+      <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* QUENTES */}
+        <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+              <Brain size={22} />
+            </div>
 
-          <p className="text-sm text-slate-500">
-            Pipeline odontológico premium
-          </p>
-        </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Maior Chance de Fechamento
+              </h2>
 
-        <div className="space-y-5">
-          {funnel.map((item, index) => {
-            const percentage = Math.round((item.total / totalFunnel) * 100);
-
-            return (
-              <div key={index}>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
-                    {item.label}
-                  </span>
-
-                  <span className="text-sm text-slate-500">
-                    {item.total} pacientes
-                  </span>
-                </div>
-
-                <div className="h-4 w-full rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${percentage}%`,
-                      background: item.color,
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              Ranking de Pacientes VIP
-            </h2>
-
-            <p className="text-sm text-slate-500">
-              Pacientes com maior faturamento, recorrência e relacionamento
-            </p>
+              <p className="text-sm text-slate-500">
+                Inteligência comercial CRM
+              </p>
+            </div>
           </div>
 
-          <div className="hidden md:flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-50 text-yellow-600">
-            <Crown size={22} />
-          </div>
-        </div>
-
-        {vipPatientsList.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center">
-            <p className="text-sm text-slate-500">
-              O ranking VIP será exibido automaticamente conforme os pagamentos.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {vipPatientsList.map((patient, index) => (
+          <div className="space-y-4">
+            {hotPatients.map((patient) => (
               <div
                 key={patient.id}
-                className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 md:flex-row md:items-center md:justify-between"
+                className="rounded-2xl bg-slate-50 p-4"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
-                    {index < 3 ? <Medal size={20} /> : index + 1}
-                  </div>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-800">
+                    {patient.name}
+                  </h3>
 
-                  <div>
-                    <p className="font-semibold text-slate-800">
-                      {patient.name}
-                    </p>
-
-                    <p className="text-xs text-slate-500">
-                      Última visita: {formatDate(patient.lastVisit)}
-                    </p>
-                  </div>
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                    {patient.score}%
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm md:flex md:items-center md:gap-6">
-                  <div>
-                    <p className="text-xs text-slate-400">Faturamento</p>
-                    <p className="font-bold text-emerald-600">
-                      {formatCurrency(patient.totalPaid)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-slate-400">Consultas</p>
-                    <p className="font-semibold text-slate-700">
-                      {patient.appointments}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-slate-400">Tratamentos</p>
-                    <p className="font-semibold text-slate-700">
-                      {patient.treatments}
-                    </p>
-                  </div>
-
-                  <div>
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getVipBadge(
-                        patient.level
-                      )}`}
-                    >
-                      {patient.level}
-                    </span>
-                  </div>
-                </div>
+                <p className="text-sm text-slate-500">
+                  {patient.reason}
+                </p>
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* RISCO */}
+        <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="rounded-2xl bg-red-50 p-3 text-red-600">
+              <AlertTriangle size={22} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Pacientes em Risco
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                Possível perda de relacionamento
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {riskPatients.map((patient) => (
+              <div
+                key={patient.id}
+                className="rounded-2xl bg-slate-50 p-4"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-800">
+                    {patient.name}
+                  </h3>
+
+                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                    Risco
+                  </span>
+                </div>
+
+                <p className="text-sm text-slate-500">
+                  {patient.reason}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
