@@ -3020,16 +3020,16 @@ function PacienteProntuarioContent({
               <button
                 type="button"
                 onClick={() => window.location.href = `/print/termo/${params.id}`}
-                className="text-left rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-5 hover:bg-[#eefafa] transition"
+                className="text-left rounded-2xl border border-[#bde8e7] bg-[#f7ffff] p-5 hover:bg-[#eefafa] transition"
               >
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
-                  Termo
+                  Consentimento
                 </div>
                 <div className="mt-2 text-base font-bold text-slate-800">
-                  Gerar termo
+                  Gerar termo premium
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
-                  Abre o termo de consentimento do paciente para impressão.
+                  Gere termos por procedimento com assinatura digital, impressão e PDF.
                 </p>
               </button>
 
