@@ -19,13 +19,20 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import {
+  calculatePatientCrmScore,
+  normalizePatientSource,
+} from "@/lib/crmScore";
 
 type Patient = {
   id: string;
   name?: string | null;
   phone?: string | null;
   email?: string | null;
+  cpf?: string | null;
   patient_source?: string | null;
+  source?: string | null;
+  origin?: string | null;
   created_at?: string | null;
 };
 
@@ -54,6 +61,7 @@ type FinancialRecord = {
   paid_amount?: number | string | null;
   status?: string | null;
   created_at?: string | null;
+  paid_at?: string | null;
 };
 
 type Treatment = {
@@ -69,13 +77,38 @@ type Treatment = {
   completed_at?: string | null;
 };
 
+type ClinicalNote = {
+  id: string;
+  patient_id?: string | null;
+  title?: string | null;
+  content?: string | null;
+  note?: string | null;
+  created_at?: string | null;
+};
+
 type CampaignKey =
   | "implantes"
   | "limpeza"
   | "ortodontia"
   | "orcamentos"
   | "vip"
-  | "retorno";
+  | "retorno"
+  | "quentes"
+  | "risco";
+
+type ScoredPatient = {
+  patient: Patient;
+  score: number;
+  closingChance: number;
+  abandonmentRisk: "Baixo" | "Médio" | "Alto";
+  financialPotential: "Baixo" | "Médio" | "Alto";
+  vipLevel: "Bronze" | "Prata" | "Ouro" | "Diamante";
+  bestApproach: string;
+  totalPaid: number;
+  openBudgets: number;
+  daysWithoutReturn: number | null;
+  source: string;
+};
 
 type CampaignCard = {
   key: CampaignKey;
@@ -83,7 +116,7 @@ type CampaignCard = {
   description: string;
   icon: any;
   gradient: string;
-  audience: Patient[];
+  audience: ScoredPatient[];
   estimatedConversion: number;
   estimatedRevenue: number;
   message: string;
@@ -136,6 +169,7 @@ function isRejectedStatus(status?: string | null) {
     normalized === "reprovada" ||
     normalized === "cancelado" ||
     normalized === "cancelada" ||
+    normalized === "cancelled" ||
     normalized === "rejected"
   );
 }
@@ -204,6 +238,30 @@ function treatmentText(treatment: Treatment) {
   ).toLowerCase();
 }
 
+function getScoreBadge(score: number) {
+  if (score >= 80) {
+    return "bg-emerald-100 text-emerald-700";
+  }
+
+  if (score >= 50) {
+    return "bg-amber-100 text-amber-700";
+  }
+
+  return "bg-rose-100 text-rose-700";
+}
+
+function getRiskBadge(risk: string) {
+  if (risk === "Baixo") {
+    return "bg-emerald-100 text-emerald-700";
+  }
+
+  if (risk === "Médio") {
+    return "bg-amber-100 text-amber-700";
+  }
+
+  return "bg-rose-100 text-rose-700";
+}
+
 export default function CampanhasInteligentesPage() {
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -213,8 +271,9 @@ export default function CampanhasInteligentesPage() {
     []
   );
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [selectedCampaign, setSelectedCampaign] =
-    useState<CampaignKey>("retorno");
+    useState<CampaignKey>("quentes");
 
   useEffect(() => {
     loadData();
@@ -230,6 +289,7 @@ export default function CampanhasInteligentesPage() {
         { data: budgetsData, error: budgetsError },
         { data: financialData, error: financialError },
         { data: treatmentsData, error: treatmentsError },
+        { data: notesData, error: notesError },
       ] = await Promise.all([
         supabase.from("patients").select("*").order("name", { ascending: true }),
         supabase
@@ -248,6 +308,10 @@ export default function CampanhasInteligentesPage() {
           .from("patient_treatments")
           .select("*")
           .order("created_at", { ascending: false }),
+        supabase
+          .from("clinical_notes")
+          .select("*")
+          .order("created_at", { ascending: false }),
       ]);
 
       if (patientsError) throw patientsError;
@@ -255,12 +319,14 @@ export default function CampanhasInteligentesPage() {
       if (budgetsError) throw budgetsError;
       if (financialError) throw financialError;
       if (treatmentsError) throw treatmentsError;
+      if (notesError) throw notesError;
 
       setPatients((patientsData || []) as Patient[]);
       setAppointments((appointmentsData || []) as Appointment[]);
       setBudgets((budgetsData || []) as Budget[]);
       setFinancialRecords((financialData || []) as FinancialRecord[]);
       setTreatments((treatmentsData || []) as Treatment[]);
+      setClinicalNotes((notesData || []) as ClinicalNote[]);
     } catch (error: any) {
       alert(
         "Erro ao carregar Central de Campanhas: " +
@@ -270,16 +336,6 @@ export default function CampanhasInteligentesPage() {
       setLoading(false);
     }
   }
-
-  const patientMap = useMemo(() => {
-    const map = new Map<string, Patient>();
-
-    patients.forEach((patient) => {
-      map.set(patient.id, patient);
-    });
-
-    return map;
-  }, [patients]);
 
   const appointmentsByPatient = useMemo(() => {
     const map = new Map<string, Appointment[]>();
@@ -336,6 +392,20 @@ export default function CampanhasInteligentesPage() {
 
     return map;
   }, [treatments]);
+
+  const notesByPatient = useMemo(() => {
+    const map = new Map<string, ClinicalNote[]>();
+
+    clinicalNotes.forEach((note) => {
+      if (!note.patient_id) return;
+
+      const list = map.get(note.patient_id) || [];
+      list.push(note);
+      map.set(note.patient_id, list);
+    });
+
+    return map;
+  }, [clinicalNotes]);
 
   function getLastAppointment(patientId: string) {
     const list = appointmentsByPatient.get(patientId) || [];
@@ -402,60 +472,141 @@ export default function CampanhasInteligentesPage() {
     });
   }
 
+  const scoredPatients = useMemo<ScoredPatient[]>(() => {
+    return patients
+      .filter((patient) => Boolean(normalizePhone(patient.phone)))
+      .map((patient) => {
+        const result = calculatePatientCrmScore({
+          patient: {
+            id: patient.id,
+            name: patient.name,
+            patient_source:
+              patient.patient_source || patient.source || patient.origin || null,
+            created_at: patient.created_at,
+          },
+          appointments: appointmentsByPatient.get(patient.id) || [],
+          budgets: budgetsByPatient.get(patient.id) || [],
+          financialRecords: financialByPatient.get(patient.id) || [],
+          treatments: treatmentsByPatient.get(patient.id) || [],
+          clinicalNotes: notesByPatient.get(patient.id) || [],
+        });
+
+        return {
+          patient,
+          score: result.score,
+          closingChance: result.closingChance,
+          abandonmentRisk: result.abandonmentRisk,
+          financialPotential: result.financialPotential,
+          vipLevel: result.vipLevel,
+          bestApproach: result.bestApproach,
+          totalPaid: result.totalPaid,
+          openBudgets: result.openBudgets,
+          daysWithoutReturn: result.daysWithoutReturn,
+          source: normalizePatientSource(
+            patient.patient_source || patient.source || patient.origin || null
+          ),
+        };
+      })
+      .sort((a, b) => b.closingChance - a.closingChance);
+  }, [
+    patients,
+    appointmentsByPatient,
+    budgetsByPatient,
+    financialByPatient,
+    treatmentsByPatient,
+    notesByPatient,
+  ]);
+
   const campaignCards = useMemo<CampaignCard[]>(() => {
-    const patientsWithPhone = patients.filter((patient) =>
-      Boolean(normalizePhone(patient.phone))
-    );
-
-    const retornoAudience = patientsWithPhone.filter((patient) => {
-      const days = getDaysWithoutReturn(patient.id);
-      return days === null || days >= 120;
-    });
-
-    const orcamentosAudience = patientsWithPhone.filter((patient) =>
-      hasOpenBudget(patient.id)
-    );
-
-    const vipAudience = patientsWithPhone.filter(
-      (patient) => getPatientPaidTotal(patient.id) >= 3000
-    );
-
-    const implantesAudience = patientsWithPhone.filter((patient) => {
-      const paidTotal = getPatientPaidTotal(patient.id);
-      const openBudget = getPatientOpenBudgetTotal(patient.id);
-      const hasImplantHistory = hasTreatmentTerm(patient.id, [
-        "implante",
-        "protocolo",
-        "enxerto",
-      ]);
-
-      return paidTotal >= 2500 || openBudget >= 2500 || hasImplantHistory;
-    });
-
-    const limpezaAudience = patientsWithPhone.filter((patient) => {
-      const days = getDaysWithoutReturn(patient.id);
-      return days === null || days >= 180;
-    });
-
-    const ortodontiaAudience = patientsWithPhone.filter((patient) => {
-      const hasOrthoHistory = hasTreatmentTerm(patient.id, [
-        "orto",
-        "aparelho",
-        "alinhador",
-      ]);
-
-      return hasOrthoHistory || !hasApprovedBudget(patient.id);
-    });
-
     const calcEstimatedRevenue = (
-      audience: Patient[],
+      audience: ScoredPatient[],
       averageTicket: number,
       conversion: number
     ) => {
       return Math.round(audience.length * averageTicket * (conversion / 100));
     };
 
+    const quentesAudience = scoredPatients
+      .filter((item) => item.closingChance >= 70)
+      .sort((a, b) => b.closingChance - a.closingChance);
+
+    const riscoAudience = scoredPatients
+      .filter((item) => item.abandonmentRisk === "Alto")
+      .sort((a, b) => b.daysWithoutReturn || 0 - (a.daysWithoutReturn || 0));
+
+    const retornoAudience = scoredPatients
+      .filter((item) => item.daysWithoutReturn === null || item.daysWithoutReturn >= 120)
+      .sort((a, b) => (b.daysWithoutReturn || 0) - (a.daysWithoutReturn || 0));
+
+    const orcamentosAudience = scoredPatients
+      .filter((item) => hasOpenBudget(item.patient.id))
+      .sort((a, b) => b.closingChance - a.closingChance);
+
+    const vipAudience = scoredPatients
+      .filter((item) => item.totalPaid >= 3000 || item.vipLevel !== "Bronze")
+      .sort((a, b) => b.totalPaid - a.totalPaid);
+
+    const implantesAudience = scoredPatients
+      .filter((item) => {
+        const paidTotal = getPatientPaidTotal(item.patient.id);
+        const openBudget = getPatientOpenBudgetTotal(item.patient.id);
+        const hasImplantHistory = hasTreatmentTerm(item.patient.id, [
+          "implante",
+          "protocolo",
+          "enxerto",
+        ]);
+
+        return paidTotal >= 2500 || openBudget >= 2500 || hasImplantHistory;
+      })
+      .sort((a, b) => b.closingChance - a.closingChance);
+
+    const limpezaAudience = scoredPatients
+      .filter((item) => item.daysWithoutReturn === null || item.daysWithoutReturn >= 180)
+      .sort((a, b) => (b.daysWithoutReturn || 0) - (a.daysWithoutReturn || 0));
+
+    const ortodontiaAudience = scoredPatients
+      .filter((item) => {
+        const hasOrthoHistory = hasTreatmentTerm(item.patient.id, [
+          "orto",
+          "aparelho",
+          "alinhador",
+        ]);
+
+        return hasOrthoHistory || !hasApprovedBudget(item.patient.id);
+      })
+      .sort((a, b) => b.closingChance - a.closingChance);
+
     return [
+      {
+        key: "quentes",
+        title: "Pacientes Quentes",
+        description:
+          "Pacientes com maior score comercial e maior chance de fechamento.",
+        icon: Brain,
+        gradient: "from-emerald-500 to-teal-500",
+        audience: quentesAudience,
+        estimatedConversion: 42,
+        estimatedRevenue: calcEstimatedRevenue(quentesAudience, 1800, 42),
+        strategy:
+          "Priorizar contato da recepção com abordagem objetiva, usando o histórico do paciente e oferecendo próxima ação clara.",
+        message:
+          "Olá, {nome}! Tudo bem?\n\nEstamos acompanhando seu plano odontológico e vimos uma ótima oportunidade de dar sequência ao seu cuidado.\n\nPodemos organizar um horário para conversar e alinhar o próximo passo?\n\nFicamos à disposição 🙂",
+      },
+      {
+        key: "risco",
+        title: "Recuperação de Risco",
+        description:
+          "Pacientes com risco alto de abandono ou muito tempo sem retorno.",
+        icon: RefreshCw,
+        gradient: "from-rose-500 to-red-500",
+        audience: riscoAudience,
+        estimatedConversion: 20,
+        estimatedRevenue: calcEstimatedRevenue(riscoAudience, 650, 20),
+        strategy:
+          "Contato acolhedor, sem pressão comercial, focado em reaproximação e revisão preventiva.",
+        message:
+          "Olá, {nome}! Tudo bem?\n\nPassando para saber como você está. Faz um tempo que não nos vemos por aqui e gostaríamos de acompanhar sua saúde bucal.\n\nSe desejar, podemos organizar uma revisão com tranquilidade.\n\nFicamos à disposição 🙂",
+      },
       {
         key: "retorno",
         title: "Recuperação de Pacientes",
@@ -548,7 +699,7 @@ export default function CampanhasInteligentesPage() {
       },
     ];
   }, [
-    patients,
+    scoredPatients,
     appointmentsByPatient,
     budgetsByPatient,
     financialByPatient,
@@ -573,6 +724,14 @@ export default function CampanhasInteligentesPage() {
     (a, b) => b.estimatedRevenue - a.estimatedRevenue
   )[0];
 
+  const averageScore =
+    scoredPatients.length > 0
+      ? Math.round(
+          scoredPatients.reduce((sum, item) => sum + item.score, 0) /
+            scoredPatients.length
+        )
+      : 0;
+
   return (
     <div className="min-h-screen bg-[#f5f7fb] p-4 md:p-6">
       <div className="mb-6 flex flex-col gap-3">
@@ -588,8 +747,8 @@ export default function CampanhasInteligentesPage() {
             </h1>
 
             <p className="mt-1 max-w-3xl text-sm text-slate-500">
-              Planeje campanhas segmentadas, veja pacientes elegíveis, previsão
-              de conversão e faturamento estimado.
+              Campanhas segmentadas com score comercial, chance de fechamento,
+              risco de abandono e previsão de faturamento.
             </p>
           </div>
 
@@ -604,7 +763,7 @@ export default function CampanhasInteligentesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -650,6 +809,20 @@ export default function CampanhasInteligentesPage() {
         <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
+              <p className="text-sm text-slate-500">Score médio</p>
+              <h2 className="mt-2 text-2xl font-black text-slate-800">
+                {loading ? "..." : `${averageScore}/100`}
+              </h2>
+            </div>
+            <div className="rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 p-3 text-white">
+              <Brain size={22} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
               <p className="text-sm text-slate-500">Melhor campanha</p>
               <h2 className="mt-2 line-clamp-1 text-2xl font-black text-slate-800">
                 {loading ? "..." : bestCampaign?.title || "-"}
@@ -674,7 +847,7 @@ export default function CampanhasInteligentesPage() {
                 Campanhas sugeridas
               </h2>
               <p className="text-sm text-slate-500">
-                Segmentações automáticas baseadas nos dados do consultório.
+                Agora ordenadas pelo score comercial centralizado.
               </p>
             </div>
           </div>
@@ -816,8 +989,7 @@ export default function CampanhasInteligentesPage() {
               Pacientes elegíveis
             </h2>
             <p className="text-sm text-slate-500">
-              Lista da campanha selecionada. O envio ainda é assistido, para
-              manter segurança e evitar spam.
+              Lista ordenada por maior chance de fechamento e score comercial.
             </p>
           </div>
 
@@ -834,10 +1006,10 @@ export default function CampanhasInteligentesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {selectedCampaignData.audience.slice(0, 20).map((patient) => {
+            {selectedCampaignData.audience.slice(0, 30).map((item) => {
+              const patient = item.patient;
               const paidTotal = getPatientPaidTotal(patient.id);
               const openBudgetTotal = getPatientOpenBudgetTotal(patient.id);
-              const days = getDaysWithoutReturn(patient.id);
               const firstName = patientFirstName(patient);
               const message = selectedCampaignData.message.replace(
                 "{nome}",
@@ -848,7 +1020,7 @@ export default function CampanhasInteligentesPage() {
               return (
                 <div
                   key={patient.id}
-                  className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_1fr_auto] md:items-center"
+                  className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 xl:grid-cols-[1fr_1.25fr_auto] xl:items-center"
                 >
                   <div>
                     <Link
@@ -859,11 +1031,50 @@ export default function CampanhasInteligentesPage() {
                     </Link>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Origem: {patient.patient_source || "Não informado"}
+                      Origem: {item.source || "Não informado"}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {item.bestApproach}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                        Score
+                      </p>
+                      <span
+                        className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${getScoreBadge(
+                          item.score
+                        )}`}
+                      >
+                        {item.score}/100
+                      </span>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                        Fechamento
+                      </p>
+                      <p className="font-black text-cyan-600">
+                        {item.closingChance}%
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                        Risco
+                      </p>
+                      <span
+                        className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${getRiskBadge(
+                          item.abandonmentRisk
+                        )}`}
+                      >
+                        {item.abandonmentRisk}
+                      </span>
+                    </div>
+
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                         Pago
@@ -878,12 +1089,14 @@ export default function CampanhasInteligentesPage() {
                         Sem retorno
                       </p>
                       <p className="font-black text-slate-700">
-                        {days === null ? "Sem consulta" : `${days} dias`}
+                        {item.daysWithoutReturn === null
+                          ? "Sem consulta"
+                          : `${item.daysWithoutReturn} dias`}
                       </p>
                     </div>
 
                     {openBudgetTotal > 0 && (
-                      <div className="col-span-2">
+                      <div className="col-span-2 md:col-span-5">
                         <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                           Orçamento aberto
                         </p>
@@ -894,7 +1107,7 @@ export default function CampanhasInteligentesPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+                  <div className="flex flex-col gap-2 sm:flex-row xl:flex-col">
                     <Link
                       href={`/pacientes/${patient.id}`}
                       className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50"
