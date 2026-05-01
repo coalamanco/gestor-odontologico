@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import PatientSmartInsights from "@/components/PatientSmartInsights";
 
 type ReceiptType = "nenhum" | "simples" | "imposto_renda";
 type PaymentMethod =
@@ -1748,6 +1749,91 @@ function PacienteProntuarioContent({
     return acc + Math.max(0, total - pago);
   }, 0);
 
+  const smartInsights = useMemo(() => {
+    const approvedBudgets = budgets.filter((budget) => {
+      const status = String(budget.status || "").trim().toLowerCase();
+      return status === "aprovado" || status === "approved" || status === "fechado";
+    });
+
+    const openBudgets = budgets.filter((budget) => {
+      const status = String(budget.status || "").trim().toLowerCase();
+      return status !== "aprovado" && status !== "approved" && status !== "reprovado" && status !== "cancelado" && status !== "cancelled";
+    });
+
+    const openBudgetValue = openBudgets.reduce(
+      (acc, budget) => acc + parseMoney(budget.total),
+      0
+    );
+
+    const lastAppointment = appointments
+      .filter((appointment) => appointment.date)
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
+
+    let daysWithoutAppointment = 0;
+
+    if (lastAppointment?.date) {
+      const lastDate = new Date(`${lastAppointment.date}T12:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      lastDate.setHours(0, 0, 0, 0);
+
+      daysWithoutAppointment = Math.max(
+        0,
+        Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
+      );
+    }
+
+    const crmNote = clinicalNotes.find((note) => {
+      const text = `${note.title || ""} ${note.content || ""}`.toLowerCase();
+      return text.includes("crm") || text.includes("whatsapp") || text.includes("contato");
+    });
+
+    let vipLevel = "Bronze";
+    if (totalPagoPaciente >= 10000) vipLevel = "Diamante";
+    else if (totalPagoPaciente >= 5000) vipLevel = "Ouro";
+    else if (totalPagoPaciente >= 3000) vipLevel = "Prata";
+
+    let financialPotential = "Médio";
+    if (totalPagoPaciente >= 7000 || openBudgetValue >= 5000) financialPotential = "Alto";
+    else if (totalPagoPaciente < 1000 && openBudgetValue < 1000) financialPotential = "Baixo";
+
+    let abandonmentRisk = "Baixo";
+    if (daysWithoutAppointment >= 180 || totalAbertoPaciente > 0) abandonmentRisk = "Alto";
+    else if (daysWithoutAppointment >= 90 || openBudgets.length > 0) abandonmentRisk = "Médio";
+
+    let closingChance = 35;
+    closingChance += Math.min(25, approvedBudgets.length * 8);
+    closingChance += Math.min(20, patientTreatments.length * 4);
+    closingChance += totalPagoPaciente >= 3000 ? 15 : 0;
+    closingChance += openBudgets.length > 0 ? 10 : 0;
+    closingChance -= abandonmentRisk === "Alto" ? 15 : 0;
+    closingChance -= abandonmentRisk === "Médio" ? 5 : 0;
+
+    closingChance = Math.max(10, Math.min(95, closingChance));
+
+    const lastCRMContact = crmNote?.created_at
+      ? new Date(crmNote.created_at).toLocaleDateString("pt-BR")
+      : "Sem contato recente";
+
+    return {
+      patientName: patient?.name || "Paciente",
+      source: patient?.patient_source || patient?.source || patient?.origin || "Não informado",
+      vipLevel,
+      closingChance,
+      abandonmentRisk,
+      financialPotential,
+      lastCRMContact,
+    };
+  }, [
+    appointments,
+    budgets,
+    clinicalNotes,
+    patient,
+    patientTreatments,
+    totalAbertoPaciente,
+    totalPagoPaciente,
+  ]);
+
   const phoneDigits = normalizePhone(patient?.phone);
   const whatsappHref = phoneDigits
     ? `https://wa.me/55${
@@ -2223,6 +2309,16 @@ function PacienteProntuarioContent({
             </div>
 
             <div className="space-y-4">
+              <PatientSmartInsights
+                patientName={smartInsights.patientName}
+                source={smartInsights.source}
+                vipLevel={smartInsights.vipLevel}
+                closingChance={smartInsights.closingChance}
+                abandonmentRisk={smartInsights.abandonmentRisk}
+                financialPotential={smartInsights.financialPotential}
+                lastCRMContact={smartInsights.lastCRMContact}
+              />
+
               <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
                 <h2 className="text-base font-bold text-slate-800 mb-4">
                   Última evolução
