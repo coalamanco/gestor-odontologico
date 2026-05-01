@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import PatientSmartInsights from "@/components/PatientSmartInsights";
+import {
+  calculatePatientCrmScore,
+  normalizePatientSource,
+} from "@/lib/crmScore";
 
 type ReceiptType = "nenhum" | "simples" | "imposto_renda";
 type PaymentMethod =
@@ -1750,88 +1754,96 @@ function PacienteProntuarioContent({
   }, 0);
 
   const smartInsights = useMemo(() => {
-    const approvedBudgets = budgets.filter((budget) => {
-      const status = String(budget.status || "").trim().toLowerCase();
-      return status === "aprovado" || status === "approved" || status === "fechado";
+    const result = calculatePatientCrmScore({
+      patient: {
+        id: patient?.id,
+        name: patient?.name,
+        patient_source:
+          patient?.patient_source ||
+          patient?.source ||
+          patient?.origin ||
+          null,
+        created_at: patient?.created_at,
+      },
+
+      appointments: appointments.map((appointment) => ({
+        id: appointment.id,
+        patient_id: appointment.patient_id,
+        date: appointment.date,
+        start_time: appointment.start_time,
+        status: appointment.status,
+        created_at: appointment.created_at,
+      })),
+
+      budgets: budgets.map((budget) => ({
+        id: budget.id,
+        patient_id: budget.patient_id,
+        status: budget.status,
+        total: budget.total,
+        created_at: budget.created_at,
+        approved_at: budget.approved_at,
+      })),
+
+      financialRecords: financialRecords.map((record) => ({
+        id: record.id,
+        patient_id: record.patient_id,
+        amount: record.amount,
+        paid_amount: record.paid_amount,
+        status: record.status,
+        created_at: record.created_at,
+        paid_at: record.paid_at,
+      })),
+
+      treatments: patientTreatments.map((treatment) => ({
+        id: treatment.id,
+        patient_id: treatment.patient_id,
+        status: treatment.status,
+        total: treatment.total,
+        unit_price: treatment.unit_price,
+        created_at: treatment.created_at,
+        completed_at: treatment.completed_at,
+      })),
+
+      clinicalNotes: clinicalNotes.map((note) => ({
+        id: note.id,
+        patient_id: note.patient_id,
+        title: note.title,
+        content: note.content,
+        created_at: note.created_at,
+      })),
     });
-
-    const openBudgets = budgets.filter((budget) => {
-      const status = String(budget.status || "").trim().toLowerCase();
-      return status !== "aprovado" && status !== "approved" && status !== "reprovado" && status !== "cancelado" && status !== "cancelled";
-    });
-
-    const openBudgetValue = openBudgets.reduce(
-      (acc, budget) => acc + parseMoney(budget.total),
-      0
-    );
-
-    const lastAppointment = appointments
-      .filter((appointment) => appointment.date)
-      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
-
-    let daysWithoutAppointment = 0;
-
-    if (lastAppointment?.date) {
-      const lastDate = new Date(`${lastAppointment.date}T12:00:00`);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      lastDate.setHours(0, 0, 0, 0);
-
-      daysWithoutAppointment = Math.max(
-        0,
-        Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-      );
-    }
-
-    const crmNote = clinicalNotes.find((note) => {
-      const text = `${note.title || ""} ${note.content || ""}`.toLowerCase();
-      return text.includes("crm") || text.includes("whatsapp") || text.includes("contato");
-    });
-
-    let vipLevel = "Bronze";
-    if (totalPagoPaciente >= 10000) vipLevel = "Diamante";
-    else if (totalPagoPaciente >= 5000) vipLevel = "Ouro";
-    else if (totalPagoPaciente >= 3000) vipLevel = "Prata";
-
-    let financialPotential = "Médio";
-    if (totalPagoPaciente >= 7000 || openBudgetValue >= 5000) financialPotential = "Alto";
-    else if (totalPagoPaciente < 1000 && openBudgetValue < 1000) financialPotential = "Baixo";
-
-    let abandonmentRisk = "Baixo";
-    if (daysWithoutAppointment >= 180 || totalAbertoPaciente > 0) abandonmentRisk = "Alto";
-    else if (daysWithoutAppointment >= 90 || openBudgets.length > 0) abandonmentRisk = "Médio";
-
-    let closingChance = 35;
-    closingChance += Math.min(25, approvedBudgets.length * 8);
-    closingChance += Math.min(20, patientTreatments.length * 4);
-    closingChance += totalPagoPaciente >= 3000 ? 15 : 0;
-    closingChance += openBudgets.length > 0 ? 10 : 0;
-    closingChance -= abandonmentRisk === "Alto" ? 15 : 0;
-    closingChance -= abandonmentRisk === "Médio" ? 5 : 0;
-
-    closingChance = Math.max(10, Math.min(95, closingChance));
-
-    const lastCRMContact = crmNote?.created_at
-      ? new Date(crmNote.created_at).toLocaleDateString("pt-BR")
-      : "Sem contato recente";
 
     return {
       patientName: patient?.name || "Paciente",
-      source: patient?.patient_source || patient?.source || patient?.origin || "Não informado",
-      vipLevel,
-      closingChance,
-      abandonmentRisk,
-      financialPotential,
-      lastCRMContact,
+
+      source: normalizePatientSource(
+        patient?.patient_source ||
+          patient?.source ||
+          patient?.origin ||
+          null
+      ),
+
+      vipLevel: result.vipLevel,
+
+      closingChance: result.closingChance,
+
+      abandonmentRisk: result.abandonmentRisk,
+
+      financialPotential: result.financialPotential,
+
+      lastCRMContact: result.lastCRMContact,
+
+      commercialScore: result.score,
+
+      bestApproach: result.bestApproach,
     };
   }, [
+    patient,
     appointments,
     budgets,
-    clinicalNotes,
-    patient,
+    financialRecords,
     patientTreatments,
-    totalAbertoPaciente,
-    totalPagoPaciente,
+    clinicalNotes,
   ]);
 
   const phoneDigits = normalizePhone(patient?.phone);
@@ -2318,6 +2330,54 @@ function PacienteProntuarioContent({
                 financialPotential={smartInsights.financialPotential}
                 lastCRMContact={smartInsights.lastCRMContact}
               />
+
+              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Score comercial
+                      </div>
+
+                      <div className="mt-2 flex items-end gap-2">
+                        <span className="text-4xl font-black text-[#239d9a]">
+                          {smartInsights.commercialScore}
+                        </span>
+
+                        <span className="pb-1 text-sm font-bold text-slate-400">
+                          /100
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`rounded-2xl px-4 py-2 text-sm font-black ${
+                        smartInsights.commercialScore >= 80
+                          ? "bg-emerald-100 text-emerald-700"
+                          : smartInsights.commercialScore >= 50
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-rose-100 text-rose-700"
+                      }`}
+                    >
+                      {smartInsights.commercialScore >= 80
+                        ? "Paciente quente"
+                        : smartInsights.commercialScore >= 50
+                        ? "Potencial moderado"
+                        : "Risco comercial"}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#d8eeee] bg-[#f8ffff] p-4">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Melhor abordagem
+                    </div>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      {smartInsights.bestApproach}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
                 <h2 className="text-base font-bold text-slate-800 mb-4">
