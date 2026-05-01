@@ -6,6 +6,8 @@ import {
   Crown,
   DollarSign,
   MessageCircle,
+  Sparkles,
+  Target,
   TrendingUp,
 } from "lucide-react";
 
@@ -13,10 +15,12 @@ interface Props {
   patientName: string;
   source?: string;
   vipLevel?: string;
-  closingChance?: number;
+  closingChance?: number | string;
   abandonmentRisk?: string;
   financialPotential?: string;
   lastCRMContact?: string;
+  commercialScore?: number;
+  bestApproach?: string;
 }
 
 export default function PatientSmartInsights({
@@ -27,13 +31,20 @@ export default function PatientSmartInsights({
   abandonmentRisk = "Baixo",
   financialPotential = "Médio",
   lastCRMContact = "Sem contato recente",
+  commercialScore = 0,
+  bestApproach = "Abordagem leve de relacionamento, perguntando como o paciente está e oferecendo retorno.",
 }: Props) {
+  const numericClosingChance =
+    typeof closingChance === "string"
+      ? Number(String(closingChance).replace("%", "")) || 0
+      : Number(closingChance || 0);
+
   function getChanceColor() {
-    if (closingChance >= 80) {
+    if (numericClosingChance >= 80) {
       return "bg-emerald-100 text-emerald-700";
     }
 
-    if (closingChance >= 50) {
+    if (numericClosingChance >= 50) {
       return "bg-yellow-100 text-yellow-700";
     }
 
@@ -68,6 +79,24 @@ export default function PatientSmartInsights({
     return "bg-orange-100 text-orange-700";
   }
 
+  function getScoreColor() {
+    if (commercialScore >= 80) {
+      return "bg-emerald-100 text-emerald-700";
+    }
+
+    if (commercialScore >= 50) {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    return "bg-red-100 text-red-700";
+  }
+
+  function getScoreLabel() {
+    if (commercialScore >= 80) return "Paciente quente";
+    if (commercialScore >= 50) return "Potencial moderado";
+    return "Risco comercial";
+  }
+
   return (
     <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center gap-3">
@@ -96,8 +125,37 @@ export default function PatientSmartInsights({
         </h3>
       </div>
 
+      {commercialScore > 0 && (
+        <div className="mb-5 rounded-2xl border border-[#d8eeee] bg-[#f8ffff] p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Target size={18} className="text-[#239d9a]" />
+
+              <p className="font-bold text-slate-800">
+                Score comercial
+              </p>
+            </div>
+
+            <span
+              className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getScoreColor()}`}
+            >
+              {getScoreLabel()}
+            </span>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <span className="text-4xl font-black text-[#239d9a]">
+              {commercialScore}
+            </span>
+
+            <span className="pb-1 text-sm font-bold text-slate-400">
+              /100
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
-        {/* CHANCE */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <TrendingUp size={18} className="text-emerald-600" />
@@ -110,11 +168,10 @@ export default function PatientSmartInsights({
           <span
             className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getChanceColor()}`}
           >
-            {closingChance}%
+            {numericClosingChance}%
           </span>
         </div>
 
-        {/* RISCO */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-500" />
@@ -131,7 +188,6 @@ export default function PatientSmartInsights({
           </span>
         </div>
 
-        {/* VIP */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <Crown size={18} className="text-yellow-500" />
@@ -148,7 +204,6 @@ export default function PatientSmartInsights({
           </span>
         </div>
 
-        {/* ORIGEM */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <MessageCircle size={18} className="text-cyan-600" />
@@ -163,7 +218,6 @@ export default function PatientSmartInsights({
           </p>
         </div>
 
-        {/* POTENCIAL */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <DollarSign size={18} className="text-emerald-600" />
@@ -178,7 +232,6 @@ export default function PatientSmartInsights({
           </p>
         </div>
 
-        {/* CRM */}
         <div className="rounded-2xl bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2">
             <MessageCircle size={18} className="text-blue-600" />
@@ -190,6 +243,20 @@ export default function PatientSmartInsights({
 
           <p className="text-sm text-slate-600">
             {lastCRMContact}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#d8eeee] bg-[#f8ffff] p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles size={18} className="text-[#239d9a]" />
+
+            <p className="font-bold text-slate-800">
+              Melhor abordagem
+            </p>
+          </div>
+
+          <p className="text-sm leading-6 text-slate-600">
+            {bestApproach}
           </p>
         </div>
       </div>
