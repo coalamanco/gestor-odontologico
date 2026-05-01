@@ -121,6 +121,7 @@ export default function FinanceiroPage() {
   const [dataInicio, setDataInicio] = useState(todayIso.slice(0, 8) + "01");
   const [dataFim, setDataFim] = useState(todayIso);
   const [searchTerm, setSearchTerm] = useState("");
+  const [smartFilter, setSmartFilter] = useState<"todos" | "atrasados" | "cobranca" | "recibos">("todos");
   const [periodoMenuOpen, setPeriodoMenuOpen] = useState(false);
 
   const parseMoney = (value: unknown) => {
@@ -482,9 +483,30 @@ export default function FinanceiroPage() {
   const registrosFiltrados = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
-    if (!term) return registrosFiltradosBase;
+    let baseRecords = registrosFiltradosBase;
 
-    return registrosFiltradosBase.filter((r) => {
+    if (smartFilter === "atrasados") {
+      baseRecords = registros.filter((record) => isFinancialOverdue(record));
+    }
+
+    if (smartFilter === "cobranca") {
+      baseRecords = registros.filter((record) => {
+        const total = parseMoney(record.amount);
+        const paid = parseMoney(record.paid_amount);
+        return Math.max(0, total - paid) >= 500;
+      });
+    }
+
+    if (smartFilter === "recibos") {
+      baseRecords = registros.filter((record) => {
+        const paid = parseMoney(record.paid_amount);
+        return hasReceipt(record.receipt_type) && paid > 0;
+      });
+    }
+
+    if (!term) return baseRecords;
+
+    return baseRecords.filter((r) => {
       const patientName = r.patient_id
         ? patientNameById.get(String(r.patient_id)) || ""
         : "";
@@ -493,8 +515,11 @@ export default function FinanceiroPage() {
         patientName,
         r.description || "",
         r.status || "",
+        labelVisualFinancialStatus(r),
         r.payment_method || "",
+        labelFormaPagamento(r.payment_method),
         r.receipt_type || "",
+        labelRecibo(r.receipt_type),
         r.amount || "",
       ]
         .join(" ")
@@ -502,7 +527,7 @@ export default function FinanceiroPage() {
 
       return searchable.includes(term);
     });
-  }, [registrosFiltradosBase, searchTerm, patientNameById]);
+  }, [registrosFiltradosBase, registros, searchTerm, smartFilter, patientNameById]);
 
   const despesasFiltradas = useMemo(() => {
     return expenses.filter((expense) => isWithinPeriodo(getExpenseDate(expense)));
@@ -1220,6 +1245,166 @@ export default function FinanceiroPage() {
     }
   }
 
+  function generateFinancialPdfReport() {
+    try {
+      const generatedAt = new Date().toLocaleString("pt-BR");
+      const activeFilterLabel =
+        smartFilter === "atrasados"
+          ? "Débitos atrasados"
+          : smartFilter === "cobranca"
+            ? "Cobranças prioritárias"
+            : smartFilter === "recibos"
+              ? "Recibos para emitir"
+              : "Todos os lançamentos do período";
+
+      const openTotal = registrosFiltrados.reduce((acc, record) => {
+        const total = parseMoney(record.amount);
+        const paid = parseMoney(record.paid_amount);
+        return acc + Math.max(0, total - paid);
+      }, 0);
+
+      const paidTotal = pagamentosFiltrados.reduce(
+        (acc, payment) => acc + parseMoney(payment.amount),
+        0
+      );
+
+      const topRows = registrosFiltrados.slice(0, 40).map((record) => {
+        const total = parseMoney(record.amount);
+        const paid = parseMoney(record.paid_amount);
+        const balance = Math.max(0, total - paid);
+        const patientName = record.patient_id
+          ? patientNameById.get(String(record.patient_id)) || "Paciente"
+          : "Paciente";
+
+        return `
+          <tr>
+            <td>${patientName}</td>
+            <td>${record.description || "Débito"}</td>
+            <td>${getFinancialDueDate(record) ? new Date(`${String(getFinancialDueDate(record)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}</td>
+            <td>${labelVisualFinancialStatus(record)}</td>
+            <td class="right">${formatCurrency(total)}</td>
+            <td class="right">${formatCurrency(paid)}</td>
+            <td class="right">${formatCurrency(balance)}</td>
+          </tr>
+        `;
+      });
+
+      const chargeRows = patientsToCharge.slice(0, 12).map((item, index) => `
+        <tr>
+          <td>${index + 1}. ${item.patientName}</td>
+          <td>${item.visualStatus === "em_atraso" ? `Em atraso há ${item.daysOpen} dia(s)` : "Pendente"}</td>
+          <td class="right">${formatCurrency(item.balance)}</td>
+        </tr>
+      `);
+
+      const paymentRows = paymentMethodSummary.map((item) => `
+        <tr>
+          <td>${item.label}</td>
+          <td class="right">${formatCurrency(item.total)}</td>
+        </tr>
+      `);
+
+      const html = `
+        <!doctype html>
+        <html lang="pt-BR">
+          <head>
+            <meta charset="utf-8" />
+            <title>Relatório financeiro</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #f7ffff; }
+              .page { max-width: 1100px; margin: 0 auto; padding: 28px; }
+              .hero { background: linear-gradient(135deg, #1db7b3, #85d4d2); color: white; border-radius: 26px; padding: 26px; margin-bottom: 18px; }
+              .hero h1 { margin: 0; font-size: 30px; }
+              .hero p { margin: 8px 0 0; opacity: .92; }
+              .meta { display: flex; justify-content: space-between; gap: 16px; margin-top: 18px; font-size: 12px; opacity: .9; }
+              .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+              .card { background: white; border: 1px solid #d9eeee; border-radius: 18px; padding: 16px; }
+              .label { color: #64748b; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+              .value { margin-top: 8px; color: #239d9a; font-size: 22px; font-weight: 900; }
+              h2 { margin: 24px 0 10px; font-size: 18px; }
+              table { width: 100%; border-collapse: collapse; background: white; border-radius: 18px; overflow: hidden; border: 1px solid #d9eeee; }
+              th { background: #eefafa; text-align: left; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: .08em; padding: 10px; }
+              td { border-top: 1px solid #edf7f7; padding: 10px; font-size: 12px; vertical-align: top; }
+              .right { text-align: right; white-space: nowrap; }
+              .footer { margin-top: 26px; color: #64748b; font-size: 11px; text-align: center; }
+              @media print { body { background: white; } .page { padding: 0; max-width: none; } .hero, .card, table { break-inside: avoid; } }
+            </style>
+          </head>
+          <body>
+            <div class="page">
+              <section class="hero">
+                <h1>Relatório financeiro</h1>
+                <p>Gestor Odontológico — Dr. Henrique S. Pasquali</p>
+                <div class="meta">
+                  <div>Período: <strong>${labelPeriodoAtual()}</strong></div>
+                  <div>Filtro: <strong>${activeFilterLabel}</strong></div>
+                  <div>Gerado em: <strong>${generatedAt}</strong></div>
+                </div>
+              </section>
+
+              <section class="grid">
+                <div class="card"><div class="label">Lançado</div><div class="value">${formatCurrency(summary.totalLancado)}</div></div>
+                <div class="card"><div class="label">Recebido</div><div class="value">${formatCurrency(paidTotal)}</div></div>
+                <div class="card"><div class="label">Aberto filtrado</div><div class="value">${formatCurrency(openTotal)}</div></div>
+                <div class="card"><div class="label">Saldo do período</div><div class="value">${formatCurrency(summary.saldo)}</div></div>
+              </section>
+
+              <h2>Alertas inteligentes</h2>
+              <section class="grid">
+                <div class="card"><div class="label">Atrasados</div><div class="value">${smartAlerts.overduePatients.length}</div></div>
+                <div class="card"><div class="label">Acima de R$ 500</div><div class="value">${smartAlerts.highDebtPatients.length}</div></div>
+                <div class="card"><div class="label">Recibos</div><div class="value">${smartAlerts.receiptWithPayment.length}</div></div>
+                <div class="card"><div class="label">Total em aberto</div><div class="value">${formatCurrency(smartAlerts.totalOpen)}</div></div>
+              </section>
+
+              <h2>Principais cobranças</h2>
+              <table>
+                <thead><tr><th>Paciente</th><th>Status</th><th class="right">Saldo</th></tr></thead>
+                <tbody>${chargeRows.join("") || `<tr><td colspan="3">Nenhuma cobrança prioritária.</td></tr>`}</tbody>
+              </table>
+
+              <h2>Formas de pagamento</h2>
+              <table>
+                <thead><tr><th>Método</th><th class="right">Total</th></tr></thead>
+                <tbody>${paymentRows.join("") || `<tr><td colspan="2">Nenhum pagamento no período.</td></tr>`}</tbody>
+              </table>
+
+              <h2>Lançamentos financeiros</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Paciente</th><th>Descrição</th><th>Vencimento</th><th>Status</th>
+                    <th class="right">Total</th><th class="right">Pago</th><th class="right">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>${topRows.join("") || `<tr><td colspan="7">Nenhum lançamento encontrado.</td></tr>`}</tbody>
+              </table>
+
+              <div class="footer">Relatório gerado automaticamente pelo Gestor Odontológico.</div>
+            </div>
+            <script>
+              window.onload = function() { window.print(); };
+            </script>
+          </body>
+        </html>
+      `;
+
+      const reportWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=900");
+      if (!reportWindow) {
+        alert("O navegador bloqueou a janela do relatório. Libere pop-ups para este site e tente novamente.");
+        return;
+      }
+
+      reportWindow.document.open();
+      reportWindow.document.write(html);
+      reportWindow.document.close();
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao gerar relatório financeiro.");
+    }
+  }
+
   return (
     <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#edf8f8] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-6 shadow-lg shadow-cyan-900/10">
@@ -1288,10 +1473,22 @@ export default function FinanceiroPage() {
             <div className="flex flex-col sm:flex-row gap-2 xl:min-w-[460px]">
               <Input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (smartFilter !== "todos") setSmartFilter("todos");
+                }}
                 placeholder="Busque por paciente, procedimento, status ou valor..."
                 className="h-11 rounded-xl border-[#d9eeee] bg-[#fbffff]"
               />
+
+              <Button
+                type="button"
+                onClick={generateFinancialPdfReport}
+                className="h-11 rounded-xl bg-slate-800 px-4 text-sm font-black text-white hover:bg-slate-900"
+              >
+                <FileText size={16} className="mr-2" />
+                Relatório PDF
+              </Button>
 
               <Button
                 type="button"
@@ -1302,11 +1499,14 @@ export default function FinanceiroPage() {
                 Exportar Excel
               </Button>
 
-              {searchTerm && (
+              {(searchTerm || smartFilter !== "todos") && (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setSearchTerm("")}
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSmartFilter("todos");
+                  }}
                   className="h-11 rounded-xl border-[#d9eeee]"
                 >
                   Limpar
@@ -1314,6 +1514,12 @@ export default function FinanceiroPage() {
               )}
             </div>
           </div>
+
+          {smartFilter !== "todos" && (
+            <div className="rounded-2xl border border-[#bfe8e7] bg-[#f2fcfc] px-4 py-3 text-sm font-bold text-[#239d9a]">
+              Filtro inteligente ativo: {smartFilter === "atrasados" ? "débitos atrasados" : smartFilter === "cobranca" ? "cobranças prioritárias" : "recibos para emitir"}
+            </div>
+          )}
 
           {periodoFiltro === "custom" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1401,8 +1607,8 @@ export default function FinanceiroPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setSearchTerm("em atraso");
-                  setPeriodoFiltro("ultimos_30");
+                  setSearchTerm("");
+                  setSmartFilter("atrasados");
                 }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-700 border border-red-100 hover:bg-red-100"
               >
@@ -1437,14 +1643,17 @@ export default function FinanceiroPage() {
             </div>
 
             {smartAlerts.highDebtPatients.length > 0 && (
-              <a
-                href={buildChargeAllWhatsappHref()}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSmartFilter("cobranca");
+                  window.open(buildChargeAllWhatsappHref(), "_blank", "noopener,noreferrer");
+                }}
                 className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-amber-700 border border-amber-100 hover:bg-amber-100"
               >
                 Gerar cobrança
-              </a>
+              </button>
             )}
           </div>
 
@@ -1476,7 +1685,10 @@ export default function FinanceiroPage() {
             {smartAlerts.receiptWithPayment.length > 0 && (
               <button
                 type="button"
-                onClick={() => setSearchTerm("recibo")}
+                onClick={() => {
+                  setSearchTerm("");
+                  setSmartFilter("recibos");
+                }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-purple-700 border border-purple-100 hover:bg-purple-100"
               >
                 Ver recibos
@@ -1514,6 +1726,7 @@ export default function FinanceiroPage() {
                 type="button"
                 onClick={() => {
                   setSearchTerm("");
+                  setSmartFilter("todos");
                   setPeriodoFiltro("mes_atual");
                 }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#239d9a] border border-[#bfe8e7] hover:bg-[#eefafa]"
