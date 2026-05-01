@@ -13,6 +13,7 @@ import {
   Settings,
   Receipt,
   MonitorSmartphone,
+  Megaphone,
 } from "lucide-react";
 import { getUserRole } from "@/lib/getUserRole";
 
@@ -44,6 +45,12 @@ const menu = [
     label: "Pacientes",
     href: "/pacientes",
     icon: Users,
+    roles: ["admin", "secretaria"],
+  },
+  {
+    label: "CRM",
+    href: "/crm",
+    icon: Megaphone,
     roles: ["admin", "secretaria"],
   },
   {
@@ -162,7 +169,7 @@ export default function Sidebar({
   );
 
   const mainMobileMenu = visibleMenu.filter((item) =>
-    ["/", "/agenda", "/recepcao", "/pacientes", "/financeiro"].includes(item.href)
+    ["/", "/agenda", "/pacientes", "/crm", "/financeiro"].includes(item.href)
   );
 
   return (
