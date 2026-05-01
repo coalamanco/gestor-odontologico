@@ -101,6 +101,9 @@ export default function PrintOrcamentoPage() {
   const params = useParams();
   const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
+  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawingSignature, setIsDrawingSignature] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const budgetId = String(params?.id || "");
 
@@ -124,9 +127,9 @@ export default function PrintOrcamentoPage() {
     clinicSettings?.display_name ||
     "Consultório Odontológico";
 
-  const professionalName =
-    clinicSettings?.owner ||
-    "Dr(a). Henrique S. Pasquali";
+  const professionalName = String(
+    clinicSettings?.owner || "Dr. Henrique S. Pasquali"
+  ).replace("Dr(a).", "Dr.");
 
   const safePatientName = useMemo(() => {
     return String(patient?.name || "paciente")
@@ -193,6 +196,101 @@ export default function PrintOrcamentoPage() {
     loadData();
   }, [budgetId]);
 
+  const goBackToBudget = () => {
+    if (budget?.patient_id) {
+      router.push(`/pacientes/${budget.patient_id}/orcamento?budgetId=${budget.id}`);
+      return;
+    }
+
+    if (patient?.id) {
+      router.push(`/pacientes/${patient.id}/orcamento`);
+      return;
+    }
+
+    router.push("/pacientes");
+  };
+
+  const prepareSignatureCanvas = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#0f172a";
+  };
+
+  const getSignaturePosition = (event: any) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = event.touches?.[0]?.clientX ?? event.clientX;
+    const clientY = event.touches?.[0]?.clientY ?? event.clientY;
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  };
+
+  const startSignature = (event: any) => {
+    event.preventDefault?.();
+    prepareSignatureCanvas();
+
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    const position = getSignaturePosition(event);
+    ctx.beginPath();
+    ctx.moveTo(position.x, position.y);
+    setIsDrawingSignature(true);
+  };
+
+  const drawSignature = (event: any) => {
+    event.preventDefault?.();
+
+    if (!isDrawingSignature) return;
+
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    const position = getSignaturePosition(event);
+    ctx.lineTo(position.x, position.y);
+    ctx.stroke();
+  };
+
+  const stopSignature = () => {
+    const canvas = signatureCanvasRef.current;
+
+    if (canvas) {
+      setSignatureDataUrl(canvas.toDataURL("image/png"));
+    }
+
+    setIsDrawingSignature(false);
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+
+    if (canvas && ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    setSignatureDataUrl(null);
+    setIsDrawingSignature(false);
+  };
+
+
   const generatePdf = async () => {
     const element = printRef.current;
 
@@ -256,7 +354,7 @@ export default function PrintOrcamentoPage() {
 
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={goBackToBudget}
             className="mt-4 rounded-xl bg-[#239d9a] px-5 py-2 text-sm font-black text-white"
           >
             Voltar
@@ -291,13 +389,17 @@ export default function PrintOrcamentoPage() {
             break-inside: avoid;
             page-break-inside: avoid;
           }
+
+          .signature-drawing-box {
+            display: none !important;
+          }
         }
       `}</style>
 
       <div className="no-print mx-auto mb-4 flex max-w-5xl flex-wrap justify-between gap-2">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={goBackToBudget}
           className="inline-flex items-center gap-2 rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-[#fbffff]"
         >
           <ArrowLeft size={17} />
@@ -582,10 +684,57 @@ export default function PrintOrcamentoPage() {
             </div>
           </section>
 
+          <section className="signature-drawing-box print-avoid-break rounded-3xl border border-[#d9eeee] bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <h2 className="text-lg font-black text-slate-800">
+                  Assinatura digital do paciente
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  O paciente ou responsável pode assinar diretamente na tela antes de imprimir ou baixar o PDF.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={clearSignature}
+                className="rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
+              >
+                Limpar assinatura
+              </button>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-[#d9eeee] bg-white">
+              <canvas
+                ref={signatureCanvasRef}
+                width={900}
+                height={260}
+                className="h-[190px] w-full touch-none bg-white"
+                onMouseDown={startSignature}
+                onMouseMove={drawSignature}
+                onMouseUp={stopSignature}
+                onMouseLeave={stopSignature}
+                onTouchStart={startSignature}
+                onTouchMove={drawSignature}
+                onTouchEnd={stopSignature}
+              />
+            </div>
+          </section>
+
           <section className="print-avoid-break pt-14">
             <div className="grid grid-cols-1 gap-14 md:grid-cols-2">
               <div className="text-center">
-                <div className="h-16" />
+                <div className="flex h-20 items-end justify-center">
+                  {signatureDataUrl ? (
+                    <img
+                      src={signatureDataUrl}
+                      alt="Assinatura do paciente"
+                      className="max-h-20 max-w-full object-contain"
+                    />
+                  ) : null}
+                </div>
+
                 <div className="border-t border-slate-400 pt-3">
                   <div className="font-bold text-slate-800">
                     {patient?.name || "Paciente"}
