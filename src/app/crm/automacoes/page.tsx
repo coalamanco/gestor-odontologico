@@ -60,6 +60,14 @@ type PatientTreatment = {
   completed_at?: string | null;
 };
 
+type ClinicalNote = {
+  id: string;
+  patient_id?: string | null;
+  title?: string | null;
+  content?: string | null;
+  created_at?: string | null;
+};
+
 type CampaignType =
   | "revisao"
   | "limpeza"
@@ -75,6 +83,8 @@ type CampaignRow = {
   lastAppointment?: Appointment | null;
   openBudgetTotal?: number;
   stoppedTreatments?: PatientTreatment[];
+  lastCrmContact?: ClinicalNote | null;
+  daysSinceLastCrmContact?: number | null;
   message: string;
 };
 
@@ -139,6 +149,29 @@ function buildWhatsappHref(phoneValue: string | null | undefined, message: strin
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
+function crmContactLabel(days?: number | null) {
+  if (days === null || days === undefined) return "Nunca contatado pelo CRM";
+  if (days === 0) return "Último contato hoje";
+  if (days === 1) return "Último contato há 1 dia";
+  return `Último contato há ${days} dias`;
+}
+
+function crmContactBadgeClass(days?: number | null) {
+  if (days === null || days === undefined) {
+    return "border-rose-100 bg-rose-50 text-rose-700";
+  }
+
+  if (days <= 7) {
+    return "border-emerald-100 bg-emerald-50 text-emerald-700";
+  }
+
+  if (days <= 30) {
+    return "border-amber-100 bg-amber-50 text-amber-700";
+  }
+
+  return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
 function patientFirstName(patient?: Patient | null) {
   return String(patient?.name || "Paciente").trim().split(" ")[0] || "Paciente";
 }
@@ -158,6 +191,7 @@ export default function CrmAutomacoesPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [treatments, setTreatments] = useState<PatientTreatment[]>([]);
+  const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCampaign, setActiveCampaign] = useState<CampaignType>("revisao");
   const [search, setSearch] = useState("");
@@ -172,6 +206,7 @@ export default function CrmAutomacoesPage() {
         { data: appointmentsData, error: appointmentsError },
         { data: budgetsData, error: budgetsError },
         { data: treatmentsData, error: treatmentsError },
+        { data: clinicalNotesData, error: clinicalNotesError },
       ] = await Promise.all([
         supabase.from("patients").select("*").order("name", { ascending: true }),
         supabase
@@ -184,17 +219,24 @@ export default function CrmAutomacoesPage() {
           .from("patient_treatments")
           .select("*")
           .order("created_at", { ascending: false }),
+        supabase
+          .from("clinical_notes")
+          .select("*")
+          .ilike("title", "CRM -%")
+          .order("created_at", { ascending: false }),
       ]);
 
       if (patientsError) throw patientsError;
       if (appointmentsError) throw appointmentsError;
       if (budgetsError) throw budgetsError;
       if (treatmentsError) throw treatmentsError;
+      if (clinicalNotesError) throw clinicalNotesError;
 
       setPatients((patientsData || []) as Patient[]);
       setAppointments((appointmentsData || []) as Appointment[]);
       setBudgets((budgetsData || []) as Budget[]);
       setTreatments((treatmentsData || []) as PatientTreatment[]);
+      setClinicalNotes((clinicalNotesData || []) as ClinicalNote[]);
     } catch (error: any) {
       alert("Erro ao carregar automações do CRM: " + (error?.message || "erro inesperado"));
     } finally {
@@ -257,6 +299,20 @@ export default function CrmAutomacoesPage() {
         return daysBetween(created, new Date()) >= 30;
       });
 
+      const patientCrmNotes = clinicalNotes
+        .filter((note) => note.patient_id === patient.id)
+        .sort((a, b) => {
+          const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return bDate - aDate;
+        });
+
+      const lastCrmContact = patientCrmNotes[0] || null;
+      const lastCrmDate = getDateAtNoon(lastCrmContact?.created_at);
+      const daysSinceLastCrmContact = lastCrmDate
+        ? daysBetween(lastCrmDate, new Date())
+        : null;
+
       return {
         patient,
         lastAppointment,
@@ -265,9 +321,11 @@ export default function CrmAutomacoesPage() {
         openBudgets,
         openBudgetTotal,
         stoppedTreatments,
+        lastCrmContact,
+        daysSinceLastCrmContact,
       };
     });
-  }, [patients, appointments, budgets, treatments]);
+  }, [patients, appointments, budgets, treatments, clinicalNotes]);
 
   const campaignRows = useMemo(() => {
     const rows: Record<CampaignType, CampaignRow[]> = {
@@ -453,6 +511,17 @@ export default function CrmAutomacoesPage() {
       });
 
       if (error) throw error;
+
+      setClinicalNotes((current) => [
+        {
+          id: `temp-${Date.now()}`,
+          patient_id: row.patient.id,
+          title: `CRM - ${row.reason}`,
+          content,
+          created_at: new Date().toISOString(),
+        },
+        ...current,
+      ]);
     } catch (error: any) {
       alert("Não foi possível registrar o contato no prontuário: " + (error?.message || "erro inesperado"));
     } finally {
@@ -655,6 +724,12 @@ export default function CrmAutomacoesPage() {
                         {row.detail}
                       </div>
 
+                      <div
+                        className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${crmContactBadgeClass(row.daysSinceLastCrmContact)}`}
+                      >
+                        {crmContactLabel(row.daysSinceLastCrmContact)}
+                      </div>
+
                       {row.lastAppointment && (
                         <div className="mt-2 text-xs text-slate-500">
                           Última consulta: {formatDateBr(row.lastAppointment.date)}
@@ -680,7 +755,11 @@ export default function CrmAutomacoesPage() {
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1c9f63]"
                         >
                           <MessageCircle size={15} />
-                          {loggingContactId === row.patient.id ? "Registrando..." : "Enviar WhatsApp"}
+                          {loggingContactId === row.patient.id
+                            ? "Registrando..."
+                            : row.daysSinceLastCrmContact !== null && Number(row.daysSinceLastCrmContact) <= 7
+                              ? "Enviar novamente"
+                              : "Enviar WhatsApp"}
                         </a>
                       ) : (
                         <button
