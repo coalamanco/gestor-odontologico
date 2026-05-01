@@ -120,6 +120,19 @@ function formatCurrency(value: number) {
   });
 }
 
+function formatPercentChange(value: number) {
+  if (!Number.isFinite(value)) return "0%";
+  const signal = value > 0 ? "+" : "";
+  return `${signal}${Math.round(value)}%`;
+}
+
+function calculatePercentChange(current: number, previous: number) {
+  if (!previous && current > 0) return 100;
+  if (!previous) return 0;
+  return ((current - previous) / previous) * 100;
+}
+
+
 function toDateKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -702,6 +715,95 @@ export default function Dashboard() {
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }, [appointments]);
 
+  const executiveComparison = useMemo(() => {
+    const now = new Date();
+    const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const receivedPreviousMonth = financialRecords.reduce((acc, record) => {
+      const paid = parseMoney(record.paid_amount);
+      const paidAt = record.paid_at || record.created_at;
+      if (!paidAt || paid <= 0) return acc;
+
+      const paidDate = new Date(paidAt);
+      if (
+        paidDate.getFullYear() === previousMonth.getFullYear() &&
+        paidDate.getMonth() === previousMonth.getMonth()
+      ) {
+        return acc + paid;
+      }
+
+      return acc;
+    }, 0);
+
+    const newPatientsPreviousMonth = patients.filter((patient) => {
+      if (!patient.created_at) return false;
+      const createdAt = new Date(patient.created_at);
+      return (
+        createdAt.getFullYear() === previousMonth.getFullYear() &&
+        createdAt.getMonth() === previousMonth.getMonth()
+      );
+    }).length;
+
+    const noShowsPreviousMonth = appointments.filter((appointment) => {
+      if (!appointment.date) return false;
+      const date = new Date(`${appointment.date}T12:00:00`);
+      return (
+        date.getFullYear() === previousMonth.getFullYear() &&
+        date.getMonth() === previousMonth.getMonth() &&
+        normalizeStatus(appointment.status) === "faltou"
+      );
+    }).length;
+
+    return {
+      receivedMonthChange: calculatePercentChange(stats.recebidoMes, receivedPreviousMonth),
+      newPatientsChange: calculatePercentChange(stats.novosPacientesMes, newPatientsPreviousMonth),
+      noShowsChange: calculatePercentChange(stats.faltasMes, noShowsPreviousMonth),
+    };
+  }, [financialRecords, patients, appointments, stats.recebidoMes, stats.novosPacientesMes, stats.faltasMes]);
+
+  const executiveInsights = useMemo(() => {
+    const bestWeekday = appointmentsByWeekday.reduce(
+      (best, item) => (item.total > best.total ? item : best),
+      { name: "-", total: 0 }
+    );
+
+    const topPaymentMethod = paymentMethods[0];
+    const topProcedure = productionByProcedure[0];
+
+    return [
+      {
+        label: "Tendência financeira",
+        value: formatPercentChange(executiveComparison.receivedMonthChange),
+        description:
+          executiveComparison.receivedMonthChange >= 0
+            ? "Recebimento acima do mês anterior"
+            : "Recebimento abaixo do mês anterior",
+        positive: executiveComparison.receivedMonthChange >= 0,
+      },
+      {
+        label: "Melhor dia da agenda",
+        value: bestWeekday.total > 0 ? bestWeekday.name : "Sem dados",
+        description:
+          bestWeekday.total > 0
+            ? `${bestWeekday.total} consulta(s) no mês`
+            : "Ainda sem movimento suficiente",
+        positive: true,
+      },
+      {
+        label: "Forma mais usada",
+        value: topPaymentMethod?.name || "Sem dados",
+        description: topPaymentMethod ? formatCurrency(topPaymentMethod.amount) : "Nenhum pagamento registrado",
+        positive: true,
+      },
+      {
+        label: "Produção destaque",
+        value: topProcedure?.name || "Sem dados",
+        description: topProcedure ? formatCurrency(topProcedure.amount) : "Sem produção no mês",
+        positive: true,
+      },
+    ];
+  }, [appointmentsByWeekday, paymentMethods, productionByProcedure, executiveComparison]);
+
   const isAdminUser = role === "admin";
 
   const quickActions = [
@@ -747,6 +849,7 @@ export default function Dashboard() {
       color: "text-[#239d9a]",
       bg: "bg-[#eefafa]",
       description: "Pagamentos do mês atual",
+      trend: `${formatPercentChange(executiveComparison.receivedMonthChange)} vs mês anterior`,
     },
     {
       title: "Despesas no mês",
@@ -787,6 +890,7 @@ export default function Dashboard() {
       color: "text-slate-700",
       bg: "bg-slate-100",
       description: `${stats.novosPacientesMes} novo(s) este mês`,
+      trend: `${formatPercentChange(executiveComparison.newPatientsChange)} novos pacientes`,
     },
     {
       title: "Ocupação hoje",
@@ -811,6 +915,7 @@ export default function Dashboard() {
       color: "text-red-700",
       bg: "bg-red-50",
       description: `${stats.faltasMes} falta(s) neste mês`,
+      trend: `${formatPercentChange(executiveComparison.noShowsChange)} vs mês anterior`,
     },
     {
       title: "Ticket médio",
@@ -834,10 +939,12 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-4">
-      <div className="max-w-7xl mx-auto space-y-4 pb-10">
-        <div className="rounded-2xl border border-[#bde4e3] bg-white shadow-sm overflow-hidden">
-          <div className="min-h-[72px] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-white">
+    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 sm:p-4">
+      <div className="max-w-7xl mx-auto space-y-3 pb-28 md:space-y-4 md:pb-10">
+        <div className="overflow-hidden rounded-[1.4rem] border border-[#bde4e3] bg-white shadow-sm md:rounded-2xl">
+          <div className="relative min-h-[72px] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-4 py-3 text-white md:px-5 md:py-4">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-cyan-200/20 blur-3xl" />
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-50/90">
@@ -911,6 +1018,37 @@ export default function Dashboard() {
           </div>
         )}
 
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {executiveInsights.map((insight) => (
+            <div
+              key={insight.label}
+              className="group overflow-hidden rounded-2xl border border-[#d9eeee] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    {insight.label}
+                  </div>
+                  <div className={`mt-2 truncate text-xl font-black ${
+                    insight.positive ? "text-[#239d9a]" : "text-rose-700"
+                  }`}>
+                    {insight.value}
+                  </div>
+                  <div className="mt-1 text-xs font-semibold text-slate-500">
+                    {insight.description}
+                  </div>
+                </div>
+
+                <div className={`rounded-2xl p-2.5 ${
+                  insight.positive ? "bg-[#eefafa] text-[#239d9a]" : "bg-rose-50 text-rose-700"
+                }`}>
+                  <TrendingUp size={18} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
           <CardHeader className="px-5 pt-5 pb-3">
             <CardTitle className="text-lg font-bold text-slate-800">
@@ -945,11 +1083,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-3">
           {cards.map((card) => (
             <Card
               key={card.title}
-              className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden"
+              className="min-w-[78vw] snap-start overflow-hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:min-w-0"
             >
               <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2 px-5 pt-5">
                 <div>
@@ -970,6 +1108,11 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-500">
                   {card.description}
                 </p>
+                {"trend" in card && (card as any).trend && (
+                  <div className="mt-2 inline-flex rounded-full bg-[#f2fcfc] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#239d9a] ring-1 ring-[#d9eeee]">
+                    {(card as any).trend}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

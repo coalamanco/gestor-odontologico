@@ -9,8 +9,9 @@ type Expense = {
   description: string;
   category: string;
   amount: number;
-  payment_date: string;
+  payment_date?: string | null;
   status: string;
+  created_at?: string | null;
 };
 
 export default function DespesasPage() {
@@ -61,11 +62,14 @@ export default function DespesasPage() {
     loadExpenses();
   }
 
-  async function markAsPaid(id: string) {
+  async function markAsPaid(expense: Expense) {
     await supabase
       .from("expenses")
-      .update({ status: "pago" })
-      .eq("id", id);
+      .update({
+        status: "pago",
+        payment_date: expense.payment_date || new Date().toISOString().slice(0, 10),
+      })
+      .eq("id", expense.id);
 
     loadExpenses();
   }
@@ -85,6 +89,14 @@ export default function DespesasPage() {
     });
   }
 
+  const totalPendente = expenses
+    .filter((expense) => expense.status !== "pago")
+    .reduce((acc, expense) => acc + Number(expense.amount || 0), 0);
+
+  const totalPago = expenses
+    .filter((expense) => expense.status === "pago")
+    .reduce((acc, expense) => acc + Number(expense.amount || 0), 0);
+
   return (
     <div className="min-h-screen bg-[#f7ffff] p-6">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -95,8 +107,28 @@ export default function DespesasPage() {
             Despesas da Clínica
           </h1>
           <p className="text-slate-500 mt-1">
-            Controle completo de gastos
+            Controle completo de gastos integrado ao financeiro geral e ao dashboard.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              Despesas pendentes
+            </div>
+            <div className="mt-2 text-2xl font-black text-rose-600">
+              {formatCurrency(totalPendente)}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              Despesas pagas
+            </div>
+            <div className="mt-2 text-2xl font-black text-emerald-600">
+              {formatCurrency(totalPago)}
+            </div>
+          </div>
         </div>
 
         {/* FORM */}
@@ -183,7 +215,7 @@ export default function DespesasPage() {
 
                   {expense.status !== "pago" && (
                     <button
-                      onClick={() => markAsPaid(expense.id)}
+                      onClick={() => markAsPaid(expense)}
                       className="text-green-600"
                     >
                       <CheckCircle size={20} />
