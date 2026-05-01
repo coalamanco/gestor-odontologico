@@ -1529,6 +1529,14 @@ export default function OrcamentoPage({
                     Abrir
                   </Link>
 
+                  <Link
+                    href={`/print/orcamento/${budget.id}`}
+                    target="_blank"
+                    className="px-4 py-2 rounded-xl border border-[#bde8e7] bg-[#eefafa] text-sm font-bold text-[#239d9a] hover:bg-[#dff5f4]"
+                  >
+                    Imprimir / PDF
+                  </Link>
+
                   {normalizeBudgetStatus(budget.status) !== "aprovado" && (
                     <>
                       <button
@@ -1562,9 +1570,19 @@ export default function OrcamentoPage({
 
         {selectedBudget && (
           <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-3">
-              Itens do orçamento
-            </h2>
+            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-lg font-bold text-slate-800">
+                Itens do orçamento
+              </h2>
+
+              <Link
+                href={`/print/orcamento/${selectedBudget.id}`}
+                target="_blank"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-95"
+              >
+                Imprimir orçamento premium
+              </Link>
+            </div>
 
             {budgetItems.length === 0 && (
               <p className="text-sm text-slate-500">
