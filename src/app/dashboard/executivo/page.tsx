@@ -33,7 +33,7 @@ import ExecutiveCharts from "@/components/dashboard/ExecutiveCharts";
 import ExecutiveKPIs from "@/components/dashboard/ExecutiveKPIs";
 import ExecutiveAlerts from "@/components/dashboard/ExecutiveAlerts";
 import ExecutiveForecast from "@/components/dashboard/ExecutiveForecast";
-import ExecutiveRankings from "@/components/dashboard/ExecutiveRankings";
+import ExecutiveConversionCenter from "@/components/dashboard/ExecutiveConversionCenter";
 
 type Patient = {
   id: string;
@@ -1205,80 +1205,22 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-purple-50 p-3 text-purple-600">
-              <Brain size={22} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Saúde CRM
-              </h2>
-              <p className="text-sm text-slate-500">
-                Temperatura comercial dos pacientes.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-2xl bg-emerald-50 p-4">
-              <div>
-                <p className="font-black text-emerald-700">
-                  Pacientes quentes
-                </p>
-                <p className="text-xs text-emerald-600">
-                  Alta chance de fechamento
-                </p>
-              </div>
-              <span className="text-2xl font-black text-emerald-700">
-                {hotPatients.length}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between rounded-2xl bg-rose-50 p-4">
-              <div>
-                <p className="font-black text-rose-700">
-                  Pacientes frios
-                </p>
-                <p className="text-xs text-rose-600">
-                  Baixa chance comercial
-                </p>
-              </div>
-              <span className="text-2xl font-black text-rose-700">
-                {coldPatients.length}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
-              <div>
-                <p className="font-black text-amber-700">
-                  Risco de abandono
-                </p>
-                <p className="text-xs text-amber-600">
-                  Priorizar recuperação
-                </p>
-              </div>
-              <span className="text-2xl font-black text-amber-700">
-                {riskPatients.length}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between rounded-2xl bg-yellow-50 p-4">
-              <div>
-                <p className="font-black text-yellow-700">
-                  Pacientes VIP
-                </p>
-                <p className="text-xs text-yellow-600">
-                  Ouro e Diamante
-                </p>
-              </div>
-              <span className="text-2xl font-black text-yellow-700">
-                {vipPatients.length}
-              </span>
-            </div>
-          </div>
-        </div>
+        <ExecutiveConversionCenter
+          hotPatients={hotPatients.length}
+          coldPatients={coldPatients.length}
+          riskPatients={riskPatients.length}
+          vipPatients={vipPatients.length}
+          averageScore={averageScore}
+          openBudgetsCount={openBudgets.length}
+          openBudgetRevenue={openBudgetRevenue}
+          averageTicket={averageTicket}
+          conversionProjection={forecast.conversionProjection}
+          campaignRevenueProjection={forecast.campaignRevenueProjection}
+          sourceStats={sourceStats}
+          sourceWithoutOriginCount={sourceWithoutOriginCount}
+          totalPatients={patients.length}
+          formatCurrency={formatCurrency}
+        />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -1407,11 +1349,81 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <ExecutiveRankings
-        procedureRanking={goals.procedureRanking}
-        professionalRanking={goals.professionalRanking}
-        formatCurrency={formatCurrency}
-      />
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-black text-slate-800">
+            Ranking de procedimentos
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Procedimentos com maior performance financeira.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {goals.procedureRanking.slice(0, 6).map((item, index) => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="font-black text-slate-800">
+                    {index + 1}. {item.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.count} lançamento(s)
+                  </p>
+                </div>
+
+                <p className="font-black text-emerald-600">
+                  {formatCurrency(item.value)}
+                </p>
+              </div>
+            ))}
+
+            {goals.procedureRanking.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                Ainda não há ranking de procedimentos.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-black text-slate-800">
+            Ranking por profissional
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Produção agrupada por profissional quando disponível.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {goals.professionalRanking.slice(0, 6).map((item, index) => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="font-black text-slate-800">
+                    {index + 1}. {item.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.count} lançamento(s)
+                  </p>
+                </div>
+
+                <p className="font-black text-emerald-600">
+                  {formatCurrency(item.value)}
+                </p>
+              </div>
+            ))}
+
+            {goals.professionalRanking.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                Ainda não há ranking por profissional.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
         </>
       )}
