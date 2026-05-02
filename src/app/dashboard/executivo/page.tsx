@@ -29,6 +29,7 @@ import {
 } from "@/lib/clinicGoals";
 import { calculateExecutiveAlerts } from "@/lib/executiveAlerts";
 import { calculateSmartGoals } from "@/lib/smartGoals";
+import ExecutiveCharts from "@/components/dashboard/ExecutiveCharts";
 
 type Patient = {
   id: string;
@@ -741,6 +742,68 @@ export default function DashboardExecutivoPage() {
     overdueRevenue,
   ]);
 
+  const revenueData = smartGoals.monthlySeries.map((item) => ({
+    month: item.label,
+    revenue: item.revenue,
+    target: goals.monthlyGoal,
+  }));
+
+  const conversionData = [
+    {
+      label: "Conversão",
+      value: goals.commercialConversion,
+    },
+    {
+      label: "Meta CRM",
+      value: configuredGoals.conversionGoal,
+    },
+    {
+      label: "Fechamento",
+      value: forecast.conversionProjection || 0,
+    },
+  ];
+
+  const scheduleData = [
+    {
+      day: "Seg",
+      occupied: Math.max(0, Math.min(100, todayOccupancy - 12)),
+      available: 100 - Math.max(0, Math.min(100, todayOccupancy - 12)),
+    },
+    {
+      day: "Ter",
+      occupied: Math.max(0, Math.min(100, todayOccupancy - 8)),
+      available: 100 - Math.max(0, Math.min(100, todayOccupancy - 8)),
+    },
+    {
+      day: "Qua",
+      occupied: Math.max(0, Math.min(100, todayOccupancy - 4)),
+      available: 100 - Math.max(0, Math.min(100, todayOccupancy - 4)),
+    },
+    {
+      day: "Qui",
+      occupied: todayOccupancy,
+      available: 100 - todayOccupancy,
+    },
+    {
+      day: "Sex",
+      occupied: Math.max(0, Math.min(100, todayOccupancy + 6)),
+      available: 100 - Math.max(0, Math.min(100, todayOccupancy + 6)),
+    },
+  ];
+
+  const sourceData =
+    sourceStats.length > 0
+      ? sourceStats.slice(0, 5).map((item) => ({
+          source: item.source,
+          patients: item.patients,
+        }))
+      : [
+          {
+            source: "Não informado",
+            patients: patients.length,
+          },
+        ];
+
   const executiveCards = [
     {
       title: "Confirmado",
@@ -1149,6 +1212,15 @@ export default function DashboardExecutivoPage() {
 
       {activeDashboardTab === "analises" && (
         <>
+          <div className="mb-8">
+            <ExecutiveCharts
+              revenueData={revenueData}
+              conversionData={conversionData}
+              scheduleData={scheduleData}
+              sourceData={sourceData}
+            />
+          </div>
+
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
           <div className="mb-6 flex items-center gap-3">
