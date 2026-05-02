@@ -34,6 +34,7 @@ import ExecutiveKPIs from "@/components/dashboard/ExecutiveKPIs";
 import ExecutiveAlerts from "@/components/dashboard/ExecutiveAlerts";
 import ExecutiveForecast from "@/components/dashboard/ExecutiveForecast";
 import ExecutiveConversionCenter from "@/components/dashboard/ExecutiveConversionCenter";
+import ExecutiveMarketingCenter from "@/components/dashboard/ExecutiveMarketingCenter";
 
 type Patient = {
   id: string;
@@ -1280,73 +1281,12 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
-              <Megaphone size={22} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Marketing e Origem
-              </h2>
-              <p className="text-sm text-slate-500">
-                Canais com maior impacto comercial.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {sourceStats.slice(0, 8).map((item) => (
-              <div
-                key={item.source}
-                className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-4 md:items-center"
-              >
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Origem
-                  </p>
-                  <p className="font-black text-slate-800">
-                    {item.source}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Pacientes
-                  </p>
-                  <p className="font-black text-slate-800">
-                    {item.patients}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Receita
-                  </p>
-                  <p className="font-black text-emerald-600">
-                    {formatCurrency(item.confirmedRevenue)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Quentes
-                  </p>
-                  <p className="font-black text-cyan-600">
-                    {item.hotPatients} • {item.conversion}%
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {sourceStats.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                Ainda não há origens cadastradas.
-              </div>
-            )}
-          </div>
-        </div>
+        <ExecutiveMarketingCenter
+          sourceStats={sourceStats}
+          totalPatients={patients.length}
+          sourceWithoutOriginCount={sourceWithoutOriginCount}
+          formatCurrency={formatCurrency}
+        />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
