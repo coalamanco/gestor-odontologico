@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
+
 import "./globals.css";
+
 import AppShell from "../components/AppShell";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Gestor Odontológico",
@@ -15,6 +19,9 @@ export const metadata: Metadata = {
     capable: true,
     title: "Gestor Odonto",
     statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     icon: [
@@ -43,17 +50,24 @@ export const viewport: Viewport = {
   themeColor: "#239d9a",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <html lang="pt-BR">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Gestor Odonto" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
 
       <body className={`${inter.className} bg-slate-50`}>
