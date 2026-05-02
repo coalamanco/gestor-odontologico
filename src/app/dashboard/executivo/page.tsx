@@ -24,6 +24,7 @@ import {
 } from "@/lib/crmScore";
 import { calculateRevenueForecast } from "@/lib/revenueForecast";
 import { calculateClinicGoals } from "@/lib/clinicGoals";
+import { calculateExecutiveAlerts } from "@/lib/executiveAlerts";
 
 type Patient = {
   id: string;
@@ -184,6 +185,29 @@ function getGoalChanceClass(chance: string) {
   if (chance === "Alta") return "bg-emerald-100 text-emerald-700";
   if (chance === "Média") return "bg-amber-100 text-amber-700";
   return "bg-rose-100 text-rose-700";
+}
+
+function getAlertClass(severity: string) {
+  if (severity === "critico") {
+    return "border-rose-100 bg-rose-50 text-rose-700";
+  }
+
+  if (severity === "atencao") {
+    return "border-amber-100 bg-amber-50 text-amber-700";
+  }
+
+  if (severity === "oportunidade") {
+    return "border-cyan-100 bg-cyan-50 text-cyan-700";
+  }
+
+  return "border-emerald-100 bg-emerald-50 text-emerald-700";
+}
+
+function getAlertLabel(severity: string) {
+  if (severity === "critico") return "Crítico";
+  if (severity === "atencao") return "Atenção";
+  if (severity === "oportunidade") return "Oportunidade";
+  return "Positivo";
 }
 
 function getScoreClass(score: number) {
@@ -586,6 +610,96 @@ export default function DashboardExecutivoPage() {
         )
       : 0;
 
+  const todayKey = new Date().toISOString().slice(0, 10);
+
+  const todayAppointments = appointments.filter(
+    (appointment) => appointment.date === todayKey
+  );
+
+  const todayOccupancy = Math.min(
+    100,
+    Math.round(
+      (todayAppointments.reduce((sum, appointment: any) => {
+        return sum + Math.max(1, Math.round(Number(appointment.duration || 30) / 15));
+      }, 0) /
+        44) *
+        100
+    )
+  );
+
+  const noShowsMonth = appointments.filter((appointment) => {
+    const date = appointment.date;
+    if (!date) return false;
+
+    const appointmentDate = new Date(`${date}T12:00:00`);
+    const now = new Date();
+
+    return (
+      appointmentDate.getFullYear() === now.getFullYear() &&
+      appointmentDate.getMonth() === now.getMonth() &&
+      normalizeStatus(appointment.status) === "faltou"
+    );
+  }).length;
+
+  const overdueRevenue = financialRecords.reduce((sum, record) => {
+    const amount = parseMoney(record.amount);
+    const paid = parseMoney(record.paid_amount);
+    const remaining = Math.max(0, amount - paid);
+
+    if (remaining <= 0 || isPaidStatus(record.status)) return sum;
+
+    return sum + remaining;
+  }, 0);
+
+  const sourceWithoutOriginCount = patients.filter((patient) => {
+    const source = normalizePatientSource(
+      patient.patient_source || patient.source || patient.origin || null
+    );
+
+    return source === "Não informado";
+  }).length;
+
+  const executiveAlerts = useMemo(() => {
+    return calculateExecutiveAlerts({
+      monthlyGoal: goals.monthlyGoal,
+      confirmedRevenue: forecast.confirmedRevenue,
+      probableRevenue: forecast.probableRevenue,
+      potentialRevenue: forecast.potentialRevenue,
+      monthlyProgress: goals.monthlyProgress,
+      chanceToHitGoal: goals.chanceToHitGoal,
+      monthlyTrend: goals.monthlyTrend,
+      hotPatients: hotPatients.length,
+      coldPatients: coldPatients.length,
+      riskPatients: riskPatients.length,
+      vipPatients: vipPatients.length,
+      openBudgetsCount: openBudgets.length,
+      openBudgetsRevenue: openBudgetRevenue,
+      averageScore,
+      conversionProjection: forecast.conversionProjection,
+      campaignRevenueProjection: forecast.campaignRevenueProjection,
+      sourceWithoutOriginCount,
+      todayAppointments: todayAppointments.length,
+      todayOccupancy,
+      noShowsMonth,
+      overdueRevenue,
+    });
+  }, [
+    goals,
+    forecast,
+    hotPatients.length,
+    coldPatients.length,
+    riskPatients.length,
+    vipPatients.length,
+    openBudgets.length,
+    openBudgetRevenue,
+    averageScore,
+    sourceWithoutOriginCount,
+    todayAppointments.length,
+    todayOccupancy,
+    noShowsMonth,
+    overdueRevenue,
+  ]);
+
   const executiveCards = [
     {
       title: "Confirmado",
@@ -696,6 +810,71 @@ export default function DashboardExecutivoPage() {
             {goals.executiveSummary}
           </p>
         </div>
+      </div>
+
+      <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-slate-800">
+              Alertas Executivos
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {executiveAlerts.mainMessage}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-700">
+              {executiveAlerts.criticalCount} crítico(s)
+            </span>
+            <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700">
+              {executiveAlerts.opportunityCount} oportunidade(s)
+            </span>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+              {executiveAlerts.positiveCount} positivo(s)
+            </span>
+          </div>
+        </div>
+
+        {executiveAlerts.alerts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+            Ainda não há alertas executivos suficientes.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+            {executiveAlerts.alerts.slice(0, 6).map((alert) => (
+              <Link
+                key={alert.id}
+                href={alert.actionHref}
+                className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm ${getAlertClass(
+                  alert.severity
+                )}`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-widest">
+                    {getAlertLabel(alert.severity)}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                    {alert.area}
+                  </span>
+                </div>
+
+                <h3 className="font-black">
+                  {alert.title}
+                </h3>
+
+                <p className="mt-1 text-sm leading-6 opacity-90">
+                  {alert.description}
+                </p>
+
+                <div className="mt-3 inline-flex rounded-xl bg-white/70 px-3 py-2 text-xs font-black">
+                  {alert.actionLabel}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
