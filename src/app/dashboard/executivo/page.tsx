@@ -837,19 +837,19 @@ export default function DashboardExecutivoPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] p-4 md:p-6">
-      <div className="mb-6 flex flex-col gap-3">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-          <Sparkles size={14} />
-          BI Executivo
-        </div>
-
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 md:text-3xl">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
+              <Sparkles size={14} />
+              BI Executivo
+            </div>
+
+            <h1 className="mt-3 text-2xl font-black text-slate-800 md:text-3xl">
               Dashboard Executivo Odontológico
             </h1>
 
-            <p className="mt-1 max-w-3xl text-sm text-slate-500">
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
               Visão executiva de faturamento, metas, CRM, campanhas, marketing,
               pipeline comercial e previsão financeira.
             </p>
@@ -884,7 +884,7 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white p-2 shadow-sm">
+      <div className="sticky top-3 z-20 mb-6 flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white/95 p-2 shadow-sm backdrop-blur">
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
@@ -921,6 +921,26 @@ export default function DashboardExecutivoPage() {
           Acessos Rápidos
         </button>
       </div>
+
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+          {activeDashboardTab === "geral"
+            ? "Resumo executivo"
+            : activeDashboardTab === "analises"
+              ? "Análises, rankings e inteligência"
+              : "Atalhos principais"}
+        </p>
+
+        <p className="hidden text-xs font-bold text-slate-400 md:block">
+          Dados atualizados ao clicar em Atualizar
+        </p>
+      </div>
+
+      {loading && (
+        <div className="mb-4 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-700">
+          Atualizando informações executivas...
+        </div>
+      )}
 
       {activeDashboardTab === "geral" && (
         <>
@@ -1222,7 +1242,7 @@ export default function DashboardExecutivoPage() {
           </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
               <BarChart3 size={22} />
@@ -1288,7 +1308,7 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
               <Trophy size={22} />
@@ -1342,7 +1362,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
               <BarChart3 size={22} />
@@ -1397,7 +1417,7 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-purple-50 p-3 text-purple-600">
               <Brain size={22} />
@@ -1474,7 +1494,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
               <Users size={22} />
@@ -1530,7 +1550,7 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
               <Megaphone size={22} />
@@ -1600,7 +1620,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-black text-slate-800">
             Ranking de procedimentos
           </h2>
@@ -1637,7 +1657,7 @@ export default function DashboardExecutivoPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-black text-slate-800">
             Ranking por profissional
           </h2>
@@ -1683,7 +1703,7 @@ export default function DashboardExecutivoPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Link
           href="/crm"
-          className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
             <Activity size={22} />
@@ -1696,7 +1716,7 @@ export default function DashboardExecutivoPage() {
 
         <Link
           href="/crm/campanhas"
-          className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="mb-4 inline-flex rounded-2xl bg-blue-50 p-3 text-blue-600">
             <Megaphone size={22} />
@@ -1709,7 +1729,7 @@ export default function DashboardExecutivoPage() {
 
         <Link
           href="/financeiro"
-          className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="mb-4 inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-600">
             <DollarSign size={22} />
