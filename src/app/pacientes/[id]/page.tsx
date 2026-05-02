@@ -133,6 +133,12 @@ function NovoPacientePage() {
     neighborhood: "",
     city: "",
     state: "",
+    patient_source: "",
+    referral_name: "",
+    origin_city: "",
+    origin_state: "",
+    origin_region: "",
+    origin_notes: "",
     notes: "",
   });
 
@@ -198,6 +204,12 @@ function NovoPacientePage() {
           neighborhood: form.neighborhood.trim() || null,
           city: form.city.trim() || null,
           state: form.state.trim() || null,
+          patient_source: form.patient_source.trim() || null,
+          referral_name: form.referral_name.trim() || null,
+          origin_city: form.origin_city.trim() || null,
+          origin_state: form.origin_state.trim() || null,
+          origin_region: form.origin_region.trim() || null,
+          origin_notes: form.origin_notes.trim() || null,
           notes: form.notes.trim() || null,
         })
         .select("id")
@@ -396,6 +408,108 @@ function NovoPacientePage() {
           </div>
         </div>
 
+        <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
+          <div>
+            <h2 className="text-base font-black text-slate-800">Origem comercial</h2>
+            <p className="text-sm text-slate-500">
+              Esses dados alimentam o CRM, o BI de marketing e a inteligência comercial.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div className="md:col-span-3">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Origem do paciente
+              </label>
+              <select
+                value={form.patient_source}
+                onChange={(e) => updateField("patient_source", e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              >
+                <option value="">Não informado</option>
+                <option value="Indicação">Indicação</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Google">Google</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Facebook">Facebook</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Site">Site</option>
+                <option value="Tráfego pago">Tráfego pago</option>
+                <option value="Paciente antigo">Paciente antigo</option>
+                <option value="Convênio">Convênio</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Quem indicou / campanha
+              </label>
+              <input
+                value={form.referral_name}
+                onChange={(e) => updateField("referral_name", e.target.value)}
+                placeholder="Nome de quem indicou, campanha ou anúncio"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Cidade de origem
+              </label>
+              <input
+                value={form.origin_city}
+                onChange={(e) => updateField("origin_city", e.target.value)}
+                placeholder="Cidade"
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-1">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                UF
+              </label>
+              <input
+                value={form.origin_state}
+                onChange={(e) => updateField("origin_state", e.target.value.toUpperCase())}
+                placeholder="SC"
+                maxLength={2}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Perfil geográfico
+              </label>
+              <select
+                value={form.origin_region}
+                onChange={(e) => updateField("origin_region", e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              >
+                <option value="">Não informado</option>
+                <option value="Cidade">Da cidade</option>
+                <option value="Região">Da região</option>
+                <option value="Outra cidade">De outra cidade</option>
+                <option value="Outro estado">De outro estado</option>
+                <option value="Online">Contato online</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-6">
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Observações comerciais
+              </label>
+              <textarea
+                value={form.origin_notes}
+                onChange={(e) => updateField("origin_notes", e.target.value)}
+                placeholder="Ex.: veio por indicação da Maria, viu anúncio de implante no Instagram, veio de outra cidade..."
+                className="w-full min-h-[90px] border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-600 mb-1">Observações</label>
@@ -543,6 +657,12 @@ function PacienteProntuarioContent({
     neighborhood: "",
     city: "",
     state: "",
+    patient_source: "",
+    referral_name: "",
+    origin_city: "",
+    origin_state: "",
+    origin_region: "",
+    origin_notes: "",
     notes: "",
   });
 
@@ -840,6 +960,12 @@ function PacienteProntuarioContent({
       neighborhood: patient?.neighborhood || "",
       city: patient?.city || "",
       state: patient?.state || "",
+      patient_source: patient?.patient_source || patient?.source || patient?.origin || "",
+      referral_name: patient?.referral_name || "",
+      origin_city: patient?.origin_city || "",
+      origin_state: patient?.origin_state || "",
+      origin_region: patient?.origin_region || "",
+      origin_notes: patient?.origin_notes || "",
       notes: patient?.notes || "",
     });
     setShowEditPatientModal(true);
@@ -909,6 +1035,12 @@ function PacienteProntuarioContent({
           neighborhood: patientForm.neighborhood.trim() || null,
           city: patientForm.city.trim() || null,
           state: patientForm.state.trim() || null,
+          patient_source: patientForm.patient_source.trim() || null,
+          referral_name: patientForm.referral_name.trim() || null,
+          origin_city: patientForm.origin_city.trim() || null,
+          origin_state: patientForm.origin_state.trim() || null,
+          origin_region: patientForm.origin_region.trim() || null,
+          origin_notes: patientForm.origin_notes.trim() || null,
           notes: patientForm.notes.trim() || null,
         })
         .eq("id", params.id);
@@ -2064,6 +2196,13 @@ function PacienteProntuarioContent({
               <div className="mt-0.5 space-y-0.5 text-[11px] text-slate-600 md:mt-2 md:space-y-1 md:text-sm">
                 {patient.phone && <p>{patient.phone}</p>}
                 {patient.cpf && <p>CPF: {patient.cpf}</p>}
+                {(patient.patient_source || patient.referral_name || patient.origin_city) && (
+                  <p>
+                    Origem: {patient.patient_source || "Não informado"}
+                    {patient.referral_name ? ` • Indicação/campanha: ${patient.referral_name}` : ""}
+                    {patient.origin_city ? ` • ${patient.origin_city}${patient.origin_state ? `/${patient.origin_state}` : ""}` : ""}
+                  </p>
+                )}
               </div>
 
               {(patient.allergies ||
@@ -3459,7 +3598,100 @@ function PacienteProntuarioContent({
                 </div>
               </div>
 
-              <div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+                  <div className="md:col-span-3">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      Origem do paciente
+                    </label>
+                    <select
+                      value={patientForm.patient_source}
+                      onChange={(e) => updatePatientForm("patient_source", e.target.value)}
+                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    >
+                      <option value="">Não informado</option>
+                      <option value="Indicação">Indicação</option>
+                      <option value="Instagram">Instagram</option>
+                      <option value="Google">Google</option>
+                      <option value="WhatsApp">WhatsApp</option>
+                      <option value="Facebook">Facebook</option>
+                      <option value="TikTok">TikTok</option>
+                      <option value="Site">Site</option>
+                      <option value="Tráfego pago">Tráfego pago</option>
+                      <option value="Paciente antigo">Paciente antigo</option>
+                      <option value="Convênio">Convênio</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      Quem indicou / campanha
+                    </label>
+                    <input
+                      value={patientForm.referral_name}
+                      onChange={(e) => updatePatientForm("referral_name", e.target.value)}
+                      placeholder="Nome de quem indicou, campanha ou anúncio"
+                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      Cidade de origem
+                    </label>
+                    <input
+                      value={patientForm.origin_city}
+                      onChange={(e) => updatePatientForm("origin_city", e.target.value)}
+                      placeholder="Cidade"
+                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      UF
+                    </label>
+                    <input
+                      value={patientForm.origin_state}
+                      onChange={(e) => updatePatientForm("origin_state", e.target.value.toUpperCase())}
+                      placeholder="SC"
+                      maxLength={2}
+                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      Perfil geográfico
+                    </label>
+                    <select
+                      value={patientForm.origin_region}
+                      onChange={(e) => updatePatientForm("origin_region", e.target.value)}
+                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    >
+                      <option value="">Não informado</option>
+                      <option value="Cidade">Da cidade</option>
+                      <option value="Região">Da região</option>
+                      <option value="Outra cidade">De outra cidade</option>
+                      <option value="Outro estado">De outro estado</option>
+                      <option value="Online">Contato online</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-6">
+                    <label className="mb-1 block text-sm font-bold text-slate-600">
+                      Observações comerciais
+                    </label>
+                    <textarea
+                      value={patientForm.origin_notes}
+                      onChange={(e) => updatePatientForm("origin_notes", e.target.value)}
+                      placeholder="Detalhes da origem, indicação ou campanha"
+                      className="min-h-[90px] w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
                 <label className="block mb-1 text-slate-600 text-sm font-medium">
                   Observações
                 </label>
