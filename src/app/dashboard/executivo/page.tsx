@@ -222,6 +222,7 @@ function getScoreClass(score: number) {
 
 export default function DashboardExecutivoPage() {
   const [loading, setLoading] = useState(true);
+  const [activeDashboardTab, setActiveDashboardTab] = useState<"geral" | "analises" | "acessos">("geral");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -820,6 +821,46 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
+      <div className="mb-6 flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white p-2 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setActiveDashboardTab("geral")}
+          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+            activeDashboardTab === "geral"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+          }`}
+        >
+          Visão Geral
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveDashboardTab("analises")}
+          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+            activeDashboardTab === "analises"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+          }`}
+        >
+          Análises Executivas
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveDashboardTab("acessos")}
+          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+            activeDashboardTab === "acessos"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+          }`}
+        >
+          Acessos Rápidos
+        </button>
+      </div>
+
+      {activeDashboardTab === "geral" && (
+        <>
       <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -1102,6 +1143,12 @@ export default function DashboardExecutivoPage() {
         })}
       </div>
 
+        </>
+
+      )}
+
+      {activeDashboardTab === "analises" && (
+        <>
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
           <div className="mb-6 flex items-center gap-3">
@@ -1556,6 +1603,11 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
+        </>
+      )}
+
+      {activeDashboardTab === "acessos" && (
+        <>
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Link
           href="/crm"
@@ -1596,6 +1648,9 @@ export default function DashboardExecutivoPage() {
           </p>
         </Link>
       </div>
+        </>
+      )}
+
     </div>
   );
 }
