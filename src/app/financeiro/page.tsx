@@ -739,6 +739,106 @@ export default function FinanceiroPage() {
     };
   }, [patientsToCharge, registros]);
 
+  const financialPrediction = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const getReceivableUntil = (days: number) => {
+      const limit = new Date(now);
+      limit.setDate(now.getDate() + days);
+      limit.setHours(23, 59, 59, 999);
+
+      return registros.reduce((acc, record) => {
+        const total = parseMoney(record.amount);
+        const paid = parseMoney(record.paid_amount);
+        const balance = Math.max(0, total - paid);
+
+        if (balance <= 0 || getVisualFinancialStatus(record) === "pago") {
+          return acc;
+        }
+
+        const dueDate = getDateAtNoon(getFinancialDueDate(record));
+        if (!dueDate) return acc;
+
+        return dueDate >= now && dueDate <= limit ? acc + balance : acc;
+      }, 0);
+    };
+
+    const getPendingExpensesUntil = (days: number) => {
+      const limit = new Date(now);
+      limit.setDate(now.getDate() + days);
+      limit.setHours(23, 59, 59, 999);
+
+      return expenses.reduce((acc, expense) => {
+        if (isExpensePaid(expense)) return acc;
+
+        const expenseDate = getDateAtNoon(getExpenseDate(expense));
+        if (!expenseDate) return acc;
+
+        return expenseDate >= now && expenseDate <= limit
+          ? acc + parseMoney(expense.amount)
+          : acc;
+      }, 0);
+    };
+
+    const receivedThisMonth = intelligentSummary.recebidoMes;
+
+    const paidExpensesThisMonth = expenses
+      .filter((expense) => {
+        if (!isExpensePaid(expense)) return false;
+
+        const date = getDateAtNoon(getExpenseDate(expense));
+        if (!date) return false;
+
+        return (
+          date.getFullYear() === now.getFullYear() &&
+          date.getMonth() === now.getMonth()
+        );
+      })
+      .reduce((acc, expense) => acc + parseMoney(expense.amount), 0);
+
+    const grossProfit = receivedThisMonth - paidExpensesThisMonth;
+    const margin =
+      receivedThisMonth > 0 ? Math.round((grossProfit / receivedThisMonth) * 100) : 0;
+
+    const receivable30 = getReceivableUntil(30);
+    const receivable60 = getReceivableUntil(60);
+    const receivable90 = getReceivableUntil(90);
+
+    const expenses30 = getPendingExpensesUntil(30);
+    const expenses60 = getPendingExpensesUntil(60);
+    const expenses90 = getPendingExpensesUntil(90);
+
+    const net30 = receivable30 - expenses30;
+    const net60 = receivable60 - expenses60;
+    const net90 = receivable90 - expenses90;
+
+    const riskLevel =
+      intelligentSummary.taxaInadimplencia >= 30 || smartAlerts.totalOpen > receivedThisMonth
+        ? "Alto"
+        : intelligentSummary.taxaInadimplencia >= 15
+          ? "Médio"
+          : "Baixo";
+
+    return {
+      receivable30,
+      receivable60,
+      receivable90,
+      expenses30,
+      expenses60,
+      expenses90,
+      net30,
+      net60,
+      net90,
+      receivedThisMonth,
+      paidExpensesThisMonth,
+      grossProfit,
+      margin,
+      riskLevel,
+    };
+  }, [registros, expenses, intelligentSummary, smartAlerts.totalOpen]);
+
+
   const buildChargeAllWhatsappHref = () => {
     const total = patientsToCharge.reduce((acc, item) => acc + item.balance, 0);
 
@@ -1898,6 +1998,173 @@ export default function FinanceiroPage() {
                 {formatCurrency(summary.saldo)}
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+              <TrendingUp size={24} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-black text-slate-800">
+                Previsão de caixa e DRE simplificado
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Projeção financeira operacional usando recebíveis, despesas, inadimplência e saldo previsto.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-2xl px-4 py-3 text-sm font-black ${
+              financialPrediction.riskLevel === "Alto"
+                ? "bg-red-50 text-red-700"
+                : financialPrediction.riskLevel === "Médio"
+                  ? "bg-amber-50 text-amber-700"
+                  : "bg-emerald-50 text-emerald-700"
+            }`}
+          >
+            Risco financeiro: {financialPrediction.riskLevel}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+            <div className="mb-3 flex items-center gap-2 text-emerald-700">
+              <CalendarDays size={18} />
+              <p className="text-xs font-black uppercase tracking-widest">
+                Próximos 30 dias
+              </p>
+            </div>
+
+            <p className="text-2xl font-black text-emerald-700">
+              {formatCurrency(financialPrediction.net30)}
+            </p>
+
+            <div className="mt-3 space-y-2 text-xs font-bold text-emerald-700">
+              <div className="flex justify-between gap-3">
+                <span>A receber</span>
+                <span>{formatCurrency(financialPrediction.receivable30)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>Despesas previstas</span>
+                <span>{formatCurrency(financialPrediction.expenses30)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-cyan-100 bg-cyan-50 p-5">
+            <div className="mb-3 flex items-center gap-2 text-cyan-700">
+              <CalendarDays size={18} />
+              <p className="text-xs font-black uppercase tracking-widest">
+                Próximos 60 dias
+              </p>
+            </div>
+
+            <p className="text-2xl font-black text-cyan-700">
+              {formatCurrency(financialPrediction.net60)}
+            </p>
+
+            <div className="mt-3 space-y-2 text-xs font-bold text-cyan-700">
+              <div className="flex justify-between gap-3">
+                <span>A receber</span>
+                <span>{formatCurrency(financialPrediction.receivable60)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>Despesas previstas</span>
+                <span>{formatCurrency(financialPrediction.expenses60)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
+            <div className="mb-3 flex items-center gap-2 text-blue-700">
+              <CalendarDays size={18} />
+              <p className="text-xs font-black uppercase tracking-widest">
+                Próximos 90 dias
+              </p>
+            </div>
+
+            <p className="text-2xl font-black text-blue-700">
+              {formatCurrency(financialPrediction.net90)}
+            </p>
+
+            <div className="mt-3 space-y-2 text-xs font-bold text-blue-700">
+              <div className="flex justify-between gap-3">
+                <span>A receber</span>
+                <span>{formatCurrency(financialPrediction.receivable90)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>Despesas previstas</span>
+                <span>{formatCurrency(financialPrediction.expenses90)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Receita do mês
+            </p>
+            <p className="mt-2 text-lg font-black text-slate-800">
+              {formatCurrency(financialPrediction.receivedThisMonth)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Despesas pagas
+            </p>
+            <p className="mt-2 text-lg font-black text-rose-700">
+              {formatCurrency(financialPrediction.paidExpensesThisMonth)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Lucro operacional
+            </p>
+            <p
+              className={`mt-2 text-lg font-black ${
+                financialPrediction.grossProfit >= 0
+                  ? "text-emerald-700"
+                  : "text-rose-700"
+              }`}
+            >
+              {formatCurrency(financialPrediction.grossProfit)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Margem estimada
+            </p>
+            <p
+              className={`mt-2 text-lg font-black ${
+                financialPrediction.margin >= 20
+                  ? "text-emerald-700"
+                  : financialPrediction.margin >= 0
+                    ? "text-amber-700"
+                    : "text-rose-700"
+              }`}
+            >
+              {financialPrediction.margin}%
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4">
+          <div className="flex items-start gap-3">
+            <Info size={18} className="mt-0.5 text-[#239d9a]" />
+            <p className="text-sm leading-6 text-slate-600">
+              A previsão considera parcelas a receber, saldo em aberto, despesas pendentes e pagamentos já recebidos.
+              Ela não altera nenhum lançamento financeiro; serve apenas como leitura gerencial para tomada de decisão.
+            </p>
           </div>
         </div>
       </div>
