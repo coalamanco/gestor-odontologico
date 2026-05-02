@@ -11,10 +11,10 @@ import {
   FileText,
   Megaphone,
   RefreshCw,
-  ShieldAlert,
   Sparkles,
   Target,
   TrendingUp,
+  Trophy,
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -23,6 +23,7 @@ import {
   normalizePatientSource,
 } from "@/lib/crmScore";
 import { calculateRevenueForecast } from "@/lib/revenueForecast";
+import { calculateClinicGoals } from "@/lib/clinicGoals";
 
 type Patient = {
   id: string;
@@ -60,6 +61,12 @@ type FinancialRecord = {
   status?: string | null;
   created_at?: string | null;
   paid_at?: string | null;
+  procedure_name?: string | null;
+  treatment_name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  professional_name?: string | null;
+  dentist_name?: string | null;
 };
 
 type Treatment = {
@@ -73,6 +80,8 @@ type Treatment = {
   unit_price?: number | string | null;
   created_at?: string | null;
   completed_at?: string | null;
+  professional_name?: string | null;
+  dentist_name?: string | null;
 };
 
 type ClinicalNote = {
@@ -106,7 +115,6 @@ type SourceStats = {
 
 function parseMoney(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return 0;
-
   if (typeof value === "number") return value;
 
   const normalized = String(value)
@@ -170,6 +178,12 @@ function getTrendClass(trend: string) {
   if (trend === "Alta") return "bg-emerald-100 text-emerald-700";
   if (trend === "Atenção") return "bg-rose-100 text-rose-700";
   return "bg-amber-100 text-amber-700";
+}
+
+function getGoalChanceClass(chance: string) {
+  if (chance === "Alta") return "bg-emerald-100 text-emerald-700";
+  if (chance === "Média") return "bg-amber-100 text-amber-700";
+  return "bg-rose-100 text-rose-700";
 }
 
 function getScoreClass(score: number) {
@@ -256,7 +270,6 @@ export default function DashboardExecutivoPage() {
 
     appointments.forEach((appointment) => {
       if (!appointment.patient_id) return;
-
       const list = map.get(appointment.patient_id) || [];
       list.push(appointment);
       map.set(appointment.patient_id, list);
@@ -270,7 +283,6 @@ export default function DashboardExecutivoPage() {
 
     budgets.forEach((budget) => {
       if (!budget.patient_id) return;
-
       const list = map.get(budget.patient_id) || [];
       list.push(budget);
       map.set(budget.patient_id, list);
@@ -284,7 +296,6 @@ export default function DashboardExecutivoPage() {
 
     financialRecords.forEach((record) => {
       if (!record.patient_id) return;
-
       const list = map.get(record.patient_id) || [];
       list.push(record);
       map.set(record.patient_id, list);
@@ -298,7 +309,6 @@ export default function DashboardExecutivoPage() {
 
     treatments.forEach((treatment) => {
       if (!treatment.patient_id) return;
-
       const list = map.get(treatment.patient_id) || [];
       list.push(treatment);
       map.set(treatment.patient_id, list);
@@ -312,7 +322,6 @@ export default function DashboardExecutivoPage() {
 
     clinicalNotes.forEach((note) => {
       if (!note.patient_id) return;
-
       const list = map.get(note.patient_id) || [];
       list.push(note);
       map.set(note.patient_id, list);
@@ -422,6 +431,36 @@ export default function DashboardExecutivoPage() {
       })),
     });
   }, [budgets, financialRecords, campaignProjections, scoredPatients]);
+
+  const goals = useMemo(() => {
+    return calculateClinicGoals({
+      monthlyGoal: 80000,
+      annualGoal: 960000,
+      crmGoal: 30,
+      commercialGoal: 20,
+      confirmedRevenue: forecast.confirmedRevenue,
+      probableRevenue: forecast.probableRevenue,
+      potentialRevenue: forecast.potentialRevenue,
+      financialRecords,
+      treatments,
+      budgets,
+      campaigns: campaignProjections,
+      scoredPatients: scoredPatients.map((item) => ({
+        id: item.patient.id,
+        score: item.score,
+        closingChance: item.closingChance,
+        vipLevel: item.vipLevel,
+        financialPotential: item.financialPotential,
+      })),
+    });
+  }, [
+    forecast,
+    financialRecords,
+    treatments,
+    budgets,
+    campaignProjections,
+    scoredPatients,
+  ]);
 
   const sourceStats = useMemo<SourceStats[]>(() => {
     const map = new Map<string, SourceStats>();
@@ -540,8 +579,10 @@ export default function DashboardExecutivoPage() {
   const averageTicket =
     approvedBudgets.length > 0
       ? Math.round(
-          approvedBudgets.reduce((sum, budget) => sum + parseMoney(budget.total), 0) /
-            approvedBudgets.length
+          approvedBudgets.reduce(
+            (sum, budget) => sum + parseMoney(budget.total),
+            0
+          ) / approvedBudgets.length
         )
       : 0;
 
@@ -568,11 +609,11 @@ export default function DashboardExecutivoPage() {
       color: "from-blue-500 to-indigo-500",
     },
     {
-      title: "Score médio",
-      value: `${averageScore}/100`,
-      subtitle: "Saúde comercial",
-      icon: Brain,
-      color: "from-purple-500 to-violet-500",
+      title: "Meta atingida",
+      value: `${goals.monthlyProgress}%`,
+      subtitle: `Meta: ${formatCurrency(goals.monthlyGoal)}`,
+      icon: Trophy,
+      color: "from-yellow-400 to-orange-400",
     },
   ];
 
@@ -591,7 +632,7 @@ export default function DashboardExecutivoPage() {
             </h1>
 
             <p className="mt-1 max-w-3xl text-sm text-slate-500">
-              Visão executiva de faturamento, CRM, campanhas, marketing,
+              Visão executiva de faturamento, metas, CRM, campanhas, marketing,
               pipeline comercial e previsão financeira.
             </p>
           </div>
@@ -618,32 +659,41 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Tendência mensal
+              Metas e tendência mensal
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span
                 className={`rounded-full px-4 py-2 text-sm font-black ${getTrendClass(
-                  forecast.monthlyTrend
+                  goals.monthlyTrend
                 )}`}
               >
-                {forecast.monthlyTrend}
+                Tendência: {goals.monthlyTrend}
+              </span>
+
+              <span
+                className={`rounded-full px-4 py-2 text-sm font-black ${getGoalChanceClass(
+                  goals.chanceToHitGoal
+                )}`}
+              >
+                Chance de bater meta: {goals.chanceToHitGoal}
               </span>
 
               <span className="text-sm text-slate-500">
-                Projeção de conversão:{" "}
+                Faltam{" "}
                 <strong className="text-slate-800">
-                  {forecast.conversionProjection}%
-                </strong>
+                  {formatCurrency(goals.gapToGoal)}
+                </strong>{" "}
+                para a meta confirmada.
               </span>
             </div>
           </div>
 
           <p className="max-w-4xl text-sm leading-6 text-slate-600">
-            {forecast.executiveSummary}
+            {goals.executiveSummary}
           </p>
         </div>
       </div>
@@ -677,6 +727,126 @@ export default function DashboardExecutivoPage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+              <BarChart3 size={22} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-black text-slate-800">
+                Metas e Performance
+              </h2>
+              <p className="text-sm text-slate-500">
+                Meta mensal, projeção provável e potencial da clínica.
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <div className="mb-2 flex items-center justify-between text-sm font-bold text-slate-600">
+              <span>Meta mensal</span>
+              <span>{goals.monthlyProgress}%</span>
+            </div>
+
+            <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-[#239d9a]"
+                style={{ width: `${Math.min(100, goals.monthlyProgress)}%` }}
+              />
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
+              <span>Confirmado: {formatCurrency(goals.confirmedRevenue)}</span>
+              <span>Provável: {formatCurrency(goals.probableRevenue)}</span>
+              <span>Potencial: {formatCurrency(goals.potentialRevenue)}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-3xl bg-emerald-50 p-5">
+              <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                Progresso provável
+              </p>
+              <p className="mt-2 text-2xl font-black text-emerald-700">
+                {goals.probableProgress}%
+              </p>
+            </div>
+
+            <div className="rounded-3xl bg-cyan-50 p-5">
+              <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
+                Conversão comercial
+              </p>
+              <p className="mt-2 text-2xl font-black text-cyan-700">
+                {goals.commercialConversion}%
+              </p>
+            </div>
+
+            <div className="rounded-3xl bg-purple-50 p-5">
+              <p className="text-xs font-black uppercase tracking-widest text-purple-700">
+                Recuperação prevista
+              </p>
+              <p className="mt-2 text-2xl font-black text-purple-700">
+                {goals.recoveredPatientsProjection}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
+              <Trophy size={22} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-black text-slate-800">
+                Destaques
+              </h2>
+              <p className="text-sm text-slate-500">
+                Produção e performance.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Procedimento destaque
+              </p>
+              <p className="mt-1 font-black text-slate-800">
+                {goals.topProcedure?.name || "Sem dados"}
+              </p>
+              <p className="mt-1 text-sm font-bold text-emerald-600">
+                {formatCurrency(goals.topProcedure?.value || 0)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Profissional destaque
+              </p>
+              <p className="mt-1 font-black text-slate-800">
+                {goals.topProfessional?.name || "Sem dados"}
+              </p>
+              <p className="mt-1 text-sm font-bold text-emerald-600">
+                {formatCurrency(goals.topProfessional?.value || 0)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Ticket médio
+              </p>
+              <p className="mt-1 text-xl font-black text-[#239d9a]">
+                {formatCurrency(goals.averageTicket || averageTicket)}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -931,6 +1101,82 @@ export default function DashboardExecutivoPage() {
             {sourceStats.length === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
                 Ainda não há origens cadastradas.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-800">
+            Ranking de procedimentos
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Procedimentos com maior performance financeira.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {goals.procedureRanking.slice(0, 6).map((item, index) => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="font-black text-slate-800">
+                    {index + 1}. {item.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.count} lançamento(s)
+                  </p>
+                </div>
+
+                <p className="font-black text-emerald-600">
+                  {formatCurrency(item.value)}
+                </p>
+              </div>
+            ))}
+
+            {goals.procedureRanking.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                Ainda não há ranking de procedimentos.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-800">
+            Ranking por profissional
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Produção agrupada por profissional quando disponível.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {goals.professionalRanking.slice(0, 6).map((item, index) => (
+              <div
+                key={item.name}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="font-black text-slate-800">
+                    {index + 1}. {item.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.count} lançamento(s)
+                  </p>
+                </div>
+
+                <p className="font-black text-emerald-600">
+                  {formatCurrency(item.value)}
+                </p>
+              </div>
+            ))}
+
+            {goals.professionalRanking.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                Ainda não há ranking por profissional.
               </div>
             )}
           </div>
