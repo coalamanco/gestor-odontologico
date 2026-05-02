@@ -74,20 +74,62 @@ export default function ExecutiveCharts({
   scheduleData,
   sourceData,
 }: ExecutiveChartsProps) {
-  const currentRevenue = revenueData[revenueData.length - 1]?.revenue || 0;
-  const currentTarget = revenueData[revenueData.length - 1]?.target || 0;
+  const safeRevenueData =
+    revenueData && revenueData.length > 0
+      ? revenueData
+      : [
+          {
+            month: "Atual",
+            revenue: 0,
+            target: 0,
+          },
+        ];
+
+  const safeConversionData =
+    conversionData && conversionData.length > 0
+      ? conversionData
+      : [
+          {
+            label: "Conversão",
+            value: 0,
+          },
+        ];
+
+  const safeScheduleData =
+    scheduleData && scheduleData.length > 0
+      ? scheduleData
+      : [
+          {
+            day: "Hoje",
+            occupied: 0,
+            available: 100,
+          },
+        ];
+
+  const safeSourceData =
+    sourceData && sourceData.length > 0
+      ? sourceData
+      : [
+          {
+            source: "Sem origem",
+            patients: 0,
+          },
+        ];
+
+  const currentRevenue = safeRevenueData[safeRevenueData.length - 1]?.revenue || 0;
+  const currentTarget = safeRevenueData[safeRevenueData.length - 1]?.target || 0;
 
   const revenueProgress =
     currentTarget > 0 ? Math.round((currentRevenue / currentTarget) * 100) : 0;
 
-  const totalPatientsFromSources = sourceData.reduce(
+  const totalPatientsFromSources = safeSourceData.reduce(
     (sum, item) => sum + Number(item.patients || 0),
     0
   );
 
   const averageOccupation = Math.round(
-    scheduleData.reduce((sum, item) => sum + Number(item.occupied || 0), 0) /
-      Math.max(scheduleData.length, 1)
+    safeScheduleData.reduce((sum, item) => sum + Number(item.occupied || 0), 0) /
+      Math.max(safeScheduleData.length, 1)
   );
 
   return (
@@ -154,7 +196,7 @@ export default function ExecutiveCharts({
               </p>
 
               <p className="mt-2 text-3xl font-black text-slate-800">
-                {conversionData[0]?.value || 0}%
+                {safeConversionData[0]?.value || 0}%
               </p>
             </div>
 
@@ -211,7 +253,7 @@ export default function ExecutiveCharts({
 
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
+              <AreaChart data={safeRevenueData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#239d9a" stopOpacity={0.35} />
@@ -275,7 +317,7 @@ export default function ExecutiveCharts({
 
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={conversionData}>
+              <BarChart data={safeConversionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
 
                 <XAxis
@@ -289,7 +331,7 @@ export default function ExecutiveCharts({
                 <Tooltip />
 
                 <Bar dataKey="value" radius={[12, 12, 0, 0]}>
-                  {conversionData.map((_, index) => (
+                  {safeConversionData.map((_, index) => (
                     <Cell
                       key={`conversion-cell-${index}`}
                       fill={CHART_COLORS[index % CHART_COLORS.length]}
@@ -322,7 +364,7 @@ export default function ExecutiveCharts({
 
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={scheduleData}>
+              <BarChart data={safeScheduleData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
 
                 <XAxis
@@ -374,14 +416,14 @@ export default function ExecutiveCharts({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={sourceData}
+                  data={safeSourceData}
                   dataKey="patients"
                   nameKey="source"
                   innerRadius={70}
                   outerRadius={110}
                   paddingAngle={4}
                 >
-                  {sourceData.map((_, index) => (
+                  {safeSourceData.map((_, index) => (
                     <Cell
                       key={`source-cell-${index}`}
                       fill={CHART_COLORS[index % CHART_COLORS.length]}
@@ -395,7 +437,7 @@ export default function ExecutiveCharts({
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {sourceData.map((item, index) => (
+            {safeSourceData.map((item, index) => (
               <div
                 key={`${item.source}-${index}`}
                 className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3"
@@ -420,7 +462,7 @@ export default function ExecutiveCharts({
               </div>
             ))}
 
-            {sourceData.length === 0 && (
+            {safeSourceData.length === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
                 Ainda não há dados suficientes de origem.
               </div>
