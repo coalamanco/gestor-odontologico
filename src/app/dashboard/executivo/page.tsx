@@ -23,7 +23,10 @@ import {
   normalizePatientSource,
 } from "@/lib/crmScore";
 import { calculateRevenueForecast } from "@/lib/revenueForecast";
-import { calculateClinicGoals } from "@/lib/clinicGoals";
+import {
+  calculateClinicGoals,
+  getClinicGoalsFromLocalStorage,
+} from "@/lib/clinicGoals";
 import { calculateExecutiveAlerts } from "@/lib/executiveAlerts";
 
 type Patient = {
@@ -226,9 +229,15 @@ export default function DashboardExecutivoPage() {
   );
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
+  const [configuredGoals, setConfiguredGoals] = useState(() =>
+    getClinicGoalsFromLocalStorage()
+  );
 
   useEffect(() => {
     loadData();
+
+    const goals = getClinicGoalsFromLocalStorage();
+    setConfiguredGoals(goals);
   }, []);
 
   async function loadData() {
@@ -458,10 +467,10 @@ export default function DashboardExecutivoPage() {
 
   const goals = useMemo(() => {
     return calculateClinicGoals({
-      monthlyGoal: 80000,
-      annualGoal: 960000,
-      crmGoal: 30,
-      commercialGoal: 20,
+      monthlyGoal: configuredGoals.monthlyGoal,
+      annualGoal: configuredGoals.annualGoal,
+      crmGoal: configuredGoals.crmGoal,
+      commercialGoal: configuredGoals.commercialGoal,
       confirmedRevenue: forecast.confirmedRevenue,
       probableRevenue: forecast.probableRevenue,
       potentialRevenue: forecast.potentialRevenue,
@@ -484,6 +493,7 @@ export default function DashboardExecutivoPage() {
     budgets,
     campaignProjections,
     scoredPatients,
+    configuredGoals,
   ]);
 
   const sourceStats = useMemo<SourceStats[]>(() => {
@@ -752,6 +762,14 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/configuracoes/metas"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-100 bg-white px-4 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
+            >
+              <Target size={17} />
+              Metas
+            </Link>
+
             <Link
               href="/crm/campanhas"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#239d9a] px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]"

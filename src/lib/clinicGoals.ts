@@ -53,11 +53,20 @@ export type ClinicGoalFinancialRecord = {
     financialPotential?: string | null;
   };
   
+  export type ClinicGoals = {
+    monthlyGoal: number;
+    annualGoal: number;
+    crmGoal: number;
+    commercialGoal: number;
+    conversionGoal: number;
+  };
+  
   export type ClinicGoalsInput = {
     monthlyGoal?: number;
     annualGoal?: number;
     crmGoal?: number;
     commercialGoal?: number;
+    conversionGoal?: number;
     confirmedRevenue?: number;
     probableRevenue?: number;
     potentialRevenue?: number;
@@ -80,6 +89,7 @@ export type ClinicGoalFinancialRecord = {
     annualGoal: number;
     crmGoal: number;
     commercialGoal: number;
+    conversionGoal: number;
     confirmedRevenue: number;
     probableRevenue: number;
     potentialRevenue: number;
@@ -102,13 +112,24 @@ export type ClinicGoalFinancialRecord = {
     executiveSummary: string;
   };
   
+  export const CLINIC_GOALS_STORAGE_KEY = "clinic_goals";
+  
+  export const DEFAULT_CLINIC_GOALS: ClinicGoals = {
+    monthlyGoal: 80000,
+    annualGoal: 960000,
+    crmGoal: 30,
+    commercialGoal: 20,
+    conversionGoal: 35,
+  };
+  
   function parseMoney(value: string | number | null | undefined) {
     if (value === null || value === undefined || value === "") return 0;
   
-    if (typeof value === "number") return value;
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   
     const normalized = String(value)
       .replace("R$", "")
+      .replace(/\s/g, "")
       .replace(/\./g, "")
       .replace(",", ".")
       .trim();
@@ -128,7 +149,9 @@ export type ClinicGoalFinancialRecord = {
       normalized === "pago" ||
       normalized === "paga" ||
       normalized === "recebido" ||
-      normalized === "quitado"
+      normalized === "recebida" ||
+      normalized === "quitado" ||
+      normalized === "quitada"
     );
   }
   
@@ -141,12 +164,76 @@ export type ClinicGoalFinancialRecord = {
       normalized === "aprovada" ||
       normalized === "fechado" ||
       normalized === "fechada" ||
-      normalized === "finalizado"
+      normalized === "finalizado" ||
+      normalized === "finalizada"
     );
   }
   
   function clampPercentage(value: number) {
+    if (!Number.isFinite(value)) return 0;
     return Math.max(0, Math.min(100, Math.round(value)));
+  }
+  
+  function normalizePositiveNumber(value: unknown, fallback: number) {
+    const parsed = parseMoney(value as string | number | null | undefined);
+    return parsed > 0 ? parsed : fallback;
+  }
+  
+  function normalizeGoals(value?: Partial<ClinicGoals> | null): ClinicGoals {
+    const monthlyGoal = normalizePositiveNumber(
+      value?.monthlyGoal,
+      DEFAULT_CLINIC_GOALS.monthlyGoal
+    );
+  
+    return {
+      monthlyGoal,
+      annualGoal: normalizePositiveNumber(value?.annualGoal, monthlyGoal * 12),
+      crmGoal: normalizePositiveNumber(value?.crmGoal, DEFAULT_CLINIC_GOALS.crmGoal),
+      commercialGoal: normalizePositiveNumber(
+        value?.commercialGoal,
+        DEFAULT_CLINIC_GOALS.commercialGoal
+      ),
+      conversionGoal: normalizePositiveNumber(
+        value?.conversionGoal,
+        DEFAULT_CLINIC_GOALS.conversionGoal
+      ),
+    };
+  }
+  
+  export function getClinicGoalsFromLocalStorage(): ClinicGoals {
+    if (typeof window === "undefined") return DEFAULT_CLINIC_GOALS;
+  
+    try {
+      const stored = window.localStorage.getItem(CLINIC_GOALS_STORAGE_KEY);
+      if (!stored) return DEFAULT_CLINIC_GOALS;
+  
+      return normalizeGoals(JSON.parse(stored));
+    } catch {
+      return DEFAULT_CLINIC_GOALS;
+    }
+  }
+  
+  export function saveClinicGoalsToLocalStorage(goals: Partial<ClinicGoals>) {
+    if (typeof window === "undefined") return;
+  
+    const normalized = normalizeGoals(goals);
+    window.localStorage.setItem(
+      CLINIC_GOALS_STORAGE_KEY,
+      JSON.stringify(normalized)
+    );
+  }
+  
+  export function mergeClinicGoalsWithInput(input: ClinicGoalsInput): ClinicGoalsInput {
+    const configuredGoals = getClinicGoalsFromLocalStorage();
+  
+    return {
+      ...input,
+      monthlyGoal: input.monthlyGoal ?? configuredGoals.monthlyGoal,
+      annualGoal: input.annualGoal ?? configuredGoals.annualGoal,
+      crmGoal: input.crmGoal ?? configuredGoals.crmGoal,
+      commercialGoal: input.commercialGoal ?? configuredGoals.commercialGoal,
+      conversionGoal: input.conversionGoal ?? configuredGoals.conversionGoal,
+    };
   }
   
   function getDate(value?: string | null) {
@@ -263,10 +350,23 @@ export type ClinicGoalFinancialRecord = {
     const campaigns = input.campaigns || [];
     const scoredPatients = input.scoredPatients || [];
   
-    const monthlyGoal = Number(input.monthlyGoal || 80000);
-    const annualGoal = Number(input.annualGoal || monthlyGoal * 12);
-    const crmGoal = Number(input.crmGoal || 30);
-    const commercialGoal = Number(input.commercialGoal || 20);
+    const monthlyGoal = normalizePositiveNumber(
+      input.monthlyGoal,
+      DEFAULT_CLINIC_GOALS.monthlyGoal
+    );
+    const annualGoal = normalizePositiveNumber(input.annualGoal, monthlyGoal * 12);
+    const crmGoal = normalizePositiveNumber(
+      input.crmGoal,
+      DEFAULT_CLINIC_GOALS.crmGoal
+    );
+    const commercialGoal = normalizePositiveNumber(
+      input.commercialGoal,
+      DEFAULT_CLINIC_GOALS.commercialGoal
+    );
+    const conversionGoal = normalizePositiveNumber(
+      input.conversionGoal,
+      DEFAULT_CLINIC_GOALS.conversionGoal
+    );
   
     const currentMonthFinancialRecords = financialRecords.filter((record) => {
       const date = record.paid_at || record.created_at;
@@ -364,25 +464,33 @@ export type ClinicGoalFinancialRecord = {
   
     const procedureRanking = buildRanking(
       rankingBase,
-      (item: any) => getProcedureName(item),
-      (item: any) => {
+      (item: ClinicGoalFinancialRecord | ClinicGoalTreatment) =>
+        getProcedureName(item),
+      (item: ClinicGoalFinancialRecord | ClinicGoalTreatment) => {
         if ("paid_amount" in item || "amount" in item) {
-          return getRecordPaidValue(item);
+          return getRecordPaidValue(item as ClinicGoalFinancialRecord);
         }
   
-        return parseMoney(item.total) || parseMoney(item.unit_price);
+        return (
+          parseMoney((item as ClinicGoalTreatment).total) ||
+          parseMoney((item as ClinicGoalTreatment).unit_price)
+        );
       }
     );
   
     const professionalRanking = buildRanking(
       rankingBase,
-      (item: any) => getProfessionalName(item),
-      (item: any) => {
+      (item: ClinicGoalFinancialRecord | ClinicGoalTreatment) =>
+        getProfessionalName(item),
+      (item: ClinicGoalFinancialRecord | ClinicGoalTreatment) => {
         if ("paid_amount" in item || "amount" in item) {
-          return getRecordPaidValue(item);
+          return getRecordPaidValue(item as ClinicGoalFinancialRecord);
         }
   
-        return parseMoney(item.total) || parseMoney(item.unit_price);
+        return (
+          parseMoney((item as ClinicGoalTreatment).total) ||
+          parseMoney((item as ClinicGoalTreatment).unit_price)
+        );
       }
     );
   
@@ -394,6 +502,7 @@ export type ClinicGoalFinancialRecord = {
       annualGoal: Math.round(annualGoal),
       crmGoal: Math.round(crmGoal),
       commercialGoal: Math.round(commercialGoal),
+      conversionGoal: Math.round(conversionGoal),
       confirmedRevenue: Math.round(confirmedRevenue),
       probableRevenue: Math.round(probableRevenue),
       potentialRevenue: Math.round(potentialRevenue),
