@@ -31,6 +31,7 @@ import { calculateExecutiveAlerts } from "@/lib/executiveAlerts";
 import { calculateSmartGoals } from "@/lib/smartGoals";
 import ExecutiveCharts from "@/components/dashboard/ExecutiveCharts";
 import ExecutiveKPIs from "@/components/dashboard/ExecutiveKPIs";
+import ExecutiveAlerts from "@/components/dashboard/ExecutiveAlerts";
 
 type Patient = {
   id: string;
@@ -1131,70 +1132,13 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-xl font-black text-slate-800">
-              Alertas Executivos
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {executiveAlerts.mainMessage}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-700">
-              {executiveAlerts.criticalCount} crítico(s)
-            </span>
-            <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700">
-              {executiveAlerts.opportunityCount} oportunidade(s)
-            </span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
-              {executiveAlerts.positiveCount} positivo(s)
-            </span>
-          </div>
-        </div>
-
-        {executiveAlerts.alerts.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-            Ainda não há alertas executivos suficientes.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-            {executiveAlerts.alerts.slice(0, 6).map((alert) => (
-              <Link
-                key={alert.id}
-                href={alert.actionHref}
-                className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm ${getAlertClass(
-                  alert.severity
-                )}`}
-              >
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-                    {getAlertLabel(alert.severity)}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-70">
-                    {alert.area}
-                  </span>
-                </div>
-
-                <h3 className="font-black">
-                  {alert.title}
-                </h3>
-
-                <p className="mt-1 text-sm leading-6 opacity-90">
-                  {alert.description}
-                </p>
-
-                <div className="mt-3 inline-flex rounded-xl bg-white/70 px-3 py-2 text-xs font-black">
-                  {alert.actionLabel}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      <ExecutiveAlerts
+        mainMessage={executiveAlerts.mainMessage}
+        criticalCount={executiveAlerts.criticalCount}
+        opportunityCount={executiveAlerts.opportunityCount}
+        positiveCount={executiveAlerts.positiveCount}
+        alerts={executiveAlerts.alerts}
+      />
 
       <ExecutiveKPIs loading={loading} cards={executiveCards} />
 
