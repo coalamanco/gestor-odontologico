@@ -1683,6 +1683,20 @@ function PacienteProntuarioContent({
 
   const clinicalTimeline = useMemo(() => {
     return clinicalNotes
+      .filter((note) => {
+        const title = String(note.title || "").toLowerCase();
+        const content = String(note.content || "").toLowerCase();
+
+        // A aba Tratamentos deve mostrar apenas evolução clínica real.
+        // Orçamento aprovado, valores e parcelas continuam disponíveis na aba Orçamentos.
+        if (title.includes("orçamento")) return false;
+        if (content.includes("orçamento aprovado")) return false;
+        if (content.includes("valor total")) return false;
+        if (content.includes("parcelas")) return false;
+        if (content.includes("tratamentos liberados")) return false;
+
+        return true;
+      })
       .map((note) => ({
         id: note.id,
         title: note.title || "Evolução clínica",
