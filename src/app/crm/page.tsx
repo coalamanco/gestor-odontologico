@@ -385,17 +385,17 @@ export default function CrmPage() {
     <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-28 md:p-6 md:pb-10">
       <div className="mx-auto max-w-7xl space-y-4">
         <section className="overflow-hidden rounded-[1.35rem] border border-[#bde4e3] bg-white shadow-sm md:rounded-[2rem]">
-          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] p-5 text-white md:p-7">
+          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-6 py-3 text-white">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-50 ring-1 ring-white/20">
                   <Sparkles size={13} />
                   CRM inteligente
                 </div>
-                <h1 className="mt-3 text-2xl font-black tracking-tight md:text-4xl">
+                <h1 className="mt-3 text-xl md:text-2xl font-black tracking-tight">
                   Relacionamento e Marketing
                 </h1>
-                <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-cyan-50">
+                <p className="mt-2 max-w-3xl text-xs opacity-90 font-medium leading-5 text-cyan-50">
                   Acompanhe pacientes sem retorno, aniversariantes, orçamentos pendentes e tratamentos parados com mensagens prontas para WhatsApp.
                 </p>
               </div>
@@ -403,7 +403,7 @@ export default function CrmPage() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href="/crm/automacoes"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
                 >
                   <Bot size={17} />
                   Automações
@@ -412,7 +412,7 @@ export default function CrmPage() {
                 <button
                   type="button"
                   onClick={loadData}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-3 text-sm font-black text-white shadow-sm backdrop-blur hover:bg-white/20"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-black text-white shadow-sm backdrop-blur hover:bg-white/20"
                 >
                   <RefreshCw size={17} />
                   Atualizar
