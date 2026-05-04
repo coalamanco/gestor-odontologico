@@ -2165,7 +2165,7 @@ export default function AgendaPage() {
                 gridTemplateColumns: `70px repeat(${days.length}, minmax(0, 1fr))`,
               }}
             >
-              <div className="px-3 py-1.5 bg-[#fbffff] font-bold text-[10px] text-slate-400 tracking-tight">{h}</div>
+              <div className="px-2 py-1 bg-[#fbffff] font-bold text-[9px] text-slate-400 tracking-tight md:px-3 md:py-1.5 md:text-[10px]">{h}</div>
 
               {days.map((d) => {
                 const ag = filteredAppointmentsByProfessional.filter((a) => {
@@ -2181,7 +2181,7 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className={`border-l border-[#edf4f4] cursor-pointer relative transition-colors min-w-0 overflow-visible group touch-manipulation ${isMobileAgenda && mobileView === "day" ? "min-h-[34px]" : "min-h-[28px]"} ${
+                    className={`border-l border-[#edf4f4] cursor-pointer relative transition-colors min-w-0 overflow-visible group touch-manipulation ${isMobileAgenda && mobileView === "day" ? "min-h-[28px]" : "min-h-[28px]"} ${
                       getHolidayInfo(d.date)
                         ? "bg-amber-50/30 hover:bg-amber-50/60"
                         : "hover:bg-[#fbffff]"
@@ -2204,7 +2204,7 @@ export default function AgendaPage() {
                             e.stopPropagation();
                             setSelectedBlockDetails(block);
                           }}
-                          className="absolute left-[5px] right-[5px] top-0.5 z-[2] overflow-hidden rounded-lg border border-slate-300/30 px-2 py-1 text-[9px] text-white cursor-pointer opacity-70 shadow-sm"
+                          className="absolute left-[3px] right-[3px] top-0.5 z-[2] overflow-hidden rounded-lg border border-slate-300/30 px-1.5 py-0.5 text-[8px] text-white cursor-pointer opacity-70 shadow-sm md:left-[5px] md:right-[5px] md:px-2 md:py-1 md:text-[9px]"
                           style={{
                             height: `${getScheduleBlockHeight(block)}px`,
                             backgroundColor: blockColor,
@@ -2250,32 +2250,32 @@ export default function AgendaPage() {
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-200"
                             : ""
-                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[10px] px-2 py-1 rounded-[9px] cursor-pointer border border-white/20 shadow-sm touch-manipulation active:scale-[0.99]`}
+                        } absolute top-0.5 z-[1] overflow-hidden text-white text-[9px] px-1.5 py-0.5 rounded-[8px] cursor-pointer border border-white/20 shadow-sm touch-manipulation active:scale-[0.99] md:text-[10px] md:px-2 md:py-1 md:rounded-[9px]`}
                         style={{
                           ...getAppointmentStyle(a),
                           height: `${getDurationHeight(a.duration || 30)}px`,
-                          left: `calc(${leftPercent}% + 5px)`,
-                          width: `calc(${widthPercent}% - 10px)`,
+                          left: isMobileAgenda ? `calc(${leftPercent}% + 3px)` : `calc(${leftPercent}% + 5px)`,
+                          width: isMobileAgenda ? `calc(${widthPercent}% - 6px)` : `calc(${widthPercent}% - 10px)`,
                         }}
                         title={isMobileAgenda ? "Toque para ver detalhes." : "Clique para ver detalhes. Arraste para remarcar. Use a barra inferior para alterar a duração."}
                       >
                         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                         <div className="flex items-start justify-between gap-1 pl-1">
                           <div className="min-w-0">
-                            <div className="truncate pr-1 text-[10px] font-black leading-tight tracking-tight">
+                            <div className="truncate pr-1 text-[9px] font-black leading-tight tracking-tight md:text-[10px]">
                               {a.patient_name || a.title}
                             </div>
-                            <div className="mt-0.5 truncate pr-1 text-[8px] font-semibold leading-tight opacity-70">
+                            <div className="mt-0.5 hidden truncate pr-1 text-[8px] font-semibold leading-tight opacity-70 md:block">
                               {a.type === "compromisso" ? "Compromisso" : a.title}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 text-[7px] font-black leading-none text-white/90">
+                          <span className="shrink-0 rounded-md bg-white/15 px-1 py-0.5 text-[6px] font-black leading-none text-white/90 md:px-1.5 md:text-[7px]">
                             {a.start_time}
                           </span>
                         </div>
 
                         {a.professional_id && (
-                          <div className="mt-0.5 flex items-center gap-1 truncate pl-1 pr-1 text-[7px] font-semibold leading-tight opacity-70">
+                          <div className="mt-0.5 hidden items-center gap-1 truncate pl-1 pr-1 text-[7px] font-semibold leading-tight opacity-70 md:flex">
                             <span
                               className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[6px] font-black text-white ring-0"
                               title={getProfessionalLabel(a.professional_id)}
@@ -2288,7 +2288,7 @@ export default function AgendaPage() {
                           </div>
                         )}
 
-                        <div className="mt-1 flex items-center gap-0.5 flex-nowrap overflow-hidden pl-1">
+                        <div className="mt-1 hidden items-center gap-0.5 flex-nowrap overflow-hidden pl-1 md:flex">
                           {a.type !== "compromisso" && (
                             <span
                               className={`shrink-0 rounded-md px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
