@@ -75,9 +75,12 @@ function formatCurrency(value: number) {
 
 function formatDateBr(value?: string | null) {
   if (!value) return "-";
+
   const clean = String(value).split("T")[0];
   const [year, month, day] = clean.split("-");
+
   if (!year || !month || !day) return clean;
+
   return `${day}/${month}/${year}`;
 }
 
@@ -100,8 +103,10 @@ function receiptLabel(value?: string | null) {
 export default function PrintOrcamentoPage() {
   const params = useParams();
   const router = useRouter();
+
   const printRef = useRef<HTMLDivElement | null>(null);
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const [isDrawingSignature, setIsDrawingSignature] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
@@ -111,7 +116,9 @@ export default function PrintOrcamentoPage() {
   const [budget, setBudget] = useState<Budget | null>(null);
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(null);
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(
+    null
+  );
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const subtotal = parseMoney(budget?.subtotal);
@@ -129,7 +136,15 @@ export default function PrintOrcamentoPage() {
 
   const professionalName = String(
     clinicSettings?.owner || "Dr. Henrique S. Pasquali"
-  ).replace("Dr(a).", "Dr.");
+  )
+    .replace("Dr(a).", "Dr.")
+    .replace("Dra(a).", "Dra.")
+    .replace("(a)", "")
+    .trim();
+
+  const professionalCro = clinicSettings?.cro
+    ? `CRO: ${clinicSettings.cro}`
+    : "CRO não informado";
 
   const safePatientName = useMemo(() => {
     return String(patient?.name || "paciente")
@@ -161,26 +176,31 @@ export default function PrintOrcamentoPage() {
 
       setBudget(budgetData as Budget);
 
-      const [{ data: itemsData, error: itemsError }, { data: patientData }, { data: clinicData }] =
-        await Promise.all([
-          supabase
-            .from("budget_items")
-            .select("*")
-            .eq("budget_id", budgetId)
-            .order("created_at", { ascending: true }),
-          supabase
-            .from("patients")
-            .select("*")
-            .eq("id", budgetData.patient_id)
-            .maybeSingle(),
-          supabase
-            .from("clinic_settings")
-            .select("*")
-            .eq("id", 1)
-            .maybeSingle(),
-        ]);
+      const [
+        { data: itemsData, error: itemsError },
+        { data: patientData, error: patientError },
+        { data: clinicData, error: clinicError },
+      ] = await Promise.all([
+        supabase
+          .from("budget_items")
+          .select("*")
+          .eq("budget_id", budgetId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("patients")
+          .select("*")
+          .eq("id", budgetData.patient_id)
+          .maybeSingle(),
+        supabase
+          .from("clinic_settings")
+          .select("*")
+          .eq("id", 1)
+          .maybeSingle(),
+      ]);
 
       if (itemsError) throw itemsError;
+      if (patientError) throw patientError;
+      if (clinicError) throw clinicError;
 
       setItems((itemsData || []) as BudgetItem[]);
       setPatient((patientData || null) as Patient | null);
@@ -194,6 +214,7 @@ export default function PrintOrcamentoPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetId]);
 
   const goBackToBudget = () => {
@@ -290,7 +311,6 @@ export default function PrintOrcamentoPage() {
     setIsDrawingSignature(false);
   };
 
-
   const generatePdf = async () => {
     const element = printRef.current;
 
@@ -302,10 +322,19 @@ export default function PrintOrcamentoPage() {
     try {
       setGeneratingPdf(true);
 
+      const canvasSignature = signatureCanvasRef.current;
+      if (canvasSignature) {
+        setSignatureDataUrl(canvasSignature.toDataURL("image/png"));
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#ffffff",
+        logging: false,
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -350,7 +379,9 @@ export default function PrintOrcamentoPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7ffff] p-6">
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-8 text-center shadow-sm">
-          <h1 className="text-xl font-black text-slate-800">Orçamento não encontrado</h1>
+          <h1 className="text-xl font-black text-slate-800">
+            Orçamento não encontrado
+          </h1>
 
           <button
             type="button"
@@ -447,8 +478,8 @@ export default function PrintOrcamentoPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-cyan-50">
-                Documento com os procedimentos propostos, valores, condições de pagamento
-                e observações clínicas registradas no sistema.
+                Documento com os procedimentos propostos, valores, condições de
+                pagamento e observações clínicas registradas no sistema.
               </p>
             </div>
 
@@ -488,10 +519,18 @@ export default function PrintOrcamentoPage() {
               </div>
 
               <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 md:grid-cols-2">
-                <div>CPF: <strong>{patient?.cpf || "-"}</strong></div>
-                <div>Telefone: <strong>{patient?.phone || "-"}</strong></div>
-                <div>Email: <strong>{patient?.email || "-"}</strong></div>
-                <div>Data: <strong>{formatDateBr(budget.created_at)}</strong></div>
+                <div>
+                  CPF: <strong>{patient?.cpf || "-"}</strong>
+                </div>
+                <div>
+                  Telefone: <strong>{patient?.phone || "-"}</strong>
+                </div>
+                <div>
+                  Email: <strong>{patient?.email || "-"}</strong>
+                </div>
+                <div>
+                  Data: <strong>{formatDateBr(budget.created_at)}</strong>
+                </div>
               </div>
             </div>
 
@@ -580,7 +619,8 @@ export default function PrintOrcamentoPage() {
                 {items.map((item, index) => {
                   const quantity = Number(item.quantity || 1);
                   const unit = parseMoney(item.unit_price);
-                  const itemTotal = parseMoney(item.total || item.amount) || unit * quantity;
+                  const itemTotal =
+                    parseMoney(item.total || item.amount) || unit * quantity;
 
                   return (
                     <div
@@ -589,7 +629,9 @@ export default function PrintOrcamentoPage() {
                     >
                       <div>
                         <div className="text-sm font-black text-slate-800">
-                          {item.procedure_name || item.treatment_name || "Procedimento"}
+                          {item.procedure_name ||
+                            item.treatment_name ||
+                            "Procedimento"}
                         </div>
 
                         <div className="mt-1 text-xs font-semibold text-slate-500">
@@ -662,12 +704,16 @@ export default function PrintOrcamentoPage() {
 
                 <div className="flex justify-between gap-4 border-b border-[#e8f5f5] pb-2">
                   <span>Parcelas do saldo</span>
-                  <strong>{installments}x de {formatCurrency(installmentValue)}</strong>
+                  <strong>
+                    {installments}x de {formatCurrency(installmentValue)}
+                  </strong>
                 </div>
 
                 <div className="flex justify-between gap-4">
                   <span>Total geral</span>
-                  <strong className="text-[#239d9a]">{formatCurrency(total)}</strong>
+                  <strong className="text-[#239d9a]">
+                    {formatCurrency(total)}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -692,7 +738,8 @@ export default function PrintOrcamentoPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  O paciente ou responsável pode assinar diretamente na tela antes de imprimir ou baixar o PDF.
+                  O paciente ou responsável pode assinar diretamente na tela antes
+                  de imprimir ou baixar o PDF.
                 </p>
               </div>
 
@@ -747,22 +794,34 @@ export default function PrintOrcamentoPage() {
               </div>
 
               <div className="text-center">
-                <div className="h-16" />
+                <div className="flex h-20 items-end justify-center">
+                  <div className="text-xs italic text-slate-400">
+                    Assinatura digital registrada no sistema
+                  </div>
+                </div>
+
                 <div className="border-t border-slate-400 pt-3">
                   <div className="font-bold text-slate-800">
                     {professionalName}
                   </div>
 
                   <div className="text-sm text-slate-500">
-                    Assinatura do profissional
+                    {professionalCro}
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="mt-10 text-center text-xs text-slate-400">
+            <div className="mt-10 rounded-2xl border border-[#e8f5f5] bg-[#fbffff] p-4 text-center text-xs leading-6 text-slate-500">
+              <strong>{clinicName}</strong>
+              <br />
+              {professionalName} {clinicSettings?.cro ? `• CRO ${clinicSettings.cro}` : ""}
+              <br />
+              {clinicSettings?.phone || clinicSettings?.whatsapp || ""}
+              {clinicSettings?.address ? ` • ${clinicSettings.address}` : ""}
+              <br />
               Documento gerado em {formatDateBr(new Date().toISOString())}.
-            </p>
+            </div>
           </section>
         </section>
       </main>
