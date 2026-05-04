@@ -1757,6 +1757,31 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       });
   }, [clinicalNotes]);
 
+  const groupedClinicalTimeline = useMemo(() => {
+    const groups: Record<string, typeof clinicalTimeline> = {};
+
+    clinicalTimeline.forEach((item) => {
+      const label = item.date
+        ? new Date(item.date).toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+        : "Sem data";
+
+      if (!groups[label]) {
+        groups[label] = [];
+      }
+
+      groups[label].push(item);
+    });
+
+    return Object.entries(groups).map(([dateLabel, items]) => ({
+      dateLabel,
+      items,
+    }));
+  }, [clinicalTimeline]);
+
   const completeTimeline = useMemo(() => {
     const events: {
       id: string;
@@ -2873,112 +2898,159 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 </div>
               </div>
 
-              <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
+              <div className="max-h-[720px] overflow-y-auto pr-1">
                 {clinicalTimeline.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-5 text-center">
-                    <p className="text-sm text-slate-500">
+                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-6 text-center">
+                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#eefafa] text-sm font-black text-[#239d9a]">
+                      +
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">
                       Nenhuma evolução registrada.
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      As evoluções clínicas aparecerão aqui por data, sem
+                      misturar orçamento ou financeiro.
                     </p>
                   </div>
                 )}
 
-                {clinicalTimeline.map((item) => (
+                {groupedClinicalTimeline.map((group) => (
                   <div
-                    key={item.id}
-                    className="border border-[#e3f2f2] rounded-xl bg-[#fbffff] p-3"
+                    key={group.dateLabel}
+                    className="relative pb-5 last:pb-0"
                   >
-                    <div className="flex flex-col gap-1 mb-2">
-                      <div className="text-sm font-semibold text-slate-800">
-                        {item.title}
-                      </div>
-
-                      <div className="text-xs text-slate-500">
-                        {item.date
-                          ? new Date(item.date).toLocaleDateString("pt-BR")
-                          : "-"}
-                      </div>
+                    <div className="sticky top-0 z-10 mb-3 bg-white/90 py-1 backdrop-blur">
+                      <span className="inline-flex rounded-full border border-[#d9eeee] bg-[#f7ffff] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a] shadow-sm">
+                        {group.dateLabel}
+                      </span>
                     </div>
 
-                    {(() => {
-                      const lines = String(item.content || "")
-                        .split("\n")
-                        .map((line) => line.trim())
-                        .filter(Boolean);
+                    <div className="relative space-y-3 pl-5 before:absolute before:left-[7px] before:top-1 before:h-[calc(100%-0.25rem)] before:w-px before:bg-[#d8eeee]">
+                      {group.items.map((item) => {
+                        const lines = String(item.content || "")
+                          .split("\n")
+                          .map((line) => line.trim())
+                          .filter(Boolean);
 
-                      const isFinished =
-                        String(item.title || "")
-                          .toLowerCase()
-                          .includes("finalizado") ||
-                        String(item.content || "")
-                          .toLowerCase()
-                          .includes("finalizado");
+                        const isFinished =
+                          String(item.title || "")
+                            .toLowerCase()
+                            .includes("finalizado") ||
+                          String(item.content || "")
+                            .toLowerCase()
+                            .includes("finalizado");
 
-                      const finalizadoIndex = lines.findIndex((line) =>
-                        /foi finalizado/i.test(line),
-                      );
+                        const procedureLine = isFinished
+                          ? lines.find((line) => {
+                              const lower = line.toLowerCase();
+                              if (lower.startsWith("profissional:"))
+                                return false;
+                              if (lower.startsWith("data:")) return false;
+                              if (lower.includes("foi finalizado"))
+                                return false;
+                              return Boolean(line.trim());
+                            }) ||
+                            lines
+                              .find((line) => /foi finalizado/i.test(line))
+                              ?.replace(/foi finalizado/gi, "")
+                              .trim() ||
+                            item.title
+                          : item.title || "Evolução clínica";
 
-                      const procedureLine = isFinished
-                        ? lines.find((line, index) => {
-                            const lower = line.toLowerCase();
-                            if (index === finalizadoIndex) return false;
-                            if (lower.startsWith("profissional:")) return false;
-                            if (lower.startsWith("data:")) return false;
-                            if (lower.includes("foi finalizado")) return false;
-                            return Boolean(line.trim());
-                          }) ||
-                          (finalizadoIndex >= 0
-                            ? lines[finalizadoIndex]
-                                .replace(/foi finalizado/gi, "")
-                                .trim()
-                            : "")
-                        : "";
+                        const professionalLine = lines.find((line) =>
+                          line.toLowerCase().startsWith("profissional:"),
+                        );
 
-                      const detailLines = isFinished
-                        ? lines.filter((line) => {
-                            const lower = line.toLowerCase();
-                            if (!line.trim()) return false;
-                            if (
-                              procedureLine &&
-                              line.trim() === procedureLine.trim()
-                            )
-                              return false;
-                            if (lower.includes("foi finalizado")) return false;
-                            return true;
-                          })
-                        : lines;
+                        const dateLine = lines.find((line) =>
+                          line.toLowerCase().startsWith("data:"),
+                        );
 
-                      if (isFinished && procedureLine) {
+                        const descriptionLines = isFinished
+                          ? lines.filter((line) => {
+                              const lower = line.toLowerCase();
+                              if (line === procedureLine) return false;
+                              if (lower.includes("foi finalizado"))
+                                return false;
+                              if (lower.startsWith("profissional:"))
+                                return false;
+                              if (lower.startsWith("data:")) return false;
+                              return Boolean(line.trim());
+                            })
+                          : lines;
+
                         return (
-                          <div className="space-y-3 text-sm text-slate-700">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-semibold text-slate-800">
-                                {procedureLine}
-                              </span>
+                          <article
+                            key={item.id}
+                            className="group relative rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-4 shadow-sm transition hover:border-[#bde8e7] hover:bg-white"
+                          >
+                            <div className="absolute -left-[18px] top-5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#239d9a] shadow-sm ring-2 ring-[#c8eeee]" />
 
-                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
-                                Finalizado
-                              </span>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h3 className="text-sm font-black text-slate-800">
+                                    {procedureLine}
+                                  </h3>
+
+                                  {isFinished && (
+                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                                      Finalizado
+                                    </span>
+                                  )}
+                                </div>
+
+                                {!isFinished &&
+                                  item.title &&
+                                  item.title !== procedureLine && (
+                                    <p className="mt-1 text-xs font-semibold text-[#239d9a]">
+                                      {item.title}
+                                    </p>
+                                  )}
+                              </div>
+
+                              <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-[#e8f5f5]">
+                                {item.date
+                                  ? new Date(item.date).toLocaleTimeString(
+                                      "pt-BR",
+                                      {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      },
+                                    )
+                                  : "-"}
+                              </div>
                             </div>
 
-                            {detailLines.length > 0 && (
-                              <div className="space-y-1 text-sm leading-relaxed text-slate-600">
-                                {detailLines.map((line, index) => (
-                                  <div key={`${item.id}-detail-${index}`}>
-                                    {line}
-                                  </div>
+                            {descriptionLines.length > 0 && (
+                              <div className="mt-3 rounded-xl border border-[#edf7f7] bg-white/70 p-3 text-sm leading-relaxed text-slate-600">
+                                {descriptionLines.map((line, index) => (
+                                  <p key={`${item.id}-line-${index}`}>{line}</p>
                                 ))}
                               </div>
                             )}
-                          </div>
-                        );
-                      }
 
-                      return (
-                        <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                          {item.content}
-                        </div>
-                      );
-                    })()}
+                            {(professionalLine || dateLine) && (
+                              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
+                                {professionalLine && (
+                                  <span className="rounded-full bg-[#eefafa] px-2.5 py-1 text-[#239d9a]">
+                                    {professionalLine.replace(
+                                      /^profissional:\s*/i,
+                                      "",
+                                    )}
+                                  </span>
+                                )}
+
+                                {dateLine && (
+                                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+                                    {dateLine.replace(/^data:\s*/i, "")}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
