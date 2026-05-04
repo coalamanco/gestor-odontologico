@@ -562,6 +562,7 @@ function PacienteProntuarioContent({
 }: {
   params: { id: string };
 }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("sobre");
   const [showSecurityHistory, setShowSecurityHistory] = useState(false);
 
@@ -2915,6 +2916,25 @@ function PacienteProntuarioContent({
 
         {activeTab === "financeiro" && (
           <div className="space-y-4">
+            <div className="flex flex-col gap-3 rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between md:p-5">
+              <div>
+                <h2 className="text-base font-black text-slate-800">
+                  Financeiro do paciente
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Acompanhe débitos, pagamentos, recibos e gere documentos fiscais.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => router.push(`/pacientes/print/ir/${params.id}`)}
+                className="rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90"
+              >
+                Gerar declaração IR
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-2xl border border-[#d8eeee] p-3 shadow-sm md:p-4">
                 <div className="text-[11px] uppercase tracking-[0.18em] font-black text-slate-400">
