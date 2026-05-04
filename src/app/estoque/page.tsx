@@ -303,81 +303,83 @@ export default function EstoquePage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              Estoque
-            </h1>
-            <p className="text-slate-500 font-medium">
-              Controle de materiais e consumo clínico.
-            </p>
-          </div>
-
-          <div className="flex-1 max-w-xl mx-auto w-full">
-            <div className="relative">
-              <PackageSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <Input
-                placeholder="Digite o nome do produto"
-                className="pl-12 h-12 w-full bg-white border-[#d9eeee] focus:ring-[#85d4d2] rounded-2xl shadow-sm"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+        <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-3 shadow-md">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-[220px]">
+              <h1 className="text-xl font-black tracking-tight text-white md:text-2xl">
+                Estoque
+              </h1>
+              <p className="mt-0.5 text-xs font-medium text-cyan-50 opacity-90">
+                Controle de materiais e consumo clínico.
+              </p>
             </div>
-          </div>
 
-          <div className="flex gap-3 justify-end">
-            <div className="relative">
+            <div className="w-full flex-1 xl:max-w-xl">
+              <div className="relative">
+                <PackageSearch className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Digite o nome do produto"
+                  className="h-10 w-full rounded-2xl border-white/40 bg-white/95 pl-11 text-sm shadow-sm focus:ring-[#85d4d2]"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2">
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setExportMenuOpen((v) => !v)}
+                  className="flex h-10 gap-2 rounded-xl border-white/30 bg-white/15 px-4 text-xs font-black uppercase tracking-widest text-white backdrop-blur hover:bg-white/25 hover:text-white"
+                >
+                  <Download size={15} />
+                  Exportar
+                </Button>
+
+                {exportMenuOpen && (
+                  <div className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-[#d9eeee] bg-white shadow-xl">
+                    <button
+                      onClick={() => {
+                        setExportMenuOpen(false);
+                        exportCsv();
+                      }}
+                      className="w-full px-5 py-4 text-left transition-colors hover:bg-slate-50"
+                    >
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-800">
+                        Excel (CSV)
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">
+                        Compatível com Excel
+                      </p>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setExportMenuOpen(false);
+                        exportPdf();
+                      }}
+                      className="w-full border-t border-[#eef6f6] px-5 py-4 text-left transition-colors hover:bg-slate-50"
+                    >
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-800">
+                        PDF
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">
+                        Imprimir / Salvar como PDF
+                      </p>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <Button
-                variant="outline"
-                onClick={() => setExportMenuOpen((v) => !v)}
-                className="rounded-2xl h-12 px-5 font-black text-xs uppercase tracking-widest border-[#d9eeee] text-slate-600 bg-white hover:bg-slate-50 flex gap-3"
+                onClick={() => setIsModalOpen(true)}
+                className="flex h-10 gap-2 rounded-xl bg-white px-4 text-xs font-black uppercase tracking-widest text-[#239d9a] shadow-sm hover:bg-cyan-50"
               >
-                <Download size={18} />
-                Exportar
+                <Plus size={16} />
+                Nova Entrada
               </Button>
-
-              {exportMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-[#d9eeee] rounded-2xl shadow-xl overflow-hidden z-30">
-                  <button
-                    onClick={() => {
-                      setExportMenuOpen(false);
-                      exportCsv();
-                    }}
-                    className="w-full px-5 py-4 text-left hover:bg-slate-50 transition-colors"
-                  >
-                    <p className="text-xs font-black text-slate-800 uppercase tracking-widest">
-                      Excel (CSV)
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">
-                      Compatível com Excel
-                    </p>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setExportMenuOpen(false);
-                      exportPdf();
-                    }}
-                    className="w-full px-5 py-4 text-left hover:bg-slate-50 transition-colors border-t border-[#eef6f6]"
-                  >
-                    <p className="text-xs font-black text-slate-800 uppercase tracking-widest">
-                      PDF
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">
-                      Imprimir / Salvar como PDF
-                    </p>
-                  </button>
-                </div>
-              )}
             </div>
-
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#7ccfce] hover:opacity-95 text-white rounded-2xl h-12 px-7 font-black text-xs uppercase tracking-widest shadow-sm flex gap-3"
-            >
-              <Plus size={20} />
-              Nova Entrada
-            </Button>
           </div>
         </div>
 

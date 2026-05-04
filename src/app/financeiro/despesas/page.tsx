@@ -101,14 +101,16 @@ export default function DespesasPage() {
     <div className="min-h-screen bg-[#f7ffff] p-6">
       <div className="max-w-5xl mx-auto space-y-6">
 
-        {/* HEADER */}
-        <div>
-          <h1 className="text-3xl font-black text-slate-800">
-            Despesas da Clínica
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Controle completo de gastos integrado ao financeiro geral e ao dashboard.
-          </p>
+        {/* HEADER PREMIUM */}
+        <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-3 shadow-md">
+          <div>
+            <h1 className="text-xl font-black text-white md:text-2xl">
+              Despesas da Clínica
+            </h1>
+            <p className="mt-0.5 text-xs font-medium text-cyan-50 opacity-90">
+              Controle completo de gastos integrado ao financeiro geral e ao dashboard.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
