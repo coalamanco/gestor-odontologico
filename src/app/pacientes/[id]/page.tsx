@@ -115,7 +115,6 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "documentos", label: "Documentos" },
 ];
 
-
 function NovoPacientePage() {
   const router = useRouter();
 
@@ -160,7 +159,9 @@ function NovoPacientePage() {
     if (cleanCep.length !== 8) return;
 
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const response = await fetch(
+        `https://viacep.com.br/ws/${cleanCep}/json/`,
+      );
       const data = await response.json();
 
       if (data?.erro) {
@@ -225,7 +226,9 @@ function NovoPacientePage() {
         router.push("/pacientes");
       }
     } catch (error: any) {
-      alert("Erro ao cadastrar paciente: " + (error?.message || "erro inesperado"));
+      alert(
+        "Erro ao cadastrar paciente: " + (error?.message || "erro inesperado"),
+      );
     } finally {
       setSaving(false);
     }
@@ -237,7 +240,9 @@ function NovoPacientePage() {
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-base font-black leading-tight text-slate-800 md:text-3xl">Novo paciente</h1>
+              <h1 className="text-base font-black leading-tight text-slate-800 md:text-3xl">
+                Novo paciente
+              </h1>
               <p className="text-sm text-slate-500 mt-1">
                 Cadastre um novo paciente no sistema.
               </p>
@@ -255,9 +260,12 @@ function NovoPacientePage() {
 
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
           <div>
-            <h2 className="text-base font-black text-slate-800">Dados principais</h2>
+            <h2 className="text-base font-black text-slate-800">
+              Dados principais
+            </h2>
             <p className="text-sm text-slate-500">
-              O nome é obrigatório. Os demais campos podem ser preenchidos depois.
+              O nome é obrigatório. Os demais campos podem ser preenchidos
+              depois.
             </p>
           </div>
 
@@ -275,7 +283,9 @@ function NovoPacientePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-600 mb-1">CPF</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                CPF
+              </label>
               <input
                 value={form.cpf}
                 onChange={(e) => updateField("cpf", e.target.value)}
@@ -297,7 +307,9 @@ function NovoPacientePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-600 mb-1">E-mail</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                E-mail
+              </label>
               <input
                 type="email"
                 value={form.email}
@@ -320,7 +332,9 @@ function NovoPacientePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-600 mb-1">Gênero</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Gênero
+              </label>
               <select
                 value={form.gender}
                 onChange={(e) => updateField("gender", e.target.value)}
@@ -355,7 +369,9 @@ function NovoPacientePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-slate-600 mb-1">CEP</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                CEP
+              </label>
               <input
                 value={form.cep}
                 onChange={(e) => searchAddressByCep(e.target.value)}
@@ -366,7 +382,9 @@ function NovoPacientePage() {
             </div>
 
             <div className="md:col-span-4">
-              <label className="block text-sm font-bold text-slate-600 mb-1">Endereço</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Endereço
+              </label>
               <input
                 value={form.address}
                 onChange={(e) => updateField("address", e.target.value)}
@@ -376,7 +394,9 @@ function NovoPacientePage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-slate-600 mb-1">Bairro</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Bairro
+              </label>
               <input
                 value={form.neighborhood}
                 onChange={(e) => updateField("neighborhood", e.target.value)}
@@ -386,7 +406,9 @@ function NovoPacientePage() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-sm font-bold text-slate-600 mb-1">Cidade</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                Cidade
+              </label>
               <input
                 value={form.city}
                 onChange={(e) => updateField("city", e.target.value)}
@@ -396,10 +418,14 @@ function NovoPacientePage() {
             </div>
 
             <div className="md:col-span-1">
-              <label className="block text-sm font-bold text-slate-600 mb-1">UF</label>
+              <label className="block text-sm font-bold text-slate-600 mb-1">
+                UF
+              </label>
               <input
                 value={form.state}
-                onChange={(e) => updateField("state", e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  updateField("state", e.target.value.toUpperCase())
+                }
                 placeholder="SC"
                 maxLength={2}
                 className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
@@ -410,9 +436,12 @@ function NovoPacientePage() {
 
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-6">
           <div>
-            <h2 className="text-base font-black text-slate-800">Origem comercial</h2>
+            <h2 className="text-base font-black text-slate-800">
+              Origem comercial
+            </h2>
             <p className="text-sm text-slate-500">
-              Esses dados alimentam o CRM, o BI de marketing e a inteligência comercial.
+              Esses dados alimentam o CRM, o BI de marketing e a inteligência
+              comercial.
             </p>
           </div>
 
@@ -471,7 +500,9 @@ function NovoPacientePage() {
               </label>
               <input
                 value={form.origin_state}
-                onChange={(e) => updateField("origin_state", e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  updateField("origin_state", e.target.value.toUpperCase())
+                }
                 placeholder="SC"
                 maxLength={2}
                 className="w-full border border-[#d9eeee] rounded-2xl p-3 bg-[#fbffff] outline-none focus:bg-white focus:border-[#84d5d3]"
@@ -512,7 +543,9 @@ function NovoPacientePage() {
 
         <div className="bg-white border border-[#d9eeee] rounded-3xl p-6 shadow-sm space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-600 mb-1">Observações</label>
+            <label className="block text-sm font-bold text-slate-600 mb-1">
+              Observações
+            </label>
             <textarea
               value={form.notes}
               onChange={(e) => updateField("notes", e.target.value)}
@@ -557,11 +590,7 @@ export default function PacienteProntuarioPage({
   return <PacienteProntuarioContent params={params} />;
 }
 
-function PacienteProntuarioContent({
-  params,
-}: {
-  params: { id: string };
-}) {
+function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("sobre");
   const [showSecurityHistory, setShowSecurityHistory] = useState(false);
@@ -569,12 +598,12 @@ function PacienteProntuarioContent({
   const [patient, setPatient] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
-  const [patientTreatments, setPatientTreatments] = useState<PatientTreatment[]>(
-    []
-  );
+  const [patientTreatments, setPatientTreatments] = useState<
+    PatientTreatment[]
+  >([]);
   const [treatmentNotes, setTreatmentNotes] = useState<TreatmentNote[]>([]);
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>(
-    []
+    [],
   );
   const [paymentTransactions, setPaymentTransactions] = useState<
     PaymentTransaction[]
@@ -582,7 +611,8 @@ function PacienteProntuarioContent({
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [patientFiles, setPatientFiles] = useState<PatientFile[]>([]);
   const [uploadingPatientFile, setUploadingPatientFile] = useState(false);
-  const [selectedPatientFile, setSelectedPatientFile] = useState<PatientFile | null>(null);
+  const [selectedPatientFile, setSelectedPatientFile] =
+    useState<PatientFile | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -592,10 +622,10 @@ function PacienteProntuarioContent({
   const [selectedTreatment, setSelectedTreatment] =
     useState<PatientTreatment | null>(null);
   const [finalizeProfessional, setFinalizeProfessional] = useState(
-    "Dr(a). Henrique S. Pasquali"
+    "Dr(a). Henrique S. Pasquali",
   );
   const [finalizeDate, setFinalizeDate] = useState(
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [finalizeEvolution, setFinalizeEvolution] = useState("");
   const [submittingFinalize, setSubmittingFinalize] = useState(false);
@@ -606,23 +636,23 @@ function PacienteProntuarioContent({
     useState<PatientTreatment | null>(null);
   const [evolutionTitle, setEvolutionTitle] = useState("Evolução clínica");
   const [evolutionProfessional, setEvolutionProfessional] = useState(
-    "Dr(a). Henrique S. Pasquali"
+    "Dr(a). Henrique S. Pasquali",
   );
   const [evolutionDate, setEvolutionDate] = useState(
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [evolutionContent, setEvolutionContent] = useState("");
   const [submittingEvolution, setSubmittingEvolution] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<FinancialRecord | null>(
-    null
+    null,
   );
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
   const [receiptType, setReceiptType] = useState<ReceiptType>("nenhum");
   const [receivedAt, setReceivedAt] = useState(
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [paymentNote, setPaymentNote] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
@@ -633,15 +663,16 @@ function PacienteProntuarioContent({
   const [editPaymentAmount, setEditPaymentAmount] = useState("");
   const [editPaymentMethod, setEditPaymentMethod] =
     useState<PaymentMethod>("pix");
-  const [editReceiptType, setEditReceiptType] =
-    useState<ReceiptType>("nenhum");
+  const [editReceiptType, setEditReceiptType] = useState<ReceiptType>("nenhum");
   const [editReceivedAt, setEditReceivedAt] = useState(
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [editPaymentNote, setEditPaymentNote] = useState("");
   const [submittingEditPayment, setSubmittingEditPayment] = useState(false);
 
-  const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(null);
+  const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(
+    null,
+  );
 
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [submittingPatientEdit, setSubmittingPatientEdit] = useState(false);
@@ -789,7 +820,8 @@ function PacienteProntuarioContent({
   };
 
   const auditActionClass = (action?: string | null) => {
-    if (action === "INSERT") return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    if (action === "INSERT")
+      return "bg-emerald-50 text-emerald-700 border-emerald-100";
     if (action === "UPDATE") return "bg-blue-50 text-blue-700 border-blue-100";
     if (action === "DELETE") return "bg-rose-50 text-rose-700 border-rose-100";
     return "bg-slate-50 text-slate-700 border-slate-100";
@@ -866,7 +898,9 @@ function PacienteProntuarioContent({
 
       const { data: auditData, error: auditError } = await supabase
         .from("audit_logs")
-        .select("id, user_email, action, table_name, record_id, old_data, new_data, created_at")
+        .select(
+          "id, user_email, action, table_name, record_id, old_data, new_data, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -961,7 +995,8 @@ function PacienteProntuarioContent({
       neighborhood: patient?.neighborhood || "",
       city: patient?.city || "",
       state: patient?.state || "",
-      patient_source: patient?.patient_source || patient?.source || patient?.origin || "",
+      patient_source:
+        patient?.patient_source || patient?.source || patient?.origin || "",
       referral_name: patient?.referral_name || "",
       origin_city: patient?.origin_city || "",
       origin_state: patient?.origin_state || "",
@@ -992,7 +1027,9 @@ function PacienteProntuarioContent({
     if (cleanCep.length !== 8) return;
 
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const response = await fetch(
+        `https://viacep.com.br/ws/${cleanCep}/json/`,
+      );
       const data = await response.json();
 
       if (data?.erro) {
@@ -1009,7 +1046,9 @@ function PacienteProntuarioContent({
         state: data.uf || current.state || "",
       }));
     } catch {
-      alert("Não foi possível buscar o CEP agora. Confira sua internet e tente novamente.");
+      alert(
+        "Não foi possível buscar o CEP agora. Confira sua internet e tente novamente.",
+      );
     }
   };
 
@@ -1114,7 +1153,9 @@ function PacienteProntuarioContent({
     try {
       setSubmittingEvolution(true);
 
-      const evolutionAtIso = new Date(`${evolutionDate}T12:00:00`).toISOString();
+      const evolutionAtIso = new Date(
+        `${evolutionDate}T12:00:00`,
+      ).toISOString();
 
       const nome =
         selectedEvolutionTreatment.procedure_name ||
@@ -1170,7 +1211,7 @@ function PacienteProntuarioContent({
 
   const findExistingFinancialForTreatment = async (
     treatment: PatientTreatment,
-    selectFields = "*"
+    selectFields = "*",
   ) => {
     if (!treatment?.id) return null;
 
@@ -1250,16 +1291,15 @@ function PacienteProntuarioContent({
 
       const existingFinancialRecord = await findExistingFinancialForTreatment(
         selectedTreatment,
-        "id"
+        "id",
       );
-
 
       // O financeiro deve ser criado somente na aprovação do orçamento.
       // A finalização do tratamento é apenas clínica e não deve gerar novo débito.
       if (!existingFinancialRecord) {
         console.warn(
           "Tratamento finalizado sem financeiro vinculado ao orçamento/tratamento:",
-          selectedTreatment.id
+          selectedTreatment.id,
         );
       }
 
@@ -1312,7 +1352,7 @@ function PacienteProntuarioContent({
 
       const financialRecordToReceive = await findExistingFinancialForTreatment(
         selectedTreatment,
-        "*"
+        "*",
       );
 
       await loadData();
@@ -1354,7 +1394,7 @@ function PacienteProntuarioContent({
   };
 
   const createFinancialRecordFromTreatment = async (
-    treatment: PatientTreatment
+    treatment: PatientTreatment,
   ) => {
     const nome =
       treatment.procedure_name ||
@@ -1365,7 +1405,8 @@ function PacienteProntuarioContent({
     const dente = treatment.tooth ? ` - Dente ${treatment.tooth}` : "";
     const face = treatment.face ? ` - Face(s): ${treatment.face}` : "";
 
-    const valor = parseMoney(treatment.total) || parseMoney(treatment.unit_price);
+    const valor =
+      parseMoney(treatment.total) || parseMoney(treatment.unit_price);
 
     if (valor <= 0) {
       alert("Este tratamento não possui valor para receber.");
@@ -1414,7 +1455,7 @@ function PacienteProntuarioContent({
 
   const deleteFinancialRecord = async (record: FinancialRecord) => {
     const confirmed = window.confirm(
-      "Deseja realmente excluir este débito?\n\nEssa ação também remove pagamentos vinculados a ele e não pode ser desfeita."
+      "Deseja realmente excluir este débito?\n\nEssa ação também remove pagamentos vinculados a ele e não pode ser desfeita.",
     );
 
     if (!confirmed) return;
@@ -1448,12 +1489,14 @@ function PacienteProntuarioContent({
   const openEditPaymentModal = (transaction: PaymentTransaction) => {
     setSelectedPaymentTransaction(transaction);
     setEditPaymentAmount(String(parseMoney(transaction.amount).toFixed(2)));
-    setEditPaymentMethod((transaction.payment_method as PaymentMethod) || "pix");
+    setEditPaymentMethod(
+      (transaction.payment_method as PaymentMethod) || "pix",
+    );
     setEditReceiptType((transaction.receipt_type as ReceiptType) || "nenhum");
     setEditReceivedAt(
       transaction.received_at
         ? String(transaction.received_at).slice(0, 10)
-        : new Date().toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
     );
     setEditPaymentNote(transaction.note || "");
     setShowEditPaymentModal(true);
@@ -1483,7 +1526,7 @@ function PacienteProntuarioContent({
 
     const record =
       financialRecords.find(
-        (item) => item.id === selectedPaymentTransaction.financial_record_id
+        (item) => item.id === selectedPaymentTransaction.financial_record_id,
       ) || detailRecord;
 
     if (!record) {
@@ -1494,7 +1537,7 @@ function PacienteProntuarioContent({
     const relatedTransactions = paymentTransactions.filter(
       (transaction) =>
         transaction.financial_record_id ===
-        selectedPaymentTransaction.financial_record_id
+        selectedPaymentTransaction.financial_record_id,
     );
 
     const updatedPaidAmount = relatedTransactions.reduce((acc, transaction) => {
@@ -1508,7 +1551,9 @@ function PacienteProntuarioContent({
     const totalAmount = parseMoney(record.amount);
 
     if (updatedPaidAmount > totalAmount) {
-      alert("A soma dos pagamentos não pode ser maior que o valor total do débito.");
+      alert(
+        "A soma dos pagamentos não pode ser maior que o valor total do débito.",
+      );
       return;
     }
 
@@ -1520,7 +1565,9 @@ function PacienteProntuarioContent({
     try {
       setSubmittingEditPayment(true);
 
-      const receivedAtIso = new Date(editReceivedAt + "T12:00:00").toISOString();
+      const receivedAtIso = new Date(
+        editReceivedAt + "T12:00:00",
+      ).toISOString();
 
       const { error: transactionError } = await supabase
         .from("payment_transactions")
@@ -1649,19 +1696,19 @@ function PacienteProntuarioContent({
   }, [treatmentNotes]);
 
   const pendingTreatments = patientTreatments.filter(
-    (item) => item.status !== "finalizado"
+    (item) => item.status !== "finalizado",
   ).length;
 
   const treatmentSummary = useMemo(() => {
     return {
       pendentes: patientTreatments.filter(
-        (item) => !item.status || item.status === "pendente"
+        (item) => !item.status || item.status === "pendente",
       ).length,
       emAtendimento: patientTreatments.filter(
-        (item) => item.status === "em_atendimento"
+        (item) => item.status === "em_atendimento",
       ).length,
       finalizados: patientTreatments.filter(
-        (item) => item.status === "finalizado"
+        (item) => item.status === "finalizado",
       ).length,
     };
   }, [patientTreatments]);
@@ -1710,12 +1757,18 @@ function PacienteProntuarioContent({
       });
   }, [clinicalNotes]);
 
-
   const completeTimeline = useMemo(() => {
     const events: {
       id: string;
       date: string;
-      type: "clinical" | "appointment" | "budget" | "financial" | "payment" | "audit" | "treatment";
+      type:
+        | "clinical"
+        | "appointment"
+        | "budget"
+        | "financial"
+        | "payment"
+        | "audit"
+        | "treatment";
       title: string;
       subtitle?: string;
       content?: string;
@@ -1744,9 +1797,16 @@ function PacienteProntuarioContent({
         id: `appointment-${appointment.id}`,
         date: dateTime,
         type: "appointment",
-        title: appointment.type === "compromisso" ? "Compromisso" : "Consulta agendada",
+        title:
+          appointment.type === "compromisso"
+            ? "Compromisso"
+            : "Consulta agendada",
         subtitle: `${appointment.date || "Data não informada"} às ${appointment.start_time || "-"}`,
-        content: appointment.description || appointment.title || appointment.status || "",
+        content:
+          appointment.description ||
+          appointment.title ||
+          appointment.status ||
+          "",
         status: appointment.status || null,
       });
     });
@@ -1762,7 +1822,10 @@ function PacienteProntuarioContent({
         id: `treatment-${treatment.id}`,
         date: treatment.completed_at || treatment.created_at || "",
         type: "treatment",
-        title: treatment.status === "finalizado" ? "Tratamento finalizado" : "Tratamento criado",
+        title:
+          treatment.status === "finalizado"
+            ? "Tratamento finalizado"
+            : "Tratamento criado",
         subtitle: name,
         content: [
           treatment.tooth ? `Dente ${treatment.tooth}` : "",
@@ -1780,7 +1843,10 @@ function PacienteProntuarioContent({
         id: `budget-${budget.id}`,
         date: budget.approved_at || budget.created_at || "",
         type: "budget",
-        title: budget.status === "aprovado" ? "Orçamento aprovado" : "Orçamento criado",
+        title:
+          budget.status === "aprovado"
+            ? "Orçamento aprovado"
+            : "Orçamento criado",
         subtitle: budget.status || "pendente",
         amount: parseMoney(budget.total),
         status: budget.status || null,
@@ -1881,17 +1947,17 @@ function PacienteProntuarioContent({
   };
 
   const activeTreatments = filteredTreatments.filter(
-    (treatment) => treatment.status !== "finalizado"
+    (treatment) => treatment.status !== "finalizado",
   );
 
   const totalLancadoPaciente = financialRecords.reduce(
     (acc, record) => acc + parseMoney(record.amount),
-    0
+    0,
   );
 
   const totalPagoPaciente = financialRecords.reduce(
     (acc, record) => acc + parseMoney(record.paid_amount),
-    0
+    0,
   );
 
   const totalAbertoPaciente = financialRecords.reduce((acc, record) => {
@@ -1906,10 +1972,7 @@ function PacienteProntuarioContent({
         id: patient?.id,
         name: patient?.name,
         patient_source:
-          patient?.patient_source ||
-          patient?.source ||
-          patient?.origin ||
-          null,
+          patient?.patient_source || patient?.source || patient?.origin || null,
         created_at: patient?.created_at,
       },
 
@@ -1964,10 +2027,7 @@ function PacienteProntuarioContent({
       patientName: patient?.name || "Paciente",
 
       source: normalizePatientSource(
-        patient?.patient_source ||
-          patient?.source ||
-          patient?.origin ||
-          null
+        patient?.patient_source || patient?.source || patient?.origin || null,
       ),
 
       vipLevel: result.vipLevel,
@@ -2031,7 +2091,7 @@ function PacienteProntuarioContent({
   const createNoShowFee = async (appointment: any) => {
     const feeAmountText = window.prompt(
       "Informe o valor da taxa de falta. Deixe vazio para cancelar.",
-      "50"
+      "50",
     );
 
     if (!feeAmountText) return;
@@ -2084,7 +2144,6 @@ function PacienteProntuarioContent({
     }
   };
 
-
   const isImageFile = (file?: PatientFile | null) => {
     return Boolean(file?.file_type?.startsWith("image/"));
   };
@@ -2098,7 +2157,9 @@ function PacienteProntuarioContent({
       .toLowerCase();
   };
 
-  const uploadPatientFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadPatientFile = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -2127,13 +2188,15 @@ function PacienteProntuarioContent({
         throw new Error("Não foi possível gerar o link público do arquivo.");
       }
 
-      const { error: insertError } = await supabase.from("patient_files").insert({
-        patient_id: params.id,
-        file_name: file.name,
-        file_url: publicUrl,
-        file_type: file.type || "application/octet-stream",
-        storage_path: storagePath,
-      });
+      const { error: insertError } = await supabase
+        .from("patient_files")
+        .insert({
+          patient_id: params.id,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: file.type || "application/octet-stream",
+          storage_path: storagePath,
+        });
 
       if (insertError) throw insertError;
 
@@ -2151,7 +2214,7 @@ function PacienteProntuarioContent({
 
   const deletePatientFile = async (file: PatientFile) => {
     const confirmed = window.confirm(
-      "Deseja realmente excluir este arquivo do prontuário?"
+      "Deseja realmente excluir este arquivo do prontuário?",
     );
 
     if (!confirmed) return;
@@ -2163,7 +2226,10 @@ function PacienteProntuarioContent({
           .remove([file.storage_path]);
 
         if (storageError) {
-          console.warn("Arquivo removido do registro, mas houve erro no Storage:", storageError);
+          console.warn(
+            "Arquivo removido do registro, mas houve erro no Storage:",
+            storageError,
+          );
         }
       }
 
@@ -2182,7 +2248,9 @@ function PacienteProntuarioContent({
 
       alert("Arquivo excluído com sucesso.");
     } catch (error: any) {
-      alert("Erro ao excluir arquivo: " + (error?.message || "erro inesperado"));
+      alert(
+        "Erro ao excluir arquivo: " + (error?.message || "erro inesperado"),
+      );
     }
   };
 
@@ -2211,11 +2279,17 @@ function PacienteProntuarioContent({
               <div className="mt-0.5 space-y-0.5 text-[11px] text-slate-600 md:mt-2 md:space-y-1 md:text-sm">
                 {patient.phone && <p>{patient.phone}</p>}
                 {patient.cpf && <p>CPF: {patient.cpf}</p>}
-                {(patient.patient_source || patient.referral_name || patient.origin_city) && (
+                {(patient.patient_source ||
+                  patient.referral_name ||
+                  patient.origin_city) && (
                   <p>
                     Origem: {patient.patient_source || "Não informado"}
-                    {patient.referral_name ? ` • Indicação/campanha: ${patient.referral_name}` : ""}
-                    {patient.origin_city ? ` • ${patient.origin_city}${patient.origin_state ? `/${patient.origin_state}` : ""}` : ""}
+                    {patient.referral_name
+                      ? ` • Indicação/campanha: ${patient.referral_name}`
+                      : ""}
+                    {patient.origin_city
+                      ? ` • ${patient.origin_city}${patient.origin_state ? `/${patient.origin_state}` : ""}`
+                      : ""}
                   </p>
                 )}
               </div>
@@ -2234,7 +2308,6 @@ function PacienteProntuarioContent({
           </div>
 
           <div className="flex flex-wrap gap-2 md:justify-end">
-
             <button
               type="button"
               onClick={openEditPatientModal}
@@ -2327,10 +2400,11 @@ function PacienteProntuarioContent({
             <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
               <h2 className="text-base font-bold text-slate-800 mb-4">
                 Dados pessoais
-
-<button
+                <button
                   type="button"
-                  onClick={() => window.location.href = `/print/prontuario/${params.id}`}
+                  onClick={() =>
+                    (window.location.href = `/print/prontuario/${params.id}`)
+                  }
                   className="ml-4 mb-3 rounded-xl bg-[#239d9a] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1f8f8c]"
                 >
                   Imprimir prontuário
@@ -2397,8 +2471,9 @@ function PacienteProntuarioContent({
                 <div>
                   <div className="text-slate-500">Cidade / UF</div>
                   <div className="text-slate-800 font-medium">
-                    {[patient.city, patient.state].filter(Boolean).join(" / ") ||
-                      "-"}
+                    {[patient.city, patient.state]
+                      .filter(Boolean)
+                      .join(" / ") || "-"}
                   </div>
                 </div>
               </div>
@@ -2414,7 +2489,8 @@ function PacienteProntuarioContent({
                       Histórico de segurança
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Clique para {showSecurityHistory ? "ocultar" : "ver"} as últimas ações registradas neste prontuário.
+                      Clique para {showSecurityHistory ? "ocultar" : "ver"} as
+                      últimas ações registradas neste prontuário.
                     </p>
                   </div>
 
@@ -2445,7 +2521,7 @@ function PacienteProntuarioContent({
                               <div className="flex items-center gap-2 min-w-0">
                                 <span
                                   className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${auditActionClass(
-                                    log.action
+                                    log.action,
                                   )}`}
                                 >
                                   {auditActionLabel(log.action)}
@@ -2457,7 +2533,9 @@ function PacienteProntuarioContent({
 
                               <span className="text-xs text-slate-400">
                                 {log.created_at
-                                  ? new Date(log.created_at).toLocaleString("pt-BR")
+                                  ? new Date(log.created_at).toLocaleString(
+                                      "pt-BR",
+                                    )
                                   : "-"}
                               </span>
                             </div>
@@ -2509,15 +2587,15 @@ function PacienteProntuarioContent({
                         smartInsights.commercialScore >= 80
                           ? "bg-emerald-100 text-emerald-700"
                           : smartInsights.commercialScore >= 50
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-rose-100 text-rose-700"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-rose-100 text-rose-700"
                       }`}
                     >
                       {smartInsights.commercialScore >= 80
                         ? "Paciente quente"
                         : smartInsights.commercialScore >= 50
-                        ? "Potencial moderado"
-                        : "Risco comercial"}
+                          ? "Potencial moderado"
+                          : "Risco comercial"}
                     </div>
                   </div>
 
@@ -2543,7 +2621,7 @@ function PacienteProntuarioContent({
                     <div className="text-slate-500">
                       {latestClinicalNote.created_at
                         ? new Date(
-                            latestClinicalNote.created_at
+                            latestClinicalNote.created_at,
                           ).toLocaleDateString("pt-BR")
                         : "-"}
                     </div>
@@ -2630,152 +2708,156 @@ function PacienteProntuarioContent({
                       Nenhum tratamento em andamento.
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Quando um tratamento for finalizado, sua evolução ficará na linha do tempo.
+                      Quando um tratamento for finalizado, sua evolução ficará
+                      na linha do tempo.
                     </p>
                   </div>
                 )}
 
                 {activeTreatments.map((treatment) => {
-                const notesForTreatment =
-                  treatmentNotesByTreatment[treatment.id] || [];
+                  const notesForTreatment =
+                    treatmentNotesByTreatment[treatment.id] || [];
 
-                return (
-                  <div
-                    key={treatment.id}
-                    className={`border rounded-xl p-3 space-y-2.5 ${
-                      treatment.status === "finalizado"
-                        ? "bg-slate-50 opacity-70"
-                        : "bg-white shadow-sm border-[#d9eeee]"
-                    }`}
-                  >
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                      <div className="space-y-1.5">
-                        <div className="font-semibold text-slate-800 text-sm leading-tight">
-                          {treatment.procedure_name ||
-                            treatment.treatment_name ||
-                            treatment.title ||
-                            "Tratamento"}
-                        </div>
-
-                        {treatment.treatment_name &&
-                          treatment.procedure_name &&
-                          treatment.treatment_name !== treatment.procedure_name && (
-                            <div className="text-sm text-slate-600">
-                              Plano/tratamento: {treatment.treatment_name}
-                            </div>
-                          )}
-
-                        <div className="flex flex-wrap gap-2">
-                          {treatment.tooth && (
-                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium">
-                              Dente: {treatment.tooth}
-                            </span>
-                          )}
-
-                          {treatment.face && (
-                            <span className="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">
-                              Face: {treatment.face}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-3 text-xs text-slate-600">
-                          <span>Qtd: {treatment.quantity || 1}</span>
-                          <span>Valor: {formatCurrency(parseMoney(treatment.total))}</span>
-                        </div>
-
-                        {treatment.created_at && (
-                          <div className="text-xs text-slate-500">
-                            Criado em:{" "}
-                            {new Date(treatment.created_at).toLocaleDateString(
-                              "pt-BR"
-                            )}
+                  return (
+                    <div
+                      key={treatment.id}
+                      className={`border rounded-xl p-3 space-y-2.5 ${
+                        treatment.status === "finalizado"
+                          ? "bg-slate-50 opacity-70"
+                          : "bg-white shadow-sm border-[#d9eeee]"
+                      }`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div className="space-y-1.5">
+                          <div className="font-semibold text-slate-800 text-sm leading-tight">
+                            {treatment.procedure_name ||
+                              treatment.treatment_name ||
+                              treatment.title ||
+                              "Tratamento"}
                           </div>
-                        )}
 
-                        {treatment.completed_at && (
-                          <div className="text-xs text-slate-500">
-                            Finalizado em:{" "}
-                            {new Date(treatment.completed_at).toLocaleDateString(
-                              "pt-BR"
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-start md:items-end gap-2">
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${treatmentStatusColor(
-                            treatment.status
-                          )}`}
-                        >
-                          {treatment.status || "pendente"}
-                        </span>
-
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEvolutionModal(treatment)}
-                            className="bg-white border border-[#d9eeee] text-[#239d9a] px-3 py-1.5 rounded-lg text-xs font-medium"
-                          >
-                            Evolução
-                          </button>
-
-
-                          {treatment.status !== "finalizado" && (
-                            <button
-                              type="button"
-                              onClick={() => openFinalizeModal(treatment)}
-                              className="bg-[#239d9a] text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-                            >
-                              Finalizar
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t pt-3 space-y-2">
-                      <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                        Evoluções do tratamento
-                      </h3>
-
-                      <div className="space-y-2">
-                        {notesForTreatment.length === 0 && (
-                          <p className="text-sm text-slate-500">
-                            Nenhuma evolução registrada para este tratamento.
-                          </p>
-                        )}
-
-                        {notesForTreatment.map((note) => (
-                          <div
-                            key={note.id}
-                            className="bg-[#fbffff] border border-[#e3f2f2] rounded-lg p-3"
-                          >
-                            <div className="text-xs text-slate-500">
-                              {note.created_at
-                                ? new Date(note.created_at).toLocaleDateString(
-                                    "pt-BR"
-                                  )
-                                : "-"}
-                            </div>
-
-                            {note.title && (
-                              <div className="font-semibold text-sm text-slate-800">
-                                {note.title}
+                          {treatment.treatment_name &&
+                            treatment.procedure_name &&
+                            treatment.treatment_name !==
+                              treatment.procedure_name && (
+                              <div className="text-sm text-slate-600">
+                                Plano/tratamento: {treatment.treatment_name}
                               </div>
                             )}
 
-                            <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                              {note.content}
-                            </div>
+                          <div className="flex flex-wrap gap-2">
+                            {treatment.tooth && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium">
+                                Dente: {treatment.tooth}
+                              </span>
+                            )}
+
+                            {treatment.face && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">
+                                Face: {treatment.face}
+                              </span>
+                            )}
                           </div>
-                        ))}
+
+                          <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+                            <span>Qtd: {treatment.quantity || 1}</span>
+                            <span>
+                              Valor:{" "}
+                              {formatCurrency(parseMoney(treatment.total))}
+                            </span>
+                          </div>
+
+                          {treatment.created_at && (
+                            <div className="text-xs text-slate-500">
+                              Criado em:{" "}
+                              {new Date(
+                                treatment.created_at,
+                              ).toLocaleDateString("pt-BR")}
+                            </div>
+                          )}
+
+                          {treatment.completed_at && (
+                            <div className="text-xs text-slate-500">
+                              Finalizado em:{" "}
+                              {new Date(
+                                treatment.completed_at,
+                              ).toLocaleDateString("pt-BR")}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-start md:items-end gap-2">
+                          <span
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${treatmentStatusColor(
+                              treatment.status,
+                            )}`}
+                          >
+                            {treatment.status || "pendente"}
+                          </span>
+
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEvolutionModal(treatment)}
+                              className="bg-white border border-[#d9eeee] text-[#239d9a] px-3 py-1.5 rounded-lg text-xs font-medium"
+                            >
+                              Evolução
+                            </button>
+
+                            {treatment.status !== "finalizado" && (
+                              <button
+                                type="button"
+                                onClick={() => openFinalizeModal(treatment)}
+                                className="bg-[#239d9a] text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+                              >
+                                Finalizar
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-3 space-y-2">
+                        <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                          Evoluções do tratamento
+                        </h3>
+
+                        <div className="space-y-2">
+                          {notesForTreatment.length === 0 && (
+                            <p className="text-sm text-slate-500">
+                              Nenhuma evolução registrada para este tratamento.
+                            </p>
+                          )}
+
+                          {notesForTreatment.map((note) => (
+                            <div
+                              key={note.id}
+                              className="bg-[#fbffff] border border-[#e3f2f2] rounded-lg p-3"
+                            >
+                              <div className="text-xs text-slate-500">
+                                {note.created_at
+                                  ? new Date(
+                                      note.created_at,
+                                    ).toLocaleDateString("pt-BR")
+                                  : "-"}
+                              </div>
+
+                              {note.title && (
+                                <div className="font-semibold text-sm text-slate-800">
+                                  {note.title}
+                                </div>
+                              )}
+
+                              <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                {note.content}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
 
@@ -2817,9 +2899,86 @@ function PacienteProntuarioContent({
                       </div>
                     </div>
 
-                    <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {item.content}
-                    </div>
+                    {(() => {
+                      const lines = String(item.content || "")
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean);
+
+                      const isFinished =
+                        String(item.title || "")
+                          .toLowerCase()
+                          .includes("finalizado") ||
+                        String(item.content || "")
+                          .toLowerCase()
+                          .includes("finalizado");
+
+                      const finalizadoIndex = lines.findIndex((line) =>
+                        /foi finalizado/i.test(line),
+                      );
+
+                      const procedureLine = isFinished
+                        ? lines.find((line, index) => {
+                            const lower = line.toLowerCase();
+                            if (index === finalizadoIndex) return false;
+                            if (lower.startsWith("profissional:")) return false;
+                            if (lower.startsWith("data:")) return false;
+                            if (lower.includes("foi finalizado")) return false;
+                            return Boolean(line.trim());
+                          }) ||
+                          (finalizadoIndex >= 0
+                            ? lines[finalizadoIndex]
+                                .replace(/foi finalizado/gi, "")
+                                .trim()
+                            : "")
+                        : "";
+
+                      const detailLines = isFinished
+                        ? lines.filter((line) => {
+                            const lower = line.toLowerCase();
+                            if (!line.trim()) return false;
+                            if (
+                              procedureLine &&
+                              line.trim() === procedureLine.trim()
+                            )
+                              return false;
+                            if (lower.includes("foi finalizado")) return false;
+                            return true;
+                          })
+                        : lines;
+
+                      if (isFinished && procedureLine) {
+                        return (
+                          <div className="space-y-3 text-sm text-slate-700">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-slate-800">
+                                {procedureLine}
+                              </span>
+
+                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                                Finalizado
+                              </span>
+                            </div>
+
+                            {detailLines.length > 0 && (
+                              <div className="space-y-1 text-sm leading-relaxed text-slate-600">
+                                {detailLines.map((line, index) => (
+                                  <div key={`${item.id}-detail-${index}`}>
+                                    {line}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                          {item.content}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
@@ -2916,7 +3075,7 @@ function PacienteProntuarioContent({
 
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${budgetStatusColor(
-                        b.status
+                        b.status,
                       )}`}
                     >
                       {b.status}
@@ -2936,7 +3095,8 @@ function PacienteProntuarioContent({
                   Financeiro do paciente
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Acompanhe débitos, pagamentos, recibos e gere documentos fiscais.
+                  Acompanhe débitos, pagamentos, recibos e gere documentos
+                  fiscais.
                 </p>
               </div>
 
@@ -2999,12 +3159,14 @@ function PacienteProntuarioContent({
                     <div
                       key={record.id}
                       className={`grid grid-cols-12 items-center gap-2 rounded-xl border px-3 py-3 md:gap-3 md:px-4 ${receiptHighlightClass(
-                        record.receipt_type
+                        record.receipt_type,
                       )}`}
                     >
                       <div className="col-span-12 md:col-span-2 text-sm font-medium text-slate-600">
                         {record.created_at
-                          ? new Date(record.created_at).toLocaleDateString("pt-BR")
+                          ? new Date(record.created_at).toLocaleDateString(
+                              "pt-BR",
+                            )
                           : "-"}
                       </div>
 
@@ -3032,7 +3194,7 @@ function PacienteProntuarioContent({
                       <div className="col-span-6 md:col-span-2">
                         <span
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${financialStatusColor(
-                            record.status
+                            record.status,
                           )}`}
                         >
                           {record.status || "pendente"}
@@ -3047,7 +3209,9 @@ function PacienteProntuarioContent({
                         {record.status === "pago" && (
                           <button
                             type="button"
-                            onClick={() => window.location.href = `/print/recibo/${record.id}`}
+                            onClick={() =>
+                              (window.location.href = `/print/recibo/${record.id}`)
+                            }
                             className="bg-[#eefafa] text-[#239d9a] px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em] border border-[#d8eeee] hover:bg-[#dff3f2]"
                           >
                             Imprimir recibo
@@ -3092,7 +3256,6 @@ function PacienteProntuarioContent({
           </div>
         )}
 
-
         {activeTab === "linha_tempo" && (
           <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
@@ -3101,7 +3264,8 @@ function PacienteProntuarioContent({
                   Linha do tempo completa
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Prontuário, agenda, orçamentos, financeiro e auditoria em uma única visão.
+                  Prontuário, agenda, orçamentos, financeiro e auditoria em uma
+                  única visão.
                 </p>
               </div>
 
@@ -3132,7 +3296,7 @@ function PacienteProntuarioContent({
                           <div className="flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${timelineTypeClass(
-                                event.type
+                                event.type,
                               )}`}
                             >
                               {timelineTypeLabel(event.type)}
@@ -3175,11 +3339,12 @@ function PacienteProntuarioContent({
                               : "Data não informada"}
                           </div>
 
-                          {typeof event.amount === "number" && event.amount > 0 && (
-                            <div className="mt-2 text-sm font-black text-slate-800">
-                              {formatCurrency(event.amount)}
-                            </div>
-                          )}
+                          {typeof event.amount === "number" &&
+                            event.amount > 0 && (
+                              <div className="mt-2 text-sm font-black text-slate-800">
+                                {formatCurrency(event.amount)}
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -3190,7 +3355,6 @@ function PacienteProntuarioContent({
           </div>
         )}
 
-
         {activeTab === "imagens_rx" && (
           <div className="space-y-4">
             <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
@@ -3200,7 +3364,8 @@ function PacienteProntuarioContent({
                     Imagens e RX
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    Tire fotos pela câmera do celular ou envie radiografias, fotografias intraorais, panorâmicas e PDFs.
+                    Tire fotos pela câmera do celular ou envie radiografias,
+                    fotografias intraorais, panorâmicas e PDFs.
                   </p>
                 </div>
 
@@ -3240,7 +3405,8 @@ function PacienteProntuarioContent({
                   Nenhuma imagem ou RX enviado
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Use “Tirar foto” no celular ou “Enviar arquivo” para anexar imagens e RX ao prontuário.
+                  Use “Tirar foto” no celular ou “Enviar arquivo” para anexar
+                  imagens e RX ao prontuário.
                 </p>
               </div>
             ) : (
@@ -3322,7 +3488,9 @@ function PacienteProntuarioContent({
           <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
               <div>
-                <h2 className="text-base font-bold text-slate-800">Documentos</h2>
+                <h2 className="text-base font-bold text-slate-800">
+                  Documentos
+                </h2>
                 <p className="text-sm text-slate-500">
                   Impressão de prontuário, termos e documentos do paciente.
                 </p>
@@ -3332,7 +3500,9 @@ function PacienteProntuarioContent({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 type="button"
-                onClick={() => window.location.href = `/print/prontuario/${params.id}`}
+                onClick={() =>
+                  (window.location.href = `/print/prontuario/${params.id}`)
+                }
                 className="text-left rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-5 hover:bg-[#eefafa] transition"
               >
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
@@ -3342,13 +3512,16 @@ function PacienteProntuarioContent({
                   Imprimir prontuário
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
-                  Abre o prontuário do paciente em uma tela própria para impressão.
+                  Abre o prontuário do paciente em uma tela própria para
+                  impressão.
                 </p>
               </button>
 
               <button
                 type="button"
-                onClick={() => window.location.href = `/print/termo/${params.id}`}
+                onClick={() =>
+                  (window.location.href = `/print/termo/${params.id}`)
+                }
                 className="text-left rounded-2xl border border-[#bde8e7] bg-[#f7ffff] p-5 hover:bg-[#eefafa] transition"
               >
                 <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
@@ -3358,7 +3531,8 @@ function PacienteProntuarioContent({
                   Gerar termo premium
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
-                  Gere termos por procedimento com assinatura digital, impressão e PDF.
+                  Gere termos por procedimento com assinatura digital, impressão
+                  e PDF.
                 </p>
               </button>
 
@@ -3380,7 +3554,6 @@ function PacienteProntuarioContent({
           </div>
         )}
       </div>
-
 
       {selectedPatientFile && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
@@ -3519,7 +3692,9 @@ function PacienteProntuarioContent({
                   <input
                     type="date"
                     value={patientForm.birth_date}
-                    onChange={(e) => updatePatientForm("birth_date", e.target.value)}
+                    onChange={(e) =>
+                      updatePatientForm("birth_date", e.target.value)
+                    }
                     className="w-full border rounded-xl p-3 text-base text-slate-800"
                   />
                 </div>
@@ -3530,7 +3705,9 @@ function PacienteProntuarioContent({
                   </label>
                   <select
                     value={patientForm.gender}
-                    onChange={(e) => updatePatientForm("gender", e.target.value)}
+                    onChange={(e) =>
+                      updatePatientForm("gender", e.target.value)
+                    }
                     className="w-full border rounded-xl p-3 text-base text-slate-800 bg-white"
                   >
                     <option value="">Não informado</option>
@@ -3571,7 +3748,8 @@ function PacienteProntuarioContent({
                       maxLength={9}
                     />
                     <p className="mt-1 text-xs text-slate-400">
-                      Ao informar 8 números, rua, bairro, cidade e UF são preenchidos automaticamente.
+                      Ao informar 8 números, rua, bairro, cidade e UF são
+                      preenchidos automaticamente.
                     </p>
                   </div>
 
@@ -3582,7 +3760,9 @@ function PacienteProntuarioContent({
                     <input
                       type="text"
                       value={patientForm.address}
-                      onChange={(e) => updatePatientForm("address", e.target.value)}
+                      onChange={(e) =>
+                        updatePatientForm("address", e.target.value)
+                      }
                       className="w-full border rounded-xl p-3 text-base text-slate-800"
                       placeholder="Rua, número, complemento"
                     />
@@ -3610,7 +3790,9 @@ function PacienteProntuarioContent({
                     <input
                       type="text"
                       value={patientForm.city}
-                      onChange={(e) => updatePatientForm("city", e.target.value)}
+                      onChange={(e) =>
+                        updatePatientForm("city", e.target.value)
+                      }
                       className="w-full border rounded-xl p-3 text-base text-slate-800"
                       placeholder="Cidade"
                     />
@@ -3623,7 +3805,9 @@ function PacienteProntuarioContent({
                     <input
                       type="text"
                       value={patientForm.state}
-                      onChange={(e) => updatePatientForm("state", e.target.value)}
+                      onChange={(e) =>
+                        updatePatientForm("state", e.target.value)
+                      }
                       className="w-full border rounded-xl p-3 text-base text-slate-800"
                       placeholder="SC"
                       maxLength={2}
@@ -3633,99 +3817,114 @@ function PacienteProntuarioContent({
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
-                  <div className="md:col-span-3">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      Origem do paciente
-                    </label>
-                    <select
-                      value={patientForm.patient_source}
-                      onChange={(e) => updatePatientForm("patient_source", e.target.value)}
-                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    >
-                      <option value="">Não informado</option>
-                      <option value="Indicação">Indicação</option>
-                      <option value="Instagram">Instagram</option>
-                      <option value="Google">Google</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                      <option value="Facebook">Facebook</option>
-                      <option value="TikTok">TikTok</option>
-                      <option value="Site">Site</option>
-                      <option value="Tráfego pago">Tráfego pago</option>
-                      <option value="Paciente antigo">Paciente antigo</option>
-                      <option value="Convênio">Convênio</option>
-                      <option value="Outro">Outro</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-3">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      Quem indicou / campanha
-                    </label>
-                    <input
-                      value={patientForm.referral_name}
-                      onChange={(e) => updatePatientForm("referral_name", e.target.value)}
-                      placeholder="Nome de quem indicou, campanha ou anúncio"
-                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      Cidade de origem
-                    </label>
-                    <input
-                      value={patientForm.origin_city}
-                      onChange={(e) => updatePatientForm("origin_city", e.target.value)}
-                      placeholder="Cidade"
-                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="md:col-span-1">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      UF
-                    </label>
-                    <input
-                      value={patientForm.origin_state}
-                      onChange={(e) => updatePatientForm("origin_state", e.target.value.toUpperCase())}
-                      placeholder="SC"
-                      maxLength={2}
-                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="md:col-span-3">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      Perfil geográfico
-                    </label>
-                    <select
-                      value={patientForm.origin_region}
-                      onChange={(e) => updatePatientForm("origin_region", e.target.value)}
-                      className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    >
-                      <option value="">Não informado</option>
-                      <option value="Cidade">Da cidade</option>
-                      <option value="Região">Da região</option>
-                      <option value="Outra cidade">De outra cidade</option>
-                      <option value="Outro estado">De outro estado</option>
-                      <option value="Online">Contato online</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-6">
-                    <label className="mb-1 block text-sm font-bold text-slate-600">
-                      Observações comerciais
-                    </label>
-                    <textarea
-                      value={patientForm.origin_notes}
-                      onChange={(e) => updatePatientForm("origin_notes", e.target.value)}
-                      placeholder="Detalhes da origem, indicação ou campanha"
-                      className="min-h-[90px] w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
-                    />
-                  </div>
+                <div className="md:col-span-3">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    Origem do paciente
+                  </label>
+                  <select
+                    value={patientForm.patient_source}
+                    onChange={(e) =>
+                      updatePatientForm("patient_source", e.target.value)
+                    }
+                    className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  >
+                    <option value="">Não informado</option>
+                    <option value="Indicação">Indicação</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Google">Google</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="Site">Site</option>
+                    <option value="Tráfego pago">Tráfego pago</option>
+                    <option value="Paciente antigo">Paciente antigo</option>
+                    <option value="Convênio">Convênio</option>
+                    <option value="Outro">Outro</option>
+                  </select>
                 </div>
 
-                <div>
+                <div className="md:col-span-3">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    Quem indicou / campanha
+                  </label>
+                  <input
+                    value={patientForm.referral_name}
+                    onChange={(e) =>
+                      updatePatientForm("referral_name", e.target.value)
+                    }
+                    placeholder="Nome de quem indicou, campanha ou anúncio"
+                    className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    Cidade de origem
+                  </label>
+                  <input
+                    value={patientForm.origin_city}
+                    onChange={(e) =>
+                      updatePatientForm("origin_city", e.target.value)
+                    }
+                    placeholder="Cidade"
+                    className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  />
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    UF
+                  </label>
+                  <input
+                    value={patientForm.origin_state}
+                    onChange={(e) =>
+                      updatePatientForm(
+                        "origin_state",
+                        e.target.value.toUpperCase(),
+                      )
+                    }
+                    placeholder="SC"
+                    maxLength={2}
+                    className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    Perfil geográfico
+                  </label>
+                  <select
+                    value={patientForm.origin_region}
+                    onChange={(e) =>
+                      updatePatientForm("origin_region", e.target.value)
+                    }
+                    className="w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  >
+                    <option value="">Não informado</option>
+                    <option value="Cidade">Da cidade</option>
+                    <option value="Região">Da região</option>
+                    <option value="Outra cidade">De outra cidade</option>
+                    <option value="Outro estado">De outro estado</option>
+                    <option value="Online">Contato online</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-6">
+                  <label className="mb-1 block text-sm font-bold text-slate-600">
+                    Observações comerciais
+                  </label>
+                  <textarea
+                    value={patientForm.origin_notes}
+                    onChange={(e) =>
+                      updatePatientForm("origin_notes", e.target.value)
+                    }
+                    placeholder="Detalhes da origem, indicação ou campanha"
+                    className="min-h-[90px] w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3 outline-none focus:border-[#84d5d3] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label className="block mb-1 text-slate-600 text-sm font-medium">
                   Observações
                 </label>
@@ -3780,7 +3979,9 @@ function PacienteProntuarioContent({
             <div className="p-5 space-y-2.5 text-sm">
               <div className="rounded-xl border bg-slate-50 p-4 space-y-2">
                 <div>
-                  <span className="font-semibold text-slate-700">Descrição:</span>{" "}
+                  <span className="font-semibold text-slate-700">
+                    Descrição:
+                  </span>{" "}
                   <span className="text-slate-600">
                     {detailRecord.description || "-"}
                   </span>
@@ -3807,8 +4008,8 @@ function PacienteProntuarioContent({
                       Math.max(
                         0,
                         parseMoney(detailRecord.amount) -
-                          parseMoney(detailRecord.paid_amount)
-                      )
+                          parseMoney(detailRecord.paid_amount),
+                      ),
                     )}
                   </span>
                 </div>
@@ -4238,8 +4439,8 @@ function PacienteProntuarioContent({
                       Math.max(
                         0,
                         parseMoney(selectedRecord.amount) -
-                          parseMoney(selectedRecord.paid_amount)
-                      )
+                          parseMoney(selectedRecord.paid_amount),
+                      ),
                     )}
                   </span>
                 </div>
