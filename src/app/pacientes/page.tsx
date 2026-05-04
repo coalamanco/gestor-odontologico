@@ -215,21 +215,21 @@ export default function PacientesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-6">
       <div className="mx-auto max-w-6xl space-y-5">
-        <div className="relative overflow-hidden rounded-[2rem] border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 py-6 shadow-lg shadow-cyan-900/10 md:px-7 md:py-7">
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/15" />
-          <div className="absolute -bottom-28 left-10 h-60 w-60 rounded-full bg-white/10" />
+        <div className="relative overflow-hidden rounded-[2rem] border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 py-3 shadow-md shadow-cyan-900/10 md:px-6 md:py-3">
+          <div className="absolute -right-16 -top-20 h-40 w-40 rounded-full bg-white/15" />
+          <div className="absolute -bottom-24 left-10 h-36 w-36 rounded-full bg-white/10" />
 
-          <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="inline-flex rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-50 backdrop-blur">
+              <div className="inline-flex rounded-full border border-white/25 bg-white/15 px-3 py-0.5 text-[9px] font-black uppercase tracking-[0.24em] text-cyan-50 backdrop-blur">
                 Central de relacionamento
               </div>
 
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
+              <h1 className="mt-1 text-xl font-black tracking-tight text-white md:text-2xl">
                 Pacientes
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-cyan-50">
+              <p className="mt-1 max-w-2xl text-xs font-medium leading-5 text-cyan-50">
                 Encontre rapidamente pacientes, abra prontuários, exporte a base e mantenha o atendimento organizado.
               </p>
             </div>
@@ -238,7 +238,7 @@ export default function PacientesPage() {
               <button
                 type="button"
                 onClick={loadPatients}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-5 py-3 text-sm font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <RefreshCw size={18} />
                 Atualizar
@@ -247,7 +247,7 @@ export default function PacientesPage() {
               <button
                 type="button"
                 onClick={exportPatientsExcel}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-5 py-3 text-sm font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <Download size={18} />
                 Exportar Excel
@@ -255,7 +255,7 @@ export default function PacientesPage() {
 
               <Link
                 href="/pacientes/novo"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/35 bg-white px-4 py-2 text-xs font-black text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
               >
                 <Plus size={18} />
                 Novo paciente
