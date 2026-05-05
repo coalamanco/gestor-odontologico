@@ -377,6 +377,8 @@ export default function AgendaPage() {
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [selectedAgendaProfessionalId, setSelectedAgendaProfessionalId] = useState<string>("");
   const [confirmingAllToday, setConfirmingAllToday] = useState(false);
+  const [savingAppointment, setSavingAppointment] = useState(false);
+  const savingAppointmentRef = useRef(false);
 
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [resizeStartY, setResizeStartY] = useState(0);
@@ -1403,6 +1405,10 @@ export default function AgendaPage() {
   };
 
   const handleSave = async () => {
+    if (savingAppointmentRef.current) {
+      return;
+    }
+
     if (!date || !time) {
       alert("Informe a data e a hora.");
       return;
@@ -1420,59 +1426,103 @@ export default function AgendaPage() {
       return;
     }
 
-    const payload = {
-      patient_id: mainType === "consulta" ? selectedPatient?.id || null : null,
-      patient_name: mainType === "consulta" ? selectedPatient?.name || null : null,
-      professional_id: selectedProfessionalId || null,
-      type: mainType,
-      title: mainType === "consulta" ? consultaMotivo : title,
-      description,
-      date,
-      start_time: time,
-      duration: parsedDuration,
-      status: appointmentStatus,
-      reminder_enabled: mainType === "consulta" ? reminderEnabled : false,
-      reminder_before_hours: mainType === "consulta" ? parseInt(reminderBeforeHours) : null,
-    };
+    savingAppointmentRef.current = true;
+    setSavingAppointment(true);
 
-    if (editingId) {
-      const { error } = await supabase
-        .from("appointments")
-        .update(payload)
-        .eq("id", editingId);
+    try {
+      const payload = {
+        patient_id: mainType === "consulta" ? selectedPatient?.id || null : null,
+        patient_name: mainType === "consulta" ? selectedPatient?.name || null : null,
+        professional_id: selectedProfessionalId || null,
+        type: mainType,
+        title: mainType === "consulta" ? consultaMotivo : title,
+        description,
+        date,
+        start_time: time,
+        duration: parsedDuration,
+        status: appointmentStatus,
+        reminder_enabled: mainType === "consulta" ? reminderEnabled : false,
+        reminder_before_hours: mainType === "consulta" ? parseInt(reminderBeforeHours) : null,
+      };
 
-      if (error) {
-        alert("Erro ao editar: " + error.message);
-        return;
+      if (editingId) {
+        const { error } = await supabase
+          .from("appointments")
+          .update(payload)
+          .eq("id", editingId);
+
+        if (error) {
+          alert("Erro ao editar: " + error.message);
+          return;
+        }
+
+        setShowModal(false);
+        resetForm();
+        await loadData();
+
+        if (String(mainType).toLowerCase() === "consulta") {
+          syncGoogleCalendarEvent(editingId);
+        }
+      } else {
+        if (mainType === "consulta" && selectedPatient?.id) {
+          let duplicateQuery = supabase
+            .from("appointments")
+            .select("id")
+            .eq("patient_id", selectedPatient.id)
+            .eq("date", date)
+            .eq("start_time", time)
+            .eq("type", "consulta")
+            .limit(1);
+
+          duplicateQuery = selectedProfessionalId
+            ? duplicateQuery.eq("professional_id", selectedProfessionalId)
+            : duplicateQuery.is("professional_id", null);
+
+          const { data: duplicateAppointments, error: duplicateError } =
+            await duplicateQuery;
+
+          if (duplicateError) {
+            alert("Erro ao verificar duplicidade: " + duplicateError.message);
+            return;
+          }
+
+          if (duplicateAppointments && duplicateAppointments.length > 0) {
+            alert(
+              "Este paciente já possui um agendamento neste mesmo dia e horário."
+            );
+            return;
+          }
+        }
+
+        const { data: createdAppointment, error } = await supabase
+          .from("appointments")
+          .insert([payload])
+          .select("id")
+          .single();
+
+        if (error) {
+          alert("Erro ao salvar: " + error.message);
+          return;
+        }
+
+        const createdAppointmentId = createdAppointment?.id;
+
+        setShowModal(false);
+        resetForm();
+        await loadData();
+
+        if (String(mainType).toLowerCase() === "consulta") {
+          console.log(
+            "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
+          );
+
+          syncGoogleCalendarEvent(createdAppointmentId);
+        }
       }
-
-      if (String(mainType).toLowerCase() === "consulta") {
-        await syncGoogleCalendarEvent(editingId);
-      }
-    } else {
-      const { data: createdAppointment, error } = await supabase
-        .from("appointments")
-        .insert([payload])
-        .select("id")
-        .single();
-
-      if (error) {
-        alert("Erro ao salvar: " + error.message);
-        return;
-      }
-
-      if (String(mainType).toLowerCase() === "consulta") {
-        console.log(
-          "Consulta salva. O lembrete será enviado automaticamente pelo cron-job.org no horário configurado."
-        );
-
-        await syncGoogleCalendarEvent(createdAppointment?.id);
-      }
+    } finally {
+      savingAppointmentRef.current = false;
+      setSavingAppointment(false);
     }
-
-    setShowModal(false);
-    resetForm();
-    loadData();
   };
 
   const openNew = (selectedDate?: string, selectedTime?: string) => {
@@ -3094,17 +3144,21 @@ export default function AgendaPage() {
 
             <div className="sticky bottom-0 bg-white border-t border-[#c2dddd] p-4 flex justify-end gap-2 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
               <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-xl border border-[#c2dddd] bg-white hover:bg-slate-50"
+                onClick={() => {
+                  if (!savingAppointment) setShowModal(false);
+                }}
+                className="px-4 py-2 rounded-xl border border-[#c2dddd] bg-white hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={savingAppointment}
               >
                 Cancelar
               </button>
 
               <button
                 onClick={handleSave}
-                className="rounded-xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8c89]"
+                disabled={savingAppointment}
+                className="rounded-xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8c89] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Salvar
+                {savingAppointment ? "Salvando..." : "Salvar"}
               </button>
             </div>
           </div>
