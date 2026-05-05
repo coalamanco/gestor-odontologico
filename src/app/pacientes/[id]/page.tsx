@@ -2800,7 +2800,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         .toISOString()
         .replace(/[:.]/g, "-")}.pdf`;
 
-      const options = {
+      const options: any = {
         margin: 0,
         filename: fileName,
         image: { type: "jpeg", quality: 0.98 },
