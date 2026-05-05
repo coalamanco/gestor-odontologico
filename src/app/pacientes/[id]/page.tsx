@@ -1290,35 +1290,136 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     type: PrescriptionType,
   ) => {
     const title = prescriptionTypeLabel(type);
-    const viaLabels =
-      type === "controle_especial"
-        ? ["1ª via - Farmácia", "2ª via - Paciente"]
-        : ["Receituário simples"];
+    const isSpecialControl = type === "controle_especial";
+    const viaLabels = isSpecialControl
+      ? ["1ª via - Farmácia", "2ª via - Paciente"]
+      : ["Receituário simples"];
 
-    const escapedContent = content
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    const escapeHtml = (value: string) =>
+      String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
-    const body = viaLabels
+    const dateLabel = prescriptionDate
+      ? new Date(`${prescriptionDate}T12:00:00`).toLocaleDateString("pt-BR")
+      : new Date().toLocaleDateString("pt-BR");
+
+    const patientAddress = [
+      patient?.address,
+      patient?.neighborhood,
+      patient?.city,
+      patient?.state,
+    ]
+      .filter(Boolean)
+      .join(" - ");
+
+    const prescriptionText = [
+      prescriptionMedication.trim(),
+      prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}` : "",
+      prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}` : "",
+      prescriptionFrequency.trim() ? `Frequência: ${prescriptionFrequency.trim()}` : "",
+      prescriptionDuration.trim() ? `Duração: ${prescriptionDuration.trim()}` : "",
+      prescriptionQuantity.trim() ? `Quantidade: ${prescriptionQuantity.trim()}` : "",
+      prescriptionInstructions.trim() ? `Orientações: ${prescriptionInstructions.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const simpleBody = viaLabels
       .map(
         (via, index) => `
           <section class="page ${index > 0 ? "page-break" : ""}">
-            <header>
+            <header class="simple-header">
               <div>
                 <h1>Clínica Odontológica</h1>
-                <p>Dr. Henrique S. Pasquali</p>
+                <p>${escapeHtml(prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali")}</p>
               </div>
-              <strong>${via}</strong>
+              <strong>${escapeHtml(via)}</strong>
             </header>
 
-            <h2>${title}</h2>
-            <pre>${escapedContent}</pre>
+            <h2>${escapeHtml(title)}</h2>
+            <pre>${escapeHtml(content)}</pre>
 
-            <footer>
+            <footer class="simple-footer">
               <div class="signature"></div>
               <p>Assinatura e carimbo do profissional</p>
             </footer>
+          </section>
+        `,
+      )
+      .join("");
+
+    const specialControlBody = viaLabels
+      .map(
+        (via, index) => `
+          <section class="page special-page ${index > 0 ? "page-break" : ""}">
+            <h2 class="special-title">RECEITUÁRIO CONTROLE ESPECIAL</h2>
+
+            <div class="special-top-grid">
+              <div class="issuer-box">
+                <div class="box-title">IDENTIFICAÇÃO DO EMITENTE</div>
+                <div class="field-line"><span>Nome:</span><strong>${escapeHtml(prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali")}</strong></div>
+                <div class="field-row">
+                  <div class="field-line"><span>CRO:</span><strong></strong></div>
+                  <div class="field-line short"><span>UF:</span><strong>SC</strong></div>
+                </div>
+                <div class="field-line"><span>Endereço:</span><strong></strong></div>
+                <div class="field-row">
+                  <div class="field-line"><span>Cidade:</span><strong>Araranguá</strong></div>
+                  <div class="field-line short"><span>UF:</span><strong>SC</strong></div>
+                </div>
+                <div class="field-line"><span>Fone:</span><strong></strong></div>
+              </div>
+
+              <div class="via-box">
+                <div>${escapeHtml(via)}</div>
+                <div>${index === 0 ? "2ª via - Paciente" : "1ª via - Farmácia"}</div>
+              </div>
+            </div>
+
+            <div class="patient-lines">
+              <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+              <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
+            </div>
+
+            <div class="prescription-area">
+              <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
+              <pre>${escapeHtml(prescriptionText)}</pre>
+            </div>
+
+            <div class="date-sign-row">
+              <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
+              <div class="stamp-line">Carimbo / Assinatura</div>
+            </div>
+
+            <div class="bottom-boxes">
+              <div class="bottom-box">
+                <div class="box-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+                <div class="field-line"><span>Nome:</span><strong></strong></div>
+                <div class="field-row">
+                  <div class="field-line"><span>Ident.:</span><strong></strong></div>
+                  <div class="field-line"><span>Órg. Emissor:</span><strong></strong></div>
+                </div>
+                <div class="field-line"><span>Endereço:</span><strong></strong></div>
+                <div class="field-row">
+                  <div class="field-line"><span>Cidade:</span><strong></strong></div>
+                  <div class="field-line short"><span>UF:</span><strong></strong></div>
+                </div>
+                <div class="field-line"><span>Fone:</span><strong></strong></div>
+              </div>
+
+              <div class="bottom-box supplier-box">
+                <div class="box-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+                <div class="supplier-empty"></div>
+                <div class="supplier-footer">
+                  <span>Assinatura do Farmacêutico</span>
+                  <span>Data: ____/____/______</span>
+                </div>
+              </div>
+            </div>
           </section>
         `,
       )
@@ -1338,13 +1439,13 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>${title}</title>
+          <title>${escapeHtml(title)}</title>
           <style>
             * { box-sizing: border-box; }
             body {
               margin: 0;
               background: #f8fafc;
-              color: #0f172a;
+              color: #111827;
               font-family: Arial, Helvetica, sans-serif;
             }
             .page {
@@ -1355,7 +1456,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               background: #ffffff;
             }
             .page-break { page-break-before: always; }
-            header {
+            .simple-header {
               display: flex;
               justify-content: space-between;
               gap: 24px;
@@ -1363,9 +1464,15 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               padding-bottom: 14px;
               margin-bottom: 24px;
             }
-            h1 { margin: 0; font-size: 20px; }
+            .simple-header h1 { margin: 0; font-size: 20px; }
+            .simple-header p { margin: 4px 0; color: #475569; }
+            .simple-footer { margin-top: 32px; text-align: center; }
+            .signature {
+              width: 90mm;
+              border-top: 1px solid #0f172a;
+              margin: 0 auto 8px;
+            }
             h2 { margin: 0 0 24px; text-align: center; font-size: 18px; text-transform: uppercase; }
-            p { margin: 4px 0; color: #475569; }
             pre {
               white-space: pre-wrap;
               font-family: Arial, Helvetica, sans-serif;
@@ -1373,19 +1480,154 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               line-height: 1.7;
               min-height: 170mm;
             }
-            footer { margin-top: 32px; text-align: center; }
-            .signature {
-              width: 90mm;
-              border-top: 1px solid #0f172a;
-              margin: 0 auto 8px;
+
+            .special-page {
+              padding: 14mm 16mm 12mm;
+              font-size: 14px;
+              color: #111111;
             }
+            .special-title {
+              margin-bottom: 10mm;
+              font-size: 21px;
+              font-weight: 900;
+              letter-spacing: .02em;
+            }
+            .special-top-grid {
+              display: grid;
+              grid-template-columns: 98mm 1fr;
+              gap: 8mm;
+              align-items: start;
+              margin-bottom: 11mm;
+            }
+            .issuer-box,
+            .bottom-box {
+              border: 1.5px solid #111111;
+              border-radius: 8px;
+              overflow: hidden;
+              background: #ffffff;
+            }
+            .box-title {
+              border-bottom: 1.5px solid #111111;
+              padding: 3px 6px;
+              text-align: center;
+              font-weight: 900;
+              font-size: 15px;
+            }
+            .issuer-box .field-line,
+            .bottom-box .field-line {
+              margin: 8px 7px;
+            }
+            .field-row {
+              display: grid;
+              grid-template-columns: 1fr 28mm;
+              gap: 6mm;
+              align-items: end;
+            }
+            .field-line {
+              display: flex;
+              align-items: end;
+              gap: 5px;
+              min-height: 17px;
+            }
+            .field-line span,
+            .long-line span { white-space: nowrap; }
+            .field-line strong,
+            .long-line strong {
+              flex: 1;
+              min-height: 16px;
+              border-bottom: 1px solid #111111;
+              font-weight: 400;
+              padding-left: 4px;
+            }
+            .field-line.short strong { min-width: 13mm; }
+            .via-box {
+              padding-top: 2mm;
+              font-size: 14px;
+              font-weight: 700;
+              line-height: 1.55;
+            }
+            .patient-lines { margin-top: 5mm; }
+            .long-line {
+              display: flex;
+              align-items: end;
+              gap: 5px;
+              margin-bottom: 8mm;
+              font-size: 14px;
+            }
+            .bold-underlined {
+              font-weight: 900;
+              text-decoration: underline;
+            }
+            .prescription-area pre {
+              min-height: 74mm;
+              margin: -4mm 0 0 0;
+              padding-top: 5mm;
+              line-height: 10mm;
+              font-size: 15px;
+              background-image: repeating-linear-gradient(
+                to bottom,
+                transparent 0,
+                transparent 9.7mm,
+                #111111 9.8mm,
+                #111111 10mm
+              );
+            }
+            .date-sign-row {
+              display: grid;
+              grid-template-columns: 70mm 1fr;
+              gap: 22mm;
+              align-items: end;
+              margin-top: 8mm;
+              margin-bottom: 2mm;
+              font-size: 14px;
+            }
+            .date-line span {
+              display: inline-block;
+              min-width: 35mm;
+              border-bottom: 1px solid #111111;
+              text-align: center;
+            }
+            .stamp-line {
+              border-top: 1px solid #111111;
+              text-align: center;
+              padding-top: 2px;
+            }
+            .bottom-boxes {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 5mm;
+              margin-top: 2mm;
+            }
+            .bottom-box {
+              min-height: 61mm;
+            }
+            .bottom-box .box-title {
+              font-size: 14.5px;
+            }
+            .supplier-box {
+              display: flex;
+              flex-direction: column;
+            }
+            .supplier-empty {
+              flex: 1;
+              min-height: 42mm;
+            }
+            .supplier-footer {
+              display: flex;
+              justify-content: space-between;
+              gap: 4mm;
+              border-top: 1px solid #111111;
+              padding: 3px 6px;
+              font-size: 11px;
+            }
+
             @media print {
               body { background: #ffffff; }
               .page { margin: 0; box-shadow: none; }
             }
           </style>
         </head>
-        <body>${body}</body>
+        <body>${isSpecialControl ? specialControlBody : simpleBody}</body>
       </html>
     `);
 
