@@ -2126,18 +2126,47 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     return "USO INTERNO";
   };
 
+  const normalizePrescriptionSentence = (value?: string | null) => {
+    const clean = String(value || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!clean) return "";
+
+    return clean.replace(/[.;,]+$/g, "");
+  };
+
+  const normalizePrescriptionDurationText = (value?: string | null) => {
+    const clean = normalizePrescriptionSentence(value);
+
+    if (!clean) return "";
+
+    return clean
+      .replace(/^por\s+/i, "durante ")
+      .replace(/^por até\s+/i, "por até ");
+  };
+
   const buildMedicationTextBlock = (
     item: Omit<PrescriptionMedicationItem, "id">,
     index: number,
   ) => {
-    const details = [
-      item.dosage.trim() ? item.dosage.trim() : "",
-      item.frequency.trim() ? item.frequency.trim() : "",
-      item.duration.trim() ? item.duration.trim() : "",
-      item.quantity.trim() ? `Qtd.: ${item.quantity.trim()}` : "",
-    ].filter(Boolean);
+    const medication = normalizePrescriptionSentence(item.medication);
+    const dosage = normalizePrescriptionSentence(item.dosage);
+    const quantity = normalizePrescriptionSentence(item.quantity);
+    const frequency = normalizePrescriptionSentence(item.frequency);
+    const durationText = normalizePrescriptionDurationText(item.duration);
 
-    return `${index}. ${item.medication.trim()}${details.length ? ` — ${details.join(" • ")}` : ""}`;
+    const firstLineBase = `${index}. ${medication}${dosage ? ` — ${dosage}` : ""}`;
+    const firstLine = quantity
+      ? `${firstLineBase} ${".".repeat(Math.max(8, 54 - firstLineBase.length - quantity.length))} ${quantity}`
+      : firstLineBase;
+
+    const posologyParts = [frequency, durationText].filter(Boolean);
+    const posologyLine = posologyParts.length
+      ? `${posologyParts.join(" ")}.`
+      : "";
+
+    return posologyLine ? `${firstLine}\n${posologyLine}` : firstLine;
   };
 
   const prescriptionMedicationItems = useMemo(() => {
@@ -2210,19 +2239,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       .map((heading) => `${heading}\n${groupedMedications[heading].join("\n")}`)
       .join("\n\n");
 
-    const uniqueInstructions = Array.from(
-      new Set(
-        prescriptionMedicationItems
-          .map((item) => item.instructions.trim())
-          .filter(Boolean),
-      ),
-    );
-
-    const generalInstructions = uniqueInstructions.length
-      ? `\n\nOrientações gerais: ${uniqueInstructions.join(" ")}`
-      : "";
-
-    return `${medicationLines}${generalInstructions}`;
+    return medicationLines;
   };
 
   const prescriptionTypeLabel = (type: PrescriptionType) => {
