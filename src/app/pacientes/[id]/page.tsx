@@ -1331,22 +1331,27 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const simpleBody = viaLabels
       .map(
         (via, index) => `
-          <section class="page ${index > 0 ? "page-break" : ""}">
-            <header class="simple-header">
-              <div>
-                <h1>Clínica Odontológica</h1>
-                <p>${escapeHtml(prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali")}</p>
+          <section class="page letterhead-page simple-letterhead-page ${index > 0 ? "page-break" : ""}">
+            <div class="letterhead-content">
+              <div class="simple-recipe-label">${escapeHtml(via)}</div>
+
+              <h2>${escapeHtml(title)}</h2>
+
+              <div class="patient-lines simple-patient-lines">
+                <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+                <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
               </div>
-              <strong>${escapeHtml(via)}</strong>
-            </header>
 
-            <h2>${escapeHtml(title)}</h2>
-            <pre>${escapeHtml(content)}</pre>
+              <div class="simple-prescription-block">
+                <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
+                <pre>${escapeHtml(prescriptionText)}</pre>
+              </div>
 
-            <footer class="simple-footer">
-              <div class="signature"></div>
-              <p>Assinatura e carimbo do profissional</p>
-            </footer>
+              <div class="simple-date-sign-row">
+                <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
+                <div class="stamp-line">Carimbo / Assinatura</div>
+              </div>
+            </div>
           </section>
         `,
       )
@@ -1455,39 +1460,58 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               padding: 18mm;
               background: #ffffff;
             }
+            .letterhead-page {
+              padding: 35mm 16mm 18mm;
+            }
+            .letterhead-content {
+              min-height: 244mm;
+            }
             .page-break { page-break-before: always; }
-            .simple-header {
-              display: flex;
-              justify-content: space-between;
-              gap: 24px;
-              border-bottom: 1px solid #cbd5e1;
-              padding-bottom: 14px;
-              margin-bottom: 24px;
+            .simple-recipe-label {
+              text-align: right;
+              font-size: 12px;
+              font-weight: 800;
+              color: #334155;
+              margin-bottom: 5mm;
             }
-            .simple-header h1 { margin: 0; font-size: 20px; }
-            .simple-header p { margin: 4px 0; color: #475569; }
-            .simple-footer { margin-top: 32px; text-align: center; }
-            .signature {
-              width: 90mm;
-              border-top: 1px solid #0f172a;
-              margin: 0 auto 8px;
-            }
-            h2 { margin: 0 0 24px; text-align: center; font-size: 18px; text-transform: uppercase; }
+            h2 { margin: 0 0 10mm; text-align: center; font-size: 18px; text-transform: uppercase; }
             pre {
               white-space: pre-wrap;
               font-family: Arial, Helvetica, sans-serif;
               font-size: 15px;
               line-height: 1.7;
-              min-height: 170mm;
+            }
+            .simple-patient-lines { margin-top: 2mm; }
+            .simple-prescription-block pre {
+              min-height: 112mm;
+              margin: -4mm 0 0 0;
+              padding-top: 5mm;
+              line-height: 10mm;
+              font-size: 15px;
+              background-image: repeating-linear-gradient(
+                to bottom,
+                transparent 0,
+                transparent 9.7mm,
+                #111111 9.8mm,
+                #111111 10mm
+              );
+            }
+            .simple-date-sign-row {
+              display: grid;
+              grid-template-columns: 70mm 1fr;
+              gap: 22mm;
+              align-items: end;
+              margin-top: 12mm;
+              font-size: 14px;
             }
 
             .special-page {
-              padding: 14mm 16mm 12mm;
+              padding: 35mm 16mm 18mm;
               font-size: 14px;
               color: #111111;
             }
             .special-title {
-              margin-bottom: 10mm;
+              margin-bottom: 6mm;
               font-size: 21px;
               font-weight: 900;
               letter-spacing: .02em;
@@ -1497,7 +1521,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               grid-template-columns: 98mm 1fr;
               gap: 8mm;
               align-items: start;
-              margin-bottom: 11mm;
+              margin-bottom: 7mm;
             }
             .issuer-box,
             .bottom-box {
@@ -1559,7 +1583,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               text-decoration: underline;
             }
             .prescription-area pre {
-              min-height: 74mm;
+              min-height: 52mm;
               margin: -4mm 0 0 0;
               padding-top: 5mm;
               line-height: 10mm;
@@ -1577,7 +1601,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               grid-template-columns: 70mm 1fr;
               gap: 22mm;
               align-items: end;
-              margin-top: 8mm;
+              margin-top: 5mm;
               margin-bottom: 2mm;
               font-size: 14px;
             }
@@ -1599,7 +1623,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               margin-top: 2mm;
             }
             .bottom-box {
-              min-height: 61mm;
+              min-height: 55mm;
             }
             .bottom-box .box-title {
               font-size: 14.5px;
@@ -1610,7 +1634,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             }
             .supplier-empty {
               flex: 1;
-              min-height: 42mm;
+              min-height: 36mm;
             }
             .supplier-footer {
               display: flex;
@@ -1621,6 +1645,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               font-size: 11px;
             }
 
+            @page {
+              size: A4 portrait;
+              margin: 0;
+            }
             @media print {
               body { background: #ffffff; }
               .page { margin: 0; box-shadow: none; }
