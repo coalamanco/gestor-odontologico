@@ -2208,14 +2208,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     }
 
     return (
-      `${prescriptionTypeLabel(prescriptionType)}\n\n` +
-      `Paciente: ${patient?.name || "Paciente"}\n` +
-      `${patient?.cpf ? `CPF: ${patient.cpf}\n` : ""}` +
-      `${patient?.birth_date ? `Nascimento: ${new Date(`${patient.birth_date}T12:00:00`).toLocaleDateString("pt-BR")}\n` : ""}` +
-      `Data: ${dateLabel}\n` +
-      `${selectedPrescriptionProtocol ? `Modelo automático: ${PRESCRIPTION_PROTOCOLS.find((item) => item.id === selectedPrescriptionProtocol)?.name || "Procedimento odontológico"}\n` : ""}` +
-      `\nMedicamentos prescritos:\n${buildPrescriptionMedicationsText()}\n` +
-      `\nProfissional: ${prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali"}`
+      `${selectedPrescriptionProtocol ? `Modelo automático: ${PRESCRIPTION_PROTOCOLS.find((item) => item.id === selectedPrescriptionProtocol)?.name || "Procedimento odontológico"}\n\n` : ""}` +
+      `Medicamentos prescritos:\n${buildPrescriptionMedicationsText()}`
     );
   };
 
@@ -2254,7 +2248,35 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const prescriptionTextFromForm = buildPrescriptionMedicationsText();
 
     const contentText = String(content || "").trim();
-    const prescriptionText = prescriptionTextFromForm || contentText;
+    const compactPrescriptionText = (() => {
+      const rawText = prescriptionTextFromForm || contentText;
+
+      if (!rawText) return "";
+
+      return rawText
+        .split(/\r?\n/)
+        .filter((line) => {
+          const trimmedLine = line.trim();
+
+          if (!trimmedLine) return true;
+          if (/^Receita de controle especial/i.test(trimmedLine)) return false;
+          if (/^Receituário simples/i.test(trimmedLine)) return false;
+          if (/^Paciente:/i.test(trimmedLine)) return false;
+          if (/^CPF:/i.test(trimmedLine)) return false;
+          if (/^Nascimento:/i.test(trimmedLine)) return false;
+          if (/^Data:/i.test(trimmedLine)) return false;
+          if (/^Profissional:/i.test(trimmedLine)) return false;
+          if (/^Modelo automático:/i.test(trimmedLine)) return false;
+
+          return true;
+        })
+        .join("\n")
+        .replace(/^\s*\n+/, "")
+        .trim();
+    })();
+    const prescriptionText = isCertificate
+      ? contentText
+      : compactPrescriptionText || prescriptionTextFromForm || contentText;
 
     const clinicLetterhead = `
       <div class="clinic-letterhead">
@@ -2771,7 +2793,35 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const prescriptionTextFromForm = buildPrescriptionMedicationsText();
 
     const contentText = String(content || "").trim();
-    const prescriptionText = prescriptionTextFromForm || contentText;
+    const compactPrescriptionText = (() => {
+      const rawText = prescriptionTextFromForm || contentText;
+
+      if (!rawText) return "";
+
+      return rawText
+        .split(/\r?\n/)
+        .filter((line) => {
+          const trimmedLine = line.trim();
+
+          if (!trimmedLine) return true;
+          if (/^Receita de controle especial/i.test(trimmedLine)) return false;
+          if (/^Receituário simples/i.test(trimmedLine)) return false;
+          if (/^Paciente:/i.test(trimmedLine)) return false;
+          if (/^CPF:/i.test(trimmedLine)) return false;
+          if (/^Nascimento:/i.test(trimmedLine)) return false;
+          if (/^Data:/i.test(trimmedLine)) return false;
+          if (/^Profissional:/i.test(trimmedLine)) return false;
+          if (/^Modelo automático:/i.test(trimmedLine)) return false;
+
+          return true;
+        })
+        .join("\n")
+        .replace(/^\s*\n+/, "")
+        .trim();
+    })();
+    const prescriptionText = isCertificate
+      ? contentText
+      : compactPrescriptionText || prescriptionTextFromForm || contentText;
 
     const clinicLetterhead = `
       <div class="clinic-letterhead">
