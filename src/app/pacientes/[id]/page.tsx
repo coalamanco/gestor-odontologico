@@ -1340,7 +1340,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
+        .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#039;");
 
     const dateLabel = prescriptionDate
@@ -1371,26 +1371,41 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const contentText = String(content || "").trim();
     const prescriptionText = prescriptionTextFromForm || contentText;
 
+    const clinicLetterhead = `
+      <div class="clinic-letterhead">
+        <div class="clinic-main">
+          <div class="clinic-name">Dr. Henrique S. Pasquali</div>
+          <div class="clinic-subtitle">Cirurgião Dentista • Implantodontia e Ortodontia</div>
+        </div>
+        <div class="clinic-contact">
+          <div>Av. Presidente João Goulart, 136, sala 07</div>
+          <div>Cidade Alta • Araranguá/SC</div>
+          <div>48 3524.4452 • 48 99670.5500</div>
+        </div>
+      </div>
+    `;
+
     const simpleBody = viaLabels
       .map(
         (via, index) => `
-          <section class="page letterhead-page simple-letterhead-page ${index > 0 ? "page-break" : ""}">
-            <div class="letterhead-content">
-              <div class="simple-recipe-label">${escapeHtml(via)}</div>
+          <section class="page portrait-page ${index > 0 ? "page-break" : ""}">
+            ${clinicLetterhead}
+            <div class="document-content">
+              <div class="recipe-label">${escapeHtml(via)}</div>
 
               <h2>${escapeHtml(title)}</h2>
 
-              <div class="patient-lines simple-patient-lines">
+              <div class="patient-lines">
                 <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
                 <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
               </div>
 
-              <div class="simple-prescription-block">
+              <div class="prescription-block simple-prescription-block">
                 <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
                 <pre>${escapeHtml(prescriptionText)}</pre>
               </div>
 
-              <div class="simple-date-sign-row">
+              <div class="date-sign-row simple-date-sign-row">
                 <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
                 <div class="stamp-line">Carimbo / Assinatura</div>
               </div>
@@ -1403,13 +1418,14 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const certificateBody = viaLabels
       .map(
         (via, index) => `
-          <section class="page letterhead-page simple-letterhead-page ${index > 0 ? "page-break" : ""}">
-            <div class="letterhead-content certificate-content">
-              <div class="simple-recipe-label">${escapeHtml(via)}</div>
+          <section class="page portrait-page ${index > 0 ? "page-break" : ""}">
+            ${clinicLetterhead}
+            <div class="document-content certificate-content">
+              <div class="recipe-label">${escapeHtml(via)}</div>
 
               <h2>ATESTADO ODONTOLÓGICO</h2>
 
-              <div class="patient-lines simple-patient-lines">
+              <div class="patient-lines">
                 <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
                 <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
               </div>
@@ -1418,7 +1434,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 <pre>${escapeHtml(contentText || prescriptionText)}</pre>
               </div>
 
-              <div class="simple-date-sign-row">
+              <div class="date-sign-row simple-date-sign-row">
                 <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
                 <div class="stamp-line">Carimbo / Assinatura</div>
               </div>
@@ -1428,80 +1444,67 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       )
       .join("");
 
-    const specialControlBody = viaLabels
-      .map(
-        (via, index) => `
-          <section class="page special-page ${index > 0 ? "page-break" : ""}">
-            <h2 class="special-title">RECEITUÁRIO CONTROLE ESPECIAL</h2>
+    const specialControlBody = `
+      <section class="page special-landscape-page">
+        ${viaLabels
+          .map(
+            (via, index) => `
+              <div class="special-copy">
+                ${clinicLetterhead}
 
-            <div class="special-top-grid">
-              <div class="issuer-box">
-                <div class="box-title">IDENTIFICAÇÃO DO EMITENTE</div>
-                <div class="field-line"><span>Nome:</span><strong>${escapeHtml(prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali")}</strong></div>
-                <div class="field-row">
-                  <div class="field-line"><span>CRO:</span><strong></strong></div>
-                  <div class="field-line short"><span>UF:</span><strong>SC</strong></div>
+                <div class="special-title-row">
+                  <h2 class="special-title">RECEITUÁRIO CONTROLE ESPECIAL</h2>
+                  <div class="via-box">${escapeHtml(via)}</div>
                 </div>
-                <div class="field-line"><span>Endereço:</span><strong></strong></div>
-                <div class="field-row">
-                  <div class="field-line"><span>Cidade:</span><strong>Araranguá</strong></div>
-                  <div class="field-line short"><span>UF:</span><strong>SC</strong></div>
+
+                <div class="patient-lines special-patient-lines">
+                  <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+                  <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
                 </div>
-                <div class="field-line"><span>Fone:</span><strong></strong></div>
-              </div>
 
-              <div class="via-box">
-                <div>${escapeHtml(via)}</div>
-                <div>${index === 0 ? "2ª via - Paciente" : "1ª via - Farmácia"}</div>
-              </div>
-            </div>
-
-            <div class="patient-lines">
-              <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
-              <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
-            </div>
-
-            <div class="prescription-area">
-              <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
-              <pre>${escapeHtml(prescriptionText)}</pre>
-            </div>
-
-            <div class="date-sign-row">
-              <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
-              <div class="stamp-line">Carimbo / Assinatura</div>
-            </div>
-
-            <div class="bottom-boxes">
-              <div class="bottom-box">
-                <div class="box-title">IDENTIFICAÇÃO DO COMPRADOR</div>
-                <div class="field-line"><span>Nome:</span><strong></strong></div>
-                <div class="field-row">
-                  <div class="field-line"><span>Ident.:</span><strong></strong></div>
-                  <div class="field-line"><span>Órg. Emissor:</span><strong></strong></div>
+                <div class="prescription-area">
+                  <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
+                  <pre>${escapeHtml(prescriptionText)}</pre>
                 </div>
-                <div class="field-line"><span>Endereço:</span><strong></strong></div>
-                <div class="field-row">
-                  <div class="field-line"><span>Cidade:</span><strong></strong></div>
-                  <div class="field-line short"><span>UF:</span><strong></strong></div>
-                </div>
-                <div class="field-line"><span>Fone:</span><strong></strong></div>
-              </div>
 
-              <div class="bottom-box supplier-box">
-                <div class="box-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
-                <div class="supplier-empty"></div>
-                <div class="supplier-footer">
-                  <span>Assinatura do Farmacêutico</span>
-                  <span>Data: ____/____/______</span>
+                <div class="date-sign-row special-date-sign-row">
+                  <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
+                  <div class="stamp-line">Carimbo / Assinatura</div>
+                </div>
+
+                <div class="bottom-boxes">
+                  <div class="bottom-box buyer-box">
+                    <div class="box-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+                    <div class="field-line"><span>Nome:</span><strong></strong></div>
+                    <div class="field-line"><span>Identidade:</span><strong></strong></div>
+                    <div class="field-row buyer-row">
+                      <div class="field-line"><span>Órgão emissor:</span><strong></strong></div>
+                      <div class="field-line"><span>UF:</span><strong></strong></div>
+                    </div>
+                    <div class="field-line"><span>Endereço:</span><strong></strong></div>
+                    <div class="field-row buyer-row">
+                      <div class="field-line"><span>Cidade:</span><strong></strong></div>
+                      <div class="field-line"><span>UF:</span><strong></strong></div>
+                    </div>
+                  </div>
+
+                  <div class="bottom-box supplier-box">
+                    <div class="box-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+                    <div class="supplier-empty"></div>
+                    <div class="supplier-footer">
+                      <span>Data</span>
+                      <span>Assinatura do farmacêutico</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        `,
-      )
-      .join("");
+            `,
+          )
+          .join("")}
+      </section>
+    `;
 
-    const printWindow = window.open("", "_blank", "width=900,height=700");
+    const printWindow = window.open("", "_blank", "width=1200,height=800");
 
     if (!printWindow) {
       alert(
@@ -1525,36 +1528,96 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               font-family: Arial, Helvetica, sans-serif;
             }
             .page {
+              margin: 0 auto;
+              background: #ffffff;
+              box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+            }
+            .portrait-page {
               width: 210mm;
               min-height: 297mm;
-              margin: 0 auto;
-              padding: 18mm;
-              background: #ffffff;
+              padding: 14mm 16mm 16mm;
             }
-            .letterhead-page {
-              padding: 35mm 16mm 18mm;
-            }
-            .letterhead-content {
-              min-height: 244mm;
+            .document-content {
+              padding-top: 10mm;
             }
             .page-break { page-break-before: always; }
-            .simple-recipe-label {
+
+            .clinic-letterhead {
+              width: 100%;
+              min-height: 30mm;
+              border-radius: 14px;
+              overflow: hidden;
+              background: linear-gradient(135deg, #0f766e 0%, #1db7b3 62%, #7ccfce 100%);
+              color: #ffffff;
+              display: grid;
+              grid-template-columns: 1.15fr 0.85fr;
+              gap: 8mm;
+              align-items: center;
+              padding: 8mm 9mm;
+              box-shadow: 0 10px 30px rgba(15, 118, 110, 0.2);
+            }
+            .clinic-name {
+              font-size: 24px;
+              line-height: 1.1;
+              font-weight: 900;
+              letter-spacing: -0.02em;
+            }
+            .clinic-subtitle {
+              margin-top: 4px;
+              font-size: 12.5px;
+              font-weight: 700;
+              opacity: .95;
+            }
+            .clinic-contact {
+              text-align: right;
+              font-size: 10.5px;
+              line-height: 1.5;
+              font-weight: 700;
+              opacity: .98;
+            }
+
+            .recipe-label {
               text-align: right;
               font-size: 12px;
               font-weight: 800;
               color: #334155;
               margin-bottom: 5mm;
             }
-            h2 { margin: 0 0 10mm; text-align: center; font-size: 18px; text-transform: uppercase; }
+            h2 {
+              margin: 0 0 9mm;
+              text-align: center;
+              font-size: 18px;
+              text-transform: uppercase;
+              letter-spacing: .04em;
+            }
             pre {
               white-space: pre-wrap;
               font-family: Arial, Helvetica, sans-serif;
               font-size: 15px;
               line-height: 1.7;
             }
-            .simple-patient-lines { margin-top: 2mm; }
+            .patient-lines { margin-top: 2mm; }
+            .long-line {
+              display: flex;
+              align-items: end;
+              gap: 4px;
+              margin-bottom: 5mm;
+              font-size: 12px;
+            }
+            .long-line span { white-space: nowrap; }
+            .long-line strong {
+              flex: 1;
+              min-height: 14px;
+              border-bottom: 1px solid #111111;
+              font-weight: 400;
+              padding-left: 4px;
+            }
+            .bold-underlined {
+              font-weight: 900;
+              text-decoration: underline;
+            }
             .simple-prescription-block pre {
-              min-height: 112mm;
+              min-height: 104mm;
               margin: -4mm 0 0 0;
               padding-top: 5mm;
               line-height: 10mm;
@@ -1568,156 +1631,185 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               );
             }
             .certificate-content h2 {
-              margin-top: 12px;
+              margin-top: 2mm;
             }
-
             .certificate-text {
-              margin-top: 34px;
-              min-height: 330px;
+              margin-top: 14mm;
+              min-height: 118mm;
               border: 1px solid #e5e7eb;
               border-radius: 14px;
-              padding: 22px;
+              padding: 10mm;
               font-size: 15px;
               line-height: 1.8;
             }
-
             .certificate-text pre {
               margin: 0;
               white-space: pre-wrap;
               font-family: Arial, sans-serif;
             }
-
-            .simple-date-sign-row {
-              display: grid;
-              grid-template-columns: 70mm 1fr;
-              gap: 22mm;
-              align-items: end;
-              margin-top: 12mm;
-              font-size: 14px;
-            }
-
-            .special-page {
-              padding: 35mm 16mm 18mm;
-              font-size: 14px;
-              color: #111111;
-            }
-            .special-title {
-              margin-bottom: 6mm;
-              font-size: 21px;
-              font-weight: 900;
-              letter-spacing: .02em;
-            }
-            .special-top-grid {
-              display: grid;
-              grid-template-columns: 98mm 1fr;
-              gap: 8mm;
-              align-items: start;
-              margin-bottom: 7mm;
-            }
-            .issuer-box,
-            .bottom-box {
-              border: 1.5px solid #111111;
-              border-radius: 8px;
-              overflow: hidden;
-              background: #ffffff;
-            }
-            .box-title {
-              border-bottom: 1.5px solid #111111;
-              padding: 3px 6px;
-              text-align: center;
-              font-weight: 900;
-              font-size: 15px;
-            }
-            .issuer-box .field-line,
-            .bottom-box .field-line {
-              margin: 8px 7px;
-            }
-            .field-row {
-              display: grid;
-              grid-template-columns: 1fr 28mm;
-              gap: 6mm;
-              align-items: end;
-            }
-            .field-line {
-              display: flex;
-              align-items: end;
-              gap: 5px;
-              min-height: 17px;
-            }
-            .field-line span,
-            .long-line span { white-space: nowrap; }
-            .field-line strong,
-            .long-line strong {
-              flex: 1;
-              min-height: 16px;
-              border-bottom: 1px solid #111111;
-              font-weight: 400;
-              padding-left: 4px;
-            }
-            .field-line.short strong { min-width: 13mm; }
-            .via-box {
-              padding-top: 2mm;
-              font-size: 14px;
-              font-weight: 700;
-              line-height: 1.55;
-            }
-            .patient-lines { margin-top: 5mm; }
-            .long-line {
-              display: flex;
-              align-items: end;
-              gap: 5px;
-              margin-bottom: 8mm;
-              font-size: 14px;
-            }
-            .bold-underlined {
-              font-weight: 900;
-              text-decoration: underline;
-            }
-            .prescription-area pre {
-              min-height: 52mm;
-              margin: -4mm 0 0 0;
-              padding-top: 5mm;
-              line-height: 10mm;
-              font-size: 15px;
-              background-image: repeating-linear-gradient(
-                to bottom,
-                transparent 0,
-                transparent 9.7mm,
-                #111111 9.8mm,
-                #111111 10mm
-              );
-            }
             .date-sign-row {
               display: grid;
+              align-items: end;
+              font-size: 12px;
+            }
+            .simple-date-sign-row {
               grid-template-columns: 70mm 1fr;
               gap: 22mm;
-              align-items: end;
-              margin-top: 5mm;
-              margin-bottom: 2mm;
-              font-size: 14px;
+              margin-top: 15mm;
             }
             .date-line span {
               display: inline-block;
-              min-width: 35mm;
+              min-width: 26mm;
               border-bottom: 1px solid #111111;
               text-align: center;
             }
             .stamp-line {
               border-top: 1px solid #111111;
               text-align: center;
-              padding-top: 2px;
+              padding-top: 3px;
+            }
+
+            .special-landscape-page {
+              width: 297mm;
+              min-height: 210mm;
+              padding: 7mm;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 6mm;
+              align-items: stretch;
+              font-size: 10.2px;
+              color: #111111;
+            }
+            .special-copy {
+              border: 1.5px solid #111111;
+              border-radius: 8px;
+              padding: 4mm;
+              min-height: 196mm;
+              display: flex;
+              flex-direction: column;
+              background: #ffffff;
+              position: relative;
+            }
+            .special-copy + .special-copy::before {
+              content: "";
+              position: absolute;
+              left: -3mm;
+              top: 0;
+              bottom: 0;
+              border-left: 1px dashed #94a3b8;
+            }
+            .special-copy .clinic-letterhead {
+              min-height: 22mm;
+              border-radius: 8px;
+              grid-template-columns: 1fr;
+              gap: 1mm;
+              padding: 4mm 5mm;
+              box-shadow: none;
+            }
+            .special-copy .clinic-name {
+              font-size: 17px;
+            }
+            .special-copy .clinic-subtitle {
+              font-size: 9px;
+              margin-top: 2px;
+            }
+            .special-copy .clinic-contact {
+              text-align: left;
+              font-size: 8px;
+              line-height: 1.25;
+            }
+            .special-title-row {
+              display: grid;
+              grid-template-columns: 1fr 30mm;
+              gap: 3mm;
+              align-items: center;
+              margin: 3mm 0;
+            }
+            .special-title {
+              margin: 0;
+              text-align: center;
+              font-size: 13px;
+              font-weight: 900;
+              letter-spacing: .02em;
+            }
+            .via-box {
+              border: 1px solid #111111;
+              border-radius: 5px;
+              padding: 2mm;
+              text-align: center;
+              font-size: 9.5px;
+              font-weight: 800;
+              line-height: 1.25;
+            }
+            .special-patient-lines .long-line {
+              font-size: 10.3px;
+              margin-bottom: 3mm;
+            }
+            .prescription-area {
+              flex: 1;
+              min-height: 62mm;
+            }
+            .prescription-area pre {
+              min-height: 62mm;
+              margin: -3mm 0 0 0;
+              padding-top: 4mm;
+              line-height: 7mm;
+              font-size: 11px;
+              background-image: repeating-linear-gradient(
+                to bottom,
+                transparent 0,
+                transparent 6.7mm,
+                #111111 6.8mm,
+                #111111 7mm
+              );
+            }
+            .special-date-sign-row {
+              grid-template-columns: 38mm 1fr;
+              gap: 8mm;
+              margin-top: 2mm;
+              margin-bottom: 2mm;
+              font-size: 10px;
             }
             .bottom-boxes {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 5mm;
-              margin-top: 2mm;
+              gap: 3mm;
+              margin-top: 1mm;
             }
             .bottom-box {
-              min-height: 55mm;
+              min-height: 37mm;
+              border: 1.2px solid #111111;
+              border-radius: 6px;
+              overflow: hidden;
+              background: #ffffff;
             }
-            .bottom-box .box-title {
-              font-size: 14.5px;
+            .box-title {
+              border-bottom: 1.2px solid #111111;
+              padding: 2px 4px;
+              text-align: center;
+              font-weight: 900;
+              font-size: 9px;
+            }
+            .field-row {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 2mm;
+              align-items: end;
+            }
+            .field-line {
+              display: flex;
+              align-items: end;
+              gap: 3px;
+              min-height: 11px;
+              margin: 3px 4px;
+            }
+            .field-line span { white-space: nowrap; }
+            .field-line strong {
+              flex: 1;
+              min-height: 11px;
+              border-bottom: 1px solid #111111;
+              font-weight: 400;
+              padding-left: 3px;
             }
             .supplier-box {
               display: flex;
@@ -1725,24 +1817,28 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             }
             .supplier-empty {
               flex: 1;
-              min-height: 36mm;
+              min-height: 24mm;
             }
             .supplier-footer {
               display: flex;
               justify-content: space-between;
-              gap: 4mm;
+              gap: 2mm;
               border-top: 1px solid #111111;
-              padding: 3px 6px;
-              font-size: 11px;
+              padding: 2px 4px;
+              font-size: 8px;
             }
 
             @page {
-              size: A4 portrait;
+              size: ${isSpecialControl ? "A4 landscape" : "A4 portrait"};
               margin: 0;
             }
             @media print {
               body { background: #ffffff; }
               .page { margin: 0; box-shadow: none; }
+              .clinic-letterhead {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
             }
           </style>
         </head>
