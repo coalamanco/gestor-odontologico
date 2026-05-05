@@ -25,6 +25,7 @@ type PrescriptionType = "simples" | "controle_especial" | "atestado";
 type MedicationTemplate = {
   name: string;
   dosage: string;
+  presentationOptions: string[];
   route: string;
   frequency: string;
   duration: string;
@@ -37,6 +38,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Amoxicilina",
     dosage: "",
+    presentationOptions: ["500 mg", "875 mg", "250 mg/5 mL", "400 mg/5 mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -47,6 +49,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Amoxicilina + Clavulanato",
     dosage: "",
+    presentationOptions: ["500 mg + 125 mg", "875 mg + 125 mg", "250 mg + 62,5 mg/5 mL", "400 mg + 57 mg/5 mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -57,6 +60,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Azitromicina",
     dosage: "",
+    presentationOptions: ["500 mg", "200 mg/5 mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -67,6 +71,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Clindamicina",
     dosage: "",
+    presentationOptions: ["300 mg", "150 mg", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -77,6 +82,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Ibuprofeno",
     dosage: "",
+    presentationOptions: ["400 mg", "600 mg", "100 mg/5 mL", "50 mg/mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -87,6 +93,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Nimesulida",
     dosage: "",
+    presentationOptions: ["100 mg", "50 mg/mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -97,6 +104,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Dipirona",
     dosage: "",
+    presentationOptions: ["500 mg", "1 g", "500 mg/mL", "50 mg/mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -107,6 +115,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Paracetamol",
     dosage: "",
+    presentationOptions: ["500 mg", "750 mg", "200 mg/mL", "32 mg/mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -117,6 +126,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Dexametasona",
     dosage: "",
+    presentationOptions: ["4 mg", "0,5 mg/5 mL", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -127,6 +137,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Clorexidina 0,12%",
     dosage: "",
+    presentationOptions: ["0,12%", "0,2%", "Outro / digitar manualmente"],
     route: "Uso bucal",
     frequency: "",
     duration: "",
@@ -137,6 +148,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Omeprazol",
     dosage: "",
+    presentationOptions: ["20 mg", "40 mg", "Outro / digitar manualmente"],
     route: "Uso oral",
     frequency: "",
     duration: "",
@@ -1400,13 +1412,24 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
     if (!template) return;
 
-    setPrescriptionDosage(template.dosage);
+    setPrescriptionDosage(template.dosage || template.presentationOptions?.[0] || "");
     setPrescriptionUseRoute(template.route);
     setPrescriptionFrequency(template.frequency);
     setPrescriptionDuration(template.duration);
     setPrescriptionQuantity(template.quantity);
     setPrescriptionInstructions(template.instructions);
   };
+
+  const selectedMedicationTemplate = useMemo(() => {
+    return MEDICATION_LIBRARY.find(
+      (item) =>
+        item.name.toLowerCase() === prescriptionMedication.trim().toLowerCase(),
+    );
+  }, [prescriptionMedication]);
+
+  const selectedDosageIsFromLibrary = Boolean(
+    selectedMedicationTemplate?.presentationOptions?.includes(prescriptionDosage),
+  );
 
   const prescriptionTypeLabel = (type: PrescriptionType) => {
     if (type === "controle_especial") {
@@ -5366,21 +5389,55 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   </datalist>
                   <p className="mt-1 text-xs text-slate-400">
                     Ao escolher da biblioteca, o sistema preenche orientações padrão.
-                    Dose, frequência, duração e quantidade continuam sob edição do profissional.
+                    Apresentação, dose, frequência, duração e quantidade continuam sob edição do profissional.
                   </p>
                 </div>
 
                 <div>
                   <label className="block mb-1 text-slate-500 text-sm">
-                    Dose / concentração
+                    Apresentação / dose
                   </label>
+
+                  {selectedMedicationTemplate?.presentationOptions?.length ? (
+                    <select
+                      value={selectedDosageIsFromLibrary ? prescriptionDosage : "manual"}
+                      onChange={(e) => {
+                        if (e.target.value === "manual") {
+                          setPrescriptionDosage("");
+                          return;
+                        }
+
+                        setPrescriptionDosage(e.target.value);
+                      }}
+                      className="mb-2 w-full border rounded-xl p-3 text-base text-slate-800"
+                    >
+                      <option value="">Selecione uma apresentação</option>
+                      {selectedMedicationTemplate.presentationOptions.map((option) => (
+                        <option
+                          key={option}
+                          value={
+                            option === "Outro / digitar manualmente"
+                              ? "manual"
+                              : option
+                          }
+                        >
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+
                   <input
                     type="text"
                     value={prescriptionDosage}
                     onChange={(e) => setPrescriptionDosage(e.target.value)}
-                    placeholder="Ex.: 500 mg"
+                    placeholder="Ex.: 500 mg, 875 mg + 125 mg, 250 mg/5 mL ou dose manual"
                     className="w-full border rounded-xl p-3 text-base text-slate-800"
                   />
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    Você pode selecionar uma apresentação pronta ou escrever manualmente.
+                  </p>
                 </div>
 
                 <div>
@@ -5445,7 +5502,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                         Biblioteca rápida de medicamentos
                       </h4>
                       <p className="text-xs text-slate-500">
-                        Toque em um item para preencher o nome e orientações. Os campos de dose e posologia ficam livres para edição.
+                        Toque em um item para preencher o nome e orientações. O sistema sugere apresentações comuns, mas todos os campos continuam livres para edição.
                       </p>
                     </div>
                   </div>
