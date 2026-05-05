@@ -2089,13 +2089,49 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     );
   };
 
+  const getPrescriptionUseHeading = (route?: string | null) => {
+    const normalizedRoute = String(route || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    if (
+      normalizedRoute.includes("topico") ||
+      normalizedRoute.includes("topica") ||
+      normalizedRoute.includes("pele") ||
+      normalizedRoute.includes("gel") ||
+      normalizedRoute.includes("pomada") ||
+      normalizedRoute.includes("creme")
+    ) {
+      return "USO TÓPICO";
+    }
+
+    if (
+      normalizedRoute.includes("injet") ||
+      normalizedRoute.includes("intramuscular") ||
+      normalizedRoute.includes("endoven") ||
+      normalizedRoute.includes("subcut")
+    ) {
+      return "USO INJETÁVEL";
+    }
+
+    if (
+      normalizedRoute.includes("bucal") ||
+      normalizedRoute.includes("oral / topico") ||
+      normalizedRoute.includes("oral/topico")
+    ) {
+      return "USO BUCAL";
+    }
+
+    return "USO INTERNO";
+  };
+
   const buildMedicationTextBlock = (
     item: Omit<PrescriptionMedicationItem, "id">,
     index: number,
   ) => {
     const details = [
       item.dosage.trim() ? item.dosage.trim() : "",
-      item.route.trim() ? item.route.trim() : "",
       item.frequency.trim() ? item.frequency.trim() : "",
       item.duration.trim() ? item.duration.trim() : "",
       item.quantity.trim() ? `Qtd.: ${item.quantity.trim()}` : "",
@@ -2148,9 +2184,31 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const hasAnyPrescriptionMedication = prescriptionMedicationItems.length > 0;
 
   const buildPrescriptionMedicationsText = () => {
-    const medicationLines = prescriptionMedicationItems
-      .map((item, index) => buildMedicationTextBlock(item, index + 1))
-      .join("\n");
+    const groupedMedications = prescriptionMedicationItems.reduce(
+      (acc, item, index) => {
+        const heading = getPrescriptionUseHeading(item.route);
+
+        if (!acc[heading]) {
+          acc[heading] = [];
+        }
+
+        acc[heading].push(buildMedicationTextBlock(item, index + 1));
+        return acc;
+      },
+      {} as Record<string, string[]>,
+    );
+
+    const headingOrder = [
+      "USO INTERNO",
+      "USO TÓPICO",
+      "USO INJETÁVEL",
+      "USO BUCAL",
+    ];
+
+    const medicationLines = headingOrder
+      .filter((heading) => groupedMedications[heading]?.length)
+      .map((heading) => `${heading}\n${groupedMedications[heading].join("\n")}`)
+      .join("\n\n");
 
     const uniqueInstructions = Array.from(
       new Set(
@@ -2207,10 +2265,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       );
     }
 
-    return (
-      `${selectedPrescriptionProtocol ? `Modelo automático: ${PRESCRIPTION_PROTOCOLS.find((item) => item.id === selectedPrescriptionProtocol)?.name || "Procedimento odontológico"}\n\n` : ""}` +
-      `Medicamentos prescritos:\n${buildPrescriptionMedicationsText()}`
-    );
+    return buildPrescriptionMedicationsText();
   };
 
   const printPrescriptionContent = (
@@ -2267,6 +2322,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
           if (/^Data:/i.test(trimmedLine)) return false;
           if (/^Profissional:/i.test(trimmedLine)) return false;
           if (/^Modelo automático:/i.test(trimmedLine)) return false;
+          if (/^Medicamentos prescritos:/i.test(trimmedLine)) return false;
 
           return true;
         })
@@ -2812,6 +2868,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
           if (/^Data:/i.test(trimmedLine)) return false;
           if (/^Profissional:/i.test(trimmedLine)) return false;
           if (/^Modelo automático:/i.test(trimmedLine)) return false;
+          if (/^Medicamentos prescritos:/i.test(trimmedLine)) return false;
 
           return true;
         })
