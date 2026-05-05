@@ -2093,17 +2093,15 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     item: Omit<PrescriptionMedicationItem, "id">,
     index: number,
   ) => {
-    const lines = [
-      `${index}. ${item.medication.trim()}`,
-      item.dosage.trim() ? `Dose/concentração: ${item.dosage.trim()}` : "",
-      item.route.trim() ? `Via de uso: ${item.route.trim()}` : "",
-      item.frequency.trim() ? `Frequência: ${item.frequency.trim()}` : "",
-      item.duration.trim() ? `Duração: ${item.duration.trim()}` : "",
-      item.quantity.trim() ? `Quantidade: ${item.quantity.trim()}` : "",
-      item.instructions.trim() ? `Orientações: ${item.instructions.trim()}` : "",
+    const details = [
+      item.dosage.trim() ? item.dosage.trim() : "",
+      item.route.trim() ? item.route.trim() : "",
+      item.frequency.trim() ? item.frequency.trim() : "",
+      item.duration.trim() ? item.duration.trim() : "",
+      item.quantity.trim() ? `Qtd.: ${item.quantity.trim()}` : "",
     ].filter(Boolean);
 
-    return lines.join("\n");
+    return `${index}. ${item.medication.trim()}${details.length ? ` — ${details.join(" • ")}` : ""}`;
   };
 
   const prescriptionMedicationItems = useMemo(() => {
@@ -2150,9 +2148,23 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const hasAnyPrescriptionMedication = prescriptionMedicationItems.length > 0;
 
   const buildPrescriptionMedicationsText = () => {
-    return prescriptionMedicationItems
+    const medicationLines = prescriptionMedicationItems
       .map((item, index) => buildMedicationTextBlock(item, index + 1))
-      .join("\n\n");
+      .join("\n");
+
+    const uniqueInstructions = Array.from(
+      new Set(
+        prescriptionMedicationItems
+          .map((item) => item.instructions.trim())
+          .filter(Boolean),
+      ),
+    );
+
+    const generalInstructions = uniqueInstructions.length
+      ? `\n\nOrientações gerais: ${uniqueInstructions.join(" ")}`
+      : "";
+
+    return `${medicationLines}${generalInstructions}`;
   };
 
   const prescriptionTypeLabel = (type: PrescriptionType) => {
@@ -2544,24 +2556,26 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
             .special-landscape-page {
               width: 297mm;
-              min-height: 210mm;
-              padding: 7mm;
+              height: 210mm;
+              padding: 5mm;
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 6mm;
+              gap: 5mm;
               align-items: stretch;
-              font-size: 10.2px;
+              font-size: 9px;
               color: #111111;
+              overflow: hidden;
             }
             .special-copy {
-              border: 1.5px solid #111111;
-              border-radius: 8px;
-              padding: 4mm;
-              min-height: 196mm;
+              border: 1.2px solid #111111;
+              border-radius: 7px;
+              padding: 3mm;
+              height: 200mm;
               display: flex;
               flex-direction: column;
               background: #ffffff;
               position: relative;
+              overflow: hidden;
             }
             .special-copy + .special-copy::before {
               content: "";
@@ -2572,96 +2586,95 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               border-left: 1px dashed #94a3b8;
             }
             .special-copy .clinic-letterhead {
-              min-height: 22mm;
-              border-radius: 8px;
+              min-height: 17mm;
+              border-radius: 7px;
               grid-template-columns: 1fr;
-              gap: 1mm;
-              padding: 4mm 5mm;
+              gap: 0.5mm;
+              padding: 3mm 4mm;
               box-shadow: none;
             }
             .special-copy .clinic-name {
-              font-size: 17px;
+              font-size: 14px;
             }
             .special-copy .clinic-subtitle {
-              font-size: 9px;
-              margin-top: 2px;
+              font-size: 7.5px;
+              margin-top: 1px;
             }
             .special-copy .clinic-contact {
               text-align: left;
-              font-size: 8px;
-              line-height: 1.25;
+              font-size: 6.8px;
+              line-height: 1.15;
             }
             .special-title-row {
               display: grid;
-              grid-template-columns: 1fr 30mm;
-              gap: 3mm;
+              grid-template-columns: 1fr 27mm;
+              gap: 2mm;
               align-items: center;
-              margin: 3mm 0;
+              margin: 2mm 0;
             }
             .special-title {
               margin: 0;
               text-align: center;
-              font-size: 13px;
+              font-size: 11px;
               font-weight: 900;
-              letter-spacing: .02em;
+              letter-spacing: .01em;
             }
             .via-box {
               border: 1px solid #111111;
-              border-radius: 5px;
-              padding: 2mm;
+              border-radius: 4px;
+              padding: 1.2mm;
               text-align: center;
-              font-size: 9.5px;
+              font-size: 8px;
               font-weight: 800;
-              line-height: 1.25;
+              line-height: 1.1;
             }
             .special-patient-lines .long-line {
-              font-size: 10.3px;
-              margin-bottom: 3mm;
+              font-size: 8.5px;
+              margin-bottom: 2mm;
             }
             .prescription-area {
               flex: 1;
-              min-height: 62mm;
+              min-height: 0;
+              overflow: hidden;
+            }
+            .prescription-area .long-line {
+              margin-bottom: 1.5mm;
+              font-size: 8.5px;
             }
             .prescription-area pre {
-              min-height: 62mm;
-              margin: -3mm 0 0 0;
-              padding-top: 4mm;
-              line-height: 7mm;
-              font-size: 11px;
-              background-image: repeating-linear-gradient(
-                to bottom,
-                transparent 0,
-                transparent 6.7mm,
-                #111111 6.8mm,
-                #111111 7mm
-              );
+              min-height: 0;
+              margin: 0;
+              padding-top: 1mm;
+              line-height: 1.35;
+              font-size: 8.6px;
+              background: none;
             }
             .special-date-sign-row {
-              grid-template-columns: 38mm 1fr;
-              gap: 8mm;
-              margin-top: 2mm;
-              margin-bottom: 2mm;
-              font-size: 10px;
+              grid-template-columns: 34mm 1fr;
+              gap: 6mm;
+              margin-top: 1mm;
+              margin-bottom: 1mm;
+              font-size: 8.5px;
             }
             .bottom-boxes {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 3mm;
+              gap: 2mm;
               margin-top: 1mm;
             }
             .bottom-box {
-              min-height: 37mm;
-              border: 1.2px solid #111111;
-              border-radius: 6px;
+              min-height: 31mm;
+              border: 1px solid #111111;
+              border-radius: 5px;
               overflow: hidden;
               background: #ffffff;
             }
             .box-title {
-              border-bottom: 1.2px solid #111111;
-              padding: 2px 4px;
+              border-bottom: 1px solid #111111;
+              padding: 1px 3px;
               text-align: center;
               font-weight: 900;
-              font-size: 9px;
+              font-size: 7.5px;
             }
             .field-row {
               display: grid;
@@ -2672,9 +2685,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             .field-line {
               display: flex;
               align-items: end;
-              gap: 3px;
-              min-height: 11px;
-              margin: 3px 4px;
+              gap: 2px;
+              min-height: 9px;
+              margin: 2px 3px;
+              font-size: 7px;
             }
             .field-line span { white-space: nowrap; }
             .field-line strong {
@@ -2690,7 +2704,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             }
             .supplier-empty {
               flex: 1;
-              min-height: 24mm;
+              min-height: 18mm;
             }
             .supplier-footer {
               display: flex;
@@ -2860,11 +2874,12 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
           }
           .landscape-page {
             width: 297mm;
-            min-height: 210mm;
-            padding: 7mm;
+            height: 210mm;
+            padding: 5mm;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6mm;
+            gap: 5mm;
+            overflow: hidden;
           }
           .clinic-letterhead {
             min-height: 30mm;
@@ -2889,24 +2904,24 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
           .main-text pre { margin: 0; white-space: pre-wrap; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.7; }
           .signature-row { display: grid; grid-template-columns: 70mm 1fr; gap: 22mm; margin-top: 15mm; font-size: 12px; align-items: end; }
           .signature-line { border-top: 1px solid #111; text-align: center; padding-top: 3px; }
-          .special-copy { border: 1.5px solid #111; border-radius: 8px; padding: 4mm; min-height: 196mm; display: flex; flex-direction: column; }
-          .special-copy .clinic-letterhead { min-height: 22mm; border-radius: 8px; grid-template-columns: 1fr; gap: 1mm; padding: 4mm 5mm; }
-          .special-copy .clinic-name { font-size: 17px; }
-          .special-copy .clinic-subtitle { font-size: 9px; }
-          .special-copy .clinic-contact { text-align: left; font-size: 8px; line-height: 1.25; }
-          .special-title-row { display: grid; grid-template-columns: 1fr 30mm; gap: 3mm; align-items: center; margin: 3mm 0; }
-          .special-title-row h2 { margin: 0; font-size: 13px; }
-          .via-box { border: 1px solid #111; border-radius: 5px; padding: 2mm; text-align: center; font-size: 9.5px; font-weight: 800; }
-          .compact > div { font-size: 10px; margin-bottom: 3mm; }
-          .special-prescription { flex: 1; min-height: 60mm; }
-          .prescription-title { font-weight: 900; text-decoration: underline; margin-bottom: 2mm; }
-          .special-prescription pre { margin: 0; white-space: pre-wrap; font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; line-height: 1.45; }
-          .special-signature-row { display: grid; grid-template-columns: 38mm 1fr; gap: 8mm; margin: 3mm 0; font-size: 10px; align-items: end; }
-          .bottom-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 2mm; }
-          .bottom-box { min-height: 37mm; border: 1.2px solid #111; border-radius: 6px; overflow: hidden; font-size: 8px; }
-          .box-title { border-bottom: 1.2px solid #111; padding: 2px 4px; text-align: center; font-weight: 900; font-size: 9px; }
-          .bottom-box p { margin: 4px; }
-          .supplier-space { height: 25mm; }
+          .special-copy { border: 1.2px solid #111; border-radius: 7px; padding: 3mm; height: 200mm; display: flex; flex-direction: column; overflow: hidden; }
+          .special-copy .clinic-letterhead { min-height: 17mm; border-radius: 7px; grid-template-columns: 1fr; gap: .5mm; padding: 3mm 4mm; }
+          .special-copy .clinic-name { font-size: 14px; }
+          .special-copy .clinic-subtitle { font-size: 7.5px; }
+          .special-copy .clinic-contact { text-align: left; font-size: 6.8px; line-height: 1.15; }
+          .special-title-row { display: grid; grid-template-columns: 1fr 27mm; gap: 2mm; align-items: center; margin: 2mm 0; }
+          .special-title-row h2 { margin: 0; font-size: 11px; }
+          .via-box { border: 1px solid #111; border-radius: 4px; padding: 1.2mm; text-align: center; font-size: 8px; font-weight: 800; }
+          .compact > div { font-size: 8.5px; margin-bottom: 2mm; }
+          .special-prescription { flex: 1; min-height: 0; overflow: hidden; }
+          .prescription-title { font-weight: 900; text-decoration: underline; margin-bottom: 1mm; font-size: 8.5px; }
+          .special-prescription pre { margin: 0; white-space: pre-wrap; font-family: Arial, Helvetica, sans-serif; font-size: 8.6px; line-height: 1.35; }
+          .special-signature-row { display: grid; grid-template-columns: 34mm 1fr; gap: 6mm; margin: 1mm 0; font-size: 8.5px; align-items: end; }
+          .bottom-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; margin-top: 1mm; }
+          .bottom-box { min-height: 31mm; border: 1px solid #111; border-radius: 5px; overflow: hidden; font-size: 7px; }
+          .box-title { border-bottom: 1px solid #111; padding: 1px 3px; text-align: center; font-weight: 900; font-size: 7.5px; }
+          .bottom-box p { margin: 2px 3px; }
+          .supplier-space { height: 18mm; }
         </style>
         ${isSpecialControl ? specialPage : regularPages}
       </div>
