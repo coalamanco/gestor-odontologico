@@ -841,6 +841,45 @@ export default function AgendaPage() {
     return "bg-white/80 text-slate-600 ring-1 ring-white/70";
   };
 
+  const appointmentTypeLabel = (appointment: any) => {
+    if (appointment?.type === "compromisso") return "Compromisso";
+
+    const raw = String(appointment?.title || "consulta").toLowerCase();
+
+    if (raw === "retorno") return "Retorno";
+    if (raw === "tratamento") return "Tratamento";
+
+    return "Consulta";
+  };
+
+  const slotDividerClass = (timeValue: string) => {
+    const minute = Number(String(timeValue || "").split(":")[1] || 0);
+
+    if (minute === 0) {
+      return "border-b border-[#b8d7d7] bg-white shadow-[inset_0_1px_0_rgba(15,23,42,0.04)]";
+    }
+
+    if (minute === 30) {
+      return "border-b border-[#cfe5e5] bg-white";
+    }
+
+    return "border-b border-[#e6f0f0] bg-white";
+  };
+
+  const timeColumnClass = (timeValue: string) => {
+    const minute = Number(String(timeValue || "").split(":")[1] || 0);
+
+    if (minute === 0) {
+      return "bg-[#f1fbfb] text-slate-600 font-black";
+    }
+
+    if (minute === 30) {
+      return "bg-[#f7ffff] text-slate-500 font-extrabold";
+    }
+
+    return "bg-[#fbffff] text-slate-400 font-bold";
+  };
+
   const updateAppointmentStatus = async (
     appointmentId: string,
     nextStatus: AppointmentStatus
@@ -1680,13 +1719,11 @@ export default function AgendaPage() {
   }, [selectedAgendaProfessionalId]);
 
   const getAppointmentStyle = (appointment: any) => {
-    const backgroundColor = appointment?.professional_id
-      ? getProfessionalColor(appointment.professional_id)
-      : getFallbackAppointmentColor(
-          appointment?.status,
-          appointment?.type,
-          appointment?.title
-        );
+    const backgroundColor = getFallbackAppointmentColor(
+      appointment?.status,
+      appointment?.type,
+      appointment?.title
+    );
 
     return { backgroundColor };
   };
@@ -2160,12 +2197,12 @@ export default function AgendaPage() {
           {hours.map((h) => (
             <div
               key={h}
-              className="grid border-b border-[#edf4f4] text-xs"
+              className={`grid text-xs ${slotDividerClass(h)}`}
               style={{
                 gridTemplateColumns: `70px repeat(${days.length}, minmax(0, 1fr))`,
               }}
             >
-              <div className="px-2 py-1 bg-[#fbffff] font-bold text-[9px] text-slate-400 tracking-tight md:px-3 md:py-1.5 md:text-[10px]">{h}</div>
+              <div className={`px-2 py-1 text-[9px] tracking-tight md:px-3 md:py-1.5 md:text-[10px] ${timeColumnClass(h)}`}>{h}</div>
 
               {days.map((d) => {
                 const ag = filteredAppointmentsByProfessional.filter((a) => {
@@ -2181,7 +2218,7 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={d.date + h}
-                    className={`border-l border-[#edf4f4] cursor-pointer relative transition-colors min-w-0 overflow-visible group touch-manipulation ${isMobileAgenda && mobileView === "day" ? "min-h-[28px]" : "min-h-[28px]"} ${
+                    className={`border-l border-[#dbe9e9] cursor-pointer relative transition-colors min-w-0 overflow-visible group touch-manipulation ${isMobileAgenda && mobileView === "day" ? "min-h-[28px]" : "min-h-[28px]"} ${
                       getHolidayInfo(d.date)
                         ? "bg-amber-50/30 hover:bg-amber-50/60"
                         : "hover:bg-[#fbffff]"
@@ -2246,7 +2283,7 @@ export default function AgendaPage() {
                           e.stopPropagation();
                           setSelectedAppointmentDetails(a);
                         }}
-                        className={`${!a.professional_id ? getColor(a) : ""} ${
+                        className={`${
                           hasDebt(a.patient_id)
                             ? "ring-1 ring-amber-200"
                             : ""
@@ -2262,11 +2299,8 @@ export default function AgendaPage() {
                         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                         <div className="flex items-start justify-between gap-1 pl-1">
                           <div className="min-w-0">
-                            <div className="truncate pr-1 text-[9px] font-black leading-tight tracking-tight md:text-[10px]">
+                            <div className="truncate pr-1 text-[10px] font-black leading-tight tracking-tight md:text-[12px]">
                               {a.patient_name || a.title}
-                            </div>
-                            <div className="mt-0.5 hidden truncate pr-1 text-[8px] font-semibold leading-tight opacity-70 md:block">
-                              {a.type === "compromisso" ? "Compromisso" : a.title}
                             </div>
                           </div>
                           <span className="shrink-0 rounded-md bg-white/15 px-1 py-0.5 text-[6px] font-black leading-none text-white/90 md:px-1.5 md:text-[7px]">
@@ -2289,6 +2323,13 @@ export default function AgendaPage() {
                         )}
 
                         <div className="mt-1 hidden items-center gap-0.5 flex-nowrap overflow-hidden pl-1 md:flex">
+                          <span
+                            className="shrink-0 rounded-md bg-white/85 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-slate-700 whitespace-nowrap leading-none ring-1 ring-white/70"
+                            title="Tipo do agendamento"
+                          >
+                            {appointmentTypeLabel(a)}
+                          </span>
+
                           {a.type !== "compromisso" && (
                             <span
                               className={`shrink-0 rounded-md px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
