@@ -1330,6 +1330,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [selectedPrescriptionProtocol, setSelectedPrescriptionProtocol] =
     useState("");
   const [submittingPrescription, setSubmittingPrescription] = useState(false);
+  const [savingPrescriptionPdf, setSavingPrescriptionPdf] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<FinancialRecord | null>(
@@ -2557,7 +2558,324 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setTimeout(() => printWindow.print(), 300);
   };
 
-  const confirmPrescription = async (shouldPrint = false) => {
+
+  const buildPrescriptionPdfHtml = (content: string, type: PrescriptionType) => {
+    const title = prescriptionTypeLabel(type);
+    const isSpecialControl = type === "controle_especial";
+    const isCertificate = type === "atestado";
+    const viaLabels = isSpecialControl
+      ? ["1ª via - Farmácia", "2ª via - Paciente"]
+      : [isCertificate ? "Atestado odontológico" : "Receituário simples"];
+
+    const escapeHtml = (value: string) =>
+      String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const dateLabel = prescriptionDate
+      ? new Date(`${prescriptionDate}T12:00:00`).toLocaleDateString("pt-BR")
+      : new Date().toLocaleDateString("pt-BR");
+
+    const patientAddress = [
+      patient?.address,
+      patient?.neighborhood,
+      patient?.city,
+      patient?.state,
+    ]
+      .filter(Boolean)
+      .join(" - ");
+
+    const prescriptionTextFromForm = [
+      prescriptionMedication.trim(),
+      prescriptionDosage.trim()
+        ? `Dose/concentração: ${prescriptionDosage.trim()}`
+        : "",
+      prescriptionUseRoute.trim()
+        ? `Via de uso: ${prescriptionUseRoute.trim()}`
+        : "",
+      prescriptionFrequency.trim()
+        ? `Frequência: ${prescriptionFrequency.trim()}`
+        : "",
+      prescriptionDuration.trim()
+        ? `Duração: ${prescriptionDuration.trim()}`
+        : "",
+      prescriptionQuantity.trim()
+        ? `Quantidade: ${prescriptionQuantity.trim()}`
+        : "",
+      prescriptionInstructions.trim()
+        ? `Orientações: ${prescriptionInstructions.trim()}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const contentText = String(content || "").trim();
+    const prescriptionText = prescriptionTextFromForm || contentText;
+
+    const clinicLetterhead = `
+      <div class="clinic-letterhead">
+        <div>
+          <div class="clinic-name">Dr. Henrique S. Pasquali</div>
+          <div class="clinic-subtitle">Cirurgião Dentista • Implantodontia e Ortodontia</div>
+        </div>
+        <div class="clinic-contact">
+          <div>Av. Presidente João Goulart, 136, sala 07</div>
+          <div>Cidade Alta • Araranguá/SC</div>
+          <div>48 3524.4452 • 48 99670.5500</div>
+        </div>
+      </div>
+    `;
+
+    const regularPages = viaLabels
+      .map(
+        (via) => `
+          <section class="pdf-page portrait-page">
+            ${clinicLetterhead}
+            <div class="recipe-label">${escapeHtml(via)}</div>
+            <h2>${escapeHtml(isCertificate ? "ATESTADO ODONTOLÓGICO" : title)}</h2>
+            <div class="patient-lines">
+              <div><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+              <div><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
+            </div>
+            <div class="main-text ${isCertificate ? "certificate-text" : ""}">
+              <pre>${escapeHtml(isCertificate ? contentText || prescriptionText : prescriptionText)}</pre>
+            </div>
+            <div class="signature-row">
+              <div>Data: ${escapeHtml(dateLabel)}</div>
+              <div class="signature-line">Carimbo / Assinatura</div>
+            </div>
+          </section>
+        `,
+      )
+      .join("");
+
+    const specialPage = `
+      <section class="pdf-page landscape-page">
+        ${viaLabels
+          .map(
+            (via) => `
+              <div class="special-copy">
+                ${clinicLetterhead}
+                <div class="special-title-row">
+                  <h2>RECEITUÁRIO CONTROLE ESPECIAL</h2>
+                  <div class="via-box">${escapeHtml(via)}</div>
+                </div>
+                <div class="patient-lines compact">
+                  <div><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+                  <div><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
+                </div>
+                <div class="special-prescription">
+                  <div class="prescription-title">Prescrição:</div>
+                  <pre>${escapeHtml(prescriptionText)}</pre>
+                </div>
+                <div class="special-signature-row">
+                  <div>Data: ${escapeHtml(dateLabel)}</div>
+                  <div class="signature-line">Carimbo / Assinatura</div>
+                </div>
+                <div class="bottom-boxes">
+                  <div class="bottom-box">
+                    <div class="box-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+                    <p>Nome: ________________________________________</p>
+                    <p>Identidade: __________________ Órgão: _________</p>
+                    <p>Endereço: _____________________________________</p>
+                    <p>Cidade: ________________________ UF: __________</p>
+                  </div>
+                  <div class="bottom-box">
+                    <div class="box-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+                    <div class="supplier-space"></div>
+                    <p>Data: ____/____/______ Assinatura do farmacêutico</p>
+                  </div>
+                </div>
+              </div>
+            `,
+          )
+          .join("")}
+      </section>
+    `;
+
+    return `
+      <div class="pdf-root ${isSpecialControl ? "landscape-root" : "portrait-root"}">
+        <style>
+          * { box-sizing: border-box; }
+          .pdf-root {
+            background: #ffffff;
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+          }
+          .pdf-page {
+            background: #ffffff;
+            page-break-after: always;
+          }
+          .portrait-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 14mm 16mm 16mm;
+          }
+          .landscape-page {
+            width: 297mm;
+            min-height: 210mm;
+            padding: 7mm;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6mm;
+          }
+          .clinic-letterhead {
+            min-height: 30mm;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0f766e 0%, #1db7b3 62%, #7ccfce 100%);
+            color: #ffffff;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 8mm;
+            align-items: center;
+            padding: 8mm 9mm;
+          }
+          .clinic-name { font-size: 24px; line-height: 1.1; font-weight: 900; }
+          .clinic-subtitle { margin-top: 4px; font-size: 12.5px; font-weight: 700; }
+          .clinic-contact { text-align: right; font-size: 10.5px; line-height: 1.5; font-weight: 700; }
+          .recipe-label { text-align: right; font-size: 12px; font-weight: 800; margin-top: 8mm; color: #334155; }
+          h2 { margin: 6mm 0 8mm; text-align: center; font-size: 18px; text-transform: uppercase; letter-spacing: .04em; }
+          .patient-lines > div { display: flex; gap: 5px; margin-bottom: 5mm; font-size: 12px; }
+          .patient-lines span { white-space: nowrap; }
+          .patient-lines strong { flex: 1; border-bottom: 1px solid #111; min-height: 14px; font-weight: 400; }
+          .main-text { min-height: 118mm; margin-top: 9mm; padding: 6mm; border: 1px solid #e5e7eb; border-radius: 12px; }
+          .main-text pre { margin: 0; white-space: pre-wrap; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.7; }
+          .signature-row { display: grid; grid-template-columns: 70mm 1fr; gap: 22mm; margin-top: 15mm; font-size: 12px; align-items: end; }
+          .signature-line { border-top: 1px solid #111; text-align: center; padding-top: 3px; }
+          .special-copy { border: 1.5px solid #111; border-radius: 8px; padding: 4mm; min-height: 196mm; display: flex; flex-direction: column; }
+          .special-copy .clinic-letterhead { min-height: 22mm; border-radius: 8px; grid-template-columns: 1fr; gap: 1mm; padding: 4mm 5mm; }
+          .special-copy .clinic-name { font-size: 17px; }
+          .special-copy .clinic-subtitle { font-size: 9px; }
+          .special-copy .clinic-contact { text-align: left; font-size: 8px; line-height: 1.25; }
+          .special-title-row { display: grid; grid-template-columns: 1fr 30mm; gap: 3mm; align-items: center; margin: 3mm 0; }
+          .special-title-row h2 { margin: 0; font-size: 13px; }
+          .via-box { border: 1px solid #111; border-radius: 5px; padding: 2mm; text-align: center; font-size: 9.5px; font-weight: 800; }
+          .compact > div { font-size: 10px; margin-bottom: 3mm; }
+          .special-prescription { flex: 1; min-height: 60mm; }
+          .prescription-title { font-weight: 900; text-decoration: underline; margin-bottom: 2mm; }
+          .special-prescription pre { margin: 0; white-space: pre-wrap; font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; line-height: 1.45; }
+          .special-signature-row { display: grid; grid-template-columns: 38mm 1fr; gap: 8mm; margin: 3mm 0; font-size: 10px; align-items: end; }
+          .bottom-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 2mm; }
+          .bottom-box { min-height: 37mm; border: 1.2px solid #111; border-radius: 6px; overflow: hidden; font-size: 8px; }
+          .box-title { border-bottom: 1.2px solid #111; padding: 2px 4px; text-align: center; font-weight: 900; font-size: 9px; }
+          .bottom-box p { margin: 4px; }
+          .supplier-space { height: 25mm; }
+        </style>
+        ${isSpecialControl ? specialPage : regularPages}
+      </div>
+    `;
+  };
+
+  const savePrescriptionPdfToPatientFiles = async (
+    content: string,
+    type: PrescriptionType,
+  ) => {
+    try {
+      setSavingPrescriptionPdf(true);
+
+      const printableHtml = buildPrescriptionPdfHtml(content, type);
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "-10000px";
+      container.style.top = "0";
+      container.innerHTML = printableHtml;
+      document.body.appendChild(container);
+
+      // Instale a dependência com: npm install html2pdf.js
+      // @ts-ignore - biblioteca sem tipos oficiais no projeto
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const fileBaseName =
+        type === "controle_especial"
+          ? "receita-controle-especial"
+          : type === "atestado"
+            ? "atestado-odontologico"
+            : "prescricao-medicamentosa";
+
+      const fileName = `${fileBaseName}-${new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")}.pdf`;
+
+      const options = {
+        margin: 0,
+        filename: fileName,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: type === "controle_especial" ? "landscape" : "portrait",
+        },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      };
+
+      const pdfBlob: Blob = await html2pdf()
+        .set(options)
+        .from(container)
+        .outputPdf("blob");
+
+      document.body.removeChild(container);
+
+      const storagePath = `${params.id}/${Date.now()}-${safeFileName(fileName)}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("patient-files")
+        .upload(storagePath, pdfBlob, {
+          cacheControl: "3600",
+          contentType: "application/pdf",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from("patient-files")
+        .getPublicUrl(storagePath);
+
+      const publicUrl = publicData?.publicUrl;
+
+      if (!publicUrl) {
+        throw new Error("Não foi possível gerar o link do PDF.");
+      }
+
+      const { error: insertError } = await supabase
+        .from("patient_files")
+        .insert({
+          patient_id: params.id,
+          file_name: fileName,
+          file_url: publicUrl,
+          file_type: "application/pdf",
+          storage_path: storagePath,
+        });
+
+      if (insertError) throw insertError;
+
+      await loadData();
+      setActiveTab("documentos");
+      alert("PDF salvo nos documentos do paciente.");
+
+      return publicUrl;
+    } catch (error: any) {
+      alert(
+        "Erro ao gerar/salvar PDF: " +
+          (error?.message ||
+            "verifique se a dependência html2pdf.js foi instalada"),
+      );
+      return null;
+    } finally {
+      setSavingPrescriptionPdf(false);
+    }
+  };
+
+  const confirmPrescription = async (action: "save" | "print" | "pdf" | "pdf_print" = "save") => {
     if (prescriptionType === "atestado") {
       const daysNumber = Number(String(certificateDays).replace(",", "."));
 
@@ -2589,11 +2907,19 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
       if (error) throw error;
 
-      if (shouldPrint) {
+      if (action === "pdf" || action === "pdf_print") {
+        await savePrescriptionPdfToPatientFiles(content, prescriptionType);
+      }
+
+      if (action === "print" || action === "pdf_print") {
         printPrescriptionContent(content, prescriptionType);
       }
 
-      alert("Prescrição salva no histórico do paciente.");
+      alert(
+        action === "pdf" || action === "pdf_print"
+          ? "Prescrição salva no histórico e PDF salvo nos documentos do paciente."
+          : "Prescrição salva no histórico do paciente.",
+      );
       setShowPrescriptionModal(false);
       setActiveTab("prescricoes");
       await loadData();
@@ -4872,6 +5198,24 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
                           <button
                             type="button"
+                            onClick={() =>
+                              savePrescriptionPdfToPatientFiles(
+                                note.content || "",
+                                isCertificate
+                                  ? "atestado"
+                                  : isSpecial
+                                    ? "controle_especial"
+                                    : "simples",
+                              )
+                            }
+                            className="rounded-xl border border-[#d9eeee] bg-[#e9f8f7] px-3 py-2 text-xs font-bold text-[#0f766e] hover:bg-[#d8f3f1] disabled:opacity-60"
+                            disabled={savingPrescriptionPdf}
+                          >
+                            {savingPrescriptionPdf ? "Gerando..." : "Salvar PDF"}
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => deletePrescriptionNote(note)}
                             className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
                           >
@@ -6213,7 +6557,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
               <button
                 type="button"
-                onClick={() => confirmPrescription(false)}
+                onClick={() => confirmPrescription("save")}
                 className="px-4 py-2 border border-[#d9eeee] bg-white text-[#239d9a] rounded-xl text-sm font-bold disabled:opacity-60"
                 disabled={submittingPrescription}
               >
@@ -6222,7 +6566,25 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
               <button
                 type="button"
-                onClick={() => confirmPrescription(true)}
+                onClick={() => confirmPrescription("pdf")}
+                className="px-4 py-2 border border-[#239d9a] bg-[#e9f8f7] text-[#0f766e] rounded-xl text-sm font-black disabled:opacity-60"
+                disabled={submittingPrescription || savingPrescriptionPdf}
+              >
+                {savingPrescriptionPdf ? "Gerando PDF..." : "Salvar PDF"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmPrescription("pdf_print")}
+                className="px-4 py-2 border border-[#0f766e] bg-white text-[#0f766e] rounded-xl text-sm font-black disabled:opacity-60"
+                disabled={submittingPrescription || savingPrescriptionPdf}
+              >
+                {savingPrescriptionPdf ? "Gerando PDF..." : "Salvar PDF e imprimir"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmPrescription("print")}
                 className="px-4 py-2 bg-[#239d9a] text-white rounded-xl text-sm font-black disabled:opacity-60"
                 disabled={submittingPrescription}
               >
