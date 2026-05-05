@@ -47,6 +47,17 @@ type PrescriptionProtocol = {
   instructions: string;
 };
 
+type PrescriptionMedicationItem = {
+  id: string;
+  medication: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  route: string;
+  quantity: string;
+  instructions: string;
+};
+
 const PRESCRIPTION_PROTOCOLS: PrescriptionProtocol[] = [
   {
     id: "extracao_simples",
@@ -1319,6 +1330,9 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [prescriptionUseRoute, setPrescriptionUseRoute] = useState("Uso oral");
   const [prescriptionQuantity, setPrescriptionQuantity] = useState("");
   const [prescriptionInstructions, setPrescriptionInstructions] = useState("");
+  const [additionalMedications, setAdditionalMedications] = useState<
+    PrescriptionMedicationItem[]
+  >([]);
   const [certificateDays, setCertificateDays] = useState("");
   const [certificateStartDate, setCertificateStartDate] = useState(
     new Date().toISOString().slice(0, 10),
@@ -1909,6 +1923,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setPrescriptionUseRoute("Uso oral");
     setPrescriptionQuantity("");
     setPrescriptionInstructions("");
+    setAdditionalMedications([]);
     setCertificateDays("");
     setCertificateStartDate(new Date().toISOString().slice(0, 10));
     setCertificatePurpose("afastamento de suas atividades laborais/escolares");
@@ -1973,6 +1988,150 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     selectedMedicationTemplate?.presentationOptions?.includes(prescriptionDosage),
   );
 
+  const createEmptyMedicationItem = (): PrescriptionMedicationItem => ({
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    medication: "",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "",
+  });
+
+  const addMedicationItem = () => {
+    setAdditionalMedications((current) => [
+      ...current,
+      createEmptyMedicationItem(),
+    ]);
+  };
+
+  const removeMedicationItem = (id: string) => {
+    setAdditionalMedications((current) =>
+      current.filter((item) => item.id !== id),
+    );
+  };
+
+  const updateMedicationItem = (
+    id: string,
+    field: keyof PrescriptionMedicationItem,
+    value: string,
+  ) => {
+    setAdditionalMedications((current) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item,
+      ),
+    );
+  };
+
+  const applyMedicationTemplateToItem = (id: string, medicationName: string) => {
+    const template = MEDICATION_LIBRARY.find(
+      (item) =>
+        item.name.toLowerCase() === medicationName.trim().toLowerCase(),
+    );
+
+    setAdditionalMedications((current) =>
+      current.map((item) => {
+        if (item.id !== id) return item;
+
+        if (!template) {
+          return {
+            ...item,
+            medication: medicationName,
+          };
+        }
+
+        return {
+          ...item,
+          medication: medicationName,
+          dosage: template.dosage || template.presentationOptions?.[0] || "",
+          route: template.route,
+          frequency: template.frequency,
+          duration: template.duration,
+          quantity: template.quantity,
+          instructions: template.instructions,
+        };
+      }),
+    );
+  };
+
+  const getMedicationTemplateByName = (name: string) => {
+    return MEDICATION_LIBRARY.find(
+      (item) => item.name.toLowerCase() === name.trim().toLowerCase(),
+    );
+  };
+
+  const buildMedicationTextBlock = (
+    item: Omit<PrescriptionMedicationItem, "id">,
+    index: number,
+  ) => {
+    const lines = [
+      `${index}. ${item.medication.trim()}`,
+      item.dosage.trim() ? `Dose/concentração: ${item.dosage.trim()}` : "",
+      item.route.trim() ? `Via de uso: ${item.route.trim()}` : "",
+      item.frequency.trim() ? `Frequência: ${item.frequency.trim()}` : "",
+      item.duration.trim() ? `Duração: ${item.duration.trim()}` : "",
+      item.quantity.trim() ? `Quantidade: ${item.quantity.trim()}` : "",
+      item.instructions.trim() ? `Orientações: ${item.instructions.trim()}` : "",
+    ].filter(Boolean);
+
+    return lines.join("\n");
+  };
+
+  const prescriptionMedicationItems = useMemo(() => {
+    const items: Omit<PrescriptionMedicationItem, "id">[] = [];
+
+    if (prescriptionMedication.trim()) {
+      items.push({
+        medication: prescriptionMedication,
+        dosage: prescriptionDosage,
+        route: prescriptionUseRoute,
+        frequency: prescriptionFrequency,
+        duration: prescriptionDuration,
+        quantity: prescriptionQuantity,
+        instructions: prescriptionInstructions,
+      });
+    }
+
+    additionalMedications.forEach((item) => {
+      if (item.medication.trim()) {
+        items.push({
+          medication: item.medication,
+          dosage: item.dosage,
+          route: item.route,
+          frequency: item.frequency,
+          duration: item.duration,
+          quantity: item.quantity,
+          instructions: item.instructions,
+        });
+      }
+    });
+
+    return items;
+  }, [
+    prescriptionMedication,
+    prescriptionDosage,
+    prescriptionUseRoute,
+    prescriptionFrequency,
+    prescriptionDuration,
+    prescriptionQuantity,
+    prescriptionInstructions,
+    additionalMedications,
+  ]);
+
+  const hasAnyPrescriptionMedication = prescriptionMedicationItems.length > 0;
+
+  const buildPrescriptionMedicationsText = () => {
+    return prescriptionMedicationItems
+      .map((item, index) => buildMedicationTextBlock(item, index + 1))
+      .join("\n\n");
+  };
+
   const prescriptionTypeLabel = (type: PrescriptionType) => {
     if (type === "controle_especial") {
       return "Receita de controle especial - 2 vias";
@@ -2020,13 +2179,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       `${patient?.birth_date ? `Nascimento: ${new Date(`${patient.birth_date}T12:00:00`).toLocaleDateString("pt-BR")}\n` : ""}` +
       `Data: ${dateLabel}\n` +
       `${selectedPrescriptionProtocol ? `Modelo automático: ${PRESCRIPTION_PROTOCOLS.find((item) => item.id === selectedPrescriptionProtocol)?.name || "Procedimento odontológico"}\n` : ""}` +
-      `\nMedicamento: ${prescriptionMedication.trim()}\n` +
-      `${prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}\n` : ""}` +
-      `${prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}\n` : ""}` +
-      `${prescriptionFrequency.trim() ? `Frequência: ${prescriptionFrequency.trim()}\n` : ""}` +
-      `${prescriptionDuration.trim() ? `Duração: ${prescriptionDuration.trim()}\n` : ""}` +
-      `${prescriptionQuantity.trim() ? `Quantidade: ${prescriptionQuantity.trim()}\n` : ""}` +
-      `${prescriptionInstructions.trim() ? `\nOrientações:\n${prescriptionInstructions.trim()}\n` : ""}` +
+      `\nMedicamentos prescritos:\n${buildPrescriptionMedicationsText()}\n` +
       `\nProfissional: ${prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali"}`
     );
   };
@@ -2063,17 +2216,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       .filter(Boolean)
       .join(" - ");
 
-    const prescriptionTextFromForm = [
-      prescriptionMedication.trim(),
-      prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}` : "",
-      prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}` : "",
-      prescriptionFrequency.trim() ? `Frequência: ${prescriptionFrequency.trim()}` : "",
-      prescriptionDuration.trim() ? `Duração: ${prescriptionDuration.trim()}` : "",
-      prescriptionQuantity.trim() ? `Quantidade: ${prescriptionQuantity.trim()}` : "",
-      prescriptionInstructions.trim() ? `Orientações: ${prescriptionInstructions.trim()}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const prescriptionTextFromForm = buildPrescriptionMedicationsText();
 
     const contentText = String(content || "").trim();
     const prescriptionText = prescriptionTextFromForm || contentText;
@@ -2588,29 +2731,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       .filter(Boolean)
       .join(" - ");
 
-    const prescriptionTextFromForm = [
-      prescriptionMedication.trim(),
-      prescriptionDosage.trim()
-        ? `Dose/concentração: ${prescriptionDosage.trim()}`
-        : "",
-      prescriptionUseRoute.trim()
-        ? `Via de uso: ${prescriptionUseRoute.trim()}`
-        : "",
-      prescriptionFrequency.trim()
-        ? `Frequência: ${prescriptionFrequency.trim()}`
-        : "",
-      prescriptionDuration.trim()
-        ? `Duração: ${prescriptionDuration.trim()}`
-        : "",
-      prescriptionQuantity.trim()
-        ? `Quantidade: ${prescriptionQuantity.trim()}`
-        : "",
-      prescriptionInstructions.trim()
-        ? `Orientações: ${prescriptionInstructions.trim()}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const prescriptionTextFromForm = buildPrescriptionMedicationsText();
 
     const contentText = String(content || "").trim();
     const prescriptionText = prescriptionTextFromForm || contentText;
@@ -2883,8 +3004,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         alert("Informe a quantidade de dias do atestado.");
         return;
       }
-    } else if (!prescriptionMedication.trim()) {
-      alert("Informe o medicamento da prescrição.");
+    } else if (!hasAnyPrescriptionMedication) {
+      alert("Informe pelo menos um medicamento da prescrição.");
       return;
     }
 
@@ -6436,6 +6557,255 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   />
                 </div>
               </div>
+              )}
+
+              {prescriptionType !== "atestado" && (
+                <div className="space-y-4 rounded-2xl border border-[#d9eeee] bg-white p-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-700">
+                        Medicamentos adicionais
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Use para prescrever antibiótico, anti-inflamatório e analgésico no mesmo receituário. Todos os campos continuam editáveis.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={addMedicationItem}
+                      className="rounded-xl bg-[#239d9a] px-4 py-2 text-xs font-black text-white transition hover:bg-[#1f8f8c]"
+                    >
+                      + Adicionar medicamento
+                    </button>
+                  </div>
+
+                  {additionalMedications.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[#cce9e7] bg-[#fbffff] p-4 text-xs font-semibold text-slate-500">
+                      Nenhum medicamento adicional incluído. Clique em adicionar para montar uma receita com mais de uma medicação.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {additionalMedications.map((item, index) => {
+                        const itemTemplate = getMedicationTemplateByName(
+                          item.medication,
+                        );
+                        const itemDosageIsFromLibrary = Boolean(
+                          itemTemplate?.presentationOptions?.includes(
+                            item.dosage,
+                          ),
+                        );
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4"
+                          >
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <div>
+                                <h5 className="text-sm font-black text-slate-700">
+                                  Medicamento {index + 2}
+                                </h5>
+                                <p className="text-xs text-slate-400">
+                                  Selecione da biblioteca ou digite livremente.
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeMedicationItem(item.id)}
+                                className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 hover:bg-rose-100"
+                              >
+                                Remover
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Medicamento
+                                </label>
+                                <input
+                                  type="text"
+                                  list="medication-library"
+                                  value={item.medication}
+                                  onChange={(e) =>
+                                    applyMedicationTemplateToItem(
+                                      item.id,
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Digite ou escolha um medicamento"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Apresentação / dose
+                                </label>
+
+                                {itemTemplate?.presentationOptions?.length ? (
+                                  <select
+                                    value={
+                                      itemDosageIsFromLibrary
+                                        ? item.dosage
+                                        : "manual"
+                                    }
+                                    onChange={(e) => {
+                                      if (e.target.value === "manual") {
+                                        updateMedicationItem(
+                                          item.id,
+                                          "dosage",
+                                          "",
+                                        );
+                                        return;
+                                      }
+
+                                      updateMedicationItem(
+                                        item.id,
+                                        "dosage",
+                                        e.target.value,
+                                      );
+                                    }}
+                                    className="mb-2 w-full border rounded-xl p-3 text-base text-slate-800"
+                                  >
+                                    <option value="">
+                                      Selecione uma apresentação
+                                    </option>
+                                    {itemTemplate.presentationOptions.map(
+                                      (option) => (
+                                        <option
+                                          key={option}
+                                          value={
+                                            option ===
+                                            "Outro / digitar manualmente"
+                                              ? "manual"
+                                              : option
+                                          }
+                                        >
+                                          {option}
+                                        </option>
+                                      ),
+                                    )}
+                                  </select>
+                                ) : null}
+
+                                <input
+                                  type="text"
+                                  value={item.dosage}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "dosage",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Ex.: 500 mg, 250 mg/5 mL ou dose manual"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Via de uso
+                                </label>
+                                <input
+                                  type="text"
+                                  value={item.route}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "route",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Ex.: Uso oral"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Frequência
+                                </label>
+                                <input
+                                  type="text"
+                                  value={item.frequency}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "frequency",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Ex.: tomar de 8 em 8 horas"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Duração
+                                </label>
+                                <input
+                                  type="text"
+                                  value={item.duration}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "duration",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Ex.: por 7 dias"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Quantidade
+                                </label>
+                                <input
+                                  type="text"
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "quantity",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Ex.: 21 cápsulas / 1 caixa"
+                                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+
+                              <div className="md:col-span-2">
+                                <label className="block mb-1 text-slate-500 text-sm">
+                                  Orientações
+                                </label>
+                                <textarea
+                                  value={item.instructions}
+                                  onChange={(e) =>
+                                    updateMedicationItem(
+                                      item.id,
+                                      "instructions",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="Orientações específicas desta medicação"
+                                  className="min-h-[90px] w-full border rounded-xl p-3 text-base text-slate-800"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
 
               {prescriptionType !== "atestado" && (
