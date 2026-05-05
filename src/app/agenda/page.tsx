@@ -338,6 +338,15 @@ export default function AgendaPage() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [selectedProfessionalId, setSelectedProfessionalId] = useState("");
 
+  const [showQuickPatientForm, setShowQuickPatientForm] = useState(false);
+  const [savingQuickPatient, setSavingQuickPatient] = useState(false);
+  const [quickPatientForm, setQuickPatientForm] = useState({
+    name: "",
+    phone: "",
+    cpf: "",
+    email: "",
+  });
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("08:00");
 
@@ -474,6 +483,76 @@ export default function AgendaPage() {
     setAppointmentStatus("agendado");
     setReminderEnabled(true);
     setReminderBeforeHours("24");
+    setShowQuickPatientForm(false);
+    setQuickPatientForm({ name: "", phone: "", cpf: "", email: "" });
+  };
+
+  const updateQuickPatientField = (field: string, value: string) => {
+    setQuickPatientForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const openQuickPatientForm = () => {
+    setShowQuickPatientForm(true);
+    setQuickPatientForm((current) => ({
+      ...current,
+      name: current.name || search,
+    }));
+  };
+
+  const closeQuickPatientForm = () => {
+    if (savingQuickPatient) return;
+    setShowQuickPatientForm(false);
+  };
+
+  const saveQuickPatient = async () => {
+    const name = quickPatientForm.name.trim();
+
+    if (!name) {
+      alert("Informe o nome do paciente.");
+      return;
+    }
+
+    try {
+      setSavingQuickPatient(true);
+
+      const payload = {
+        name,
+        phone: normalizePhone(quickPatientForm.phone) || null,
+        cpf: String(quickPatientForm.cpf || "").replace(/\D/g, "") || null,
+        email: quickPatientForm.email.trim() || null,
+      };
+
+      const { data, error } = await supabase
+        .from("patients")
+        .insert(payload)
+        .select("*")
+        .single();
+
+      if (error) {
+        alert("Erro ao cadastrar paciente: " + error.message);
+        return;
+      }
+
+      if (data) {
+        setPatients((current) =>
+          [...current, data].sort((a, b) =>
+            String(a?.name || "").localeCompare(String(b?.name || ""), "pt-BR")
+          )
+        );
+        setSelectedPatient(data);
+        setSearch(data.name || name);
+      }
+
+      setQuickPatientForm({ name: "", phone: "", cpf: "", email: "" });
+      setShowQuickPatientForm(false);
+    } catch (error: any) {
+      alert("Erro inesperado ao cadastrar paciente: " + (error?.message || "erro desconhecido"));
+    } finally {
+      setSavingQuickPatient(false);
+    }
   };
 
 
@@ -2936,34 +3015,151 @@ export default function AgendaPage() {
             {mainType === "consulta" && (
               <>
                 <div>
-                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                    Paciente
-                  </label>
+                  <div className="mb-1 flex items-center justify-between gap-3">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      Paciente
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={openQuickPatientForm}
+                      className="rounded-xl border border-[#b9dddd] bg-white px-3 py-1.5 text-[11px] font-black text-[#239d9a] shadow-sm transition hover:bg-[#f2fcfc]"
+                    >
+                      + Novo paciente
+                    </button>
+                  </div>
+
                   <input
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
                       setSelectedPatient(null);
+                      setQuickPatientForm((current) => ({
+                        ...current,
+                        name: e.target.value,
+                      }));
                     }}
                     placeholder="Buscar paciente"
                     className="w-full border border-[#c2dddd] p-3 rounded-xl"
                   />
+
+                  {selectedPatient && (
+                    <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                      Paciente selecionado: {selectedPatient.name}
+                    </div>
+                  )}
                 </div>
 
-                <div className="border border-[#c2dddd] rounded-xl max-h-32 overflow-auto">
-                  {filteredPatients.map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedPatient(p);
-                        setSearch(p.name);
-                      }}
-                      className="p-3 hover:bg-[#fbffff] cursor-pointer"
-                    >
-                      {p.name}
+                {showQuickPatientForm && (
+                  <div className="rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-black text-slate-800">
+                          Cadastro rápido de paciente
+                        </h3>
+                        <p className="text-xs font-semibold text-slate-400">
+                          Cadastre sem sair da agenda. O paciente será selecionado automaticamente.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={closeQuickPatientForm}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#d4e8e8] bg-white text-slate-500 hover:bg-[#f4fbfb]"
+                      >
+                        ×
+                      </button>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                          Nome completo *
+                        </label>
+                        <input
+                          value={quickPatientForm.name}
+                          onChange={(e) => updateQuickPatientField("name", e.target.value)}
+                          placeholder="Nome do paciente"
+                          className="w-full rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 outline-none focus:border-[#239d9a] focus:bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                          WhatsApp
+                        </label>
+                        <input
+                          value={quickPatientForm.phone}
+                          onChange={(e) => updateQuickPatientField("phone", e.target.value)}
+                          placeholder="Telefone / WhatsApp"
+                          className="w-full rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 outline-none focus:border-[#239d9a] focus:bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                          CPF
+                        </label>
+                        <input
+                          value={quickPatientForm.cpf}
+                          onChange={(e) => updateQuickPatientField("cpf", e.target.value)}
+                          placeholder="CPF"
+                          className="w-full rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 outline-none focus:border-[#239d9a] focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                          E-mail
+                        </label>
+                        <input
+                          type="email"
+                          value={quickPatientForm.email}
+                          onChange={(e) => updateQuickPatientField("email", e.target.value)}
+                          placeholder="E-mail"
+                          className="w-full rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 outline-none focus:border-[#239d9a] focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={closeQuickPatientForm}
+                        disabled={savingQuickPatient}
+                        className="rounded-xl border border-[#d4e8e8] bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-[#f4fbfb] disabled:opacity-60"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={saveQuickPatient}
+                        disabled={savingQuickPatient}
+                        className="rounded-xl bg-[#239d9a] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+                      >
+                        {savingQuickPatient ? "Salvando..." : "Salvar e selecionar"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {filteredPatients.length > 0 && !selectedPatient && (
+                  <div className="max-h-32 overflow-auto rounded-xl border border-[#c2dddd] bg-white">
+                    {filteredPatients.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setSelectedPatient(p);
+                          setSearch(p.name);
+                        }}
+                        className="cursor-pointer p-3 hover:bg-[#fbffff]"
+                      >
+                        {p.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div>
                   <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
