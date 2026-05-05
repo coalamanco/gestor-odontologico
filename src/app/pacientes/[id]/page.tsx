@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { createClinicalFollowupsForProtocol } from "@/lib/clinicalCRM";
 import PatientSmartInsights from "@/components/PatientSmartInsights";
 import {
   calculatePatientCrmScore,
@@ -773,6 +774,16 @@ type PatientFile = {
   created_at?: string | null;
 };
 
+type ClinicalFollowup = {
+  id: string;
+  patient_id: string;
+  type: string;
+  origin?: string | null;
+  due_date: string;
+  status?: string | null;
+  created_at?: string | null;
+};
+
 const TABS: { id: TabId; label: string }[] = [
   { id: "sobre", label: "Sobre" },
   { id: "tratamentos", label: "Tratamentos" },
@@ -1280,6 +1291,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   >([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [patientFiles, setPatientFiles] = useState<PatientFile[]>([]);
+  const [clinicalFollowups, setClinicalFollowups] = useState<ClinicalFollowup[]>([]);
+  const [updatingClinicalFollowup, setUpdatingClinicalFollowup] = useState<string | null>(null);
   const [uploadingPatientFile, setUploadingPatientFile] = useState(false);
   const [selectedPatientFile, setSelectedPatientFile] =
     useState<PatientFile | null>(null);
@@ -1598,6 +1611,15 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
       if (patientFilesError) throw patientFilesError;
 
+      const { data: cf, error: clinicalFollowupsError } = await supabase
+        .from("clinical_followups")
+        .select("*")
+        .eq("patient_id", params.id)
+        .order("due_date", { ascending: true })
+        .order("created_at", { ascending: false });
+
+      if (clinicalFollowupsError) throw clinicalFollowupsError;
+
       const { data: auditData, error: auditError } = await supabase
         .from("audit_logs")
         .select(
@@ -1647,6 +1669,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       setPaymentTransactions(txs);
       setClinicalNotes((cn || []) as ClinicalNote[]);
       setPatientFiles((pf || []) as PatientFile[]);
+      setClinicalFollowups((cf || []) as ClinicalFollowup[]);
       setAuditLogs(patientAuditLogs);
     } catch (error: any) {
       alert("Erro ao carregar prontuário: " + error.message);
@@ -3020,13 +3043,31 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             ? "Atestado odontológico"
             : "Prescrição medicamentosa";
 
-      const { error } = await supabase.from("clinical_notes").insert({
-        patient_id: params.id,
-        title,
-        content,
-      });
+      const { data: savedNote, error } = await supabase
+        .from("clinical_notes")
+        .insert({
+          patient_id: params.id,
+          title,
+          content,
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      let createdFollowups = 0;
+
+      if (prescriptionType !== "atestado" && selectedPrescriptionProtocol) {
+        const followupResult = await createClinicalFollowupsForProtocol({
+          supabase,
+          patientId: params.id,
+          protocolId: selectedPrescriptionProtocol,
+          baseDate: prescriptionDate || new Date().toISOString().slice(0, 10),
+          sourceNoteId: savedNote?.id || null,
+        });
+
+        createdFollowups = followupResult.created;
+      }
 
       if (action === "pdf" || action === "pdf_print") {
         await savePrescriptionPdfToPatientFiles(content, prescriptionType);
@@ -3036,10 +3077,17 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         printPrescriptionContent(content, prescriptionType);
       }
 
-      alert(
+      const baseMessage =
         action === "pdf" || action === "pdf_print"
           ? "Prescrição salva no histórico e PDF salvo nos documentos do paciente."
-          : "Prescrição salva no histórico do paciente.",
+          : "Prescrição salva no histórico do paciente.";
+
+      alert(
+        createdFollowups > 0
+          ? `${baseMessage}
+
+CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
+          : baseMessage,
       );
       setShowPrescriptionModal(false);
       setActiveTab("prescricoes");
@@ -3614,6 +3662,71 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         return bDate - aDate;
       });
   }, [clinicalNotes]);
+
+
+  const pendingClinicalFollowups = useMemo(() => {
+    return clinicalFollowups
+      .filter((followup) => followup.status !== "concluido" && followup.status !== "cancelado")
+      .sort((a, b) => {
+        const aDate = a.due_date ? new Date(`${a.due_date}T12:00:00`).getTime() : 0;
+        const bDate = b.due_date ? new Date(`${b.due_date}T12:00:00`).getTime() : 0;
+        return aDate - bDate;
+      });
+  }, [clinicalFollowups]);
+
+  const clinicalFollowupBadgeClass = (dueDate?: string | null) => {
+    if (!dueDate) return "bg-slate-50 text-slate-600 border-slate-100";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const target = new Date(`${dueDate}T12:00:00`);
+    target.setHours(0, 0, 0, 0);
+
+    if (target.getTime() < today.getTime()) {
+      return "bg-rose-50 text-rose-700 border-rose-100";
+    }
+
+    const diffDays = Math.ceil((target.getTime() - today.getTime()) / 86400000);
+
+    if (diffDays <= 3) {
+      return "bg-amber-50 text-amber-700 border-amber-100";
+    }
+
+    return "bg-emerald-50 text-emerald-700 border-emerald-100";
+  };
+
+  const formatClinicalFollowupDate = (dueDate?: string | null) => {
+    if (!dueDate) return "Sem data";
+
+    return new Date(`${dueDate}T12:00:00`).toLocaleDateString("pt-BR");
+  };
+
+  const completeClinicalFollowup = async (followup: ClinicalFollowup) => {
+    const confirmed = window.confirm(
+      "Deseja marcar este acompanhamento clínico como concluído?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingClinicalFollowup(followup.id);
+
+      const { error } = await supabase
+        .from("clinical_followups")
+        .update({ status: "concluido" })
+        .eq("id", followup.id);
+
+      if (error) throw error;
+
+      await loadData();
+      alert("Acompanhamento clínico concluído.");
+    } catch (error: any) {
+      alert("Erro ao concluir acompanhamento: " + error.message);
+    } finally {
+      setUpdatingClinicalFollowup(null);
+    }
+  };
 
   const clinicalTimeline = useMemo(() => {
     return clinicalNotes
@@ -5379,6 +5492,66 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   <p className="mt-1 text-xs">
                     Para afastamento após cirurgia, atendimento ou procedimento.
                   </p>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800">
+                      CRM clínico
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Revisões e retornos automáticos gerados pelas prescrições.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white border border-[#d8eeee] px-2.5 py-1 text-[10px] font-black text-[#239d9a]">
+                    {pendingClinicalFollowups.length}
+                  </span>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  {pendingClinicalFollowups.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-[#d8eeee] bg-white p-3 text-xs text-slate-500">
+                      Nenhum acompanhamento clínico pendente para este paciente.
+                    </p>
+                  ) : (
+                    pendingClinicalFollowups.slice(0, 5).map((followup) => (
+                      <div
+                        key={followup.id}
+                        className="rounded-xl border border-[#d8eeee] bg-white p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span
+                              className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black ${clinicalFollowupBadgeClass(
+                                followup.due_date,
+                              )}`}
+                            >
+                              {formatClinicalFollowupDate(followup.due_date)}
+                            </span>
+                            <p className="mt-2 text-xs font-black text-slate-800">
+                              {followup.type || "Acompanhamento"}
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-slate-500">
+                              {followup.origin || "Origem clínica"}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => completeClinicalFollowup(followup)}
+                            disabled={updatingClinicalFollowup === followup.id}
+                            className="rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700 disabled:opacity-60"
+                          >
+                            {updatingClinicalFollowup === followup.id
+                              ? "..."
+                              : "Concluir"}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
