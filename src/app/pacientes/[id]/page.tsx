@@ -34,6 +34,140 @@ type MedicationTemplate = {
   category: string;
 };
 
+type PrescriptionProtocol = {
+  id: string;
+  name: string;
+  description: string;
+  medication: string;
+  dosage: string;
+  route: string;
+  frequency: string;
+  duration: string;
+  quantity: string;
+  instructions: string;
+};
+
+const PRESCRIPTION_PROTOCOLS: PrescriptionProtocol[] = [
+  {
+    id: "extracao_simples",
+    name: "Extração simples",
+    description: "Modelo básico para pós-operatório de exodontia simples.",
+    medication: "Dipirona",
+    dosage: "500 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 comprimido de 6/6 horas se dor.",
+    duration: "Por até 3 dias, se necessário",
+    quantity: "12 comprimidos",
+    instructions:
+      "Orientações complementares:\n" +
+      "- Evitar bochechos vigorosos nas primeiras 24 horas.\n" +
+      "- Manter repouso relativo e alimentação fria/pastosa nas primeiras horas.\n" +
+      "- Retornar em caso de dor intensa, sangramento persistente, febre ou edema progressivo.",
+  },
+  {
+    id: "extracao_infectada",
+    name: "Extração com infecção / abscesso",
+    description: "Sugere antibiótico + analgésico, com campos editáveis.",
+    medication: "Amoxicilina",
+    dosage: "500 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 cápsula de 8/8 horas.",
+    duration: "Por 7 dias",
+    quantity: "21 cápsulas",
+    instructions:
+      "Associar analgésico conforme necessidade clínica.\n" +
+      "Sugestão adicional: Dipirona 500 mg, tomar 1 comprimido de 6/6 horas se dor.\n" +
+      "Confirmar alergias e histórico clínico antes da prescrição.",
+  },
+  {
+    id: "implante_unitario",
+    name: "Implante unitário",
+    description: "Protocolo pós-operatório para instalação de implante.",
+    medication: "Amoxicilina",
+    dosage: "500 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 cápsula de 8/8 horas.",
+    duration: "Por 7 dias",
+    quantity: "21 cápsulas",
+    instructions:
+      "Sugestão adicional: anti-inflamatório e analgésico conforme avaliação profissional.\n" +
+      "Bochecho com Clorexidina 0,12% pode ser indicado conforme o caso.\n" +
+      "Manter gelo local nas primeiras horas e evitar esforço físico.",
+  },
+  {
+    id: "implantes_multiplos",
+    name: "Implantes múltiplos / cirurgia extensa",
+    description: "Modelo para cirurgia mais invasiva, editável antes de salvar.",
+    medication: "Amoxicilina + Clavulanato",
+    dosage: "875 mg + 125 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 comprimido de 12/12 horas.",
+    duration: "Por 7 dias",
+    quantity: "14 comprimidos",
+    instructions:
+      "Sugestão adicional: analgésico e anti-inflamatório conforme avaliação clínica.\n" +
+      "Orientar repouso, compressa fria nas primeiras horas e retorno para revisão.\n" +
+      "Confirmar alergias, uso de anticoagulantes, gastrite, doença hepática/renal e demais contraindicações.",
+  },
+  {
+    id: "enxerto_osseo",
+    name: "Enxerto ósseo / biomaterial",
+    description: "Modelo com reforço de cuidados pós-operatórios.",
+    medication: "Amoxicilina + Clavulanato",
+    dosage: "875 mg + 125 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 comprimido de 12/12 horas.",
+    duration: "Por 7 dias",
+    quantity: "14 comprimidos",
+    instructions:
+      "Evitar trauma local, esforço físico, calor e manipulação da região operada.\n" +
+      "Não assoar o nariz se houver orientação relacionada a seio maxilar.\n" +
+      "Retornar conforme agendamento ou antes em caso de intercorrência.",
+  },
+  {
+    id: "endodontia_dor",
+    name: "Endodontia com dor",
+    description: "Modelo para dor pós-atendimento endodôntico.",
+    medication: "Ibuprofeno",
+    dosage: "600 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 comprimido de 8/8 horas, se dor.",
+    duration: "Por até 3 dias",
+    quantity: "9 comprimidos",
+    instructions:
+      "Tomar preferencialmente após alimentação.\n" +
+      "Se houver contraindicação a anti-inflamatório, substituir conforme avaliação profissional.\n" +
+      "Retornar se dor intensa, edema ou febre.",
+  },
+  {
+    id: "periodontal_gengivite",
+    name: "Pós-raspagem / gengivite",
+    description: "Modelo com antisséptico bucal e orientações.",
+    medication: "Clorexidina 0,12%",
+    dosage: "0,12%",
+    route: "Uso bucal",
+    frequency: "Bochechar 15 mL por 1 minuto, 2 vezes ao dia.",
+    duration: "Por 7 dias",
+    quantity: "1 frasco",
+    instructions:
+      "Não ingerir. Evitar alimentos/bebidas logo após o uso.\n" +
+      "Manter escovação e uso de fio dental conforme orientação profissional.",
+  },
+  {
+    id: "dor_leve",
+    name: "Dor leve / procedimento simples",
+    description: "Modelo analgésico simples.",
+    medication: "Paracetamol",
+    dosage: "750 mg",
+    route: "Uso oral",
+    frequency: "Tomar 1 comprimido de 6/6 horas se dor.",
+    duration: "Por até 3 dias",
+    quantity: "12 comprimidos",
+    instructions:
+      "Usar somente se dor. Verificar histórico clínico e contraindicações antes da prescrição.",
+  },
+];
+
 const MEDICATION_LIBRARY: MedicationTemplate[] = [
   {
     name: "Amoxicilina",
@@ -1193,6 +1327,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     "afastamento de suas atividades laborais/escolares",
   );
   const [certificateObservations, setCertificateObservations] = useState("");
+  const [selectedPrescriptionProtocol, setSelectedPrescriptionProtocol] =
+    useState("");
   const [submittingPrescription, setSubmittingPrescription] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1776,6 +1912,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setCertificateStartDate(new Date().toISOString().slice(0, 10));
     setCertificatePurpose("afastamento de suas atividades laborais/escolares");
     setCertificateObservations("");
+    setSelectedPrescriptionProtocol("");
   };
 
   const openPrescriptionModal = () => {
@@ -1803,6 +1940,25 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setPrescriptionDuration(template.duration);
     setPrescriptionQuantity(template.quantity);
     setPrescriptionInstructions(template.instructions);
+  };
+
+  const applyPrescriptionProtocol = (protocolId: string) => {
+    setSelectedPrescriptionProtocol(protocolId);
+
+    const protocol = PRESCRIPTION_PROTOCOLS.find(
+      (item) => item.id === protocolId,
+    );
+
+    if (!protocol) return;
+
+    setPrescriptionType("simples");
+    setPrescriptionMedication(protocol.medication);
+    setPrescriptionDosage(protocol.dosage);
+    setPrescriptionUseRoute(protocol.route);
+    setPrescriptionFrequency(protocol.frequency);
+    setPrescriptionDuration(protocol.duration);
+    setPrescriptionQuantity(protocol.quantity);
+    setPrescriptionInstructions(protocol.instructions);
   };
 
   const selectedMedicationTemplate = useMemo(() => {
@@ -1861,8 +2017,9 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       `Paciente: ${patient?.name || "Paciente"}\n` +
       `${patient?.cpf ? `CPF: ${patient.cpf}\n` : ""}` +
       `${patient?.birth_date ? `Nascimento: ${new Date(`${patient.birth_date}T12:00:00`).toLocaleDateString("pt-BR")}\n` : ""}` +
-      `Data: ${dateLabel}\n\n` +
-      `Medicamento: ${prescriptionMedication.trim()}\n` +
+      `Data: ${dateLabel}\n` +
+      `${selectedPrescriptionProtocol ? `Modelo automático: ${PRESCRIPTION_PROTOCOLS.find((item) => item.id === selectedPrescriptionProtocol)?.name || "Procedimento odontológico"}\n` : ""}` +
+      `\nMedicamento: ${prescriptionMedication.trim()}\n` +
       `${prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}\n` : ""}` +
       `${prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}\n` : ""}` +
       `${prescriptionFrequency.trim() ? `Frequência: ${prescriptionFrequency.trim()}\n` : ""}` +
@@ -5750,6 +5907,64 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   />
                 </div>
               </div>
+
+              {prescriptionType !== "atestado" && (
+                <div className="rounded-2xl border border-[#d9eeee] bg-gradient-to-br from-[#fbffff] to-[#eef8f8] p-4">
+                  <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-700">
+                        Prescrição automática por procedimento
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Escolha um modelo para preencher a prescrição. Todos os campos continuam editáveis antes de salvar ou imprimir.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                    <div>
+                      <label className="block mb-1 text-slate-500 text-sm">
+                        Modelo clínico
+                      </label>
+                      <select
+                        value={selectedPrescriptionProtocol}
+                        onChange={(e) => applyPrescriptionProtocol(e.target.value)}
+                        className="w-full border rounded-xl p-3 text-base text-slate-800"
+                      >
+                        <option value="">Selecionar modelo automático</option>
+                        {PRESCRIPTION_PROTOCOLS.map((protocol) => (
+                          <option key={protocol.id} value={protocol.id}>
+                            {protocol.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPrescriptionProtocol("");
+                        setPrescriptionMedication("");
+                        setPrescriptionDosage("");
+                        setPrescriptionFrequency("");
+                        setPrescriptionDuration("");
+                        setPrescriptionUseRoute("Uso oral");
+                        setPrescriptionQuantity("");
+                        setPrescriptionInstructions("");
+                      }}
+                      className="rounded-xl border border-[#cce9e7] bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-[#fbffff]"
+                    >
+                      Limpar modelo
+                    </button>
+                  </div>
+
+                  {selectedPrescriptionProtocol ? (
+                    <p className="mt-2 text-xs font-semibold text-[#239d9a]">
+                      {PRESCRIPTION_PROTOCOLS.find((protocol) => protocol.id === selectedPrescriptionProtocol)?.description}
+                    </p>
+                  ) : null}
+                </div>
+              )}
 
               {prescriptionType !== "atestado" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
