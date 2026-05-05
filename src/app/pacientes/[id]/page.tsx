@@ -20,12 +20,15 @@ type PaymentMethod =
   | "transferencia"
   | "cheque";
 
+type PrescriptionType = "simples" | "controle_especial";
+
 type TabId =
   | "sobre"
   | "tratamentos"
   | "agendamentos"
   | "orcamentos"
   | "financeiro"
+  | "prescricoes"
   | "linha_tempo"
   | "imagens_rx"
   | "documentos";
@@ -110,6 +113,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "agendamentos", label: "Agendamentos" },
   { id: "orcamentos", label: "Orçamentos" },
   { id: "financeiro", label: "Financeiro" },
+  { id: "prescricoes", label: "Prescrições" },
   { id: "linha_tempo", label: "Linha do tempo" },
   { id: "imagens_rx", label: "Imagens e RX" },
   { id: "documentos", label: "Documentos" },
@@ -644,6 +648,24 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [evolutionContent, setEvolutionContent] = useState("");
   const [submittingEvolution, setSubmittingEvolution] = useState(false);
 
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [prescriptionType, setPrescriptionType] =
+    useState<PrescriptionType>("simples");
+  const [prescriptionDate, setPrescriptionDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [prescriptionProfessional, setPrescriptionProfessional] = useState(
+    "Dr. Henrique S. Pasquali",
+  );
+  const [prescriptionMedication, setPrescriptionMedication] = useState("");
+  const [prescriptionDosage, setPrescriptionDosage] = useState("");
+  const [prescriptionFrequency, setPrescriptionFrequency] = useState("");
+  const [prescriptionDuration, setPrescriptionDuration] = useState("");
+  const [prescriptionUseRoute, setPrescriptionUseRoute] = useState("Uso oral");
+  const [prescriptionQuantity, setPrescriptionQuantity] = useState("");
+  const [prescriptionInstructions, setPrescriptionInstructions] = useState("");
+  const [submittingPrescription, setSubmittingPrescription] = useState(false);
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<FinancialRecord | null>(
     null,
@@ -967,6 +989,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         "agendamentos",
         "orcamentos",
         "financeiro",
+        "prescricoes",
         "linha_tempo",
         "imagens_rx",
         "documentos",
@@ -1206,6 +1229,206 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       alert("Erro ao registrar evolução: " + error.message);
     } finally {
       setSubmittingEvolution(false);
+    }
+  };
+
+  const resetPrescriptionForm = () => {
+    setPrescriptionType("simples");
+    setPrescriptionDate(new Date().toISOString().slice(0, 10));
+    setPrescriptionProfessional("Dr. Henrique S. Pasquali");
+    setPrescriptionMedication("");
+    setPrescriptionDosage("");
+    setPrescriptionFrequency("");
+    setPrescriptionDuration("");
+    setPrescriptionUseRoute("Uso oral");
+    setPrescriptionQuantity("");
+    setPrescriptionInstructions("");
+  };
+
+  const openPrescriptionModal = () => {
+    resetPrescriptionForm();
+    setShowPrescriptionModal(true);
+  };
+
+  const closePrescriptionModal = () => {
+    if (submittingPrescription) return;
+    setShowPrescriptionModal(false);
+  };
+
+  const prescriptionTypeLabel = (type: PrescriptionType) => {
+    if (type === "controle_especial") {
+      return "Receita de controle especial - 2 vias";
+    }
+
+    return "Receituário simples";
+  };
+
+  const buildPrescriptionContent = () => {
+    const dateLabel = prescriptionDate
+      ? new Date(`${prescriptionDate}T12:00:00`).toLocaleDateString("pt-BR")
+      : new Date().toLocaleDateString("pt-BR");
+
+    return (
+      `${prescriptionTypeLabel(prescriptionType)}\n\n` +
+      `Paciente: ${patient?.name || "Paciente"}\n` +
+      `${patient?.cpf ? `CPF: ${patient.cpf}\n` : ""}` +
+      `${patient?.birth_date ? `Nascimento: ${new Date(`${patient.birth_date}T12:00:00`).toLocaleDateString("pt-BR")}\n` : ""}` +
+      `Data: ${dateLabel}\n\n` +
+      `Medicamento: ${prescriptionMedication.trim()}\n` +
+      `${prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}\n` : ""}` +
+      `${prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}\n` : ""}` +
+      `${prescriptionFrequency.trim() ? `Frequência: ${prescriptionFrequency.trim()}\n` : ""}` +
+      `${prescriptionDuration.trim() ? `Duração: ${prescriptionDuration.trim()}\n` : ""}` +
+      `${prescriptionQuantity.trim() ? `Quantidade: ${prescriptionQuantity.trim()}\n` : ""}` +
+      `${prescriptionInstructions.trim() ? `\nOrientações:\n${prescriptionInstructions.trim()}\n` : ""}` +
+      `\nProfissional: ${prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali"}`
+    );
+  };
+
+  const printPrescriptionContent = (
+    content: string,
+    type: PrescriptionType,
+  ) => {
+    const title = prescriptionTypeLabel(type);
+    const viaLabels =
+      type === "controle_especial"
+        ? ["1ª via - Farmácia", "2ª via - Paciente"]
+        : ["Receituário simples"];
+
+    const escapedContent = content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    const body = viaLabels
+      .map(
+        (via, index) => `
+          <section class="page ${index > 0 ? "page-break" : ""}">
+            <header>
+              <div>
+                <h1>Clínica Odontológica</h1>
+                <p>Dr. Henrique S. Pasquali</p>
+              </div>
+              <strong>${via}</strong>
+            </header>
+
+            <h2>${title}</h2>
+            <pre>${escapedContent}</pre>
+
+            <footer>
+              <div class="signature"></div>
+              <p>Assinatura e carimbo do profissional</p>
+            </footer>
+          </section>
+        `,
+      )
+      .join("");
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+
+    if (!printWindow) {
+      alert(
+        "Não foi possível abrir a janela de impressão. Verifique o bloqueador de pop-up.",
+      );
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${title}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              background: #f8fafc;
+              color: #0f172a;
+              font-family: Arial, Helvetica, sans-serif;
+            }
+            .page {
+              width: 210mm;
+              min-height: 297mm;
+              margin: 0 auto;
+              padding: 18mm;
+              background: #ffffff;
+            }
+            .page-break { page-break-before: always; }
+            header {
+              display: flex;
+              justify-content: space-between;
+              gap: 24px;
+              border-bottom: 1px solid #cbd5e1;
+              padding-bottom: 14px;
+              margin-bottom: 24px;
+            }
+            h1 { margin: 0; font-size: 20px; }
+            h2 { margin: 0 0 24px; text-align: center; font-size: 18px; text-transform: uppercase; }
+            p { margin: 4px 0; color: #475569; }
+            pre {
+              white-space: pre-wrap;
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 15px;
+              line-height: 1.7;
+              min-height: 170mm;
+            }
+            footer { margin-top: 32px; text-align: center; }
+            .signature {
+              width: 90mm;
+              border-top: 1px solid #0f172a;
+              margin: 0 auto 8px;
+            }
+            @media print {
+              body { background: #ffffff; }
+              .page { margin: 0; box-shadow: none; }
+            }
+          </style>
+        </head>
+        <body>${body}</body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+  };
+
+  const confirmPrescription = async (shouldPrint = false) => {
+    if (!prescriptionMedication.trim()) {
+      alert("Informe o medicamento da prescrição.");
+      return;
+    }
+
+    try {
+      setSubmittingPrescription(true);
+
+      const content = buildPrescriptionContent();
+      const title =
+        prescriptionType === "controle_especial"
+          ? "Receita de controle especial"
+          : "Prescrição medicamentosa";
+
+      const { error } = await supabase.from("clinical_notes").insert({
+        patient_id: params.id,
+        title,
+        content,
+      });
+
+      if (error) throw error;
+
+      if (shouldPrint) {
+        printPrescriptionContent(content, prescriptionType);
+      }
+
+      alert("Prescrição salva no histórico do paciente.");
+      setShowPrescriptionModal(false);
+      setActiveTab("prescricoes");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao salvar prescrição: " + error.message);
+    } finally {
+      setSubmittingPrescription(false);
     }
   };
 
@@ -1727,6 +1950,26 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
   const recentAppointments = appointments.slice(0, 5);
   const latestClinicalNote = clinicalNotes.length > 0 ? clinicalNotes[0] : null;
+
+  const prescriptionNotes = useMemo(() => {
+    return clinicalNotes
+      .filter((note) => {
+        const title = String(note.title || "").toLowerCase();
+        const content = String(note.content || "").toLowerCase();
+
+        return (
+          title.includes("prescrição") ||
+          title.includes("receita") ||
+          content.includes("receituário simples") ||
+          content.includes("receita de controle especial")
+        );
+      })
+      .sort((a, b) => {
+        const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bDate - aDate;
+      });
+  }, [clinicalNotes]);
 
   const clinicalTimeline = useMemo(() => {
     return clinicalNotes
@@ -2359,6 +2602,14 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 WhatsApp
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={openPrescriptionModal}
+              className="flex-1 rounded-xl border border-[#d9eeee] bg-white px-3 py-1.5 text-center text-xs font-black text-[#239d9a] shadow-sm hover:bg-[#fbffff] md:flex-none md:px-4 md:text-sm"
+            >
+              Nova prescrição
+            </button>
 
             <Link
               href={`/pacientes/${params.id}/orcamento`}
@@ -3328,6 +3579,122 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
           </div>
         )}
 
+        {activeTab === "prescricoes" && (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5 xl:col-span-2">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">
+                    Prescrições do paciente
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Receituários simples e receitas de controle especial salvos
+                    no histórico clínico.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openPrescriptionModal}
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-sm font-black text-white shadow-sm"
+                >
+                  Nova prescrição
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {prescriptionNotes.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-5 text-center">
+                    <p className="text-sm text-slate-500">
+                      Nenhuma prescrição registrada para este paciente.
+                    </p>
+                  </div>
+                )}
+
+                {prescriptionNotes.map((note) => {
+                  const isSpecial = String(note.title || "")
+                    .toLowerCase()
+                    .includes("controle especial");
+
+                  return (
+                    <div
+                      key={note.id}
+                      className="rounded-2xl border border-[#d9eeee] bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
+                              isSpecial
+                                ? "bg-rose-50 text-rose-700"
+                                : "bg-cyan-50 text-cyan-700"
+                            }`}
+                          >
+                            {isSpecial
+                              ? "Controle especial - 2 vias"
+                              : "Receituário simples"}
+                          </span>
+
+                          <h3 className="mt-2 text-sm font-black text-slate-800">
+                            {note.title || "Prescrição medicamentosa"}
+                          </h3>
+
+                          {note.created_at && (
+                            <p className="mt-1 text-xs text-slate-500">
+                              {new Date(note.created_at).toLocaleString(
+                                "pt-BR",
+                              )}
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            printPrescriptionContent(
+                              note.content || "",
+                              isSpecial ? "controle_especial" : "simples",
+                            )
+                          }
+                          className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-xs font-bold text-[#239d9a] hover:bg-[#fbffff]"
+                        >
+                          Imprimir
+                        </button>
+                      </div>
+
+                      <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-3 text-sm leading-relaxed text-slate-700 font-sans">
+                        {note.content}
+                      </pre>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-4 shadow-sm h-fit">
+              <h3 className="text-sm font-black text-slate-800">
+                Tipos disponíveis
+              </h3>
+              <div className="mt-3 space-y-3 text-sm text-slate-600">
+                <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
+                  <strong className="text-cyan-800">Receituário simples</strong>
+                  <p className="mt-1 text-xs">
+                    Para prescrições comuns, incluindo antibióticos,
+                    anti-inflamatórios e analgésicos.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3">
+                  <strong className="text-rose-800">Controle especial</strong>
+                  <p className="mt-1 text-xs">
+                    Impressão em duas vias: farmácia e paciente.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === "linha_tempo" && (
           <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
@@ -4243,6 +4610,204 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 disabled={submittingEvolution}
               >
                 {submittingEvolution ? "Salvando..." : "Salvar evolução"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrescriptionModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-[#d8eeee]">
+            <div className="p-5 border-b flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-slate-800">
+                  Nova prescrição
+                </h3>
+                <p className="text-sm text-slate-500">
+                  A prescrição será salva automaticamente no histórico do
+                  paciente.
+                </p>
+              </div>
+
+              <span className="rounded-full bg-[#e9f8f7] px-3 py-1 text-xs font-black text-[#239d9a]">
+                {patient?.name}
+              </span>
+            </div>
+
+            <div className="p-5 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Tipo de receituário
+                  </label>
+                  <select
+                    value={prescriptionType}
+                    onChange={(e) =>
+                      setPrescriptionType(e.target.value as PrescriptionType)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  >
+                    <option value="simples">Receituário simples</option>
+                    <option value="controle_especial">
+                      Controle especial - 2 vias
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Data
+                  </label>
+                  <input
+                    type="date"
+                    value={prescriptionDate}
+                    onChange={(e) => setPrescriptionDate(e.target.value)}
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Profissional
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionProfessional}
+                    onChange={(e) =>
+                      setPrescriptionProfessional(e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Medicamento *
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionMedication}
+                    onChange={(e) => setPrescriptionMedication(e.target.value)}
+                    placeholder="Ex.: Amoxicilina 500 mg"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Dose / concentração
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionDosage}
+                    onChange={(e) => setPrescriptionDosage(e.target.value)}
+                    placeholder="Ex.: 500 mg"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Via de uso
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionUseRoute}
+                    onChange={(e) => setPrescriptionUseRoute(e.target.value)}
+                    placeholder="Ex.: Uso oral"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Frequência
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionFrequency}
+                    onChange={(e) => setPrescriptionFrequency(e.target.value)}
+                    placeholder="Ex.: tomar de 8 em 8 horas"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Duração
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionDuration}
+                    onChange={(e) => setPrescriptionDuration(e.target.value)}
+                    placeholder="Ex.: por 7 dias"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Quantidade
+                  </label>
+                  <input
+                    type="text"
+                    value={prescriptionQuantity}
+                    onChange={(e) => setPrescriptionQuantity(e.target.value)}
+                    placeholder="Ex.: 21 cápsulas / 1 caixa"
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-2 text-slate-700 text-sm font-medium">
+                  Orientações adicionais
+                </label>
+                <textarea
+                  value={prescriptionInstructions}
+                  onChange={(e) => setPrescriptionInstructions(e.target.value)}
+                  className="w-full min-h-[150px] border rounded-xl p-3 text-sm text-slate-800"
+                  placeholder="Ex.: tomar após as refeições, evitar álcool, retornar em caso de reação..."
+                />
+              </div>
+
+              {prescriptionType === "controle_especial" && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  <strong>Controle especial:</strong> ao imprimir, o sistema
+                  gera duas vias: farmácia e paciente.
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 border-t flex flex-col-reverse md:flex-row md:justify-end gap-2">
+              <button
+                type="button"
+                onClick={closePrescriptionModal}
+                className="px-4 py-2 border rounded-xl text-sm"
+                disabled={submittingPrescription}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmPrescription(false)}
+                className="px-4 py-2 border border-[#d9eeee] bg-white text-[#239d9a] rounded-xl text-sm font-bold disabled:opacity-60"
+                disabled={submittingPrescription}
+              >
+                {submittingPrescription ? "Salvando..." : "Salvar no histórico"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmPrescription(true)}
+                className="px-4 py-2 bg-[#239d9a] text-white rounded-xl text-sm font-black disabled:opacity-60"
+                disabled={submittingPrescription}
+              >
+                {submittingPrescription ? "Salvando..." : "Salvar e imprimir"}
               </button>
             </div>
           </div>
