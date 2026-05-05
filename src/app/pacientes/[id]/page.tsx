@@ -22,6 +22,130 @@ type PaymentMethod =
 
 type PrescriptionType = "simples" | "controle_especial" | "atestado";
 
+type MedicationTemplate = {
+  name: string;
+  dosage: string;
+  route: string;
+  frequency: string;
+  duration: string;
+  quantity: string;
+  instructions: string;
+  category: string;
+};
+
+const MEDICATION_LIBRARY: MedicationTemplate[] = [
+  {
+    name: "Amoxicilina",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Orientar retorno em caso de reação adversa.",
+    category: "Antibiótico",
+  },
+  {
+    name: "Amoxicilina + Clavulanato",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Orientar retorno em caso de reação adversa.",
+    category: "Antibiótico",
+  },
+  {
+    name: "Azitromicina",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Confirmar alergias e histórico clínico antes da prescrição.",
+    category: "Antibiótico",
+  },
+  {
+    name: "Clindamicina",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Confirmar alergias e histórico clínico antes da prescrição.",
+    category: "Antibiótico",
+  },
+  {
+    name: "Ibuprofeno",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Preferencialmente após alimentação, conforme avaliação profissional.",
+    category: "Anti-inflamatório",
+  },
+  {
+    name: "Nimesulida",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Preferencialmente após alimentação, conforme avaliação profissional.",
+    category: "Anti-inflamatório",
+  },
+  {
+    name: "Dipirona",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Verificar alergias previamente.",
+    category: "Analgésico",
+  },
+  {
+    name: "Paracetamol",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional. Verificar histórico clínico previamente.",
+    category: "Analgésico",
+  },
+  {
+    name: "Dexametasona",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional.",
+    category: "Corticosteroide",
+  },
+  {
+    name: "Clorexidina 0,12%",
+    dosage: "",
+    route: "Uso bucal",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme orientação profissional. Não ingerir.",
+    category: "Antisséptico bucal",
+  },
+  {
+    name: "Omeprazol",
+    dosage: "",
+    route: "Uso oral",
+    frequency: "",
+    duration: "",
+    quantity: "",
+    instructions: "Usar conforme avaliação profissional.",
+    category: "Protetor gástrico",
+  },
+];
+
 type TabId =
   | "sobre"
   | "tratamentos"
@@ -1265,6 +1389,23 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const closePrescriptionModal = () => {
     if (submittingPrescription) return;
     setShowPrescriptionModal(false);
+  };
+
+  const applyMedicationTemplate = (medicationName: string) => {
+    setPrescriptionMedication(medicationName);
+
+    const template = MEDICATION_LIBRARY.find(
+      (item) => item.name.toLowerCase() === medicationName.trim().toLowerCase(),
+    );
+
+    if (!template) return;
+
+    setPrescriptionDosage(template.dosage);
+    setPrescriptionUseRoute(template.route);
+    setPrescriptionFrequency(template.frequency);
+    setPrescriptionDuration(template.duration);
+    setPrescriptionQuantity(template.quantity);
+    setPrescriptionInstructions(template.instructions);
   };
 
   const prescriptionTypeLabel = (type: PrescriptionType) => {
@@ -5210,11 +5351,23 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   </label>
                   <input
                     type="text"
+                    list="medication-library"
                     value={prescriptionMedication}
-                    onChange={(e) => setPrescriptionMedication(e.target.value)}
-                    placeholder="Ex.: Amoxicilina 500 mg"
+                    onChange={(e) => applyMedicationTemplate(e.target.value)}
+                    placeholder="Digite ou escolha um medicamento"
                     className="w-full border rounded-xl p-3 text-base text-slate-800"
                   />
+                  <datalist id="medication-library">
+                    {MEDICATION_LIBRARY.map((item) => (
+                      <option key={item.name} value={item.name}>
+                        {item.category}
+                      </option>
+                    ))}
+                  </datalist>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Ao escolher da biblioteca, o sistema preenche orientações padrão.
+                    Dose, frequência, duração e quantidade continuam sob edição do profissional.
+                  </p>
                 </div>
 
                 <div>
@@ -5282,6 +5435,37 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   />
                 </div>
               </div>
+              )}
+
+              {prescriptionType !== "atestado" && (
+                <div className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4">
+                  <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-700">
+                        Biblioteca rápida de medicamentos
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Toque em um item para preencher o nome e orientações. Os campos de dose e posologia ficam livres para edição.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {MEDICATION_LIBRARY.map((item) => (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => applyMedicationTemplate(item.name)}
+                        className="rounded-full border border-[#cce9e7] bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-[#239d9a] hover:bg-[#e9f8f7] hover:text-[#239d9a]"
+                      >
+                        {item.name}
+                        <span className="ml-1 font-medium text-slate-400">
+                          • {item.category}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {prescriptionType === "atestado" && (
