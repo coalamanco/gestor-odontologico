@@ -20,7 +20,7 @@ type PaymentMethod =
   | "transferencia"
   | "cheque";
 
-type PrescriptionType = "simples" | "controle_especial";
+type PrescriptionType = "simples" | "controle_especial" | "atestado";
 
 type TabId =
   | "sobre"
@@ -664,6 +664,14 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [prescriptionUseRoute, setPrescriptionUseRoute] = useState("Uso oral");
   const [prescriptionQuantity, setPrescriptionQuantity] = useState("");
   const [prescriptionInstructions, setPrescriptionInstructions] = useState("");
+  const [certificateDays, setCertificateDays] = useState("");
+  const [certificateStartDate, setCertificateStartDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [certificatePurpose, setCertificatePurpose] = useState(
+    "afastamento de suas atividades laborais/escolares",
+  );
+  const [certificateObservations, setCertificateObservations] = useState("");
   const [submittingPrescription, setSubmittingPrescription] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -1243,6 +1251,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setPrescriptionUseRoute("Uso oral");
     setPrescriptionQuantity("");
     setPrescriptionInstructions("");
+    setCertificateDays("");
+    setCertificateStartDate(new Date().toISOString().slice(0, 10));
+    setCertificatePurpose("afastamento de suas atividades laborais/escolares");
+    setCertificateObservations("");
   };
 
   const openPrescriptionModal = () => {
@@ -1260,6 +1272,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       return "Receita de controle especial - 2 vias";
     }
 
+    if (type === "atestado") {
+      return "Atestado odontológico";
+    }
+
     return "Receituário simples";
   };
 
@@ -1267,6 +1283,29 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     const dateLabel = prescriptionDate
       ? new Date(`${prescriptionDate}T12:00:00`).toLocaleDateString("pt-BR")
       : new Date().toLocaleDateString("pt-BR");
+
+    if (prescriptionType === "atestado") {
+      const daysNumber = Number(String(certificateDays).replace(",", "."));
+      const daysLabel =
+        daysNumber > 0
+          ? `${daysNumber} ${daysNumber === 1 ? "dia" : "dias"}`
+          : "período informado";
+
+      const startLabel = certificateStartDate
+        ? new Date(`${certificateStartDate}T12:00:00`).toLocaleDateString("pt-BR")
+        : dateLabel;
+
+      return (
+        `${prescriptionTypeLabel(prescriptionType)}\n\n` +
+        `Paciente: ${patient?.name || "Paciente"}\n` +
+        `${patient?.cpf ? `CPF: ${patient.cpf}\n` : ""}` +
+        `${patient?.birth_date ? `Nascimento: ${new Date(`${patient.birth_date}T12:00:00`).toLocaleDateString("pt-BR")}\n` : ""}` +
+        `Data: ${dateLabel}\n\n` +
+        `Atesto, para os devidos fins, que o(a) paciente acima identificado(a) necessita de ${daysLabel} de ${certificatePurpose.trim() || "afastamento de suas atividades laborais/escolares"}, a partir de ${startLabel}.\n` +
+        `${certificateObservations.trim() ? `\nObservações:\n${certificateObservations.trim()}\n` : ""}` +
+        `\nProfissional: ${prescriptionProfessional.trim() || "Dr. Henrique S. Pasquali"}`
+      );
+    }
 
     return (
       `${prescriptionTypeLabel(prescriptionType)}\n\n` +
@@ -1291,9 +1330,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   ) => {
     const title = prescriptionTypeLabel(type);
     const isSpecialControl = type === "controle_especial";
+    const isCertificate = type === "atestado";
     const viaLabels = isSpecialControl
       ? ["1ª via - Farmácia", "2ª via - Paciente"]
-      : ["Receituário simples"];
+      : [isCertificate ? "Atestado odontológico" : "Receituário simples"];
 
     const escapeHtml = (value: string) =>
       String(value || "")
@@ -1316,7 +1356,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       .filter(Boolean)
       .join(" - ");
 
-    const prescriptionText = [
+    const prescriptionTextFromForm = [
       prescriptionMedication.trim(),
       prescriptionDosage.trim() ? `Dose/concentração: ${prescriptionDosage.trim()}` : "",
       prescriptionUseRoute.trim() ? `Via de uso: ${prescriptionUseRoute.trim()}` : "",
@@ -1327,6 +1367,9 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     ]
       .filter(Boolean)
       .join("\n");
+
+    const contentText = String(content || "").trim();
+    const prescriptionText = prescriptionTextFromForm || contentText;
 
     const simpleBody = viaLabels
       .map(
@@ -1345,6 +1388,34 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               <div class="simple-prescription-block">
                 <div class="long-line"><span class="bold-underlined">Prescrição:</span><strong></strong></div>
                 <pre>${escapeHtml(prescriptionText)}</pre>
+              </div>
+
+              <div class="simple-date-sign-row">
+                <div class="date-line">Data: <span>${escapeHtml(dateLabel)}</span></div>
+                <div class="stamp-line">Carimbo / Assinatura</div>
+              </div>
+            </div>
+          </section>
+        `,
+      )
+      .join("");
+
+    const certificateBody = viaLabels
+      .map(
+        (via, index) => `
+          <section class="page letterhead-page simple-letterhead-page ${index > 0 ? "page-break" : ""}">
+            <div class="letterhead-content certificate-content">
+              <div class="simple-recipe-label">${escapeHtml(via)}</div>
+
+              <h2>ATESTADO ODONTOLÓGICO</h2>
+
+              <div class="patient-lines simple-patient-lines">
+                <div class="long-line"><span>Paciente:</span><strong>${escapeHtml(patient?.name || "")}</strong></div>
+                <div class="long-line"><span>Endereço:</span><strong>${escapeHtml(patientAddress)}</strong></div>
+              </div>
+
+              <div class="certificate-text">
+                <pre>${escapeHtml(contentText || prescriptionText)}</pre>
               </div>
 
               <div class="simple-date-sign-row">
@@ -1496,6 +1567,26 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 #111111 10mm
               );
             }
+            .certificate-content h2 {
+              margin-top: 12px;
+            }
+
+            .certificate-text {
+              margin-top: 34px;
+              min-height: 330px;
+              border: 1px solid #e5e7eb;
+              border-radius: 14px;
+              padding: 22px;
+              font-size: 15px;
+              line-height: 1.8;
+            }
+
+            .certificate-text pre {
+              margin: 0;
+              white-space: pre-wrap;
+              font-family: Arial, sans-serif;
+            }
+
             .simple-date-sign-row {
               display: grid;
               grid-template-columns: 70mm 1fr;
@@ -1655,7 +1746,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             }
           </style>
         </head>
-        <body>${isSpecialControl ? specialControlBody : simpleBody}</body>
+        <body>${isSpecialControl ? specialControlBody : isCertificate ? certificateBody : simpleBody}</body>
       </html>
     `);
 
@@ -1665,7 +1756,14 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   };
 
   const confirmPrescription = async (shouldPrint = false) => {
-    if (!prescriptionMedication.trim()) {
+    if (prescriptionType === "atestado") {
+      const daysNumber = Number(String(certificateDays).replace(",", "."));
+
+      if (Number.isNaN(daysNumber) || daysNumber <= 0) {
+        alert("Informe a quantidade de dias do atestado.");
+        return;
+      }
+    } else if (!prescriptionMedication.trim()) {
       alert("Informe o medicamento da prescrição.");
       return;
     }
@@ -1677,7 +1775,9 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       const title =
         prescriptionType === "controle_especial"
           ? "Receita de controle especial"
-          : "Prescrição medicamentosa";
+          : prescriptionType === "atestado"
+            ? "Atestado odontológico"
+            : "Prescrição medicamentosa";
 
       const { error } = await supabase.from("clinical_notes").insert({
         patient_id: params.id,
@@ -2162,6 +2262,29 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     }
   };
 
+  const deletePrescriptionNote = async (note: ClinicalNote) => {
+    const confirmed = window.confirm(
+      "Deseja realmente excluir este registro?\n\nEssa ação remove a prescrição/atestado do histórico do paciente e não pode ser desfeita.",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from("clinical_notes")
+        .delete()
+        .eq("id", note.id)
+        .eq("patient_id", params.id);
+
+      if (error) throw error;
+
+      alert("Registro excluído com sucesso.");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao excluir registro: " + error.message);
+    }
+  };
+
   const transactionsByRecord = useMemo(() => {
     const grouped: Record<string, PaymentTransaction[]> = {};
 
@@ -2230,8 +2353,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         return (
           title.includes("prescrição") ||
           title.includes("receita") ||
+          title.includes("atestado") ||
           content.includes("receituário simples") ||
-          content.includes("receita de controle especial")
+          content.includes("receita de controle especial") ||
+          content.includes("atestado odontológico")
         );
       })
       .sort((a, b) => {
@@ -2878,7 +3003,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               onClick={openPrescriptionModal}
               className="flex-1 rounded-xl border border-[#d9eeee] bg-white px-3 py-1.5 text-center text-xs font-black text-[#239d9a] shadow-sm hover:bg-[#fbffff] md:flex-none md:px-4 md:text-sm"
             >
-              Nova prescrição
+              Novo documento clínico
             </button>
 
             <Link
@@ -3858,7 +3983,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                     Prescrições do paciente
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Receituários simples e receitas de controle especial salvos
+                    Receituários simples, controle especial e atestados salvos
                     no histórico clínico.
                   </p>
                 </div>
@@ -3882,9 +4007,12 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 )}
 
                 {prescriptionNotes.map((note) => {
-                  const isSpecial = String(note.title || "")
-                    .toLowerCase()
-                    .includes("controle especial");
+                  const loweredTitle = String(note.title || "").toLowerCase();
+                  const loweredContent = String(note.content || "").toLowerCase();
+                  const isSpecial = loweredTitle.includes("controle especial");
+                  const isCertificate =
+                    loweredTitle.includes("atestado") ||
+                    loweredContent.includes("atestado odontológico");
 
                   return (
                     <div
@@ -3895,14 +4023,18 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                         <div>
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
-                              isSpecial
-                                ? "bg-rose-50 text-rose-700"
-                                : "bg-cyan-50 text-cyan-700"
+                              isCertificate
+                                ? "bg-amber-50 text-amber-700"
+                                : isSpecial
+                                  ? "bg-rose-50 text-rose-700"
+                                  : "bg-cyan-50 text-cyan-700"
                             }`}
                           >
-                            {isSpecial
-                              ? "Controle especial - 2 vias"
-                              : "Receituário simples"}
+                            {isCertificate
+                              ? "Atestado"
+                              : isSpecial
+                                ? "Controle especial - 2 vias"
+                                : "Receituário simples"}
                           </span>
 
                           <h3 className="mt-2 text-sm font-black text-slate-800">
@@ -3918,18 +4050,32 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                           )}
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            printPrescriptionContent(
-                              note.content || "",
-                              isSpecial ? "controle_especial" : "simples",
-                            )
-                          }
-                          className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-xs font-bold text-[#239d9a] hover:bg-[#fbffff]"
-                        >
-                          Imprimir
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              printPrescriptionContent(
+                                note.content || "",
+                                isCertificate
+                                  ? "atestado"
+                                  : isSpecial
+                                    ? "controle_especial"
+                                    : "simples",
+                              )
+                            }
+                            className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-xs font-bold text-[#239d9a] hover:bg-[#fbffff]"
+                          >
+                            Imprimir
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deletePrescriptionNote(note)}
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                          >
+                            Excluir
+                          </button>
+                        </div>
                       </div>
 
                       <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-3 text-sm leading-relaxed text-slate-700 font-sans">
@@ -3958,6 +4104,13 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   <strong className="text-rose-800">Controle especial</strong>
                   <p className="mt-1 text-xs">
                     Impressão em duas vias: farmácia e paciente.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-3">
+                  <strong className="text-amber-800">Atestado</strong>
+                  <p className="mt-1 text-xs">
+                    Para afastamento após cirurgia, atendimento ou procedimento.
                   </p>
                 </div>
               </div>
@@ -4892,10 +5045,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
             <div className="p-5 border-b flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-slate-800">
-                  Nova prescrição
+                  Novo documento clínico
                 </h3>
                 <p className="text-sm text-slate-500">
-                  A prescrição será salva automaticamente no histórico do
+                  O documento será salvo automaticamente no histórico do
                   paciente.
                 </p>
               </div>
@@ -4909,7 +5062,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block mb-1 text-slate-500 text-sm">
-                    Tipo de receituário
+                    Tipo de documento
                   </label>
                   <select
                     value={prescriptionType}
@@ -4922,6 +5075,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                     <option value="controle_especial">
                       Controle especial - 2 vias
                     </option>
+                    <option value="atestado">Atestado odontológico</option>
                   </select>
                 </div>
 
@@ -4952,6 +5106,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                 </div>
               </div>
 
+              {prescriptionType !== "atestado" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 text-slate-500 text-sm">
@@ -5031,7 +5186,63 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   />
                 </div>
               </div>
+              )}
 
+              {prescriptionType === "atestado" && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block mb-1 text-slate-500 text-sm">
+                      Dias de afastamento *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={certificateDays}
+                      onChange={(e) => setCertificateDays(e.target.value)}
+                      placeholder="Ex.: 3"
+                      className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-500 text-sm">
+                      Início do afastamento
+                    </label>
+                    <input
+                      type="date"
+                      value={certificateStartDate}
+                      onChange={(e) => setCertificateStartDate(e.target.value)}
+                      className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-500 text-sm">
+                      Finalidade
+                    </label>
+                    <input
+                      type="text"
+                      value={certificatePurpose}
+                      onChange={(e) => setCertificatePurpose(e.target.value)}
+                      className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="block mb-2 text-slate-700 text-sm font-medium">
+                      Observações do atestado
+                    </label>
+                    <textarea
+                      value={certificateObservations}
+                      onChange={(e) => setCertificateObservations(e.target.value)}
+                      className="w-full min-h-[120px] border rounded-xl p-3 text-sm text-slate-800"
+                      placeholder="Ex.: paciente submetido a procedimento cirúrgico odontológico nesta data."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {prescriptionType !== "atestado" && (
               <div>
                 <label className="block mb-2 text-slate-700 text-sm font-medium">
                   Orientações adicionais
@@ -5043,6 +5254,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
                   placeholder="Ex.: tomar após as refeições, evitar álcool, retornar em caso de reação..."
                 />
               </div>
+              )}
 
               {prescriptionType === "controle_especial" && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
