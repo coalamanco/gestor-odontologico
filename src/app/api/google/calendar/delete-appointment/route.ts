@@ -59,9 +59,16 @@ async function tryDeleteGoogleEvent(params: {
     } catch (error: any) {
       const status = error?.code || error?.response?.status;
 
-      if (status !== 404 && status !== 410) {
-        throw error;
+      if (status === 404 || status === 410) {
+        return {
+          deleted: false,
+          method: "google_event_id_not_found",
+          eventId: appointment.google_event_id,
+          warning: "Evento Google já não existia ou foi removido anteriormente.",
+        };
       }
+
+      throw error;
     }
   }
 
@@ -97,10 +104,7 @@ async function tryDeleteGoogleEvent(params: {
 
     if (!eventId) continue;
 
-    const matchesPatient = patientNameLooksLikeMatch(
-      combinedText,
-      patientName
-    );
+    const matchesPatient = patientNameLooksLikeMatch(combinedText, patientName);
 
     const looksLikeConsultation =
       normalizeText(combinedText).includes("consulta") ||
@@ -133,9 +137,11 @@ async function tryDeleteGoogleEvent(params: {
 }
 
 export async function POST(request: NextRequest) {
+  let appointmentId: string | null = null;
+
   try {
     const body = await request.json();
-    const appointmentId = body?.appointmentId;
+    appointmentId = body?.appointmentId || null;
 
     if (!appointmentId) {
       return NextResponse.json(
@@ -168,45 +174,97 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: connections, error: connectionError } = await supabaseAdmin
-      .from("google_calendar_connections")
-      .select("*")
-      .order("updated_at", { ascending: false })
-      .limit(5);
-
-    if (connectionError) throw connectionError;
-
     let googleResult: any = {
       deleted: false,
-      method: "no_connection",
+      method: "not_attempted",
       eventId: null,
     };
 
-    for (const connection of connections || []) {
-      if (!connection?.refresh_token) continue;
+    let googleError: string | null = null;
 
-      const oauth2Client = getGoogleOAuthClient();
+    /*
+      IMPORTANTE:
+      A exclusão local no Supabase nunca deve depender da Google Agenda.
+      Se o Google falhar por token, calendário, evento inexistente ou instabilidade,
+      o agendamento ainda precisa ser removido da agenda clínica.
+    */
+    try {
+      const { data: connections, error: connectionError } = await supabaseAdmin
+        .from("google_calendar_connections")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(5);
 
-      oauth2Client.setCredentials({
-        refresh_token: connection.refresh_token,
-        access_token: connection.access_token || undefined,
-        expiry_date: connection.expiry_date || undefined,
+      if (connectionError) throw connectionError;
+
+      googleResult = {
+        deleted: false,
+        method: connections && connections.length > 0 ? "not_found" : "no_connection",
+        eventId: null,
+      };
+
+      for (const connection of connections || []) {
+        if (!connection?.refresh_token) continue;
+
+        try {
+          const oauth2Client = getGoogleOAuthClient();
+
+          oauth2Client.setCredentials({
+            refresh_token: connection.refresh_token,
+            access_token: connection.access_token || undefined,
+            expiry_date: connection.expiry_date || undefined,
+          });
+
+          const calendar = google.calendar({
+            version: "v3",
+            auth: oauth2Client,
+          });
+
+          const calendarId = connection.calendar_id || "primary";
+
+          googleResult = await tryDeleteGoogleEvent({
+            calendar,
+            calendarId,
+            appointment,
+          });
+
+          if (googleResult.deleted) break;
+        } catch (connectionDeleteError: any) {
+          googleError =
+            connectionDeleteError?.message ||
+            "Erro ao tentar excluir evento em uma conexão Google.";
+
+          console.warn("Falha ao excluir evento Google nesta conexão:", {
+            appointmentId,
+            connectionId: connection?.id,
+            calendarId: connection?.calendar_id || "primary",
+            error: googleError,
+          });
+
+          googleResult = {
+            deleted: false,
+            method: "google_error_ignored",
+            eventId: appointment?.google_event_id || null,
+          };
+
+          continue;
+        }
+      }
+    } catch (error: any) {
+      googleError =
+        error?.message ||
+        "Erro ao consultar conexões ou excluir evento do Google Agenda.";
+
+      console.warn("Erro Google ignorado para permitir exclusão local:", {
+        appointmentId,
+        error: googleError,
       });
 
-      const calendar = google.calendar({
-        version: "v3",
-        auth: oauth2Client,
-      });
-
-      const calendarId = connection.calendar_id || "primary";
-
-      googleResult = await tryDeleteGoogleEvent({
-        calendar,
-        calendarId,
-        appointment,
-      });
-
-      if (googleResult.deleted) break;
+      googleResult = {
+        deleted: false,
+        method: "google_general_error_ignored",
+        eventId: appointment?.google_event_id || null,
+      };
     }
 
     const { error: deleteError } = await supabaseAdmin
@@ -219,13 +277,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       appointmentDeleted: true,
-      googleDeleted: googleResult.deleted,
-      googleDeleteMethod: googleResult.method,
-      googleEventId: googleResult.eventId,
+      googleDeleted: Boolean(googleResult?.deleted),
+      googleDeleteMethod: googleResult?.method || "unknown",
+      googleEventId: googleResult?.eventId || null,
+      googleWarning:
+        googleError ||
+        googleResult?.warning ||
+        null,
       debug: googleResult,
     });
   } catch (error: any) {
-    console.error("Erro ao excluir agendamento:", error);
+    console.error("Erro ao excluir agendamento:", {
+      appointmentId,
+      error,
+    });
 
     return NextResponse.json(
       {
