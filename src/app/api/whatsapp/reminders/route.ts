@@ -12,9 +12,7 @@ function normalizeBrazilPhone(phone: string) {
 
 function formatDateBr(dateString: string) {
   if (!dateString) return "";
-
   const [year, month, day] = dateString.split("-");
-
   return `${day}/${month}/${year}`;
 }
 
@@ -52,7 +50,6 @@ async function sendZapiMessage(phone: string, message: string) {
   );
 
   const text = await response.text();
-
   let result: any = null;
 
   try {
@@ -85,7 +82,6 @@ function getBrazilNow() {
   });
 
   const parts = formatter.formatToParts(new Date());
-
   const get = (type: string) =>
     parts.find((part) => part.type === type)?.value || "00";
 
@@ -98,7 +94,6 @@ function getBrazilNow() {
 
 function createBrazilDate(date: string, time: string) {
   const safeTime = time?.length === 5 ? `${time}:00` : time || "00:00:00";
-
   return new Date(`${date}T${safeTime}-03:00`);
 }
 
@@ -108,12 +103,20 @@ function formatDateKey(date: Date) {
   });
 }
 
+function addDaysBrazil(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function diffInMinutes(from: Date, to: Date) {
+  return Math.round((to.getTime() - from.getTime()) / 60000);
+}
+
 export async function GET() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
@@ -128,24 +131,31 @@ export async function GET() {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const now = getBrazilNow();
-
     const today = formatDateKey(now);
 
-    const limitDate = new Date(now);
+    /*
+      REGRA DEFINITIVA DO CRON:
 
-    limitDate.setDate(limitDate.getDate() + 5);
+      - Este endpoint é somente para lembretes automáticos antes da consulta.
+      - Consulta marcada para hoje NÃO deve receber lembrete de 24h.
+      - O lembrete só é enviado quando a consulta está dentro da janela correta
+        do reminder_before_hours, com pequena tolerância para o cron não precisar
+        rodar exatamente no minuto perfeito.
+      - Isso evita o bug de agendar hoje e o paciente receber mensagem indevida.
+    */
 
+    const maxReminderHours = 72;
+    const limitDate = addDaysBrazil(now, Math.ceil(maxReminderHours / 24) + 2);
     const limitDateString = formatDateKey(limitDate);
 
-    const { data: appointments, error: appointmentsError } =
-      await supabase
-        .from("appointments")
-        .select("*")
-        .eq("type", "consulta")
-        .eq("reminder_enabled", true)
-        .is("reminder_sent_at", null)
-        .gte("date", today)
-        .lte("date", limitDateString);
+    const { data: appointments, error: appointmentsError } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("type", "consulta")
+      .eq("reminder_enabled", true)
+      .is("reminder_sent_at", null)
+      .gt("date", today)
+      .lte("date", limitDateString);
 
     if (appointmentsError) {
       throw appointmentsError;
@@ -157,10 +167,8 @@ export async function GET() {
       .eq("active", true);
 
     const template =
-      templates?.find((item) => item.type === "lembrete")
-        ?.content ||
-      templates?.find((item) => item.type === "confirmacao")
-        ?.content ||
+      templates?.find((item) => item.type === "lembrete")?.content ||
+      templates?.find((item) => item.type === "confirmacao")?.content ||
       "Olá {{nome}}, lembrando da sua consulta no dia {{data}} às {{hora}}.";
 
     const patientIds = Array.from(
@@ -181,85 +189,94 @@ export async function GET() {
           : ["00000000-0000-0000-0000-000000000000"]
       );
 
-    const patientMap = new Map(
-      (patients || []).map((p: any) => [p.id, p])
-    );
+    const patientMap = new Map((patients || []).map((p: any) => [p.id, p]));
 
     const sent: any[] = [];
     const skipped: any[] = [];
     const failed: any[] = [];
 
     for (const appointment of appointments || []) {
-      const reminderBeforeHours = Number(
-        appointment.reminder_before_hours || 24
-      );
+      const reminderBeforeHours = Number(appointment.reminder_before_hours || 24);
 
       const appointmentDateTime = createBrazilDate(
         appointment.date,
         appointment.start_time || "00:00"
       );
 
-      const sendAt = new Date(appointmentDateTime);
-
-      sendAt.setHours(
-        sendAt.getHours() - reminderBeforeHours
-      );
+      const minutesUntilAppointment = diffInMinutes(now, appointmentDateTime);
+      const reminderWindowMinutes = reminderBeforeHours * 60;
+      const cronToleranceMinutes = 20;
 
       console.log("==========");
       console.log("Paciente:", appointment.patient_name);
-      console.log("Agora:", now);
-      console.log("Consulta:", appointmentDateTime);
-      console.log("Enviar em:", sendAt);
+      console.log("Agora Brasil:", now.toISOString());
+      console.log("Consulta Brasil:", appointmentDateTime.toISOString());
+      console.log("Minutos até consulta:", minutesUntilAppointment);
+      console.log("Janela do lembrete:", reminderWindowMinutes);
 
-      if (now < sendAt) {
+      if (appointment.date === today) {
         skipped.push({
           id: appointment.id,
-          reason:
-            "Ainda não chegou o horário do lembrete.",
+          patient: appointment.patient_name,
+          date: appointment.date,
+          reason: "Consulta é hoje. Lembrete de 24h não deve ser enviado.",
         });
-
         continue;
       }
 
       if (appointmentDateTime <= now) {
         skipped.push({
           id: appointment.id,
+          patient: appointment.patient_name,
+          date: appointment.date,
           reason: "Consulta já passou.",
         });
-
         continue;
       }
 
-      const patient = patientMap.get(
-        appointment.patient_id
-      );
+      if (minutesUntilAppointment > reminderWindowMinutes) {
+        skipped.push({
+          id: appointment.id,
+          patient: appointment.patient_name,
+          date: appointment.date,
+          reason: "Ainda não chegou a janela do lembrete.",
+          minutesUntilAppointment,
+          reminderWindowMinutes,
+        });
+        continue;
+      }
 
-      const phone = normalizeBrazilPhone(
-        patient?.phone || ""
-      );
+      if (minutesUntilAppointment < reminderWindowMinutes - cronToleranceMinutes) {
+        skipped.push({
+          id: appointment.id,
+          patient: appointment.patient_name,
+          date: appointment.date,
+          reason: "Janela do lembrete já passou. Evitando envio atrasado/indevido.",
+          minutesUntilAppointment,
+          reminderWindowMinutes,
+        });
+        continue;
+      }
+
+      const patient = patientMap.get(appointment.patient_id);
+      const phone = normalizeBrazilPhone(patient?.phone || "");
 
       if (!phone) {
         skipped.push({
           id: appointment.id,
+          patient: patient?.name || appointment.patient_name,
           reason: "Paciente sem telefone.",
         });
-
         continue;
       }
 
       const message = buildMessage(template, {
         ...appointment,
-        patient_name:
-          patient?.name ||
-          appointment.patient_name ||
-          "paciente",
+        patient_name: patient?.name || appointment.patient_name || "paciente",
       });
 
       try {
-        const result = await sendZapiMessage(
-          phone,
-          message
-        );
+        const result = await sendZapiMessage(phone, message);
 
         const { error: updateError } = await supabase
           .from("appointments")
@@ -276,37 +293,35 @@ export async function GET() {
           id: appointment.id,
           patient: patient?.name,
           phone,
+          date: appointment.date,
+          start_time: appointment.start_time,
           result,
         });
       } catch (error: any) {
         failed.push({
           id: appointment.id,
           patient: patient?.name,
-          error:
-            error?.message || "Erro desconhecido.",
+          error: error?.message || "Erro desconhecido.",
         });
       }
     }
 
     return NextResponse.json({
       ok: true,
+      now_brazil: now.toISOString(),
+      today_brazil: today,
       checked: appointments?.length || 0,
       sent,
       skipped,
       failed,
     });
   } catch (error: any) {
-    console.error(
-      "Erro no cron de lembretes:",
-      error
-    );
+    console.error("Erro no cron de lembretes:", error);
 
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error?.message ||
-          "Erro ao processar lembretes.",
+        error: error?.message || "Erro ao processar lembretes.",
       },
       { status: 500 }
     );
