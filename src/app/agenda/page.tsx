@@ -1039,6 +1039,19 @@ export default function AgendaPage() {
     return patients.find((p) => p.id === appointment.patient_id) || null;
   };
 
+  const getAppointmentPatientName = (appointment: any) => {
+    if (!appointment) return "";
+
+    const patient = getPatientByAppointment(appointment);
+
+    return (
+      patient?.name ||
+      appointment?.patient_name ||
+      appointment?.title ||
+      "Paciente"
+    );
+  };
+
   const getProfessionalById = (professionalId?: string | null) => {
     if (!professionalId) return null;
     return professionals.find((p) => p.id === professionalId) || null;
@@ -1286,8 +1299,12 @@ export default function AgendaPage() {
 
 
   const buildAutomaticWhatsappMessage = (appointmentPayload: any) => {
+    const patientFromList = getPatientByAppointment(appointmentPayload);
     const patientName =
-      selectedPatient?.name || appointmentPayload.patient_name || "paciente";
+      selectedPatient?.name ||
+      patientFromList?.name ||
+      appointmentPayload.patient_name ||
+      "paciente";
 
     const procedureName =
       appointmentPayload.type === "compromisso"
@@ -1358,9 +1375,14 @@ export default function AgendaPage() {
         patientId: appointmentPayload.patient_id,
       });
 
+      const patientFromList = getPatientByAppointment(appointmentPayload);
+
       let patientName =
-        selectedPatient?.name || appointmentPayload.patient_name || "paciente";
-      let patientPhone = selectedPatient?.phone || "";
+        selectedPatient?.name ||
+        patientFromList?.name ||
+        appointmentPayload.patient_name ||
+        "paciente";
+      let patientPhone = selectedPatient?.phone || patientFromList?.phone || "";
 
       if (!normalizePhone(patientPhone)) {
         const { data: patientFromDb, error: patientError } = await supabase
@@ -2429,7 +2451,7 @@ export default function AgendaPage() {
                         <div className="flex items-start justify-between gap-1 pl-1">
                           <div className="min-w-0">
                             <div className="truncate pr-1 text-[10px] font-black leading-tight tracking-tight md:text-[12px]">
-                              {a.patient_name || a.title}
+                              {getAppointmentPatientName(a)}
                             </div>
                           </div>
                           <span className="shrink-0 rounded-md bg-white/15 px-1 py-0.5 text-[6px] font-black leading-none text-white/90 md:px-1.5 md:text-[7px]">
@@ -2608,8 +2630,7 @@ export default function AgendaPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black leading-tight">
-                    {selectedAppointmentDetails.patient_name ||
-                      selectedAppointmentDetails.title}
+                    {getAppointmentPatientName(selectedAppointmentDetails)}
                   </h2>
 
                   <p className="mt-1 text-sm opacity-95">
