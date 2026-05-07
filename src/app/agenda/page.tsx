@@ -392,6 +392,7 @@ export default function AgendaPage() {
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [resizeStartY, setResizeStartY] = useState(0);
   const [resizeStartDuration, setResizeStartDuration] = useState(30);
+  const resizeCurrentDurationRef = useRef(30);
   const isResizingRef = useRef(false);
   const suppressNextClickRef = useRef(false);
 
@@ -1726,7 +1727,57 @@ export default function AgendaPage() {
   useEffect(() => {
     if (!resizingId) return;
 
+    const finishResize = async () => {
+      const currentResizeId = resizingId;
+      const appt = appointments.find((a) => a.id === currentResizeId);
+      const finalDuration = Math.max(
+        15,
+        Number(resizeCurrentDurationRef.current || appt?.duration || 30)
+      );
+
+      suppressNextClickRef.current = true;
+
+      if (!appt) {
+        setResizingId(null);
+        isResizingRef.current = false;
+        window.setTimeout(() => {
+          suppressNextClickRef.current = false;
+        }, 400);
+        return;
+      }
+
+      if (
+        !isSlotAvailable(
+          appt.date,
+          appt.start_time,
+          finalDuration,
+          currentResizeId,
+          appt.professional_id
+        )
+      ) {
+        await loadData();
+        alert("Não foi possível ajustar: conflito com outro horário.");
+        setResizingId(null);
+        isResizingRef.current = false;
+        window.setTimeout(() => {
+          suppressNextClickRef.current = false;
+        }, 400);
+        return;
+      }
+
+      setResizingId(null);
+      isResizingRef.current = false;
+
+      await updateAppointment(currentResizeId, { duration: finalDuration });
+
+      window.setTimeout(() => {
+        suppressNextClickRef.current = false;
+      }, 400);
+    };
+
     const onMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+
       const deltaY = e.clientY - resizeStartY;
 
       if (Math.abs(deltaY) > 2) {
@@ -1743,6 +1794,8 @@ export default function AgendaPage() {
       const maxDuration = clinicSettings.end_hour * 60 - start;
       nextDuration = Math.min(nextDuration, maxDuration);
 
+      resizeCurrentDurationRef.current = nextDuration;
+
       setAppointments((prev) =>
         prev.map((a) =>
           a.id === resizingId ? { ...a, duration: nextDuration } : a
@@ -1750,42 +1803,9 @@ export default function AgendaPage() {
       );
     };
 
-    const onMouseUp = async () => {
-      const appt = appointments.find((a) => a.id === resizingId);
-      if (!appt) {
-        setResizingId(null);
-        isResizingRef.current = false;
-        window.setTimeout(() => {
-          suppressNextClickRef.current = false;
-        }, 250);
-        return;
-      }
-
-      if (
-        !isSlotAvailable(
-          appt.date,
-          appt.start_time,
-          Number(appt.duration || 30),
-          resizingId,
-          appt.professional_id
-        )
-      ) {
-        await loadData();
-        alert("Não foi possível ajustar: conflito com outro horário.");
-        setResizingId(null);
-        isResizingRef.current = false;
-        window.setTimeout(() => {
-          suppressNextClickRef.current = false;
-        }, 250);
-        return;
-      }
-
-      await updateAppointment(resizingId, { duration: appt.duration });
-      setResizingId(null);
-      isResizingRef.current = false;
-      window.setTimeout(() => {
-        suppressNextClickRef.current = false;
-      }, 250);
+    const onMouseUp = (e: MouseEvent) => {
+      e.preventDefault();
+      void finishResize();
     };
 
     window.addEventListener("mousemove", onMouseMove);
@@ -1795,7 +1815,13 @@ export default function AgendaPage() {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [resizingId, resizeStartY, resizeStartDuration, appointments]);
+  }, [
+    resizingId,
+    resizeStartY,
+    resizeStartDuration,
+    appointments,
+    clinicSettings.end_hour,
+  ]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -2584,6 +2610,7 @@ export default function AgendaPage() {
                             setResizingId(a.id);
                             setResizeStartY(e.clientY);
                             setResizeStartDuration(Number(a.duration || 30));
+                            resizeCurrentDurationRef.current = Number(a.duration || 30);
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
