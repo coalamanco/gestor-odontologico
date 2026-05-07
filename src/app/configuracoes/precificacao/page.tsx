@@ -72,6 +72,7 @@ export default function PrecificacaoProcedimentosPage() {
   const [savedPricings, setSavedPricings] = useState<SavedPricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [applyingPrice, setApplyingPrice] = useState(false);
 
   const [selectedProcedureId, setSelectedProcedureId] = useState("");
   const [manualProcedureName, setManualProcedureName] = useState("");
@@ -288,6 +289,55 @@ export default function PrecificacaoProcedimentosPage() {
       alert("Erro inesperado ao salvar: " + (error?.message || "erro desconhecido"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateProcedurePrice = async () => {
+    if (!selectedProcedureId) {
+      alert("Selecione um procedimento cadastrado antes de aplicar o preço.");
+      return;
+    }
+
+    if (!suggestedPrice || suggestedPrice <= 0) {
+      alert("O preço sugerido precisa ser maior que zero.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja aplicar ${formatCurrency(
+        suggestedPrice,
+      )} como novo preço cadastrado para "${procedureName}"?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setApplyingPrice(true);
+
+      const { error } = await supabase
+        .from("procedures")
+        .update({
+          price: Number(suggestedPrice.toFixed(2)),
+        })
+        .eq("id", selectedProcedureId);
+
+      if (error) {
+        alert(
+          "Erro ao aplicar preço sugerido.\n\nConfira se a tabela procedures possui a coluna price.\n\n" +
+            error.message,
+        );
+        return;
+      }
+
+      alert("Preço sugerido aplicado com sucesso.");
+      await loadData();
+    } catch (error: any) {
+      alert(
+        "Erro inesperado ao aplicar preço sugerido: " +
+          (error?.message || "erro desconhecido"),
+      );
+    } finally {
+      setApplyingPrice(false);
     }
   };
 
@@ -671,6 +721,17 @@ export default function PrecificacaoProcedimentosPage() {
                   className="rounded-2xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-5 py-3 text-sm font-black text-white shadow-sm disabled:opacity-60"
                 >
                   {saving ? "Salvando..." : "Salvar precificação"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={updateProcedurePrice}
+                  disabled={!selectedProcedureId || applyingPrice}
+                  className="rounded-2xl border border-[#bfe8e7] bg-[#edffff] px-5 py-3 text-sm font-black text-[#0f807d] shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {applyingPrice
+                    ? "Aplicando..."
+                    : "Aplicar preço sugerido no procedimento"}
                 </button>
 
                 <button
