@@ -392,6 +392,8 @@ export default function AgendaPage() {
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [resizeStartY, setResizeStartY] = useState(0);
   const [resizeStartDuration, setResizeStartDuration] = useState(30);
+  const isResizingRef = useRef(false);
+  const suppressNextClickRef = useRef(false);
 
   const loadData = async () => {
     const { data: p } = await supabase.from("patients").select("*").order("name");
@@ -1627,6 +1629,10 @@ export default function AgendaPage() {
   };
 
   const openNew = (selectedDate?: string, selectedTime?: string) => {
+    if (isResizingRef.current || suppressNextClickRef.current || draggingId) {
+      return;
+    }
+
     resetForm();
     if (selectedAgendaProfessionalId) {
       setSelectedProfessionalId(selectedAgendaProfessionalId);
@@ -1712,6 +1718,9 @@ export default function AgendaPage() {
     });
 
     setDraggingId(null);
+    window.setTimeout(() => {
+      suppressNextClickRef.current = false;
+    }, 250);
   };
 
   useEffect(() => {
@@ -1719,6 +1728,11 @@ export default function AgendaPage() {
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaY = e.clientY - resizeStartY;
+
+      if (Math.abs(deltaY) > 2) {
+        suppressNextClickRef.current = true;
+      }
+
       const slotDelta = Math.round(deltaY / SLOT_HEIGHT);
       let nextDuration = Math.max(15, resizeStartDuration + slotDelta * 15);
 
@@ -1740,6 +1754,10 @@ export default function AgendaPage() {
       const appt = appointments.find((a) => a.id === resizingId);
       if (!appt) {
         setResizingId(null);
+        isResizingRef.current = false;
+        window.setTimeout(() => {
+          suppressNextClickRef.current = false;
+        }, 250);
         return;
       }
 
@@ -1755,11 +1773,19 @@ export default function AgendaPage() {
         await loadData();
         alert("Não foi possível ajustar: conflito com outro horário.");
         setResizingId(null);
+        isResizingRef.current = false;
+        window.setTimeout(() => {
+          suppressNextClickRef.current = false;
+        }, 250);
         return;
       }
 
       await updateAppointment(resizingId, { duration: appt.duration });
       setResizingId(null);
+      isResizingRef.current = false;
+      window.setTimeout(() => {
+        suppressNextClickRef.current = false;
+      }, 250);
     };
 
     window.addEventListener("mousemove", onMouseMove);
@@ -2374,7 +2400,15 @@ export default function AgendaPage() {
                         ? "bg-amber-50/30 hover:bg-amber-50/60"
                         : "hover:bg-[#fbffff]"
                     }`}
-                    onClick={() => openNew(d.date, h)}
+                    onClick={(e) => {
+                      if (isResizingRef.current || suppressNextClickRef.current || draggingId) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                      }
+
+                      openNew(d.date, h);
+                    }}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
@@ -2428,10 +2462,24 @@ export default function AgendaPage() {
                         onDragStart={(e) => {
                           e.stopPropagation();
                           if (isMobileAgenda) return;
+                          suppressNextClickRef.current = true;
                           setDraggingId(a.id);
+                        }}
+                        onDragEnd={(e) => {
+                          e.stopPropagation();
+                          setDraggingId(null);
+                          window.setTimeout(() => {
+                            suppressNextClickRef.current = false;
+                          }, 250);
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
+
+                          if (isResizingRef.current || suppressNextClickRef.current || draggingId) {
+                            e.preventDefault();
+                            return;
+                          }
+
                           setSelectedAppointmentDetails(a);
                         }}
                         className={`${
@@ -2530,11 +2578,18 @@ export default function AgendaPage() {
                           onMouseDown={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
+                            isResizingRef.current = true;
+                            suppressNextClickRef.current = true;
+                            setSelectedAppointmentDetails(null);
                             setResizingId(a.id);
                             setResizeStartY(e.clientY);
                             setResizeStartDuration(Number(a.duration || 30));
                           }}
-                          className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize rounded-b-md bg-black/5 hover:bg-white/20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                          className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize rounded-b-md bg-black/5 hover:bg-white/20"
                           title="Arraste para aumentar ou diminuir a duração"
                         />
                       </div>
