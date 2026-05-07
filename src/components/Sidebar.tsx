@@ -15,6 +15,7 @@ import {
   Settings,
   Users,
   X,
+  Calculator,
 } from "lucide-react";
 import { getUserRole } from "@/lib/getUserRole";
 
@@ -88,6 +89,13 @@ const menu = [
     section: "Gestão",
   },
   {
+    label: "Precificação",
+    href: "/configuracoes/precificacao",
+    icon: Calculator,
+    roles: ["admin"],
+    section: "Gestão",
+  },
+  {
     label: "Configurações",
     href: "/configuracoes",
     icon: Settings,
@@ -107,7 +115,13 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
 
-  const sections = ["Visão geral", "Atendimento", "Relacionamento", "Gestão", "Sistema"];
+  const sections = [
+    "Visão geral",
+    "Atendimento",
+    "Relacionamento",
+    "Gestão",
+    "Sistema",
+  ];
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#166f70] via-[#239d9a] to-[#2bb5b1] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.12)]">
@@ -147,7 +161,9 @@ function SidebarContent({
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-5">
           {sections.map((section) => {
-            const sectionItems = visibleMenu.filter((item) => item.section === section);
+            const sectionItems = visibleMenu.filter(
+              (item) => item.section === section,
+            );
 
             if (sectionItems.length === 0) return null;
 
@@ -161,7 +177,8 @@ function SidebarContent({
                   {sectionItems.map((item) => {
                     const active =
                       pathname === item.href ||
-                      (item.href !== "/" && pathname.startsWith(item.href));
+                      (item.href !== "/" &&
+                        pathname.startsWith(item.href));
 
                     const Icon = item.icon;
 
@@ -205,7 +222,9 @@ function SidebarContent({
         <div className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_0_4px_rgba(110,231,183,0.16)]" />
-            <span className="text-xs font-black text-white">Sistema ativo</span>
+            <span className="text-xs font-black text-white">
+              Sistema ativo
+            </span>
           </div>
 
           <div className="mt-1 text-[10px] font-semibold text-cyan-50/70">
@@ -234,11 +253,11 @@ export default function Sidebar({
   }, []);
 
   const visibleMenu = menu.filter((item) =>
-    item.roles.includes(role || "admin")
+    item.roles.includes(role || "admin"),
   );
 
   const mainMobileMenu = visibleMenu.filter((item) =>
-    ["/", "/agenda", "/pacientes", "/crm", "/financeiro"].includes(item.href)
+    ["/", "/agenda", "/pacientes", "/crm", "/financeiro"].includes(item.href),
   );
 
   return (
@@ -273,7 +292,8 @@ export default function Sidebar({
           {mainMobileMenu.map((item) => {
             const active =
               pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href));
+              (item.href !== "/" &&
+                pathname.startsWith(item.href));
 
             const Icon = item.icon;
 
