@@ -24,7 +24,7 @@ function getTodayBrazil() {
 function buildBirthdayMessage(name: string) {
   return (
     `Olá, ${name}! 🎉\n\n` +
-    `A equipe da clínica deseja um feliz aniversário, com muita saúde, alegria e muitos motivos para sorrir.\n\n` +
+    `A equipe do consultório deseja um feliz aniversário, com muita saúde, alegria e muitos motivos para sorrir.\n\n` +
     `Parabéns pelo seu dia! 🦷✨`
   );
 }
