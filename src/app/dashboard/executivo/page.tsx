@@ -266,6 +266,28 @@ function normalizeText(value: unknown) {
     .trim();
 }
 
+function normalizeProcedureName(value: unknown) {
+  return normalizeText(value)
+    .replace(/\|/g, " • ")
+    .split("•")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => {
+      if (/^dente\s+\d+/i.test(part)) return false;
+      if (/^face\s+/i.test(part)) return false;
+      if (/^parcela\s+\d+\/\d+/i.test(part)) return false;
+      if (/^entrada$/i.test(part)) return false;
+      return true;
+    })
+    .join(" ")
+    .replace(/\bparcela\s+\d+\/\d+\b/g, "")
+    .replace(/\bdente\s+\d+\b/g, "")
+    .replace(/\bface\s+[a-z0-9]+\b/g, "")
+    .replace(/\bentrada\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getProfitabilityClass(margin: number | null) {
   if (margin === null) return "bg-slate-100 text-slate-600";
   if (margin >= 60) return "bg-emerald-100 text-emerald-700";
@@ -896,7 +918,7 @@ export default function DashboardExecutivoPage() {
 
     procedurePricings.forEach((pricing) => {
       const name = pricing.procedure_name || pricing.nome_do_procedimento || "";
-      const key = normalizeText(name);
+      const key = normalizeProcedureName(name);
 
       if (!key || map.has(key)) return;
       map.set(key, pricing);
@@ -905,11 +927,21 @@ export default function DashboardExecutivoPage() {
     return map;
   }, [procedurePricings]);
 
+  const pricingEntries = useMemo(() => {
+    return Array.from(latestPricingByProcedureName.entries()).sort(
+      (a, b) => b[0].length - a[0].length,
+    );
+  }, [latestPricingByProcedureName]);
+
   const procedureProfitabilityRanking = useMemo(() => {
     return goals.procedureRanking.map((item: any) => {
-      const pricing = latestPricingByProcedureName.get(
-        normalizeText(item.name),
-      );
+      const itemKey = normalizeProcedureName(item.name);
+      const directPricing = latestPricingByProcedureName.get(itemKey);
+      const fuzzyPricing = pricingEntries.find(([pricingKey]) => {
+        if (!pricingKey || !itemKey) return false;
+        return itemKey.includes(pricingKey) || pricingKey.includes(itemKey);
+      })?.[1];
+      const pricing = directPricing || fuzzyPricing || null;
 
       const materialCost = parseMoney(
         pricing?.material_cost ?? pricing?.custo_do_material,
@@ -952,7 +984,7 @@ export default function DashboardExecutivoPage() {
         hasPricing: Boolean(pricing),
       };
     });
-  }, [goals.procedureRanking, latestPricingByProcedureName]);
+  }, [goals.procedureRanking, latestPricingByProcedureName, pricingEntries]);
 
   const profitabilitySummary = useMemo(() => {
     const withPricing = procedureProfitabilityRanking.filter(
