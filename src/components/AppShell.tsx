@@ -54,7 +54,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f7ffff] text-slate-500">
+      <div className="flex min-h-screen items-center justify-center bg-[#fffafa] text-slate-500">
         Verificando acesso...
       </div>
     );
@@ -65,18 +65,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+    <div className="flex h-screen w-full overflow-hidden bg-[#fffafa]">
       <Sidebar
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#d9eeee] bg-white/95 px-4 shadow-sm backdrop-blur md:hidden">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#fffafa]">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#ead4da] bg-white/95 px-4 shadow-sm backdrop-blur md:hidden">
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d4e8e8] bg-[#f7ffff] text-[#239d9a] shadow-sm"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ead4da] bg-[#fff1f4] text-[#7a1f35] shadow-sm"
             aria-label="Abrir menu"
           >
             <Menu size={22} />
@@ -86,7 +86,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className="truncate text-sm font-black text-slate-800">
               Gestor Odontológico
             </div>
-            <div className="truncate text-[11px] font-bold uppercase tracking-wide text-[#239d9a]">
+            <div className="truncate text-[11px] font-bold uppercase tracking-wide text-[#7a1f35]">
               Sistema ativo
             </div>
           </div>
