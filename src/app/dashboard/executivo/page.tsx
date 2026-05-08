@@ -1044,30 +1044,27 @@ export default function DashboardExecutivoPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] p-4 md:p-6">
-      <div className="mb-6 rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 py-3 shadow-lg shadow-cyan-900/10 md:px-6">
-        <div className="flex min-h-[76px] flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-5 overflow-hidden rounded-[26px] border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 shadow-lg shadow-cyan-900/10 md:px-6">
+        <div className="flex h-[76px] items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25">
-              <Sparkles size={18} />
+            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25">
+              <Sparkles size={17} />
             </div>
 
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/85">
-                BI Executivo
+              <p className="truncate text-[13px] font-black uppercase tracking-[0.22em] text-white">
+                Dashboard Executivo
               </p>
-              <h1 className="truncate text-xl font-black tracking-tight text-white md:text-2xl">
-                Dashboard Executivo Odontológico
-              </h1>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/configuracoes/metas"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-4 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
             >
               <Target size={17} />
-              Metas
+              <span className="hidden sm:inline">Metas</span>
             </Link>
 
             <Link
@@ -1075,7 +1072,7 @@ export default function DashboardExecutivoPage() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-[#239d9a] px-4 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8f8c]"
             >
               <Megaphone size={17} />
-              Campanhas
+              <span className="hidden sm:inline">Campanhas</span>
             </Link>
 
             <button
@@ -1084,7 +1081,7 @@ export default function DashboardExecutivoPage() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-4 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
             >
               <RefreshCw size={17} />
-              Atualizar
+              <span className="hidden sm:inline">Atualizar</span>
             </button>
           </div>
         </div>
