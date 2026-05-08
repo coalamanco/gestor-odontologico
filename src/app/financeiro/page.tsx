@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
+import { createAuditLog } from "@/lib/audit";
 import {
   DollarSign,
   PlusCircle,
@@ -1042,6 +1043,18 @@ export default function FinanceiroPage() {
       return;
     }
 
+    await createAuditLog({
+      action: "create",
+      module: "financeiro",
+      patient_id: formData.patient_id,
+      description: "Novo lançamento financeiro criado",
+      metadata: {
+        description: formData.description,
+        amount: amountNumeric,
+        installments: installmentsNumeric,
+      },
+    });
+
     setFormData({
       patient_id: "",
       description: "",
@@ -1076,6 +1089,13 @@ export default function FinanceiroPage() {
       alert("Erro ao excluir lançamento: " + error.message);
       return;
     }
+
+    await createAuditLog({
+      action: "delete",
+      module: "financeiro",
+      record_id: id,
+      description: "Lançamento financeiro excluído",
+    });
 
     await reloadAll();
   }
@@ -1199,6 +1219,20 @@ export default function FinanceiroPage() {
 
       await recalculateFinancialRecordAfterPaymentEdit(editingPayment.financial_record_id);
 
+      await createAuditLog({
+        action: "edit_payment",
+        module: "financeiro",
+        record_id: editingPayment.financial_record_id,
+        patient_id: editingPayment.patient_id || null,
+        description: "Pagamento editado",
+        metadata: {
+          valor: newAmount,
+          forma_pagamento: editPaymentMethod,
+          recibo: editReceiptType,
+          data_recebimento: editReceivedAt,
+        },
+      });
+
       alert("Pagamento atualizado com sucesso.");
       closeEditPaymentModal();
       await reloadAll();
@@ -1271,6 +1305,24 @@ export default function FinanceiroPage() {
         alert("Erro ao atualizar débito: " + recordUpdateError.message);
         return;
       }
+
+      await createAuditLog({
+        action: "receive_payment",
+        module: "financeiro",
+        record_id: String(target.id),
+        patient_id: target.patient_id || null,
+        description: "Pagamento recebido",
+        metadata: {
+          valor: valorPagoAgora,
+          valor_anterior: pagoAtual,
+          valor_total: total,
+          novo_valor_pago: novoPago,
+          novo_status: novoStatus,
+          forma_pagamento: receberFormaPagamento,
+          recibo: receberRecibo,
+          observacao: receberObservacao || null,
+        },
+      });
 
       setIsReceberOpen(false);
       setReceberTarget(null);
