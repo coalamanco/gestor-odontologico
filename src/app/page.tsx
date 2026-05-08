@@ -94,6 +94,8 @@ type DashboardStats = {
   despesasMes: number;
   lucroMes: number;
   aReceber: number;
+  vencidoEmAberto: number;
+  parcelasVencidas: number;
   saldoPrevisto: number;
   pacientes: number;
   novosPacientesMes: number;
@@ -220,12 +222,25 @@ function getDateAtStart(dateString?: string | null) {
   return date;
 }
 
+function isPaidFinancialStatus(status?: string | null) {
+  const normalized = normalizeStatus(status);
+
+  return (
+    normalized === "pago" ||
+    normalized === "paga" ||
+    normalized === "paid" ||
+    normalized === "recebido" ||
+    normalized === "quitado" ||
+    normalized === "quitada"
+  );
+}
+
 function isFinancialOverdue(record: FinancialRecord) {
   const amount = parseMoney(record.amount);
   const paid = parseMoney(record.paid_amount);
   const remaining = Math.max(0, amount - paid);
 
-  if (remaining <= 0 || record.status === "pago") return false;
+  if (remaining <= 0 || isPaidFinancialStatus(record.status)) return false;
 
   const dueDate = getDateAtStart(getFinancialDueDate(record));
   if (!dueDate) return false;
@@ -385,6 +400,16 @@ export default function Dashboard() {
       return acc + Math.max(0, amount - paid);
     }, 0);
 
+    const overdueFinancialRecords = financialRecords.filter((record) =>
+      isFinancialOverdue(record)
+    );
+
+    const vencidoEmAberto = overdueFinancialRecords.reduce((acc, record) => {
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      return acc + Math.max(0, amount - paid);
+    }, 0);
+
     const consultasHojeList = appointments.filter(
       (appointment) => appointment.date === todayKey
     );
@@ -441,6 +466,8 @@ export default function Dashboard() {
       despesasMes,
       lucroMes,
       aReceber,
+      vencidoEmAberto,
+      parcelasVencidas: overdueFinancialRecords.length,
       saldoPrevisto: recebidoMes + aReceber - despesasMes,
       pacientes: patients.length,
       novosPacientesMes,
@@ -882,7 +909,7 @@ export default function Dashboard() {
       icon: AlertCircle,
       color: "text-amber-700",
       bg: "bg-amber-50",
-      description: "Valores pendentes",
+      description: "Parcelas em aberto, incluindo futuras",
     },
     {
       title: "Consultas hoje",
@@ -1002,7 +1029,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {isAdminUser && stats.aReceber > 0 && (
+        {isAdminUser && stats.vencidoEmAberto > 0 && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-amber-100 p-2.5 text-amber-700">
@@ -1010,10 +1037,10 @@ export default function Dashboard() {
               </div>
               <div>
                 <div className="font-bold text-amber-800">
-                  Atenção: existem valores pendentes para receber
+                  Atenção: existem parcelas vencidas em aberto
                 </div>
                 <div className="text-xs text-amber-700">
-                  Total em aberto: {formatCurrency(stats.aReceber)}
+                  {stats.parcelasVencidas} parcela(s) vencida(s) • Total vencido: {formatCurrency(stats.vencidoEmAberto)}
                 </div>
               </div>
             </div>
