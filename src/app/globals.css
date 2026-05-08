@@ -4,102 +4,102 @@
 
 @layer base {
   :root {
-    --background: 30 33% 98%;
-    --foreground: 225 35% 12%;
+    --background: 190 45% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 225 35% 12%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 225 35% 12%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 350 58% 26%;
+    --primary: 178 64% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 350 35% 95%;
-    --secondary-foreground: 350 58% 20%;
+    --secondary: 184 48% 94%;
+    --secondary-foreground: 185 60% 18%;
 
-    --muted: 30 28% 95%;
-    --muted-foreground: 220 14% 45%;
+    --muted: 190 35% 95%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 350 45% 93%;
-    --accent-foreground: 350 58% 24%;
+    --accent: 184 60% 92%;
+    --accent-foreground: 185 60% 22%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 350 22% 88%;
-    --input: 350 22% 88%;
-    --ring: 350 58% 26%;
+    --border: 184 35% 88%;
+    --input: 184 35% 88%;
+    --ring: 178 64% 38%;
 
     --radius: 1.1rem;
 
-    --clinic-primary: #7a1f35;
-    --clinic-primary-dark: #4a0f1f;
-    --clinic-primary-soft: #fff1f4;
-    --clinic-accent: #a43a52;
-    --clinic-bg: #fffafa;
-    --clinic-border: #ead4da;
-    --clinic-text: #111827;
+    --clinic-primary: #239d9a;
+    --clinic-primary-dark: #166f70;
+    --clinic-primary-soft: #eefafa;
+    --clinic-accent: #1db7b3;
+    --clinic-bg: #f7ffff;
+    --clinic-border: #d9eeee;
+    --clinic-text: #0f172a;
     --clinic-muted: #64748b;
 
-    --premium-shadow: 0 16px 45px rgba(76, 15, 31, 0.10);
-    --soft-shadow: 0 8px 26px rgba(76, 15, 31, 0.07);
+    --premium-shadow: 0 16px 45px rgba(15, 23, 42, 0.08);
+    --soft-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
 
     --premium-gradient: linear-gradient(
       135deg,
-      #4a0f1f,
-      #7a1f35,
-      #a43a52
+      #1db7b3,
+      #46c1bf,
+      #8bd8d6
     );
   }
 
   .dark {
-    --background: 225 32% 7%;
-    --foreground: 30 30% 96%;
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
 
-    --card: 225 30% 9%;
-    --card-foreground: 30 30% 96%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 225 30% 9%;
-    --popover-foreground: 30 30% 96%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 350 62% 62%;
-    --primary-foreground: 225 32% 8%;
+    --primary: 178 64% 45%;
+    --primary-foreground: 222 47% 8%;
 
-    --secondary: 350 28% 18%;
-    --secondary-foreground: 30 30% 96%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 225 24% 16%;
-    --muted-foreground: 220 15% 72%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 70%;
 
-    --accent: 350 32% 20%;
-    --accent-foreground: 350 62% 86%;
+    --accent: 180 35% 18%;
+    --accent-foreground: 180 55% 86%;
 
     --destructive: 0 63% 40%;
-    --destructive-foreground: 30 30% 96%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 350 24% 20%;
-    --input: 350 24% 20%;
-    --ring: 350 62% 62%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 178 64% 45%;
 
-    --clinic-primary: #d86b82;
-    --clinic-primary-dark: #7a1f35;
-    --clinic-primary-soft: #2a1018;
-    --clinic-accent: #f0a0b0;
-    --clinic-bg: #10080c;
-    --clinic-border: #3b1a24;
+    --clinic-primary: #2dd4cf;
+    --clinic-primary-dark: #0f766e;
+    --clinic-primary-soft: #0f2f31;
+    --clinic-accent: #5eead4;
+    --clinic-bg: #071819;
+    --clinic-border: #1f3f42;
     --clinic-text: #f8fafc;
-    --clinic-muted: #cbd5e1;
+    --clinic-muted: #94a3b8;
 
-    --premium-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
-    --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    --premium-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+    --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
 
     --premium-gradient: linear-gradient(
       135deg,
-      #3b0a16,
-      #7a1f35,
-      #d86b82
+      #0f766e,
+      #14b8a6,
+      #5eead4
     );
   }
 
@@ -117,7 +117,7 @@
   }
 
   ::selection {
-    background: rgba(122, 31, 53, 0.22);
+    background: rgba(35, 157, 154, 0.22);
   }
 
   ::-webkit-scrollbar {
@@ -126,46 +126,46 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(234, 212, 218, 0.45);
+    background: rgba(217, 238, 238, 0.45);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(122, 31, 53, 0.45);
+    background: rgba(35, 157, 154, 0.45);
     border-radius: 999px;
-    border: 2px solid rgba(255, 250, 250, 0.85);
+    border: 2px solid rgba(247, 255, 255, 0.85);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(122, 31, 53, 0.72);
+    background: rgba(35, 157, 154, 0.72);
   }
 }
 
 @layer components {
   .premium-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #fffafa, #fbf4f5, #f7eef1);
+    background: linear-gradient(135deg, #f7ffff, #f4fbfb, #eef8f8);
   }
 
   .premium-card {
     border-radius: 1.5rem;
-    border: 1px solid #ead4da;
+    border: 1px solid #d9eeee;
     background: #ffffff;
     box-shadow: var(--soft-shadow);
   }
 
   .premium-card-soft {
     border-radius: 1.5rem;
-    border: 1px solid #ead4da;
-    background: #fffafa;
+    border: 1px solid #d9eeee;
+    background: #fbffff;
     box-shadow: var(--soft-shadow);
   }
 
   .premium-header {
     border-radius: 1.5rem;
-    border: 1px solid rgba(164, 58, 82, 0.25);
+    border: 1px solid #b6e3e2;
     background: var(--premium-gradient);
     color: #ffffff;
-    box-shadow: 0 18px 40px rgba(76, 15, 31, 0.16);
+    box-shadow: 0 18px 40px rgba(15, 118, 110, 0.12);
   }
 
   .premium-button {
@@ -173,7 +173,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 1rem;
-    background: #7a1f35;
+    background: #239d9a;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     font-weight: 900;
@@ -183,7 +183,7 @@
   }
 
   .premium-button:hover {
-    background: #64182b;
+    background: #1f8f8c;
   }
 
   .premium-button:disabled {
@@ -196,24 +196,24 @@
     align-items: center;
     justify-content: center;
     border-radius: 1rem;
-    border: 1px solid #ead4da;
+    border: 1px solid #d9eeee;
     background: #ffffff;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     font-weight: 900;
-    color: #7a1f35;
+    color: #239d9a;
     box-shadow: var(--soft-shadow);
     transition: 0.2s ease;
   }
 
   .premium-button-outline:hover {
-    background: #fff1f4;
+    background: #f2fcfc;
   }
 
   .premium-input {
     border-radius: 1rem;
-    border: 1px solid #ead4da;
-    background: #fffafa;
+    border: 1px solid #d9eeee;
+    background: #fbffff;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     font-weight: 600;
@@ -222,7 +222,7 @@
   }
 
   .premium-input:focus {
-    border-color: #c66a80;
+    border-color: #84d5d3;
     background: #ffffff;
   }
 
@@ -237,7 +237,7 @@
 
   .premium-kpi {
     border-radius: 1.5rem;
-    border: 1px solid #ead4da;
+    border: 1px solid #d9eeee;
     background: #ffffff;
     padding: 1.25rem;
     box-shadow: var(--soft-shadow);
