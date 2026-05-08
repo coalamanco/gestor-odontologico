@@ -72,6 +72,9 @@ type FinancialRecord = {
   status?: string | null;
   created_at?: string | null;
   paid_at?: string | null;
+  due_date?: string | null;
+  installment_number?: number | null;
+  installments?: number | null;
   procedure_name?: string | null;
   treatment_name?: string | null;
   description?: string | null;
@@ -216,6 +219,50 @@ function isPaidStatus(status?: string | null) {
     normalized === "quitado"
   );
 }
+
+function getDateAtStart(dateString?: string | null) {
+  if (!dateString) return null;
+
+  const date = new Date(
+    String(dateString).includes("T") ? dateString : `${dateString}T12:00:00`,
+  );
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function getFinancialDueDate(record: FinancialRecord) {
+  if (record.due_date) return record.due_date;
+
+  if (!record.created_at) return null;
+
+  const baseDate = getDateAtStart(record.created_at);
+  if (!baseDate) return record.created_at;
+
+  const installmentNumber = Math.max(1, Number(record.installment_number || 1));
+  baseDate.setMonth(baseDate.getMonth() + installmentNumber - 1);
+
+  return baseDate.toISOString().slice(0, 10);
+}
+
+function isFinancialRecordOverdue(record: FinancialRecord) {
+  const amount = parseMoney(record.amount);
+  const paid = parseMoney(record.paid_amount);
+  const remaining = Math.max(0, amount - paid);
+
+  if (remaining <= 0 || isPaidStatus(record.status)) return false;
+
+  const dueDate = getDateAtStart(getFinancialDueDate(record));
+  if (!dueDate) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return dueDate < today;
+}
+
 
 function getTrendClass(trend: string) {
   if (trend === "Alta") return "bg-emerald-100 text-emerald-700";
@@ -795,11 +842,11 @@ export default function DashboardExecutivoPage() {
   }).length;
 
   const overdueRevenue = financialRecords.reduce((sum, record) => {
+    if (!isFinancialRecordOverdue(record)) return sum;
+
     const amount = parseMoney(record.amount);
     const paid = parseMoney(record.paid_amount);
     const remaining = Math.max(0, amount - paid);
-
-    if (remaining <= 0 || isPaidStatus(record.status)) return sum;
 
     return sum + remaining;
   }, 0);
