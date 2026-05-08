@@ -124,6 +124,36 @@ type SourceStats = {
   conversion: number;
 };
 
+type ProcedurePricing = {
+  id: string;
+  procedure_id?: string | null;
+  id_do_procedimento?: string | null;
+  procedure_name?: string | null;
+  nome_do_procedimento?: string | null;
+  material_cost?: number | string | null;
+  custo_do_material?: number | string | null;
+  operational_cost?: number | string | null;
+  custo_operacional?: number | string | null;
+  clinical_time_minutes?: number | string | null;
+  tempo_clinico_minutos?: number | string | null;
+  hourly_cost?: number | string | null;
+  custo_por_hora?: number | string | null;
+  card_fee_percent?: number | string | null;
+  porcentagem_taxa_do_cartao?: number | string | null;
+  tax_percent?: number | string | null;
+  percentual_de_imposto?: number | string | null;
+  desired_margin_percent?: number | string | null;
+  porcentagem_de_margem?: number | string | null;
+  minimum_price?: number | string | null;
+  preco_minimo?: number | string | null;
+  suggested_price?: number | string | null;
+  preco_sugerido?: number | string | null;
+  premium_price?: number | string | null;
+  preco_premium?: number | string | null;
+  created_at?: string | null;
+  criado_em?: string | null;
+};
+
 function parseMoney(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return 0;
   if (typeof value === "number") return value;
@@ -145,7 +175,9 @@ function formatCurrency(value: number) {
 }
 
 function normalizeStatus(status?: string | null) {
-  return String(status || "").trim().toLowerCase();
+  return String(status || "")
+    .trim()
+    .toLowerCase();
 }
 
 function isApprovedStatus(status?: string | null) {
@@ -226,19 +258,46 @@ function getScoreClass(score: number) {
   return "bg-rose-100 text-rose-700";
 }
 
+function normalizeText(value: unknown) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function getProfitabilityClass(margin: number | null) {
+  if (margin === null) return "bg-slate-100 text-slate-600";
+  if (margin >= 60) return "bg-emerald-100 text-emerald-700";
+  if (margin >= 35) return "bg-amber-100 text-amber-700";
+  return "bg-rose-100 text-rose-700";
+}
+
+function getProfitabilityLabel(margin: number | null) {
+  if (margin === null) return "Sem custo";
+  if (margin >= 60) return "Saudável";
+  if (margin >= 35) return "Atenção";
+  return "Margem baixa";
+}
+
 export default function DashboardExecutivoPage() {
   const [loading, setLoading] = useState(true);
-  const [activeDashboardTab, setActiveDashboardTab] = useState<"geral" | "analises" | "acessos">("geral");
+  const [activeDashboardTab, setActiveDashboardTab] = useState<
+    "geral" | "analises" | "acessos"
+  >("geral");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>(
-    []
+    [],
   );
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
+  const [procedurePricings, setProcedurePricings] = useState<
+    ProcedurePricing[]
+  >([]);
   const [configuredGoals, setConfiguredGoals] = useState(() =>
-    getClinicGoalsFromLocalStorage()
+    getClinicGoalsFromLocalStorage(),
   );
 
   useEffect(() => {
@@ -260,7 +319,10 @@ export default function DashboardExecutivoPage() {
         { data: treatmentsData, error: treatmentsError },
         { data: notesData, error: notesError },
       ] = await Promise.all([
-        supabase.from("patients").select("*").order("name", { ascending: true }),
+        supabase
+          .from("patients")
+          .select("*")
+          .order("name", { ascending: true }),
         supabase
           .from("appointments")
           .select("*")
@@ -296,10 +358,25 @@ export default function DashboardExecutivoPage() {
       setFinancialRecords((financialData || []) as FinancialRecord[]);
       setTreatments((treatmentsData || []) as Treatment[]);
       setClinicalNotes((notesData || []) as ClinicalNote[]);
+
+      const { data: pricingData, error: pricingError } = await supabase
+        .from("procedure_pricing")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!pricingError && pricingData) {
+        setProcedurePricings(pricingData as ProcedurePricing[]);
+      } else if (pricingError) {
+        console.warn(
+          "Não foi possível carregar procedure_pricing:",
+          pricingError.message,
+        );
+        setProcedurePricings([]);
+      }
     } catch (error: any) {
       alert(
         "Erro ao carregar Dashboard Executivo: " +
-          (error?.message || "erro inesperado")
+          (error?.message || "erro inesperado"),
       );
     } finally {
       setLoading(false);
@@ -379,7 +456,10 @@ export default function DashboardExecutivoPage() {
             id: patient.id,
             name: patient.name,
             patient_source:
-              patient.patient_source || patient.source || patient.origin || null,
+              patient.patient_source ||
+              patient.source ||
+              patient.origin ||
+              null,
             created_at: patient.created_at,
           },
           appointments: appointmentsByPatient.get(patient.id) || [],
@@ -399,7 +479,7 @@ export default function DashboardExecutivoPage() {
           totalPaid: result.totalPaid,
           openBudgets: result.openBudgets,
           source: normalizePatientSource(
-            patient.patient_source || patient.source || patient.origin || null
+            patient.patient_source || patient.source || patient.origin || null,
           ),
         };
       })
@@ -415,19 +495,20 @@ export default function DashboardExecutivoPage() {
 
   const campaignProjections = useMemo(() => {
     const hotPatients = scoredPatients.filter(
-      (patient) => patient.closingChance >= 70
+      (patient) => patient.closingChance >= 70,
     ).length;
 
     const riskPatients = scoredPatients.filter(
-      (patient) => patient.abandonmentRisk === "Alto"
+      (patient) => patient.abandonmentRisk === "Alto",
     ).length;
 
     const vipPatients = scoredPatients.filter(
-      (patient) => patient.vipLevel === "Ouro" || patient.vipLevel === "Diamante"
+      (patient) =>
+        patient.vipLevel === "Ouro" || patient.vipLevel === "Diamante",
     ).length;
 
     const openBudgetPatients = scoredPatients.filter(
-      (patient) => patient.openBudgets > 0
+      (patient) => patient.openBudgets > 0,
     ).length;
 
     return [
@@ -504,7 +585,6 @@ export default function DashboardExecutivoPage() {
     configuredGoals,
   ]);
 
-
   const smartGoals = useMemo(() => {
     return calculateSmartGoals({
       currentMonthlyGoal: goals.monthlyGoal,
@@ -538,7 +618,7 @@ export default function DashboardExecutivoPage() {
 
     patients.forEach((patient) => {
       const source = normalizePatientSource(
-        patient.patient_source || patient.source || patient.origin || null
+        patient.patient_source || patient.source || patient.origin || null,
       );
 
       if (!map.has(source)) {
@@ -559,7 +639,7 @@ export default function DashboardExecutivoPage() {
 
       const patient = patients.find((item) => item.id === record.patient_id);
       const source = normalizePatientSource(
-        patient?.patient_source || patient?.source || patient?.origin || null
+        patient?.patient_source || patient?.source || patient?.origin || null,
       );
 
       if (!map.has(source)) {
@@ -610,7 +690,7 @@ export default function DashboardExecutivoPage() {
   }, [patients, financialRecords, scoredPatients]);
 
   const approvedBudgets = budgets.filter((budget) =>
-    isApprovedStatus(budget.status)
+    isApprovedStatus(budget.status),
   );
 
   const openBudgets = budgets.filter((budget) => {
@@ -622,29 +702,29 @@ export default function DashboardExecutivoPage() {
     scoredPatients.length > 0
       ? Math.round(
           scoredPatients.reduce((sum, item) => sum + item.score, 0) /
-            scoredPatients.length
+            scoredPatients.length,
         )
       : 0;
 
   const hotPatients = scoredPatients.filter(
-    (patient) => patient.closingChance >= 70
+    (patient) => patient.closingChance >= 70,
   );
 
   const coldPatients = scoredPatients.filter(
-    (patient) => patient.closingChance < 45
+    (patient) => patient.closingChance < 45,
   );
 
   const riskPatients = scoredPatients.filter(
-    (patient) => patient.abandonmentRisk === "Alto"
+    (patient) => patient.abandonmentRisk === "Alto",
   );
 
   const vipPatients = scoredPatients.filter(
-    (patient) => patient.vipLevel === "Ouro" || patient.vipLevel === "Diamante"
+    (patient) => patient.vipLevel === "Ouro" || patient.vipLevel === "Diamante",
   );
 
   const openBudgetRevenue = openBudgets.reduce(
     (sum, budget) => sum + parseMoney(budget.total),
-    0
+    0,
   );
 
   const averageTicket =
@@ -652,26 +732,28 @@ export default function DashboardExecutivoPage() {
       ? Math.round(
           approvedBudgets.reduce(
             (sum, budget) => sum + parseMoney(budget.total),
-            0
-          ) / approvedBudgets.length
+            0,
+          ) / approvedBudgets.length,
         )
       : 0;
 
   const todayKey = new Date().toISOString().slice(0, 10);
 
   const todayAppointments = appointments.filter(
-    (appointment) => appointment.date === todayKey
+    (appointment) => appointment.date === todayKey,
   );
 
   const todayOccupancy = Math.min(
     100,
     Math.round(
       (todayAppointments.reduce((sum, appointment: any) => {
-        return sum + Math.max(1, Math.round(Number(appointment.duration || 30) / 15));
+        return (
+          sum + Math.max(1, Math.round(Number(appointment.duration || 30) / 15))
+        );
       }, 0) /
         44) *
-        100
-    )
+        100,
+    ),
   );
 
   const noShowsMonth = appointments.filter((appointment) => {
@@ -700,7 +782,7 @@ export default function DashboardExecutivoPage() {
 
   const sourceWithoutOriginCount = patients.filter((patient) => {
     const source = normalizePatientSource(
-      patient.patient_source || patient.source || patient.origin || null
+      patient.patient_source || patient.source || patient.origin || null,
     );
 
     return source === "Não informado";
@@ -808,6 +890,92 @@ export default function DashboardExecutivoPage() {
             patients: patients.length,
           },
         ];
+
+  const latestPricingByProcedureName = useMemo(() => {
+    const map = new Map<string, ProcedurePricing>();
+
+    procedurePricings.forEach((pricing) => {
+      const name = pricing.procedure_name || pricing.nome_do_procedimento || "";
+      const key = normalizeText(name);
+
+      if (!key || map.has(key)) return;
+      map.set(key, pricing);
+    });
+
+    return map;
+  }, [procedurePricings]);
+
+  const procedureProfitabilityRanking = useMemo(() => {
+    return goals.procedureRanking.map((item: any) => {
+      const pricing = latestPricingByProcedureName.get(
+        normalizeText(item.name),
+      );
+
+      const materialCost = parseMoney(
+        pricing?.material_cost ?? pricing?.custo_do_material,
+      );
+      const operationalCost = parseMoney(
+        pricing?.operational_cost ?? pricing?.custo_operacional,
+      );
+      const clinicalMinutes = parseMoney(
+        pricing?.clinical_time_minutes ?? pricing?.tempo_clinico_minutos,
+      );
+      const hourlyCost = parseMoney(
+        pricing?.hourly_cost ?? pricing?.custo_por_hora,
+      );
+      const cardFeePercent = parseMoney(
+        pricing?.card_fee_percent ?? pricing?.porcentagem_taxa_do_cartao,
+      );
+      const taxPercent = parseMoney(
+        pricing?.tax_percent ?? pricing?.percentual_de_imposto,
+      );
+
+      const unitCost =
+        materialCost + operationalCost + (clinicalMinutes / 60) * hourlyCost;
+      const revenue = parseMoney(item.value);
+      const count = Math.max(1, Number(item.count || 1));
+      const estimatedCost = unitCost * count;
+      const estimatedFees = revenue * ((cardFeePercent + taxPercent) / 100);
+      const estimatedProfit = revenue - estimatedCost - estimatedFees;
+      const margin =
+        revenue > 0 ? Math.round((estimatedProfit / revenue) * 100) : null;
+
+      return {
+        ...item,
+        pricing,
+        revenue,
+        unitCost,
+        estimatedCost,
+        estimatedFees,
+        estimatedProfit,
+        margin,
+        hasPricing: Boolean(pricing),
+      };
+    });
+  }, [goals.procedureRanking, latestPricingByProcedureName]);
+
+  const profitabilitySummary = useMemo(() => {
+    const withPricing = procedureProfitabilityRanking.filter(
+      (item) => item.hasPricing,
+    );
+    const revenue = withPricing.reduce((sum, item) => sum + item.revenue, 0);
+    const cost = withPricing.reduce(
+      (sum, item) => sum + item.estimatedCost + item.estimatedFees,
+      0,
+    );
+    const profit = revenue - cost;
+    const averageMargin =
+      revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
+
+    return {
+      mapped: withPricing.length,
+      total: procedureProfitabilityRanking.length,
+      revenue,
+      cost,
+      profit,
+      averageMargin,
+    };
+  }, [procedureProfitabilityRanking]);
 
   const executiveCards = [
     {
@@ -949,74 +1117,71 @@ export default function DashboardExecutivoPage() {
 
       {activeDashboardTab === "geral" && (
         <>
-      <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Metas e tendência mensal
-            </p>
+          <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  Metas e tendência mensal
+                </p>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <span
-                className={`rounded-full px-4 py-2 text-sm font-black ${getTrendClass(
-                  goals.monthlyTrend
-                )}`}
-              >
-                Tendência: {goals.monthlyTrend}
-              </span>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <span
+                    className={`rounded-full px-4 py-2 text-sm font-black ${getTrendClass(
+                      goals.monthlyTrend,
+                    )}`}
+                  >
+                    Tendência: {goals.monthlyTrend}
+                  </span>
 
-              <span
-                className={`rounded-full px-4 py-2 text-sm font-black ${getGoalChanceClass(
-                  goals.chanceToHitGoal
-                )}`}
-              >
-                Chance de bater meta: {goals.chanceToHitGoal}
-              </span>
+                  <span
+                    className={`rounded-full px-4 py-2 text-sm font-black ${getGoalChanceClass(
+                      goals.chanceToHitGoal,
+                    )}`}
+                  >
+                    Chance de bater meta: {goals.chanceToHitGoal}
+                  </span>
 
-              <span className="text-sm text-slate-500">
-                Faltam{" "}
-                <strong className="text-slate-800">
-                  {formatCurrency(goals.gapToGoal)}
-                </strong>{" "}
-                para a meta confirmada.
-              </span>
+                  <span className="text-sm text-slate-500">
+                    Faltam{" "}
+                    <strong className="text-slate-800">
+                      {formatCurrency(goals.gapToGoal)}
+                    </strong>{" "}
+                    para a meta confirmada.
+                  </span>
+                </div>
+              </div>
+
+              <p className="max-w-4xl text-sm leading-6 text-slate-600">
+                {goals.executiveSummary}
+              </p>
             </div>
           </div>
 
-          <p className="max-w-4xl text-sm leading-6 text-slate-600">
-            {goals.executiveSummary}
-          </p>
-        </div>
-      </div>
+          <ExecutiveForecast
+            suggestedMonthlyGoal={smartGoals.suggestedMonthlyGoal}
+            suggestedAnnualGoal={smartGoals.suggestedAnnualGoal}
+            trend={smartGoals.trend}
+            growthRate={smartGoals.growthRate}
+            confidence={smartGoals.confidence}
+            riskLevel={smartGoals.riskLevel}
+            executiveRecommendation={smartGoals.executiveRecommendation}
+            riskMessage={smartGoals.riskMessage}
+            opportunityMessage={smartGoals.opportunityMessage}
+            lastThreeMonthsAverage={smartGoals.lastThreeMonthsAverage}
+            monthlySeries={smartGoals.monthlySeries}
+            monthlyGoal={goals.monthlyGoal}
+          />
 
+          <ExecutiveAlerts
+            mainMessage={executiveAlerts.mainMessage}
+            criticalCount={executiveAlerts.criticalCount}
+            opportunityCount={executiveAlerts.opportunityCount}
+            positiveCount={executiveAlerts.positiveCount}
+            alerts={executiveAlerts.alerts}
+          />
 
-      <ExecutiveForecast
-        suggestedMonthlyGoal={smartGoals.suggestedMonthlyGoal}
-        suggestedAnnualGoal={smartGoals.suggestedAnnualGoal}
-        trend={smartGoals.trend}
-        growthRate={smartGoals.growthRate}
-        confidence={smartGoals.confidence}
-        riskLevel={smartGoals.riskLevel}
-        executiveRecommendation={smartGoals.executiveRecommendation}
-        riskMessage={smartGoals.riskMessage}
-        opportunityMessage={smartGoals.opportunityMessage}
-        lastThreeMonthsAverage={smartGoals.lastThreeMonthsAverage}
-        monthlySeries={smartGoals.monthlySeries}
-        monthlyGoal={goals.monthlyGoal}
-      />
-
-      <ExecutiveAlerts
-        mainMessage={executiveAlerts.mainMessage}
-        criticalCount={executiveAlerts.criticalCount}
-        opportunityCount={executiveAlerts.opportunityCount}
-        positiveCount={executiveAlerts.positiveCount}
-        alerts={executiveAlerts.alerts}
-      />
-
-      <ExecutiveKPIs loading={loading} cards={executiveCards} />
-
+          <ExecutiveKPIs loading={loading} cards={executiveCards} />
         </>
-
       )}
 
       {activeDashboardTab === "analises" && (
@@ -1030,389 +1195,479 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
-              <BarChart3 size={22} />
-            </div>
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                  <BarChart3 size={22} />
+                </div>
 
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Metas e Performance
-              </h2>
-              <p className="text-sm text-slate-500">
-                Meta mensal, projeção provável e potencial da clínica.
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <div className="mb-2 flex items-center justify-between text-sm font-bold text-slate-600">
-              <span>Meta mensal</span>
-              <span>{goals.monthlyProgress}%</span>
-            </div>
-
-            <div className="h-4 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-[#239d9a]"
-                style={{ width: `${Math.min(100, goals.monthlyProgress)}%` }}
-              />
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
-              <span>Confirmado: {formatCurrency(goals.confirmedRevenue)}</span>
-              <span>Provável: {formatCurrency(goals.probableRevenue)}</span>
-              <span>Potencial: {formatCurrency(goals.potentialRevenue)}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-3xl bg-emerald-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
-                Progresso provável
-              </p>
-              <p className="mt-2 text-2xl font-black text-emerald-700">
-                {goals.probableProgress}%
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-cyan-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
-                Conversão comercial
-              </p>
-              <p className="mt-2 text-2xl font-black text-cyan-700">
-                {goals.commercialConversion}%
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-purple-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-purple-700">
-                Recuperação prevista
-              </p>
-              <p className="mt-2 text-2xl font-black text-purple-700">
-                {goals.recoveredPatientsProjection}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
-              <Trophy size={22} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Destaques
-              </h2>
-              <p className="text-sm text-slate-500">
-                Produção e performance.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Procedimento destaque
-              </p>
-              <p className="mt-1 font-black text-slate-800">
-                {goals.topProcedure?.name || "Sem dados"}
-              </p>
-              <p className="mt-1 text-sm font-bold text-emerald-600">
-                {formatCurrency(goals.topProcedure?.value || 0)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Profissional destaque
-              </p>
-              <p className="mt-1 font-black text-slate-800">
-                {goals.topProfessional?.name || "Sem dados"}
-              </p>
-              <p className="mt-1 text-sm font-bold text-emerald-600">
-                {formatCurrency(goals.topProfessional?.value || 0)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Ticket médio
-              </p>
-              <p className="mt-1 text-xl font-black text-[#239d9a]">
-                {formatCurrency(goals.averageTicket || averageTicket)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
-              <BarChart3 size={22} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Pipeline Executivo
-              </h2>
-              <p className="text-sm text-slate-500">
-                Confirmado, provável, potencial e oportunidades abertas.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-3xl bg-emerald-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
-                Pipeline comercial
-              </p>
-              <p className="mt-2 text-2xl font-black text-emerald-700">
-                {formatCurrency(forecast.commercialPipeline)}
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-cyan-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
-                Orçamentos abertos
-              </p>
-              <p className="mt-2 text-2xl font-black text-cyan-700">
-                {formatCurrency(openBudgetRevenue)}
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-blue-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-blue-700">
-                Ticket médio aprovado
-              </p>
-              <p className="mt-2 text-2xl font-black text-blue-700">
-                {formatCurrency(averageTicket)}
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-purple-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-purple-700">
-                Campanhas previstas
-              </p>
-              <p className="mt-2 text-2xl font-black text-purple-700">
-                {formatCurrency(forecast.campaignRevenueProjection)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <ExecutiveConversionCenter
-          hotPatients={hotPatients.length}
-          coldPatients={coldPatients.length}
-          riskPatients={riskPatients.length}
-          vipPatients={vipPatients.length}
-          averageScore={averageScore}
-          openBudgetsCount={openBudgets.length}
-          openBudgetRevenue={openBudgetRevenue}
-          averageTicket={averageTicket}
-          conversionProjection={forecast.conversionProjection}
-          campaignRevenueProjection={forecast.campaignRevenueProjection}
-          sourceStats={sourceStats}
-          sourceWithoutOriginCount={sourceWithoutOriginCount}
-          totalPatients={patients.length}
-          formatCurrency={formatCurrency}
-        />
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
-              <Users size={22} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-800">
-                Top Pacientes por Score
-              </h2>
-              <p className="text-sm text-slate-500">
-                Maiores oportunidades comerciais.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {scoredPatients.slice(0, 8).map((item) => (
-              <Link
-                key={item.patient.id}
-                href={`/pacientes/${item.patient.id}`}
-                className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50 md:grid-cols-[1fr_auto]"
-              >
                 <div>
-                  <p className="font-black text-slate-800">
-                    {item.patient.name || "Paciente"}
+                  <h2 className="text-xl font-black text-slate-800">
+                    Metas e Performance
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Meta mensal, projeção provável e potencial da clínica.
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Origem: {item.source} • VIP: {item.vipLevel}
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <div className="mb-2 flex items-center justify-between text-sm font-bold text-slate-600">
+                  <span>Meta mensal</span>
+                  <span>{goals.monthlyProgress}%</span>
+                </div>
+
+                <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-[#239d9a]"
+                    style={{
+                      width: `${Math.min(100, goals.monthlyProgress)}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
+                  <span>
+                    Confirmado: {formatCurrency(goals.confirmedRevenue)}
+                  </span>
+                  <span>Provável: {formatCurrency(goals.probableRevenue)}</span>
+                  <span>
+                    Potencial: {formatCurrency(goals.potentialRevenue)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="rounded-3xl bg-emerald-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                    Progresso provável
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-emerald-700">
+                    {goals.probableProgress}%
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-black ${getScoreClass(
-                      item.score
-                    )}`}
+                <div className="rounded-3xl bg-cyan-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
+                    Conversão comercial
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-cyan-700">
+                    {goals.commercialConversion}%
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-purple-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-purple-700">
+                    Recuperação prevista
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-purple-700">
+                    {goals.recoveredPatientsProjection}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
+                  <Trophy size={22} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Destaques
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Produção e performance.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Procedimento destaque
+                  </p>
+                  <p className="mt-1 font-black text-slate-800">
+                    {goals.topProcedure?.name || "Sem dados"}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-emerald-600">
+                    {formatCurrency(goals.topProcedure?.value || 0)}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Profissional destaque
+                  </p>
+                  <p className="mt-1 font-black text-slate-800">
+                    {goals.topProfessional?.name || "Sem dados"}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-emerald-600">
+                    {formatCurrency(goals.topProfessional?.value || 0)}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Ticket médio
+                  </p>
+                  <p className="mt-1 text-xl font-black text-[#239d9a]">
+                    {formatCurrency(goals.averageTicket || averageTicket)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                  <BarChart3 size={22} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Pipeline Executivo
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Confirmado, provável, potencial e oportunidades abertas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-3xl bg-emerald-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                    Pipeline comercial
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-emerald-700">
+                    {formatCurrency(forecast.commercialPipeline)}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-cyan-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
+                    Orçamentos abertos
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-cyan-700">
+                    {formatCurrency(openBudgetRevenue)}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-blue-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-700">
+                    Ticket médio aprovado
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-blue-700">
+                    {formatCurrency(averageTicket)}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-purple-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-purple-700">
+                    Campanhas previstas
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-purple-700">
+                    {formatCurrency(forecast.campaignRevenueProjection)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <ExecutiveConversionCenter
+              hotPatients={hotPatients.length}
+              coldPatients={coldPatients.length}
+              riskPatients={riskPatients.length}
+              vipPatients={vipPatients.length}
+              averageScore={averageScore}
+              openBudgetsCount={openBudgets.length}
+              openBudgetRevenue={openBudgetRevenue}
+              averageTicket={averageTicket}
+              conversionProjection={forecast.conversionProjection}
+              campaignRevenueProjection={forecast.campaignRevenueProjection}
+              sourceStats={sourceStats}
+              sourceWithoutOriginCount={sourceWithoutOriginCount}
+              totalPatients={patients.length}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+                  <Users size={22} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Top Pacientes por Score
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Maiores oportunidades comerciais.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {scoredPatients.slice(0, 8).map((item) => (
+                  <Link
+                    key={item.patient.id}
+                    href={`/pacientes/${item.patient.id}`}
+                    className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50 md:grid-cols-[1fr_auto]"
                   >
-                    {item.score}/100
-                  </span>
+                    <div>
+                      <p className="font-black text-slate-800">
+                        {item.patient.name || "Paciente"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Origem: {item.source} • VIP: {item.vipLevel}
+                      </p>
+                    </div>
 
-                  <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-black text-cyan-700">
-                    {item.closingChance}%
-                  </span>
-                </div>
-              </Link>
-            ))}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-black ${getScoreClass(
+                          item.score,
+                        )}`}
+                      >
+                        {item.score}/100
+                      </span>
 
-            {scoredPatients.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                Ainda não há pacientes suficientes para análise.
+                      <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-black text-cyan-700">
+                        {item.closingChance}%
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+
+                {scoredPatients.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    Ainda não há pacientes suficientes para análise.
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+            <ExecutiveMarketingCenter
+              sourceStats={sourceStats}
+              totalPatients={patients.length}
+              sourceWithoutOriginCount={sourceWithoutOriginCount}
+              formatCurrency={formatCurrency}
+            />
           </div>
-        </div>
 
-        <ExecutiveMarketingCenter
-          sourceStats={sourceStats}
-          totalPatients={patients.length}
-          sourceWithoutOriginCount={sourceWithoutOriginCount}
-          formatCurrency={formatCurrency}
-        />
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black text-slate-800">
-            Ranking de procedimentos
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Procedimentos com maior performance financeira.
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {goals.procedureRanking.slice(0, 6).map((item, index) => (
-              <div
-                key={item.name}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
-              >
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="font-black text-slate-800">
-                    {index + 1}. {item.name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {item.count} lançamento(s)
-                  </p>
-                </div>
-
-                <p className="font-black text-emerald-600">
-                  {formatCurrency(item.value)}
-                </p>
-              </div>
-            ))}
-
-            {goals.procedureRanking.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                Ainda não há ranking de procedimentos.
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black text-slate-800">
-            Ranking por profissional
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Produção agrupada por profissional quando disponível.
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {goals.professionalRanking.slice(0, 6).map((item, index) => (
-              <div
-                key={item.name}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
-              >
-                <div>
-                  <p className="font-black text-slate-800">
-                    {index + 1}. {item.name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {item.count} lançamento(s)
+                  <h2 className="text-xl font-black text-slate-800">
+                    Rentabilidade dos procedimentos
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Faturamento cruzado com custos cadastrados na precificação.
                   </p>
                 </div>
 
-                <p className="font-black text-emerald-600">
-                  {formatCurrency(item.value)}
-                </p>
+                <Link
+                  href="/configuracoes/precificacao"
+                  className="inline-flex items-center justify-center rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-xs font-black text-[#239d9a] hover:bg-cyan-100"
+                >
+                  Abrir precificação
+                </Link>
               </div>
-            ))}
 
-            {goals.professionalRanking.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                Ainda não há ranking por profissional.
+              <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    Procedimentos mapeados
+                  </p>
+                  <p className="mt-1 text-xl font-black text-slate-800">
+                    {profitabilitySummary.mapped}/{profitabilitySummary.total}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-emerald-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                    Lucro estimado
+                  </p>
+                  <p className="mt-1 text-xl font-black text-emerald-700">
+                    {formatCurrency(profitabilitySummary.profit)}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-cyan-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-cyan-700">
+                    Margem média
+                  </p>
+                  <p className="mt-1 text-xl font-black text-cyan-700">
+                    {profitabilitySummary.averageMargin}%
+                  </p>
+                </div>
               </div>
-            )}
+
+              <div className="space-y-3">
+                {procedureProfitabilityRanking
+                  .slice(0, 6)
+                  .map((item, index) => (
+                    <div
+                      key={item.name}
+                      className="rounded-2xl bg-slate-50 p-4"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <p className="font-black text-slate-800">
+                            {index + 1}. {item.name}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {item.count} lançamento(s) • Receita:{" "}
+                            {formatCurrency(item.revenue)}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`w-fit rounded-full px-3 py-1 text-xs font-black ${getProfitabilityClass(
+                            item.margin,
+                          )}`}
+                        >
+                          {getProfitabilityLabel(item.margin)}
+                          {item.margin !== null ? ` • ${item.margin}%` : ""}
+                        </span>
+                      </div>
+
+                      {item.hasPricing ? (
+                        <div className="mt-4 grid grid-cols-1 gap-3 text-xs font-bold text-slate-500 md:grid-cols-3">
+                          <div className="rounded-2xl bg-white p-3">
+                            <p className="text-slate-400">Custo estimado</p>
+                            <p className="mt-1 text-sm font-black text-slate-800">
+                              {formatCurrency(
+                                item.estimatedCost + item.estimatedFees,
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl bg-white p-3">
+                            <p className="text-slate-400">Lucro estimado</p>
+                            <p className="mt-1 text-sm font-black text-emerald-700">
+                              {formatCurrency(item.estimatedProfit)}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl bg-white p-3">
+                            <p className="text-slate-400">
+                              Custo unitário base
+                            </p>
+                            <p className="mt-1 text-sm font-black text-slate-800">
+                              {formatCurrency(item.unitCost)}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-700">
+                          Este procedimento ainda não possui precificação
+                          cadastrada. Cadastre o custo para calcular margem
+                          real.
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                {procedureProfitabilityRanking.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    Ainda não há dados suficientes para calcular rentabilidade.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <h2 className="text-xl font-black text-slate-800">
+                Ranking por profissional
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Produção agrupada por profissional quando disponível.
+              </p>
+
+              <div className="mt-5 space-y-3">
+                {goals.professionalRanking.slice(0, 6).map((item, index) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+                  >
+                    <div>
+                      <p className="font-black text-slate-800">
+                        {index + 1}. {item.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.count} lançamento(s)
+                      </p>
+                    </div>
+
+                    <p className="font-black text-emerald-600">
+                      {formatCurrency(item.value)}
+                    </p>
+                  </div>
+                ))}
+
+                {goals.professionalRanking.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    Ainda não há ranking por profissional.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
         </>
       )}
 
       {activeDashboardTab === "acessos" && (
         <>
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Link
-          href="/crm"
-          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
-            <Activity size={22} />
-          </div>
-          <h3 className="text-lg font-black text-slate-800">CRM</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Acessar relacionamento, aniversários, orçamentos e tratamentos parados.
-          </p>
-        </Link>
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <Link
+              href="/crm"
+              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                <Activity size={22} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800">CRM</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Acessar relacionamento, aniversários, orçamentos e tratamentos
+                parados.
+              </p>
+            </Link>
 
-        <Link
-          href="/crm/campanhas"
-          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="mb-4 inline-flex rounded-2xl bg-blue-50 p-3 text-blue-600">
-            <Megaphone size={22} />
-          </div>
-          <h3 className="text-lg font-black text-slate-800">Campanhas</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Acessar campanhas segmentadas por score e chance de fechamento.
-          </p>
-        </Link>
+            <Link
+              href="/crm/campanhas"
+              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="mb-4 inline-flex rounded-2xl bg-blue-50 p-3 text-blue-600">
+                <Megaphone size={22} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800">Campanhas</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Acessar campanhas segmentadas por score e chance de fechamento.
+              </p>
+            </Link>
 
-        <Link
-          href="/financeiro"
-          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="mb-4 inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-600">
-            <DollarSign size={22} />
+            <Link
+              href="/financeiro"
+              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="mb-4 inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+                <DollarSign size={22} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800">Financeiro</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Abrir o financeiro operacional do consultório.
+              </p>
+            </Link>
           </div>
-          <h3 className="text-lg font-black text-slate-800">Financeiro</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Abrir o financeiro operacional do consultório.
-          </p>
-        </Link>
-      </div>
         </>
       )}
-
     </div>
   );
 }
