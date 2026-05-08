@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,6 +123,8 @@ export default function FinanceiroPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [smartFilter, setSmartFilter] = useState<"todos" | "atrasados" | "cobranca" | "recibos">("todos");
   const [periodoMenuOpen, setPeriodoMenuOpen] = useState(false);
+
+  const resultadosRef = useRef<HTMLDivElement | null>(null);
 
   const parseMoney = (value: unknown) => {
     if (value === null || value === undefined || value === "") return 0;
@@ -429,6 +431,15 @@ export default function FinanceiroPage() {
   const hasReceipt = (value: unknown) => {
     const v = String(value ?? "").trim().toLowerCase();
     return Boolean(v && v !== "nenhum");
+  };
+
+  const scrollToResultados = () => {
+    setTimeout(() => {
+      resultadosRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
   };
 
   const receiptBadgeClass = (value: unknown) => {
@@ -1709,6 +1720,7 @@ export default function FinanceiroPage() {
                 onClick={() => {
                   setSearchTerm("");
                   setSmartFilter("atrasados");
+                  scrollToResultados();
                 }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-700 border border-red-100 hover:bg-red-100"
               >
@@ -1748,6 +1760,7 @@ export default function FinanceiroPage() {
                 onClick={() => {
                   setSearchTerm("");
                   setSmartFilter("cobranca");
+                  scrollToResultados();
                   window.open(buildChargeAllWhatsappHref(), "_blank", "noopener,noreferrer");
                 }}
                 className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-amber-700 border border-amber-100 hover:bg-amber-100"
@@ -1788,6 +1801,7 @@ export default function FinanceiroPage() {
                 onClick={() => {
                   setSearchTerm("");
                   setSmartFilter("recibos");
+                  scrollToResultados();
                 }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-purple-700 border border-purple-100 hover:bg-purple-100"
               >
@@ -1828,6 +1842,7 @@ export default function FinanceiroPage() {
                   setSearchTerm("");
                   setSmartFilter("todos");
                   setPeriodoFiltro("mes_atual");
+                  scrollToResultados();
                 }}
                 className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#239d9a] border border-[#bfe8e7] hover:bg-[#eefafa]"
               >
@@ -2640,7 +2655,7 @@ export default function FinanceiroPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm">
+        <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm scroll-mt-6">
           <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
             <div>
               <CardTitle className="text-lg font-black tracking-tight text-[#239d9a]">
