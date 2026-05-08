@@ -290,16 +290,18 @@ function normalizeProcedureName(value: unknown) {
 
 function getProfitabilityClass(margin: number | null) {
   if (margin === null) return "bg-slate-100 text-slate-600";
-  if (margin >= 60) return "bg-emerald-100 text-emerald-700";
-  if (margin >= 35) return "bg-amber-100 text-amber-700";
+  if (margin >= 50) return "bg-emerald-100 text-emerald-700";
+  if (margin >= 35) return "bg-cyan-100 text-cyan-700";
+  if (margin >= 20) return "bg-amber-100 text-amber-700";
   return "bg-rose-100 text-rose-700";
 }
 
 function getProfitabilityLabel(margin: number | null) {
   if (margin === null) return "Sem custo";
-  if (margin >= 60) return "Saudável";
-  if (margin >= 35) return "Atenção";
-  return "Margem baixa";
+  if (margin >= 50) return "Excelente";
+  if (margin >= 35) return "Saudável";
+  if (margin >= 20) return "Atenção";
+  return "Crítico";
 }
 
 export default function DashboardExecutivoPage() {
