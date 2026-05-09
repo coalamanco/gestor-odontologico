@@ -35,6 +35,10 @@ import ExecutiveAlerts from "@/components/dashboard/ExecutiveAlerts";
 import ExecutiveForecast from "@/components/dashboard/ExecutiveForecast";
 import ExecutiveConversionCenter from "@/components/dashboard/ExecutiveConversionCenter";
 import ExecutiveMarketingCenter from "@/components/dashboard/ExecutiveMarketingCenter";
+import {
+  getFinancialRecordOverdueBalance,
+  isFinancialRecordOverdue as isFinancialOverdueByEngine,
+} from "@/lib/financialEngine";
 
 type Patient = {
   id: string;
@@ -248,19 +252,7 @@ function getFinancialDueDate(record: FinancialRecord) {
 }
 
 function isFinancialRecordOverdue(record: FinancialRecord) {
-  const amount = parseMoney(record.amount);
-  const paid = parseMoney(record.paid_amount);
-  const remaining = Math.max(0, amount - paid);
-
-  if (remaining <= 0 || isPaidStatus(record.status)) return false;
-
-  const dueDate = getDateAtStart(getFinancialDueDate(record));
-  if (!dueDate) return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return dueDate < today;
+  return isFinancialOverdueByEngine(record);
 }
 
 
@@ -844,11 +836,9 @@ export default function DashboardExecutivoPage() {
   const overdueRevenue = financialRecords.reduce((sum, record) => {
     if (!isFinancialRecordOverdue(record)) return sum;
 
-    const amount = parseMoney(record.amount);
-    const paid = parseMoney(record.paid_amount);
-    const remaining = Math.max(0, amount - paid);
-
-    return sum + remaining;
+    // Inadimplência executiva deve considerar somente saldo vencido real.
+    // Saldo futuro de orçamento parcelado em dia não entra como atraso.
+    return sum + getFinancialRecordOverdueBalance(record);
   }, 0);
 
   const sourceWithoutOriginCount = patients.filter((patient) => {
