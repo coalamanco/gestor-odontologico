@@ -310,18 +310,47 @@ export default function FinanceiroPage() {
   const statusBadgeClass = (value: unknown) => {
     const v = String(value ?? "").trim().toLowerCase();
     if (v === "pago" || v === "paid") {
-      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+      return "border border-emerald-200 bg-emerald-50/90 text-emerald-700 shadow-sm shadow-emerald-900/5";
     }
     if (v === "parcial") {
-      return "bg-amber-50 text-amber-800 border border-amber-200";
+      return "border border-amber-200 bg-amber-50/90 text-amber-800 shadow-sm shadow-amber-900/5";
     }
     if (v === "atrasado" || v === "em_atraso") {
-      return "bg-red-50 text-red-700 border border-red-200";
+      return "border border-red-200 bg-red-50/95 text-red-700 shadow-sm shadow-red-900/5";
     }
     if (v === "pendente" || v === "pending") {
-      return "bg-rose-50 text-rose-700 border border-rose-200";
+      return "border border-slate-200 bg-slate-50/95 text-slate-600 shadow-sm";
     }
-    return "bg-slate-100 text-slate-700 border border-slate-200";
+    if (v === "cancelado" || v === "cancelled" || v === "canceled") {
+      return "border border-slate-200 bg-slate-100 text-slate-500 shadow-sm";
+    }
+    return "border border-slate-200 bg-white text-slate-600 shadow-sm";
+  };
+
+  const rowStatusAccentClass = (record: FinancialRecord) => {
+    const analysis = getFinancialRecordAnalysis(record);
+
+    if (analysis.overdueBalance > 0) {
+      return "border-l-4 border-l-red-400 bg-red-50/45 hover:bg-red-50";
+    }
+
+    if (analysis.dueTodayBalance > 0) {
+      return "border-l-4 border-l-amber-400 bg-amber-50/40 hover:bg-amber-50";
+    }
+
+    if (analysis.futureBalance > 0) {
+      return "border-l-4 border-l-cyan-300 bg-cyan-50/25 hover:bg-cyan-50/50";
+    }
+
+    if (analysis.visualStatus === "pago") {
+      return "border-l-4 border-l-emerald-300 bg-emerald-50/25 hover:bg-emerald-50/45";
+    }
+
+    if (hasReceipt(record.receipt_type)) {
+      return "border-l-4 border-l-purple-300 bg-purple-50/35 hover:bg-purple-50/70";
+    }
+
+    return "border-l-4 border-l-transparent hover:bg-[#fbffff]";
   };
 
   const getDaysSince = (dateString?: string | null) => {
@@ -1511,14 +1540,14 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#edf8f8] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-6 shadow-lg shadow-cyan-900/10">
+    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#eaf7f7] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-5 shadow-xl shadow-cyan-900/10 ring-1 ring-white/40">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-white">
             Financeiro
           </h1>
           <p className="mt-1 text-sm text-cyan-50">
-            Controle de débitos, recebimentos e saldo de pacientes.
+            Controle financeiro inteligente com vencimentos reais, parcelas e cobrança premium.
           </p>
         </div>
       </div>
@@ -1658,7 +1687,7 @@ export default function FinanceiroPage() {
 
 
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-5 shadow-sm ring-1 ring-white/60">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
           <div className="flex items-start gap-4">
             <div className="rounded-2xl bg-red-50 p-3 text-red-700">
@@ -1930,7 +1959,7 @@ export default function FinanceiroPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <div className="rounded-2xl border border-[#d5eeee] bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-[#d5eeee] bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-[#eefafa] p-3 text-[#28aaa8]">
               <Wallet size={20} />
@@ -1946,7 +1975,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-100 bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-emerald-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
               <TrendingUp size={20} />
@@ -1962,7 +1991,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-amber-100 bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-amber-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
               <DollarSign size={20} />
@@ -1978,7 +2007,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-rose-100 bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-rose-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-rose-50 p-3 text-rose-700">
               <Trash2 size={20} />
@@ -1994,7 +2023,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-sky-100 bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-sky-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
               <PlusCircle size={20} />
@@ -2474,7 +2503,7 @@ export default function FinanceiroPage() {
                   </h3>
 
                   <span
-                    className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
+                    className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
                       item.visualStatus
                     )}`}
                   >
@@ -2524,14 +2553,14 @@ export default function FinanceiroPage() {
 
         <CardContent className="p-0 max-h-[280px] overflow-y-auto">
           <Table>
-            <TableHeader className="bg-[#f7ffff]">
-              <TableRow className="h-9 border-none hover:bg-transparent">
-                <TableHead className="px-6 text-xs text-slate-500">Paciente</TableHead>
-                <TableHead className="text-xs text-slate-500">Total</TableHead>
-                <TableHead className="text-xs text-slate-500">Já pagou</TableHead>
-                <TableHead className="text-xs text-slate-500">Vencido</TableHead>
-                <TableHead className="text-xs text-slate-500">A vencer</TableHead>
-                <TableHead className="px-6 text-right text-xs text-slate-500">Falta pagar</TableHead>
+            <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
+              <TableRow className="h-10 border-none hover:bg-transparent">
+                <TableHead className="px-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Total</TableHead>
+                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Já pagou</TableHead>
+                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Vencido</TableHead>
+                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">A vencer</TableHead>
+                <TableHead className="px-6 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Falta pagar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -2657,7 +2686,7 @@ export default function FinanceiroPage() {
           </CardContent>
         </Card>
 
-        <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm scroll-mt-6">
+        <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm ring-1 ring-white/60 scroll-mt-6">
           <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
             <div>
               <CardTitle className="text-lg font-black tracking-tight text-[#239d9a]">
@@ -2671,15 +2700,15 @@ export default function FinanceiroPage() {
 
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-[#f7ffff]">
-                <TableRow className="h-9 border-none hover:bg-transparent">
-                  <TableHead className="px-6 text-xs text-slate-500">Data</TableHead>
-                  <TableHead className="text-xs text-slate-500">Paciente</TableHead>
-                  <TableHead className="text-xs text-slate-500">Lançamento</TableHead>
-                  <TableHead className="text-xs text-slate-500">Pagamento</TableHead>
-                  <TableHead className="text-xs text-slate-500">Status</TableHead>
-                  <TableHead className="text-right text-xs text-slate-500">Valor</TableHead>
-                  <TableHead className="px-6 text-right text-xs text-slate-500">Ações</TableHead>
+              <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
+                <TableRow className="h-10 border-none hover:bg-transparent">
+                  <TableHead className="px-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Data</TableHead>
+                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Lançamento</TableHead>
+                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Pagamento</TableHead>
+                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                  <TableHead className="text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Valor</TableHead>
+                  <TableHead className="px-6 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Ações</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -2706,16 +2735,22 @@ export default function FinanceiroPage() {
                     return (
                       <TableRow
                         key={t.id}
-                        className={`group h-10 border-[#edf7f7] transition-all ${
-                          getVisualFinancialStatus(t) === "em_atraso"
-                            ? "bg-red-50/50 hover:bg-red-50"
-                            : hasReceipt(t.receipt_type)
-                              ? "bg-purple-50/40 hover:bg-purple-50/70"
-                              : "hover:bg-[#fbffff]"
-                        }`}
+                        className={`group h-12 border-[#edf7f7] transition-all ${rowStatusAccentClass(t)}`}
                       >
                         <TableCell className="px-6 py-2 text-sm font-medium text-slate-700">
-                          {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
+                          <div className="font-bold text-slate-700">
+                            {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
+                          </div>
+                          {getFinancialRecordAnalysis(t).overdueBalance > 0 && (
+                            <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-red-600">
+                              {getFinancialRecordAnalysis(t).daysOverdue} dia(s) em atraso
+                            </div>
+                          )}
+                          {getFinancialRecordAnalysis(t).futureBalance > 0 && getFinancialRecordAnalysis(t).overdueBalance <= 0 && (
+                            <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-cyan-600">
+                              A vencer
+                            </div>
+                          )}
                         </TableCell>
 
                         <TableCell className="text-sm font-medium text-slate-800">
@@ -2767,7 +2802,7 @@ export default function FinanceiroPage() {
 
                         <TableCell>
                           <span
-                            className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
+                            className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
                               getVisualFinancialStatus(t)
                             )}`}
                           >
@@ -2775,8 +2810,13 @@ export default function FinanceiroPage() {
                           </span>
                         </TableCell>
 
-                        <TableCell className="text-right text-sm font-bold text-emerald-700">
-                          {formatCurrency(total)}
+                        <TableCell className="text-right text-sm font-black text-slate-800">
+                          <div>{formatCurrency(total)}</div>
+                          {balance > 0 && (
+                            <div className="mt-0.5 text-[10px] font-bold text-slate-400">
+                              Saldo {formatCurrency(balance)}
+                            </div>
+                          )}
                         </TableCell>
 
                         <TableCell className="px-6 text-right">
