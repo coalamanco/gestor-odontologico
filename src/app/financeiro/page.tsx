@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
+  getFinancialRecordAnalysis,
   getFinancialRecordBalance,
   getFinancialRecordDaysOverdue,
   getFinancialRecordDueDate,
@@ -643,50 +644,55 @@ export default function FinanceiroPage() {
   const patientsToCharge = useMemo(() => {
     return registros
       .map((record) => {
-        const amount = parseMoney(record.amount);
-        const paid = parseMoney(record.paid_amount);
-        const balance = getFinancialRecordBalance(record);
+        const analysis = getFinancialRecordAnalysis(record);
         const patientName = record.patient_id
           ? patientNameById.get(String(record.patient_id)) || "Paciente"
           : "Paciente";
-        const daysOpen = getDaysOverdue(record);
-        const visualStatus = getVisualFinancialStatus(record);
 
         return {
           record,
           patientName,
-          balance,
-          daysOpen,
-          visualStatus,
+          balance: analysis.balance,
+          overdueBalance: analysis.overdueBalance,
+          dueTodayBalance: analysis.dueTodayBalance,
+          futureBalance: analysis.futureBalance,
+          daysOpen: analysis.daysOverdue,
+          visualStatus: analysis.visualStatus,
         };
       })
-      .filter((item) => item.balance > 0)
+      // Cobrança inteligente deve mostrar apenas atraso real.
+      // Saldo futuro de orçamento parcelado em dia não entra como inadimplência.
+      .filter((item) => item.overdueBalance > 0)
       .sort((a, b) => {
-        const aLate = a.visualStatus === "em_atraso" ? 1 : 0;
-        const bLate = b.visualStatus === "em_atraso" ? 1 : 0;
-
-        if (aLate !== bLate) return bLate - aLate;
         if (a.daysOpen !== b.daysOpen) return b.daysOpen - a.daysOpen;
-
-        return b.balance - a.balance;
+        return b.overdueBalance - a.overdueBalance;
       })
       .slice(0, 8);
   }, [registros, patientNameById]);
 
-  const smartAlerts = useMemo(() => {
-    const overduePatients = patientsToCharge.filter(
-      (item) => item.visualStatus === "em_atraso"
+  const openBalanceSummary = useMemo(() => {
+    return registros.reduce(
+      (acc, record) => {
+        const analysis = getFinancialRecordAnalysis(record);
+        acc.totalOpen += analysis.balance;
+        acc.totalOverdue += analysis.overdueBalance;
+        acc.totalDueToday += analysis.dueTodayBalance;
+        acc.totalFuture += analysis.futureBalance;
+        return acc;
+      },
+      { totalOpen: 0, totalOverdue: 0, totalDueToday: 0, totalFuture: 0 },
     );
+  }, [registros]);
+
+  const smartAlerts = useMemo(() => {
+    const overduePatients = patientsToCharge;
 
     const totalOverdue = overduePatients.reduce(
-      (acc, item) => acc + item.balance,
+      (acc, item) => acc + item.overdueBalance,
       0
     );
 
-    const totalOpen = patientsToCharge.reduce(
-      (acc, item) => acc + item.balance,
-      0
-    );
+    const totalOpen = openBalanceSummary.totalOpen;
 
     const receiptRequested = registros.filter((record) =>
       hasReceipt(record.receipt_type)
@@ -697,18 +703,20 @@ export default function FinanceiroPage() {
     );
 
     const highDebtPatients = patientsToCharge.filter(
-      (item) => item.balance >= 500
+      (item) => item.overdueBalance >= 500
     );
 
     return {
       overduePatients,
       totalOverdue,
       totalOpen,
+      totalDueToday: openBalanceSummary.totalDueToday,
+      totalFuture: openBalanceSummary.totalFuture,
       receiptRequested,
       receiptWithPayment,
       highDebtPatients,
     };
-  }, [patientsToCharge, registros]);
+  }, [patientsToCharge, registros, openBalanceSummary]);
 
   const financialPrediction = useMemo(() => {
     const now = new Date();
@@ -811,7 +819,7 @@ export default function FinanceiroPage() {
 
 
   const buildChargeAllWhatsappHref = () => {
-    const total = patientsToCharge.reduce((acc, item) => acc + item.balance, 0);
+    const total = patientsToCharge.reduce((acc, item) => acc + item.overdueBalance, 0);
 
     const lines = patientsToCharge.map((item, index) => {
       const status =
@@ -820,7 +828,7 @@ export default function FinanceiroPage() {
           : "pendente dentro do prazo";
 
       return `${index + 1}. ${item.patientName} - ${formatCurrency(
-        item.balance
+        item.overdueBalance
       )} (${status})`;
     });
 
@@ -1364,7 +1372,7 @@ export default function FinanceiroPage() {
         <tr>
           <td>${index + 1}. ${item.patientName}</td>
           <td>${item.visualStatus === "em_atraso" ? `Em atraso há ${item.daysOpen} dia(s)` : "Pendente"}</td>
-          <td class="right">${formatCurrency(item.balance)}</td>
+          <td class="right">${formatCurrency(item.overdueBalance)}</td>
         </tr>
       `);
 
@@ -1834,7 +1842,7 @@ export default function FinanceiroPage() {
                 </span>
                 <span className="rounded-full bg-white px-3 py-1 font-black text-amber-700 border border-amber-100">
                   Total: {formatCurrency(
-                    patientsToCharge.reduce((acc, item) => acc + item.balance, 0)
+                    patientsToCharge.reduce((acc, item) => acc + item.overdueBalance, 0)
                   )}
                 </span>
               </div>
@@ -1886,7 +1894,7 @@ export default function FinanceiroPage() {
                   </div>
 
                   <div className="text-sm font-black text-amber-700 whitespace-nowrap">
-                    {formatCurrency(item.balance)}
+                    {formatCurrency(item.overdueBalance)}
                   </div>
                 </div>
               </div>

@@ -1376,6 +1376,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [selectedPaymentTransaction, setSelectedPaymentTransaction] =
     useState<PaymentTransaction | null>(null);
   const [editPaymentAmount, setEditPaymentAmount] = useState("");
+  const [editPaymentRecordId, setEditPaymentRecordId] = useState("");
   const [editPaymentMethod, setEditPaymentMethod] =
     useState<PaymentMethod>("pix");
   const [editReceiptType, setEditReceiptType] = useState<ReceiptType>("nenhum");
@@ -3518,6 +3519,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
   const openEditPaymentModal = (transaction: PaymentTransaction) => {
     setSelectedPaymentTransaction(transaction);
     setEditPaymentAmount(String(parseMoney(transaction.amount).toFixed(2)));
+    setEditPaymentRecordId(String(transaction.financial_record_id || ""));
     setEditPaymentMethod(
       (transaction.payment_method as PaymentMethod) || "pix",
     );
@@ -3537,59 +3539,105 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
     setShowEditPaymentModal(false);
     setSelectedPaymentTransaction(null);
     setEditPaymentAmount("");
+    setEditPaymentRecordId("");
     setEditPaymentMethod("pix");
     setEditReceiptType("nenhum");
     setEditReceivedAt(new Date().toISOString().slice(0, 10));
     setEditPaymentNote("");
   };
 
+  const recalculateFinancialRecordAfterPaymentChange = async (financialRecordId: string) => {
+    if (!financialRecordId) return;
+
+    const { data: recordData, error: recordError } = await supabase
+      .from("financial_records")
+      .select("*")
+      .eq("id", financialRecordId)
+      .single();
+
+    if (recordError) throw recordError;
+
+    const { data: transactionData, error: transactionError } = await supabase
+      .from("payment_transactions")
+      .select("*")
+      .eq("financial_record_id", financialRecordId)
+      .order("received_at", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (transactionError) throw transactionError;
+
+    const transactions = (transactionData || []) as PaymentTransaction[];
+    const updatedPaidAmount = transactions.reduce(
+      (acc, transaction) => acc + parseMoney(transaction.amount),
+      0,
+    );
+    const totalAmount = parseMoney((recordData as FinancialRecord).amount);
+
+    let newStatus = "pendente";
+    if (updatedPaidAmount <= 0) newStatus = "pendente";
+    else if (updatedPaidAmount < totalAmount) newStatus = "parcial";
+    else newStatus = "pago";
+
+    const latestTransaction = transactions[0] || null;
+
+    const { error: updateRecordError } = await supabase
+      .from("financial_records")
+      .update({
+        paid_amount: updatedPaidAmount,
+        status: newStatus,
+        payment_method: latestTransaction?.payment_method || null,
+        receipt_type: latestTransaction?.receipt_type || "nenhum",
+        paid_at: latestTransaction?.received_at || null,
+      })
+      .eq("id", financialRecordId);
+
+    if (updateRecordError) throw updateRecordError;
+  };
+
   const confirmEditPayment = async () => {
     if (!selectedPaymentTransaction) return;
 
     const editedAmount = Number(String(editPaymentAmount).replace(",", "."));
+    const targetRecordId = String(editPaymentRecordId || "");
+    const originalRecordId = String(selectedPaymentTransaction.financial_record_id || "");
 
     if (isNaN(editedAmount) || editedAmount <= 0) {
       alert("Informe um valor válido.");
       return;
     }
 
-    const record =
-      financialRecords.find(
-        (item) => item.id === selectedPaymentTransaction.financial_record_id,
-      ) || detailRecord;
-
-    if (!record) {
-      alert("Não encontrei o débito vinculado a este pagamento.");
+    if (!targetRecordId) {
+      alert("Selecione a parcela/débito correto para este pagamento.");
       return;
     }
 
-    const relatedTransactions = paymentTransactions.filter(
-      (transaction) =>
-        transaction.financial_record_id ===
-        selectedPaymentTransaction.financial_record_id,
+    const targetRecord = financialRecords.find((item) => item.id === targetRecordId);
+
+    if (!targetRecord) {
+      alert("Não encontrei a parcela/débito selecionado.");
+      return;
+    }
+
+    const targetTransactions = paymentTransactions.filter(
+      (transaction) => transaction.financial_record_id === targetRecordId,
     );
 
-    const updatedPaidAmount = relatedTransactions.reduce((acc, transaction) => {
+    const updatedTargetPaidAmount = targetTransactions.reduce((acc, transaction) => {
       if (transaction.id === selectedPaymentTransaction.id) {
         return acc + editedAmount;
       }
 
       return acc + parseMoney(transaction.amount);
-    }, 0);
+    }, originalRecordId === targetRecordId ? 0 : editedAmount);
 
-    const totalAmount = parseMoney(record.amount);
+    const totalAmount = parseMoney(targetRecord.amount);
 
-    if (updatedPaidAmount > totalAmount) {
+    if (updatedTargetPaidAmount > totalAmount) {
       alert(
-        "A soma dos pagamentos não pode ser maior que o valor total do débito.",
+        "A soma dos pagamentos não pode ser maior que o valor total da parcela/débito selecionado.",
       );
       return;
     }
-
-    let newStatus = "pendente";
-    if (updatedPaidAmount === 0) newStatus = "pendente";
-    else if (updatedPaidAmount < totalAmount) newStatus = "parcial";
-    else newStatus = "pago";
 
     try {
       setSubmittingEditPayment(true);
@@ -3601,6 +3649,8 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
       const { error: transactionError } = await supabase
         .from("payment_transactions")
         .update({
+          financial_record_id: targetRecordId,
+          patient_id: params.id,
           amount: editedAmount,
           payment_method: editPaymentMethod,
           receipt_type: editReceiptType,
@@ -3611,18 +3661,11 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
 
       if (transactionError) throw transactionError;
 
-      const { error: recordError } = await supabase
-        .from("financial_records")
-        .update({
-          paid_amount: updatedPaidAmount,
-          status: newStatus,
-          payment_method: editPaymentMethod,
-          receipt_type: editReceiptType,
-          paid_at: receivedAtIso,
-        })
-        .eq("id", selectedPaymentTransaction.financial_record_id);
+      await recalculateFinancialRecordAfterPaymentChange(originalRecordId);
 
-      if (recordError) throw recordError;
+      if (targetRecordId !== originalRecordId) {
+        await recalculateFinancialRecordAfterPaymentChange(targetRecordId);
+      }
 
       alert("Pagamento editado com sucesso.");
       closeEditPaymentModal();
@@ -5457,6 +5500,16 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                               Receber
                             </button>
                           </>
+                        )}
+
+                        {paidAmount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setDetailRecord(record)}
+                            className="bg-white text-[#239d9a] px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.12em] border border-[#d8eeee] hover:bg-[#eefafa]"
+                          >
+                            Editar pagamento
+                          </button>
                         )}
 
                         <button
@@ -7423,7 +7476,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
                 <div>
                   <label className="block mb-1 text-slate-500">
                     Valor pago
@@ -7449,6 +7502,32 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                     onChange={(e) => setEditReceivedAt(e.target.value)}
                     className="w-full border rounded-xl p-3 text-base text-slate-800"
                   />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500">
+                    Parcela / débito correto
+                  </label>
+                  <select
+                    value={editPaymentRecordId}
+                    onChange={(e) => setEditPaymentRecordId(e.target.value)}
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  >
+                    {financialRecords.map((record) => {
+                      const label = record.installments && record.installments > 1
+                        ? `Parcela ${record.installment_number || 1}/${record.installments}`
+                        : "Débito";
+
+                      return (
+                        <option key={record.id} value={record.id}>
+                          {label} — {record.description || "Financeiro"} — {formatCurrency(parseMoney(record.amount))}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Use este campo para mover um pagamento lançado na parcela errada.
+                  </p>
                 </div>
 
                 <div>
