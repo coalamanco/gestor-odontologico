@@ -93,7 +93,7 @@ export default function FinanceiroPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [saldosPorPaciente, setSaldosPorPaciente] = useState<
-    Array<{ patient_id: string; name: string; total: number; paid: number; balance: number }>
+    Array<{ patient_id: string; name: string; total: number; paid: number; balance: number; overdueBalance: number; dueTodayBalance: number; futureBalance: number }>
   >([]);
 
   const [formData, setFormData] = useState({
@@ -469,7 +469,7 @@ export default function FinanceiroPage() {
 
     if (smartFilter === "cobranca") {
       baseRecords = registros.filter((record) => {
-        return getFinancialRecordBalance(record) >= 500;
+        return getFinancialRecordAnalysis(record).overdueBalance >= 500;
       });
     }
 
@@ -628,7 +628,7 @@ export default function FinanceiroPage() {
 
   const topOpenBalances = useMemo(() => {
     return saldosPorPaciente
-      .filter((item) => item.balance > 0)
+      .filter((item) => item.overdueBalance > 0)
       .slice(0, 6);
   }, [saldosPorPaciente]);
 
@@ -793,7 +793,7 @@ export default function FinanceiroPage() {
     const net90 = receivable90 - expenses90;
 
     const riskLevel =
-      intelligentSummary.taxaInadimplencia >= 30 || smartAlerts.totalOpen > receivedThisMonth
+      intelligentSummary.taxaInadimplencia >= 30 || smartAlerts.totalOverdue > receivedThisMonth
         ? "Alto"
         : intelligentSummary.taxaInadimplencia >= 15
           ? "Médio"
@@ -815,7 +815,7 @@ export default function FinanceiroPage() {
       margin,
       riskLevel,
     };
-  }, [registros, expenses, intelligentSummary, smartAlerts.totalOpen]);
+  }, [registros, expenses, intelligentSummary, smartAlerts.totalOverdue]);
 
 
   const buildChargeAllWhatsappHref = () => {
@@ -833,9 +833,9 @@ export default function FinanceiroPage() {
     });
 
     const message =
-      `Cobrança inteligente - pacientes com saldo em aberto\n\n` +
+      `Cobrança inteligente - pacientes com saldo vencido\n\n` +
       lines.join("\n") +
-      `\n\nTotal em aberto: ${formatCurrency(total)}\n\n` +
+      `\n\nTotal vencido: ${formatCurrency(total)}\n\n` +
       `Use esta lista para organizar os contatos de cobrança da clínica.`;
 
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -910,7 +910,9 @@ export default function FinanceiroPage() {
   async function fetchSaldosPorPaciente() {
     const [patientsRes, recordsRes] = await Promise.all([
       supabaseNoSchemaCache.from("patients").select("id, name").order("name", { ascending: true }),
-      supabaseNoSchemaCache.from("financial_records").select("patient_id, amount, paid_amount"),
+      supabaseNoSchemaCache
+        .from("financial_records")
+        .select("patient_id, amount, paid_amount, status, due_date, created_at, paid_at, installment_number, installments"),
     ]);
 
     if (patientsRes.error || recordsRes.error) {
@@ -923,32 +925,56 @@ export default function FinanceiroPage() {
       patientNameMap.set(String((p as any).id), String((p as any).name ?? ""));
     }
 
-    const grouped: Record<string, { total: number; paid: number }> = {};
+    const grouped: Record<
+      string,
+      {
+        total: number;
+        paid: number;
+        balance: number;
+        overdueBalance: number;
+        dueTodayBalance: number;
+        futureBalance: number;
+      }
+    > = {};
 
     for (const r of recordsRes.data ?? []) {
-      const patientId = String((r as any).patient_id ?? "");
+      const record = r as any;
+      const patientId = String(record.patient_id ?? "");
       if (!patientId) continue;
 
-      const amount = parseMoney((r as any).amount);
-      const paid = parseMoney((r as any).paid_amount);
+      const analysis = getFinancialRecordAnalysis(record);
 
       if (!grouped[patientId]) {
-        grouped[patientId] = { total: 0, paid: 0 };
+        grouped[patientId] = {
+          total: 0,
+          paid: 0,
+          balance: 0,
+          overdueBalance: 0,
+          dueTodayBalance: 0,
+          futureBalance: 0,
+        };
       }
 
-      grouped[patientId].total += amount;
-      grouped[patientId].paid += paid;
+      grouped[patientId].total += analysis.total;
+      grouped[patientId].paid += analysis.paid;
+      grouped[patientId].balance += analysis.balance;
+      grouped[patientId].overdueBalance += analysis.overdueBalance;
+      grouped[patientId].dueTodayBalance += analysis.dueTodayBalance;
+      grouped[patientId].futureBalance += analysis.futureBalance;
     }
 
     const rows = Object.entries(grouped).map(([patient_id, values]) => ({
       patient_id,
       name: patientNameMap.get(patient_id) ?? patient_id,
-      total: values.total,
-      paid: values.paid,
-      balance: Math.max(0, values.total - values.paid),
+      total: Number(values.total.toFixed(2)),
+      paid: Number(values.paid.toFixed(2)),
+      balance: Number(values.balance.toFixed(2)),
+      overdueBalance: Number(values.overdueBalance.toFixed(2)),
+      dueTodayBalance: Number(values.dueTodayBalance.toFixed(2)),
+      futureBalance: Number(values.futureBalance.toFixed(2)),
     }));
 
-    rows.sort((a, b) => b.balance - a.balance || a.name.localeCompare(b.name, "pt-BR"));
+    rows.sort((a, b) => b.overdueBalance - a.overdueBalance || b.balance - a.balance || a.name.localeCompare(b.name, "pt-BR"));
     setSaldosPorPaciente(rows);
   }
 
@@ -1800,7 +1826,7 @@ export default function FinanceiroPage() {
             </div>
 
             <div className="mt-1 text-xs font-medium text-slate-600">
-              {patientsToCharge.length} paciente(s) com saldo
+              {patientsToCharge.length} paciente(s) com atraso real
             </div>
 
             {patientsToCharge.length > 0 && (
@@ -1833,7 +1859,7 @@ export default function FinanceiroPage() {
                 Cobrança inteligente
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Lista automática dos principais pacientes com saldo em aberto.
+                Lista automática dos principais pacientes com parcela vencida em aberto.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -2324,17 +2350,17 @@ export default function FinanceiroPage() {
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
           <div className="mb-4">
             <h2 className="text-base font-black text-slate-800">
-              Maiores saldos em aberto
+              Maiores saldos vencidos
             </h2>
             <p className="text-sm text-slate-500">
-              Pacientes com maior valor pendente.
+              Pacientes com maior valor realmente vencido.
             </p>
           </div>
 
           <div className="space-y-2">
             {topOpenBalances.length === 0 && (
               <p className="text-sm text-slate-400">
-                Nenhum saldo em aberto.
+                Nenhum saldo vencido.
               </p>
             )}
 
@@ -2353,7 +2379,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 <div className="text-sm font-black text-amber-700 whitespace-nowrap">
-                  {formatCurrency(item.balance)}
+                  {formatCurrency(item.overdueBalance)}
                 </div>
               </div>
             ))}
@@ -2403,7 +2429,7 @@ export default function FinanceiroPage() {
               Pacientes para cobrar
             </h2>
             <p className="text-sm text-slate-500">
-              Lista automática baseada nos saldos em aberto. Após 30 dias, o débito aparece como em atraso.
+              Lista automática baseada apenas em parcelas vencidas com saldo pendente. Parcelas futuras não entram aqui.
             </p>
           </div>
 
@@ -2428,7 +2454,7 @@ export default function FinanceiroPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
           {patientsToCharge.length === 0 && (
             <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-6 text-center text-sm text-slate-400 xl:col-span-2">
-              Nenhum paciente com saldo em aberto.
+              Nenhum paciente com parcela vencida em aberto.
             </div>
           )}
 
@@ -2461,13 +2487,13 @@ export default function FinanceiroPage() {
                 </p>
 
                 <p className="mt-1 text-xs text-slate-500">
-                  Aberto há {item.daysOpen} dia(s)
+                  Vencido há {item.daysOpen} dia(s)
                 </p>
               </div>
 
               <div className="flex flex-col md:items-end gap-2">
                 <div className="text-base font-black text-[#239d9a]">
-                  {formatCurrency(item.balance)}
+                  {formatCurrency(item.overdueBalance)}
                 </div>
 
                 <Button
@@ -2491,7 +2517,7 @@ export default function FinanceiroPage() {
               Saldo devedor por paciente
             </CardTitle>
             <CardDescription className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Total lançado, pago e saldo em aberto
+              Total lançado, pago, vencido e a vencer
             </CardDescription>
           </div>
         </CardHeader>
@@ -2503,13 +2529,15 @@ export default function FinanceiroPage() {
                 <TableHead className="px-6 text-xs text-slate-500">Paciente</TableHead>
                 <TableHead className="text-xs text-slate-500">Total</TableHead>
                 <TableHead className="text-xs text-slate-500">Já pagou</TableHead>
+                <TableHead className="text-xs text-slate-500">Vencido</TableHead>
+                <TableHead className="text-xs text-slate-500">A vencer</TableHead>
                 <TableHead className="px-6 text-right text-xs text-slate-500">Falta pagar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {saldosPorPaciente.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-sm font-bold text-slate-400">
+                  <TableCell colSpan={6} className="py-8 text-center text-sm font-bold text-slate-400">
                     Nenhum saldo encontrado
                   </TableCell>
                 </TableRow>
@@ -2524,6 +2552,12 @@ export default function FinanceiroPage() {
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-emerald-700">
                       {formatCurrency(r.paid)}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold text-red-700">
+                      {formatCurrency(r.overdueBalance)}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold text-cyan-700">
+                      {formatCurrency(r.futureBalance + r.dueTodayBalance)}
                     </TableCell>
                     <TableCell className="px-6 text-right text-sm font-semibold text-[#1da3a0]">
                       {formatCurrency(r.balance)}
