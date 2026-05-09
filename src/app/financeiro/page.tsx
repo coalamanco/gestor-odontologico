@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
+  getFinancialRecordBalance,
+  getFinancialRecordDaysOverdue,
+  getFinancialRecordDueDate,
+  getFinancialRecordVisualStatus,
+  isFinancialRecordOverdue as isFinancialOverdueByEngine,
+} from "@/lib/financialEngine";
+import {
   DollarSign,
   PlusCircle,
   Trash2,
@@ -329,17 +336,7 @@ export default function FinanceiroPage() {
   };
 
   const getFinancialDueDate = (record: FinancialRecord) => {
-    if (record.due_date) return record.due_date;
-
-    if (!record.created_at) return null;
-
-    const baseDate = getDateAtNoon(record.created_at);
-    if (!baseDate) return record.created_at;
-
-    const installmentNumber = Math.max(1, Number(record.installment_number || 1));
-    baseDate.setMonth(baseDate.getMonth() + installmentNumber - 1);
-
-    return baseDate.toISOString().slice(0, 10);
+    return getFinancialRecordDueDate(record);
   };
 
   const getDateAtNoon = (dateString?: string | null) => {
@@ -356,46 +353,15 @@ export default function FinanceiroPage() {
   };
 
   const isFinancialOverdue = (record: FinancialRecord) => {
-    const total = parseMoney(record.amount);
-    const paid = parseMoney(record.paid_amount);
-    const balance = Math.max(0, total - paid);
-
-    if (balance <= 0 || record.status === "pago") return false;
-
-    const dueDate = getDateAtNoon(getFinancialDueDate(record));
-    if (!dueDate) return false;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return dueDate < today;
+    return isFinancialOverdueByEngine(record);
   };
 
   const getDaysOverdue = (record: FinancialRecord) => {
-    if (!isFinancialOverdue(record)) return 0;
-
-    const dueDate = getDateAtNoon(getFinancialDueDate(record));
-    if (!dueDate) return 0;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return Math.max(
-      0,
-      Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
-    );
+    return getFinancialRecordDaysOverdue(record);
   };
 
   const getVisualFinancialStatus = (record: FinancialRecord) => {
-    const total = parseMoney(record.amount);
-    const paid = parseMoney(record.paid_amount);
-    const balance = Math.max(0, total - paid);
-
-    if (balance <= 0 || record.status === "pago") return "pago";
-    if (isFinancialOverdue(record)) return "em_atraso";
-    if (paid > 0 || record.status === "parcial") return "parcial";
-
-    return "pendente";
+    return getFinancialRecordVisualStatus(record);
   };
 
   const labelVisualFinancialStatus = (record: FinancialRecord) => {
@@ -502,9 +468,7 @@ export default function FinanceiroPage() {
 
     if (smartFilter === "cobranca") {
       baseRecords = registros.filter((record) => {
-        const total = parseMoney(record.amount);
-        const paid = parseMoney(record.paid_amount);
-        return Math.max(0, total - paid) >= 500;
+        return getFinancialRecordBalance(record) >= 500;
       });
     }
 
@@ -556,9 +520,7 @@ export default function FinanceiroPage() {
     );
 
     const totalAReceber = registrosFiltradosBase.reduce((acc, curr) => {
-      const total = parseMoney(curr.amount);
-      const paid = parseMoney(curr.paid_amount);
-      return acc + Math.max(0, total - paid);
+      return acc + getFinancialRecordBalance(curr);
     }, 0);
 
     const despesasPagas = despesasFiltradas
@@ -604,9 +566,7 @@ export default function FinanceiroPage() {
       .reduce((acc, curr) => acc + parseMoney(curr.amount), 0);
 
     const totalEmAberto = registros.reduce((acc, record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      return acc + Math.max(0, amount - paid);
+      return acc + getFinancialRecordBalance(record);
     }, 0);
 
     const registrosComValor = registros.filter((record) => parseMoney(record.amount) > 0);
@@ -685,7 +645,7 @@ export default function FinanceiroPage() {
       .map((record) => {
         const amount = parseMoney(record.amount);
         const paid = parseMoney(record.paid_amount);
-        const balance = Math.max(0, amount - paid);
+        const balance = getFinancialRecordBalance(record);
         const patientName = record.patient_id
           ? patientNameById.get(String(record.patient_id)) || "Paciente"
           : "Paciente";
