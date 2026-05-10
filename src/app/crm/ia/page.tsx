@@ -19,6 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { generateStrategicAnalysis } from "@/lib/ai/strategicInsights";
 
 type Patient = {
   id: string;
@@ -66,27 +67,6 @@ type Treatment = {
   created_at?: string | null;
 };
 
-type HighPotentialPatient = {
-  id: string;
-  name: string;
-  score: number;
-  reason: string;
-};
-
-function parseMoney(value: string | number | null | undefined) {
-  if (value === null || value === undefined || value === "") return 0;
-
-  if (typeof value === "number") return value;
-
-  const normalized = String(value)
-    .replace("R$", "")
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .trim();
-
-  return Number(normalized) || 0;
-}
-
 function formatCurrency(value: number) {
   return Number(value || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -94,107 +74,27 @@ function formatCurrency(value: number) {
   });
 }
 
-function normalizeStatus(status?: string | null) {
-  return String(status || "").trim().toLowerCase();
+function getRecommendationClass(severity: string) {
+  if (severity === "critico") {
+    return "border-rose-100 bg-rose-50 text-rose-800";
+  }
+
+  if (severity === "atencao") {
+    return "border-amber-100 bg-amber-50 text-amber-800";
+  }
+
+  if (severity === "oportunidade") {
+    return "border-cyan-100 bg-cyan-50 text-cyan-800";
+  }
+
+  return "border-emerald-100 bg-emerald-50 text-emerald-800";
 }
 
-function getDateAtNoon(value?: string | null) {
-  if (!value) return null;
-
-  const raw = String(value).trim();
-  if (!raw) return null;
-
-  const clean = raw.split("T")[0];
-  const date = new Date(`${clean}T12:00:00`);
-
-  if (Number.isNaN(date.getTime())) return null;
-
-  return date;
-}
-
-function daysBetween(value?: string | null) {
-  const date = getDateAtNoon(value);
-
-  if (!date) return null;
-
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-
-  return Math.floor(
-    (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
-  );
-}
-
-function isPaidStatus(status?: string | null) {
-  const normalized = normalizeStatus(status);
-
-  return (
-    normalized === "paid" ||
-    normalized === "pago" ||
-    normalized === "paga" ||
-    normalized === "recebido" ||
-    normalized === "quitado"
-  );
-}
-
-function isApprovedStatus(status?: string | null) {
-  const normalized = normalizeStatus(status);
-
-  return (
-    normalized === "approved" ||
-    normalized === "aprovado" ||
-    normalized === "aprovada" ||
-    normalized === "fechado" ||
-    normalized === "fechada" ||
-    normalized === "finalizado"
-  );
-}
-
-function isRejectedStatus(status?: string | null) {
-  const normalized = normalizeStatus(status);
-
-  return (
-    normalized === "reprovado" ||
-    normalized === "reprovada" ||
-    normalized === "cancelado" ||
-    normalized === "cancelada" ||
-    normalized === "cancelled" ||
-    normalized === "rejected"
-  );
-}
-
-function getPatientSource(patient: Patient) {
-  const source = String(
-    patient.patient_source || patient.source || patient.origin || ""
-  ).trim();
-
-  return source || "Origem não informada";
-}
-
-function getTreatmentText(treatment: Treatment) {
-  return String(
-    treatment.procedure_name || treatment.treatment_name || treatment.title || ""
-  ).toLowerCase();
-}
-
-function buildSocialSuggestions() {
-  return [
-    {
-      title: "Prevenção odontológica",
-      content:
-        "Você sabia que consultas preventivas ajudam a evitar tratamentos maiores no futuro? 🦷✨ Manter o acompanhamento em dia é um investimento em saúde e qualidade de vida.",
-    },
-    {
-      title: "Clareamento dental",
-      content:
-        "Seu sorriso influencia diretamente sua autoestima ✨ O clareamento dental é uma forma segura e eficaz de devolver brilho e naturalidade ao sorriso.",
-    },
-    {
-      title: "Implantes dentários",
-      content:
-        "Os implantes devolvem função, estética e segurança ao sorrir 😁 Agende sua avaliação e descubra as possibilidades para o seu caso.",
-    },
-  ];
+function getRecommendationIconClass(severity: string) {
+  if (severity === "critico") return "bg-rose-100 text-rose-700";
+  if (severity === "atencao") return "bg-amber-100 text-amber-700";
+  if (severity === "oportunidade") return "bg-cyan-100 text-cyan-700";
+  return "bg-emerald-100 text-emerald-700";
 }
 
 export default function CrmIaPage() {
@@ -251,171 +151,15 @@ export default function CrmIaPage() {
     loadData();
   }, []);
 
-  const insights = useMemo(() => {
-    const totalPatients = patients.length;
-
-    const openBudgets = budgets.filter((budget) => {
-      const status = normalizeStatus(budget.status);
-      return !isApprovedStatus(status) && !isRejectedStatus(status);
+  const analysis = useMemo(() => {
+    return generateStrategicAnalysis({
+      patients,
+      appointments,
+      budgets,
+      financialRecords,
+      treatments,
     });
-
-    const openBudgetValue = openBudgets.reduce(
-      (sum, budget) => sum + parseMoney(budget.total),
-      0
-    );
-
-    const overdueRecords = financialRecords.filter((record) => {
-      const dueDate = getDateAtNoon(record.due_date);
-      if (!dueDate) return false;
-
-      const today = new Date();
-      today.setHours(12, 0, 0, 0);
-
-      return dueDate.getTime() < today.getTime() && !isPaidStatus(record.status);
-    });
-
-    const overdueValue = overdueRecords.reduce((sum, record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      return sum + Math.max(0, amount - paid);
-    }, 0);
-
-    const inactivePatients = patients.filter((patient) => {
-      const patientAppointments = appointments
-        .filter((appointment) => appointment.patient_id === patient.id)
-        .sort((a, b) =>
-          String(b.date || b.created_at || "").localeCompare(
-            String(a.date || a.created_at || "")
-          )
-        );
-
-      const lastAppointment = patientAppointments[0];
-      const days = daysBetween(lastAppointment?.date || patient.created_at);
-
-      return days !== null && days >= 180;
-    });
-
-    const implantTreatments = treatments.filter((treatment) => {
-      const text = getTreatmentText(treatment);
-      return text.includes("implante") || text.includes("protocolo");
-    });
-
-    const highPotentialPatients: HighPotentialPatient[] = patients
-      .map((patient) => {
-        const patientFinancial = financialRecords.filter(
-          (record) => record.patient_id === patient.id
-        );
-
-        const patientBudgets = budgets.filter(
-          (budget) => budget.patient_id === patient.id
-        );
-
-        const patientAppointments = appointments.filter(
-          (appointment) => appointment.patient_id === patient.id
-        );
-
-        const totalPaid = patientFinancial.reduce((sum, record) => {
-          if (parseMoney(record.paid_amount) > 0) {
-            return sum + parseMoney(record.paid_amount);
-          }
-
-          if (isPaidStatus(record.status)) {
-            return sum + parseMoney(record.amount);
-          }
-
-          return sum;
-        }, 0);
-
-        const openBudgetTotal = patientBudgets.reduce((sum, budget) => {
-          if (isApprovedStatus(budget.status) || isRejectedStatus(budget.status)) {
-            return sum;
-          }
-
-          return sum + parseMoney(budget.total);
-        }, 0);
-
-        const source = getPatientSource(patient);
-        const sourceBonus = source === "Origem não informada" ? 0 : 8;
-
-        const score = Math.min(
-          100,
-          Math.round(
-            totalPaid / 300 +
-              openBudgetTotal / 200 +
-              patientAppointments.length * 4 +
-              sourceBonus
-          )
-        );
-
-        let reason = "Potencial comercial moderado";
-
-        if (openBudgetTotal >= 3000) {
-          reason = "Possui orçamento pendente relevante";
-        } else if (totalPaid >= 3000) {
-          reason = "Histórico financeiro forte";
-        } else if (patientAppointments.length >= 3) {
-          reason = "Bom vínculo com a clínica";
-        }
-
-        return {
-          id: patient.id,
-          name: patient.name || "Paciente",
-          score,
-          reason,
-        };
-      })
-      .filter((patient) => patient.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
-
-    const recommendations: string[] = [];
-
-    if (inactivePatients.length >= 10) {
-      recommendations.push(
-        `Existem ${inactivePatients.length} pacientes sem retorno há mais de 180 dias. Recomenda-se campanha de reativação com contato humano e mensagem preventiva.`
-      );
-    }
-
-    if (openBudgetValue >= 20000) {
-      recommendations.push(
-        `A clínica possui ${formatCurrency(
-          openBudgetValue
-        )} em orçamentos pendentes. A postura recomendada é priorizar follow-up com os maiores valores e oferecer próximo passo claro.`
-      );
-    }
-
-    if (overdueValue >= 5000) {
-      recommendations.push(
-        `A inadimplência atual está em ${formatCurrency(
-          overdueValue
-        )}. Reforce negociação, cobrança preventiva e revisão dos parcelamentos em aberto.`
-      );
-    }
-
-    if (implantTreatments.length >= 5) {
-      recommendations.push(
-        "Implantes apresentam potencial estratégico. Considere campanhas educativas e conteúdo de autoridade para tratamentos de maior ticket."
-      );
-    }
-
-    if (recommendations.length === 0) {
-      recommendations.push(
-        "A clínica não apresenta alertas críticos nesta leitura. A postura recomendada é manter recuperação ativa, acompanhar orçamentos pendentes e revisar oportunidades semanalmente."
-      );
-    }
-
-    return {
-      totalPatients,
-      inactivePatients,
-      openBudgetValue,
-      overdueValue,
-      implantTreatments,
-      recommendations,
-      highPotentialPatients,
-    };
   }, [patients, appointments, budgets, financialRecords, treatments]);
-
-  const socialSuggestions = useMemo(() => buildSocialSuggestions(), []);
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">
@@ -436,8 +180,8 @@ export default function CrmIaPage() {
               </h1>
 
               <p className="mt-2 max-w-3xl text-sm text-white/90 md:text-base">
-                Inteligência administrativa, comercial e estratégica integrada ao
-                CRM.
+                Diagnóstico administrativo, comercial e de marketing baseado nos
+                dados reais da clínica.
               </p>
             </div>
 
@@ -486,7 +230,7 @@ export default function CrmIaPage() {
                 </div>
 
                 <h2 className="text-3xl font-black text-slate-800">
-                  {insights.totalPatients}
+                  {analysis.totalPatients}
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -506,7 +250,7 @@ export default function CrmIaPage() {
                 </div>
 
                 <h2 className="text-3xl font-black text-slate-800">
-                  {insights.inactivePatients.length}
+                  {analysis.inactivePatientsCount}
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -526,7 +270,7 @@ export default function CrmIaPage() {
                 </div>
 
                 <h2 className="text-2xl font-black text-slate-800">
-                  {formatCurrency(insights.openBudgetValue)}
+                  {formatCurrency(analysis.openBudgetValue)}
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -546,7 +290,7 @@ export default function CrmIaPage() {
                 </div>
 
                 <h2 className="text-2xl font-black text-slate-800">
-                  {formatCurrency(insights.overdueValue)}
+                  {formatCurrency(analysis.overdueValue)}
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -555,42 +299,80 @@ export default function CrmIaPage() {
               </div>
             </div>
 
-            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
-              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
-                <div className="mb-5 flex items-center gap-3">
+            <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-3">
                   <div className="rounded-2xl bg-[#239d9a]/10 p-3 text-[#239d9a]">
                     <Brain className="h-6 w-6" />
                   </div>
 
                   <div>
                     <h2 className="text-2xl font-black text-slate-800">
-                      Diagnóstico Estratégico
+                      Leitura Executiva da IA
+                    </h2>
+
+                    <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
+                      {analysis.diagnosis}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500">
+                  Análise local segura
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#239d9a]/10 p-3 text-[#239d9a]">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-800">
+                      Recomendações Administrativas
                     </h2>
 
                     <p className="text-sm text-slate-500">
-                      Interpretação inteligente dos dados da clínica.
+                      Posturas práticas sugeridas a partir das métricas.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {insights.recommendations.map((item, index) => (
+                  {analysis.recommendations.map((item) => (
                     <div
-                      key={index}
-                      className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                      key={item.id}
+                      className={`rounded-2xl border p-4 ${getRecommendationClass(
+                        item.severity
+                      )}`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="rounded-xl bg-[#239d9a]/10 p-2 text-[#239d9a]">
+                        <div
+                          className={`rounded-xl p-2 ${getRecommendationIconClass(
+                            item.severity
+                          )}`}
+                        >
                           <Sparkles className="h-5 w-5" />
                         </div>
 
                         <div>
-                          <h3 className="font-black text-slate-800">
-                            Recomendação da IA
-                          </h3>
+                          <div className="mb-1 flex flex-wrap items-center gap-2">
+                            <h3 className="font-black">{item.title}</h3>
 
-                          <p className="mt-1 text-sm leading-6 text-slate-600">
-                            {item}
+                            <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-black uppercase tracking-widest">
+                              {item.area}
+                            </span>
+                          </div>
+
+                          <p className="text-sm leading-6 opacity-90">
+                            {item.description}
+                          </p>
+
+                          <p className="mt-2 text-sm font-bold leading-6">
+                            Postura sugerida: {item.action}
                           </p>
                         </div>
                       </div>
@@ -617,7 +399,7 @@ export default function CrmIaPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {insights.highPotentialPatients.map((item) => (
+                  {analysis.patientOpportunities.map((item) => (
                     <div
                       key={item.id}
                       className="rounded-2xl border border-slate-100 p-4"
@@ -640,7 +422,7 @@ export default function CrmIaPage() {
                     </div>
                   ))}
 
-                  {insights.highPotentialPatients.length === 0 && (
+                  {analysis.patientOpportunities.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-sm text-slate-500">
                       Ainda não há pacientes estratégicos suficientes.
                     </div>
@@ -658,62 +440,56 @@ export default function CrmIaPage() {
 
                   <div>
                     <h2 className="text-2xl font-black text-slate-800">
-                      Sugestões de Marketing
+                      Estratégias de Marketing
                     </h2>
 
                     <p className="text-sm text-slate-500">
-                      Estratégias recomendadas automaticamente.
+                      Campanhas sugeridas de acordo com os dados.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-cyan-800">
                     <div className="flex items-start gap-3">
-                      <TrendingUp className="mt-1 h-5 w-5 text-cyan-700" />
+                      <TrendingUp className="mt-1 h-5 w-5" />
 
                       <div>
-                        <h3 className="font-black text-cyan-900">
-                          Campanha recomendada
-                        </h3>
+                        <h3 className="font-black">Campanha da semana</h3>
 
-                        <p className="mt-1 text-sm leading-6 text-cyan-800">
-                          Criar campanha de reativação para pacientes sem retorno
-                          há mais de 180 dias.
+                        <p className="mt-1 text-sm leading-6">
+                          Reativação de pacientes sem retorno e recuperação de
+                          orçamentos pendentes.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800">
                     <div className="flex items-start gap-3">
-                      <Target className="mt-1 h-5 w-5 text-emerald-700" />
+                      <Target className="mt-1 h-5 w-5" />
 
                       <div>
-                        <h3 className="font-black text-emerald-900">
-                          Oportunidade comercial
-                        </h3>
+                        <h3 className="font-black">Foco comercial</h3>
 
-                        <p className="mt-1 text-sm leading-6 text-emerald-800">
-                          Priorizar pacientes com orçamentos pendentes acima de
-                          R$ 3.000.
+                        <p className="mt-1 text-sm leading-6">
+                          Priorizar pacientes com orçamento relevante, bom vínculo
+                          com a clínica ou histórico financeiro forte.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-amber-800">
                     <div className="flex items-start gap-3">
-                      <HeartHandshake className="mt-1 h-5 w-5 text-amber-700" />
+                      <HeartHandshake className="mt-1 h-5 w-5" />
 
                       <div>
-                        <h3 className="font-black text-amber-900">
-                          Relacionamento
-                        </h3>
+                        <h3 className="font-black">Relacionamento</h3>
 
-                        <p className="mt-1 text-sm leading-6 text-amber-800">
-                          Reforçar contatos humanizados para aumentar conversão
-                          de tratamentos premium.
+                        <p className="mt-1 text-sm leading-6">
+                          Usar abordagem humana, sem tom agressivo de venda,
+                          reforçando cuidado, prevenção e continuidade.
                         </p>
                       </div>
                     </div>
@@ -733,15 +509,15 @@ export default function CrmIaPage() {
                     </h2>
 
                     <p className="text-sm text-slate-500">
-                      Sugestões automáticas geradas pela IA.
+                      Sugestões curtas baseadas na leitura da clínica.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {socialSuggestions.map((item, index) => (
+                  {analysis.socialPosts.map((item) => (
                     <div
-                      key={index}
+                      key={item.id}
                       className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
                     >
                       <div className="mb-2 flex items-center gap-2">
@@ -751,6 +527,10 @@ export default function CrmIaPage() {
                           {item.title}
                         </h3>
                       </div>
+
+                      <p className="mb-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                        Objetivo: {item.objective}
+                      </p>
 
                       <p className="text-sm leading-6 text-slate-600">
                         {item.content}
