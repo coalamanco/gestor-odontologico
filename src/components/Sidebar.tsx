@@ -132,12 +132,12 @@ function SidebarContent({
   ];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#2b0d0d] via-[#4a1212] to-[#630d0d] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
+    <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#0f766e] via-[#159e96] to-[#35bcb3] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
       <div className="border-b border-white/10 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 shadow-sm backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[#630d0d] shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[#159e96] shadow-sm">
                 <span className="text-sm font-black">HP</span>
               </div>
 
@@ -146,7 +146,7 @@ function SidebarContent({
                   Dr. Henrique S. Pasquali
                 </div>
 
-                <div className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.18em] text-red-100/70">
+                <div className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/70">
                   Implantodontia
                 </div>
               </div>
@@ -177,7 +177,7 @@ function SidebarContent({
 
             return (
               <div key={section} className="space-y-1.5">
-                <div className="px-3 text-[9px] font-black uppercase tracking-[0.22em] text-red-100/45">
+                <div className="px-3 text-[9px] font-black uppercase tracking-[0.22em] text-emerald-100/45">
                   {section}
                 </div>
 
@@ -197,18 +197,18 @@ function SidebarContent({
                         onClick={onNavigate}
                         className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-black transition-all duration-200 ${
                           active
-                            ? "bg-white text-[#630d0d] shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+                            ? "bg-white text-[#159e96] shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
                             : "text-white/75 hover:translate-x-1 hover:bg-white/10 hover:text-white"
                         }`}
                       >
                         {active && (
-                          <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#630d0d]" />
+                          <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#159e96]" />
                         )}
 
                         <span
                           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition ${
                             active
-                              ? "bg-[#f6e8e8] text-[#630d0d]"
+                              ? "bg-[#dff8f5] text-[#159e96]"
                               : "bg-white/10 text-white/85 group-hover:bg-white/15 group-hover:text-white"
                           }`}
                         >
@@ -235,7 +235,7 @@ function SidebarContent({
             </span>
           </div>
 
-          <div className="mt-1 text-[10px] font-semibold text-red-100/60">
+          <div className="mt-1 text-[10px] font-semibold text-emerald-100/60">
             Operação clínica online
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function Sidebar({
         />
       </aside>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#eadede] bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#d8f1ee] bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden">
         <div className="grid grid-cols-5">
           {mainMobileMenu.map((item) => {
             const active =
@@ -310,12 +310,12 @@ export default function Sidebar({
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-black ${
-                  active ? "text-[#630d0d]" : "text-slate-500"
+                  active ? "text-[#159e96]" : "text-slate-500"
                 }`}
               >
                 <span
                   className={`flex h-8 w-8 items-center justify-center rounded-2xl ${
-                    active ? "bg-[#f8ecec]" : "bg-transparent"
+                    active ? "bg-[#dff8f5]" : "bg-transparent"
                   }`}
                 >
                   <Icon size={17} />
