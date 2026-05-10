@@ -1080,7 +1080,7 @@ export default function DashboardExecutivoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-5">
       <div className="mb-5 overflow-hidden rounded-[26px] border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 shadow-lg shadow-cyan-900/10 md:px-6">
         <div className="flex h-[76px] items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -1124,7 +1124,7 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <div className="sticky top-3 z-20 mb-6 flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white/95 p-2 shadow-sm backdrop-blur">
+      <div className="sticky top-3 z-20 mb-5 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-2 shadow-sm backdrop-blur">
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
@@ -1184,41 +1184,41 @@ export default function DashboardExecutivoPage() {
 
       {activeDashboardTab === "geral" && (
         <>
-          <div className="mb-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-5">
+            <ExecutiveKPIs loading={loading} cards={executiveCards} />
+          </div>
+
+          <div className="mb-5 rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm ring-1 ring-white/70">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  Metas e tendência mensal
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">
+                  Leitura executiva do mês
                 </p>
 
-                <div className="mt-2 flex flex-wrap items-center gap-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-4 py-2 text-sm font-black ${getTrendClass(
+                    className={`rounded-full px-3 py-1.5 text-xs font-black ${getTrendClass(
                       goals.monthlyTrend,
                     )}`}
                   >
-                    Tendência: {goals.monthlyTrend}
+                    Tendência {goals.monthlyTrend}
                   </span>
 
                   <span
-                    className={`rounded-full px-4 py-2 text-sm font-black ${getGoalChanceClass(
+                    className={`rounded-full px-3 py-1.5 text-xs font-black ${getGoalChanceClass(
                       goals.chanceToHitGoal,
                     )}`}
                   >
-                    Chance de bater meta: {goals.chanceToHitGoal}
+                    Meta {goals.chanceToHitGoal}
                   </span>
 
-                  <span className="text-sm text-slate-500">
-                    Faltam{" "}
-                    <strong className="text-slate-800">
-                      {formatCurrency(goals.gapToGoal)}
-                    </strong>{" "}
-                    para a meta confirmada.
+                  <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
+                    Gap: <strong className="text-slate-800">{formatCurrency(goals.gapToGoal)}</strong>
                   </span>
                 </div>
               </div>
 
-              <p className="max-w-4xl text-sm leading-6 text-slate-600">
+              <p className="max-w-3xl text-sm leading-6 text-slate-600">
                 {goals.executiveSummary}
               </p>
             </div>
@@ -1246,8 +1246,6 @@ export default function DashboardExecutivoPage() {
             positiveCount={executiveAlerts.positiveCount}
             alerts={executiveAlerts.alerts}
           />
-
-          <ExecutiveKPIs loading={loading} cards={executiveCards} />
         </>
       )}
 
@@ -1263,18 +1261,18 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-black text-slate-800">
+                  <h2 className="text-lg font-black text-slate-800">
                     Metas e Performance
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Meta mensal, projeção provável e potencial da clínica.
+                    Meta, projeção e execução.
                   </p>
                 </div>
               </div>
@@ -1306,47 +1304,47 @@ export default function DashboardExecutivoPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="rounded-3xl bg-emerald-50 p-5">
+                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
                     Progresso provável
                   </p>
-                  <p className="mt-2 text-2xl font-black text-emerald-700">
+                  <p className="mt-2 text-xl font-black text-emerald-700">
                     {goals.probableProgress}%
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-cyan-50 p-5">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
                     Conversão comercial
                   </p>
-                  <p className="mt-2 text-2xl font-black text-cyan-700">
+                  <p className="mt-2 text-xl font-black text-cyan-700">
                     {goals.commercialConversion}%
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-purple-50 p-5">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-purple-700">
                     Recuperação prevista
                   </p>
-                  <p className="mt-2 text-2xl font-black text-purple-700">
+                  <p className="mt-2 text-xl font-black text-purple-700">
                     {goals.recoveredPatientsProjection}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
                   <Trophy size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-black text-slate-800">
+                  <h2 className="text-lg font-black text-slate-800">
                     Destaques
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Produção e performance.
+                    Destaques do período.
                   </p>
                 </div>
               </div>
@@ -1389,55 +1387,55 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-black text-slate-800">
+                  <h2 className="text-lg font-black text-slate-800">
                     Pipeline Executivo
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Confirmado, provável, potencial e oportunidades abertas.
+                    Pipeline e oportunidades abertas.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="rounded-3xl bg-emerald-50 p-5">
+                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
                     Pipeline comercial
                   </p>
-                  <p className="mt-2 text-2xl font-black text-emerald-700">
+                  <p className="mt-2 text-xl font-black text-emerald-700">
                     {formatCurrency(forecast.commercialPipeline)}
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-cyan-50 p-5">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
                     Orçamentos abertos
                   </p>
-                  <p className="mt-2 text-2xl font-black text-cyan-700">
+                  <p className="mt-2 text-xl font-black text-cyan-700">
                     {formatCurrency(openBudgetRevenue)}
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-blue-50 p-5">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-blue-700">
                     Ticket médio aprovado
                   </p>
-                  <p className="mt-2 text-2xl font-black text-blue-700">
+                  <p className="mt-2 text-xl font-black text-blue-700">
                     {formatCurrency(averageTicket)}
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-purple-50 p-5">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-purple-700">
                     Campanhas previstas
                   </p>
-                  <p className="mt-2 text-2xl font-black text-purple-700">
+                  <p className="mt-2 text-xl font-black text-purple-700">
                     {formatCurrency(forecast.campaignRevenueProjection)}
                   </p>
                 </div>
@@ -1463,18 +1461,18 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
                   <Users size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-black text-slate-800">
+                  <h2 className="text-lg font-black text-slate-800">
                     Top Pacientes por Score
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Maiores oportunidades comerciais.
+                    Prioridade comercial.
                   </p>
                 </div>
               </div>
@@ -1528,14 +1526,14 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-slate-800">
+                  <h2 className="text-lg font-black text-slate-800">
                     Rentabilidade dos procedimentos
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Faturamento cruzado com custos cadastrados na precificação.
+                    Margem estimada por procedimento.
                   </p>
                 </div>
 
@@ -1552,7 +1550,7 @@ export default function DashboardExecutivoPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Procedimentos mapeados
                   </p>
-                  <p className="mt-1 text-xl font-black text-slate-800">
+                  <p className="mt-1 text-lg font-black text-slate-800">
                     {profitabilitySummary.mapped}/{profitabilitySummary.total}
                   </p>
                 </div>
@@ -1650,8 +1648,8 @@ export default function DashboardExecutivoPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-              <h2 className="text-xl font-black text-slate-800">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
+              <h2 className="text-lg font-black text-slate-800">
                 Ranking por profissional
               </h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -1695,7 +1693,7 @@ export default function DashboardExecutivoPage() {
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
             <Link
               href="/crm"
-              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                 <Activity size={22} />
@@ -1709,7 +1707,7 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="mb-4 inline-flex rounded-2xl bg-blue-50 p-3 text-blue-600">
                 <Megaphone size={22} />
@@ -1722,7 +1720,7 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/financeiro"
-              className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="mb-4 inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-600">
                 <DollarSign size={22} />
