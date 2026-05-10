@@ -1540,7 +1540,7 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#eaf7f7] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="min-h-screen w-full overflow-x-hidden overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#eaf7f7] p-3 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-5 shadow-xl shadow-cyan-900/10 ring-1 ring-white/40">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-white">
@@ -2539,7 +2539,7 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
+      <Card className="min-w-0 overflow-hidden border border-[#d9eeee] shadow-sm">
         <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-5 px-6">
           <div>
             <CardTitle className="text-base font-black tracking-tight text-[#239d9a]">
@@ -2599,7 +2599,7 @@ export default function FinanceiroPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
         <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
           <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
             <CardTitle className="flex items-center gap-3 text-[#239d9a]">
@@ -2686,7 +2686,7 @@ export default function FinanceiroPage() {
           </CardContent>
         </Card>
 
-        <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm ring-1 ring-white/60 scroll-mt-6">
+        <Card ref={resultadosRef} className="min-w-0 overflow-hidden border border-[#d9eeee] shadow-sm ring-1 ring-white/60 scroll-mt-6">
           <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
             <div>
               <CardTitle className="text-lg font-black tracking-tight text-[#239d9a]">
@@ -2698,17 +2698,18 @@ export default function FinanceiroPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="p-0">
-            <Table>
+          <CardContent className="min-w-0 overflow-hidden p-0">
+            <div className="w-full max-w-full overflow-x-auto">
+              <Table className="min-w-[980px]">
               <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
                 <TableRow className="h-10 border-none hover:bg-transparent">
-                  <TableHead className="px-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Data</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Lançamento</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Pagamento</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
-                  <TableHead className="text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Valor</TableHead>
-                  <TableHead className="px-6 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Ações</TableHead>
+                  <TableHead className="w-[130px] px-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Data</TableHead>
+                  <TableHead className="w-[190px] text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                  <TableHead className="w-[160px] text-[11px] font-black uppercase tracking-widest text-slate-400">Lançamento</TableHead>
+                  <TableHead className="w-[170px] text-[11px] font-black uppercase tracking-widest text-slate-400">Pagamento</TableHead>
+                  <TableHead className="w-[130px] text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                  <TableHead className="w-[140px] text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Valor</TableHead>
+                  <TableHead className="w-[130px] px-5 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Ações</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -2737,7 +2738,7 @@ export default function FinanceiroPage() {
                         key={t.id}
                         className={`group h-12 border-[#edf7f7] transition-all ${rowStatusAccentClass(t)}`}
                       >
-                        <TableCell className="px-6 py-2 text-sm font-medium text-slate-700">
+                        <TableCell className="px-5 py-2 text-sm font-medium text-slate-700">
                           <div className="font-bold text-slate-700">
                             {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
                           </div>
@@ -2754,12 +2755,12 @@ export default function FinanceiroPage() {
                         </TableCell>
 
                         <TableCell className="text-sm font-medium text-slate-800">
-                          {t.patient_id ? patientNameById.get(String(t.patient_id)) || "Paciente" : "—"}
+                          <div className="max-w-[180px] truncate">{t.patient_id ? patientNameById.get(String(t.patient_id)) || "Paciente" : "—"}</div>
                         </TableCell>
 
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-slate-800">
+                            <span className="max-w-[130px] truncate text-sm font-medium text-slate-800">
                               {t.installments && t.installments > 1
                                 ? `Parcela ${t.installment_number || 1}/${t.installments}`
                                 : "Débito"}
@@ -2819,7 +2820,7 @@ export default function FinanceiroPage() {
                           )}
                         </TableCell>
 
-                        <TableCell className="px-6 text-right">
+                        <TableCell className="px-5 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {balance > 0 && (
                               <Button
@@ -2849,6 +2850,7 @@ export default function FinanceiroPage() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
