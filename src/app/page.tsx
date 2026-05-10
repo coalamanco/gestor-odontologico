@@ -88,6 +88,8 @@ type Expense = {
   created_at?: string | null;
 };
 
+type DashboardPeriod = "hoje" | "semana" | "mes";
+
 type DashboardStats = {
   recebidoHoje: number;
   recebidoMes: number;
@@ -160,6 +162,85 @@ function isSameMonth(dateString?: string | null, base = new Date()) {
 function isSameDay(dateString?: string | null, base = new Date()) {
   if (!dateString) return false;
   return dateString.slice(0, 10) === toDateKey(base);
+}
+
+function startOfDay(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function endOfDay(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(23, 59, 59, 999);
+  return copy;
+}
+
+function startOfWeek(date: Date) {
+  const copy = startOfDay(date);
+  const day = copy.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  copy.setDate(copy.getDate() + diff);
+  return copy;
+}
+
+function endOfWeek(date: Date) {
+  const start = startOfWeek(date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return endOfDay(end);
+}
+
+function endOfMonth(date: Date) {
+  return endOfDay(new Date(date.getFullYear(), date.getMonth() + 1, 0));
+}
+
+function getPeriodRange(period: DashboardPeriod, base = new Date()) {
+  if (period === "hoje") {
+    return { start: startOfDay(base), end: endOfDay(base) };
+  }
+
+  if (period === "semana") {
+    return { start: startOfWeek(base), end: endOfWeek(base) };
+  }
+
+  return { start: startOfMonth(base), end: endOfMonth(base) };
+}
+
+function getPreviousPeriodRange(period: DashboardPeriod, base = new Date()) {
+  if (period === "hoje") {
+    const previous = new Date(base);
+    previous.setDate(base.getDate() - 1);
+    return { start: startOfDay(previous), end: endOfDay(previous) };
+  }
+
+  if (period === "semana") {
+    const previous = new Date(base);
+    previous.setDate(base.getDate() - 7);
+    return { start: startOfWeek(previous), end: endOfWeek(previous) };
+  }
+
+  const previous = new Date(base.getFullYear(), base.getMonth() - 1, 1);
+  return { start: startOfMonth(previous), end: endOfMonth(previous) };
+}
+
+function isWithinRange(dateString: string | null | undefined, range: { start: Date; end: Date }) {
+  if (!dateString) return false;
+  const date = getDateAtStart(dateString);
+  if (!date) return false;
+  return date >= range.start && date <= range.end;
+}
+
+function getPeriodLabel(period: DashboardPeriod) {
+  if (period === "hoje") return "hoje";
+  if (period === "semana") return "na semana";
+  return "no mês";
+}
+
+function getPeriodDescription(period: DashboardPeriod) {
+  if (period === "hoje") return "do dia";
+  if (period === "semana") return "da semana atual";
+  return "do mês atual";
 }
 
 function normalizeStatus(status?: string | null) {
@@ -310,7 +391,7 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<"hoje" | "semana" | "mes">("mes");
+  const [period, setPeriod] = useState<DashboardPeriod>("mes");
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
@@ -362,39 +443,59 @@ export default function Dashboard() {
 
   const today = useMemo(() => new Date(), []);
 
+  const periodRange = useMemo(() => getPeriodRange(period, today), [period, today]);
+  const previousPeriodRange = useMemo(
+    () => getPreviousPeriodRange(period, today),
+    [period, today]
+  );
+
+  const periodLabel = getPeriodLabel(period);
+  const periodDescription = getPeriodDescription(period);
+
+  const financialRecordsInPeriod = useMemo(() => {
+    return financialRecords.filter((record) =>
+      isWithinRange(record.paid_at || record.created_at, periodRange)
+    );
+  }, [financialRecords, periodRange]);
+
+  const openFinancialRecordsDueInPeriod = useMemo(() => {
+    return financialRecords.filter((record) => {
+      const amount = parseMoney(record.amount);
+      const paid = parseMoney(record.paid_amount);
+      const remaining = Math.max(0, amount - paid);
+      if (remaining <= 0 || isPaidFinancialStatus(record.status)) return false;
+      return isWithinRange(getFinancialDueDate(record), periodRange);
+    });
+  }, [financialRecords, periodRange]);
+
+  const expensesInPeriod = useMemo(() => {
+    return expenses.filter((expense) => isWithinRange(getExpenseDate(expense), periodRange));
+  }, [expenses, periodRange]);
+
+  const appointmentsInPeriod = useMemo(() => {
+    return appointments.filter((appointment) => isWithinRange(appointment.date, periodRange));
+  }, [appointments, periodRange]);
+
+  const patientsInPeriod = useMemo(() => {
+    return patients.filter((patient) => isWithinRange(patient.created_at, periodRange));
+  }, [patients, periodRange]);
+
   const stats: DashboardStats = useMemo(() => {
     const todayKey = toDateKey(new Date());
 
-    const recebidoHoje = financialRecords.reduce((acc, record) => {
+    const recebidoPeriodo = financialRecordsInPeriod.reduce((acc, record) => {
       const paid = parseMoney(record.paid_amount);
-      const paidAt = record.paid_at || record.created_at;
-
-      if (paid > 0 && isSameDay(paidAt, new Date())) return acc + paid;
-
-      return acc;
+      return paid > 0 ? acc + paid : acc;
     }, 0);
 
-    const recebidoMes = financialRecords.reduce((acc, record) => {
-      const paid = parseMoney(record.paid_amount);
-      const paidAt = record.paid_at || record.created_at;
-
-      if (paid > 0 && isSameMonth(paidAt, new Date())) return acc + paid;
-
-      return acc;
-    }, 0);
-
-    const despesasMes = expenses.reduce((acc, expense) => {
+    const despesasPeriodo = expensesInPeriod.reduce((acc, expense) => {
       if (!isExpensePaid(expense)) return acc;
-      const expenseDate = getExpenseDate(expense);
-      if (isSameMonth(expenseDate, new Date())) {
-        return acc + parseMoney(expense.amount);
-      }
-      return acc;
+      return acc + parseMoney(expense.amount);
     }, 0);
 
-    const lucroMes = recebidoMes - despesasMes;
+    const lucroPeriodo = recebidoPeriodo - despesasPeriodo;
 
-    const aReceber = financialRecords.reduce((acc, record) => {
+    const aReceber = openFinancialRecordsDueInPeriod.reduce((acc, record) => {
       const amount = parseMoney(record.amount);
       const paid = parseMoney(record.paid_amount);
       return acc + Math.max(0, amount - paid);
@@ -418,68 +519,77 @@ export default function Dashboard() {
       (appointment) => normalizeStatus(appointment.status) === "confirmado"
     ).length;
 
-    const consultasMesList = appointments.filter((appointment) =>
-      isSameMonth(appointment.date, new Date())
-    );
+    const consultasPeriodoList = appointmentsInPeriod;
 
-    const faltasMes = consultasMesList.filter(
+    const faltasPeriodo = consultasPeriodoList.filter(
       (appointment) => normalizeStatus(appointment.status) === "faltou"
     ).length;
 
-    const novosPacientesMes = patients.filter((patient) =>
-      isSameMonth(patient.created_at, new Date())
-    ).length;
+    const novosPacientesPeriodo = patientsInPeriod.length;
 
     const totalSlotsDia = 11 * 4;
     const usedSlots = consultasHojeList.reduce((acc, appointment) => {
       return acc + Math.max(1, Math.round(Number(appointment.duration || 30) / 15));
     }, 0);
 
+    const confirmedPeriod = consultasPeriodoList.filter(
+      (appointment) => normalizeStatus(appointment.status) === "confirmado"
+    ).length;
+
     const taxaConfirmacao =
-      consultasHojeList.length > 0
-        ? Math.round((confirmadosHoje / consultasHojeList.length) * 100)
+      consultasPeriodoList.length > 0
+        ? Math.round((confirmedPeriod / consultasPeriodoList.length) * 100)
         : 0;
 
     const taxaFaltas =
-      consultasMesList.length > 0
-        ? Math.round((faltasMes / consultasMesList.length) * 100)
+      consultasPeriodoList.length > 0
+        ? Math.round((faltasPeriodo / consultasPeriodoList.length) * 100)
         : 0;
 
-    const pacientesComPagamentoNoMes = new Set(
-      financialRecords
+    const pacientesComPagamentoNoPeriodo = new Set(
+      financialRecordsInPeriod
         .filter((record) => {
           const paid = parseMoney(record.paid_amount);
-          const paidAt = record.paid_at || record.created_at;
-          return paid > 0 && isSameMonth(paidAt, new Date()) && record.patient_id;
+          return paid > 0 && record.patient_id;
         })
         .map((record) => String(record.patient_id))
     );
 
     const ticketMedio =
-      pacientesComPagamentoNoMes.size > 0
-        ? recebidoMes / pacientesComPagamentoNoMes.size
+      pacientesComPagamentoNoPeriodo.size > 0
+        ? recebidoPeriodo / pacientesComPagamentoNoPeriodo.size
         : 0;
 
     return {
-      recebidoHoje,
-      recebidoMes,
-      despesasMes,
-      lucroMes,
+      recebidoHoje: recebidoPeriodo,
+      recebidoMes: recebidoPeriodo,
+      despesasMes: despesasPeriodo,
+      lucroMes: lucroPeriodo,
       aReceber,
       vencidoEmAberto,
       parcelasVencidas: overdueFinancialRecords.length,
-      saldoPrevisto: recebidoMes + aReceber - despesasMes,
+      saldoPrevisto: recebidoPeriodo + aReceber - despesasPeriodo,
       pacientes: patients.length,
-      novosPacientesMes,
-      consultasHoje: consultasHojeList.length,
-      confirmadosHoje,
-      faltasMes,
+      novosPacientesMes: novosPacientesPeriodo,
+      consultasHoje: period === "hoje" ? consultasHojeList.length : consultasPeriodoList.length,
+      confirmadosHoje: period === "hoje" ? confirmadosHoje : confirmedPeriod,
+      faltasMes: faltasPeriodo,
       ocupacaoHoje: Math.min(100, Math.round((usedSlots / totalSlotsDia) * 100)),
       taxaConfirmacao,
       taxaFaltas,
       ticketMedio,
     };
-  }, [financialRecords, expenses, appointments, patients]);
+  }, [
+    financialRecords,
+    financialRecordsInPeriod,
+    expensesInPeriod,
+    appointments,
+    appointmentsInPeriod,
+    patients,
+    patientsInPeriod,
+    openFinancialRecordsDueInPeriod,
+    period,
+  ]);
 
   const weeklyRevenue = useMemo(() => {
     const now = new Date();
@@ -539,7 +649,7 @@ export default function Dashboard() {
   const paymentMethods = useMemo(() => {
     const grouped: Record<string, number> = {};
 
-    financialRecords.forEach((record) => {
+    financialRecordsInPeriod.forEach((record) => {
       const paid = parseMoney(record.paid_amount);
       if (paid <= 0) return;
 
@@ -551,7 +661,7 @@ export default function Dashboard() {
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
-  }, [financialRecords]);
+  }, [financialRecordsInPeriod]);
 
   const todayAppointments = useMemo(() => {
     const todayKey = toDateKey(new Date());
@@ -689,7 +799,7 @@ export default function Dashboard() {
 
     financialRecords.forEach((record) => {
       const date = record.paid_at || record.created_at;
-      if (!isSameMonth(date, new Date())) return;
+      if (!isWithinRange(date, periodRange)) return;
 
       const label = normalizeLabel(
         record.procedure_name ||
@@ -712,13 +822,12 @@ export default function Dashboard() {
     return Object.values(grouped)
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 6);
-  }, [financialRecords]);
+  }, [financialRecords, periodRange]);
 
   const appointmentsByWeekday = useMemo(() => {
     const grouped = weekLabels.map((name) => ({ name, total: 0 }));
 
-    appointments.forEach((appointment) => {
-      if (!isSameMonth(appointment.date, new Date())) return;
+    appointmentsInPeriod.forEach((appointment) => {
       if (!appointment.date) return;
 
       const date = new Date(`${appointment.date}T12:00:00`);
@@ -728,66 +837,51 @@ export default function Dashboard() {
     });
 
     return grouped;
-  }, [appointments]);
+  }, [appointmentsInPeriod]);
 
   const appointmentStatusData = useMemo(() => {
     const grouped: Record<string, number> = {};
 
-    appointments.forEach((appointment) => {
-      if (!isSameMonth(appointment.date, new Date())) return;
-
+    appointmentsInPeriod.forEach((appointment) => {
       const label = statusLabel(appointment.status);
       grouped[label] = (grouped[label] || 0) + 1;
     });
 
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
-  }, [appointments]);
+  }, [appointmentsInPeriod]);
 
   const executiveComparison = useMemo(() => {
-    const now = new Date();
-    const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-    const receivedPreviousMonth = financialRecords.reduce((acc, record) => {
+    const receivedPreviousPeriod = financialRecords.reduce((acc, record) => {
       const paid = parseMoney(record.paid_amount);
       const paidAt = record.paid_at || record.created_at;
-      if (!paidAt || paid <= 0) return acc;
-
-      const paidDate = new Date(paidAt);
-      if (
-        paidDate.getFullYear() === previousMonth.getFullYear() &&
-        paidDate.getMonth() === previousMonth.getMonth()
-      ) {
-        return acc + paid;
-      }
-
-      return acc;
+      if (paid <= 0 || !isWithinRange(paidAt, previousPeriodRange)) return acc;
+      return acc + paid;
     }, 0);
 
-    const newPatientsPreviousMonth = patients.filter((patient) => {
-      if (!patient.created_at) return false;
-      const createdAt = new Date(patient.created_at);
-      return (
-        createdAt.getFullYear() === previousMonth.getFullYear() &&
-        createdAt.getMonth() === previousMonth.getMonth()
-      );
-    }).length;
+    const newPatientsPreviousPeriod = patients.filter((patient) =>
+      isWithinRange(patient.created_at, previousPeriodRange)
+    ).length;
 
-    const noShowsPreviousMonth = appointments.filter((appointment) => {
-      if (!appointment.date) return false;
-      const date = new Date(`${appointment.date}T12:00:00`);
-      return (
-        date.getFullYear() === previousMonth.getFullYear() &&
-        date.getMonth() === previousMonth.getMonth() &&
+    const noShowsPreviousPeriod = appointments.filter(
+      (appointment) =>
+        isWithinRange(appointment.date, previousPeriodRange) &&
         normalizeStatus(appointment.status) === "faltou"
-      );
-    }).length;
+    ).length;
 
     return {
-      receivedMonthChange: calculatePercentChange(stats.recebidoMes, receivedPreviousMonth),
-      newPatientsChange: calculatePercentChange(stats.novosPacientesMes, newPatientsPreviousMonth),
-      noShowsChange: calculatePercentChange(stats.faltasMes, noShowsPreviousMonth),
+      receivedMonthChange: calculatePercentChange(stats.recebidoMes, receivedPreviousPeriod),
+      newPatientsChange: calculatePercentChange(stats.novosPacientesMes, newPatientsPreviousPeriod),
+      noShowsChange: calculatePercentChange(stats.faltasMes, noShowsPreviousPeriod),
     };
-  }, [financialRecords, patients, appointments, stats.recebidoMes, stats.novosPacientesMes, stats.faltasMes]);
+  }, [
+    financialRecords,
+    patients,
+    appointments,
+    previousPeriodRange,
+    stats.recebidoMes,
+    stats.novosPacientesMes,
+    stats.faltasMes,
+  ]);
 
   const executiveInsights = useMemo(() => {
     const bestWeekday = appointmentsByWeekday.reduce(
@@ -804,8 +898,8 @@ export default function Dashboard() {
         value: formatPercentChange(executiveComparison.receivedMonthChange),
         description:
           executiveComparison.receivedMonthChange >= 0
-            ? "Recebimento acima do mês anterior"
-            : "Recebimento abaixo do mês anterior",
+            ? "Recebimento acima do período anterior"
+            : "Recebimento abaixo do período anterior",
         positive: executiveComparison.receivedMonthChange >= 0,
       },
       {
@@ -813,7 +907,7 @@ export default function Dashboard() {
         value: bestWeekday.total > 0 ? bestWeekday.name : "Sem dados",
         description:
           bestWeekday.total > 0
-            ? `${bestWeekday.total} consulta(s) no mês`
+            ? `${bestWeekday.total} consulta(s) ${periodLabel}`
             : "Ainda sem movimento suficiente",
         positive: true,
       },
@@ -826,11 +920,11 @@ export default function Dashboard() {
       {
         label: "Produção destaque",
         value: topProcedure?.name || "Sem dados",
-        description: topProcedure ? formatCurrency(topProcedure.amount) : "Sem produção no mês",
+        description: topProcedure ? formatCurrency(topProcedure.amount) : "Sem produção no período",
         positive: true,
       },
     ];
-  }, [appointmentsByWeekday, paymentMethods, productionByProcedure, executiveComparison]);
+  }, [appointmentsByWeekday, paymentMethods, productionByProcedure, executiveComparison, periodLabel]);
 
   const isAdminUser = role === "admin";
 
@@ -871,29 +965,29 @@ export default function Dashboard() {
 
   const cards = [
     {
-      title: "Recebido hoje",
+      title: `Recebido ${periodLabel}`,
       value: formatCurrency(stats.recebidoHoje),
       icon: DollarSign,
       color: "text-emerald-700",
       bg: "bg-emerald-50",
-      description: "Entradas registradas hoje",
+      description: `Entradas registradas ${periodDescription}`,
     },
     {
-      title: "Recebido no mês",
-      value: formatCurrency(stats.recebidoMes),
+      title: "Saldo previsto",
+      value: formatCurrency(stats.saldoPrevisto),
       icon: TrendingUp,
       color: "text-[#239d9a]",
       bg: "bg-[#eefafa]",
-      description: "Pagamentos do mês atual",
-      trend: `${formatPercentChange(executiveComparison.receivedMonthChange)} vs mês anterior`,
+      description: `Recebido + a receber - despesas ${periodDescription}`,
+      trend: `${formatPercentChange(executiveComparison.receivedMonthChange)} vs período anterior`,
     },
     {
-      title: "Despesas no mês",
+      title: `Despesas ${periodLabel}`,
       value: formatCurrency(stats.despesasMes),
       icon: Wallet,
       color: "text-rose-700",
       bg: "bg-rose-50",
-      description: "Saídas pagas da clínica",
+      description: `Saídas pagas ${periodDescription}`,
     },
     {
       title: "Lucro real",
@@ -901,7 +995,7 @@ export default function Dashboard() {
       icon: Zap,
       color: stats.lucroMes >= 0 ? "text-emerald-700" : "text-rose-700",
       bg: stats.lucroMes >= 0 ? "bg-emerald-50" : "bg-rose-50",
-      description: "Recebido no mês - despesas pagas",
+      description: `Recebido ${periodDescription} - despesas pagas`,
     },
     {
       title: "A receber",
@@ -909,15 +1003,15 @@ export default function Dashboard() {
       icon: AlertCircle,
       color: "text-amber-700",
       bg: "bg-amber-50",
-      description: "Parcelas em aberto, incluindo futuras",
+      description: `Parcelas em aberto com vencimento ${periodDescription}`,
     },
     {
-      title: "Consultas hoje",
+      title: period === "hoje" ? "Consultas hoje" : period === "semana" ? "Consultas na semana" : "Consultas no mês",
       value: String(stats.consultasHoje),
       icon: CalendarCheck,
       color: "text-blue-700",
       bg: "bg-blue-50",
-      description: `${stats.confirmadosHoje} confirmada(s)`,
+      description: `${stats.confirmadosHoje} confirmada(s) ${periodDescription}`,
     },
     {
       title: "Pacientes",
@@ -925,8 +1019,8 @@ export default function Dashboard() {
       icon: Users,
       color: "text-slate-700",
       bg: "bg-slate-100",
-      description: `${stats.novosPacientesMes} novo(s) este mês`,
-      trend: `${formatPercentChange(executiveComparison.newPatientsChange)} novos pacientes`,
+      description: `${stats.novosPacientesMes} novo(s) ${periodDescription}`,
+      trend: `${formatPercentChange(executiveComparison.newPatientsChange)} vs período anterior`,
     },
     {
       title: "Ocupação hoje",
@@ -942,7 +1036,7 @@ export default function Dashboard() {
       icon: CalendarCheck,
       color: "text-cyan-700",
       bg: "bg-cyan-50",
-      description: `${stats.confirmadosHoje}/${stats.consultasHoje} consulta(s) hoje`,
+      description: `${stats.confirmadosHoje}/${stats.consultasHoje} consulta(s) ${periodDescription}`,
     },
     {
       title: "Taxa de faltas",
@@ -950,8 +1044,8 @@ export default function Dashboard() {
       icon: AlertTriangle,
       color: "text-red-700",
       bg: "bg-red-50",
-      description: `${stats.faltasMes} falta(s) neste mês`,
-      trend: `${formatPercentChange(executiveComparison.noShowsChange)} vs mês anterior`,
+      description: `${stats.faltasMes} falta(s) ${periodDescription}`,
+      trend: `${formatPercentChange(executiveComparison.noShowsChange)} vs período anterior`,
     },
     {
       title: "Ticket médio",
@@ -959,19 +1053,17 @@ export default function Dashboard() {
       icon: Wallet,
       color: "text-indigo-700",
       bg: "bg-indigo-50",
-      description: "Média por paciente pagante no mês",
+      description: `Média por paciente pagante ${periodDescription}`,
     },
   ].filter((card) => {
     if (isAdminUser) return true;
 
-    return ![
-      "Recebido hoje",
-      "Recebido no mês",
-      "Despesas no mês",
-      "Lucro real",
-      "A receber",
-      "Ticket médio",
-    ].includes(card.title);
+    const restrictedTitles = ["Lucro real", "A receber", "Ticket médio"];
+    return (
+      !String(card.title).startsWith("Recebido") &&
+      !String(card.title).startsWith("Despesas") &&
+      !restrictedTitles.includes(String(card.title))
+    );
   });
 
   return (
@@ -1332,7 +1424,7 @@ export default function Dashboard() {
             <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
               <CardHeader className="px-5 pt-5 pb-3">
                 <CardTitle className="text-lg font-bold text-slate-800">
-                  Recebimentos da semana
+                  Recebimentos por dia da semana
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
                 Distribuição diária
@@ -1425,7 +1517,7 @@ export default function Dashboard() {
                   Produção da clínica
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Faturamento por procedimento no mês atual
+                Faturamento por procedimento no período selecionado
               </CardDescription>
             </CardHeader>
 
@@ -1481,7 +1573,7 @@ export default function Dashboard() {
                 Status da agenda
               </CardTitle>
               <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Distribuição do mês atual
+                Distribuição do período selecionado
               </CardDescription>
             </CardHeader>
 
@@ -1538,7 +1630,7 @@ export default function Dashboard() {
               Movimento da agenda
             </CardTitle>
             <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Consultas por dia da semana no mês atual
+              Consultas por dia da semana no período selecionado
             </CardDescription>
           </CardHeader>
 
