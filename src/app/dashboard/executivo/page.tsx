@@ -1260,7 +1260,7 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-[0.78fr_1.22fr]">
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(390px,0.62fr)_minmax(760px,1.38fr)]">
             <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
