@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { generateStrategicAnalysis } from "@/lib/ai/strategicInsights";
+import StrategicWeeklyOrientation from "@/components/dashboard/StrategicWeeklyOrientation";
 
 type Patient = {
   id: string;
@@ -429,6 +430,16 @@ export default function CrmIaPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="mb-6">
+              <StrategicWeeklyOrientation
+                openBudgetValue={analysis.openBudgetValue}
+                overdueValue={analysis.overdueValue}
+                inactivePatientsCount={analysis.inactivePatientsCount}
+                implantTreatmentsCount={analysis.implantTreatmentsCount}
+                totalPatients={analysis.totalPatients}
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
