@@ -1260,8 +1260,8 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 flex flex-col gap-6 xl:flex-row">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:basis-[42%] xl:max-w-[42%] xl:shrink-0">
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
@@ -1386,8 +1386,8 @@ export default function DashboardExecutivoPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
+          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[520px_minmax(0,1fr)]">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
@@ -1403,7 +1403,7 @@ export default function DashboardExecutivoPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
                     Pipeline comercial
@@ -1442,24 +1442,22 @@ export default function DashboardExecutivoPage() {
               </div>
             </div>
 
-            <div className="min-w-0 xl:basis-[58%] xl:max-w-[58%] xl:flex-1">
-              <ExecutiveConversionCenter
-                hotPatients={hotPatients.length}
-                coldPatients={coldPatients.length}
-                riskPatients={riskPatients.length}
-                vipPatients={vipPatients.length}
-                averageScore={averageScore}
-                openBudgetsCount={openBudgets.length}
-                openBudgetRevenue={openBudgetRevenue}
-                averageTicket={averageTicket}
-                conversionProjection={forecast.conversionProjection}
-                campaignRevenueProjection={forecast.campaignRevenueProjection}
-                sourceStats={sourceStats}
-                sourceWithoutOriginCount={sourceWithoutOriginCount}
-                totalPatients={patients.length}
-                formatCurrency={formatCurrency}
-              />
-            </div>
+            <ExecutiveConversionCenter
+              hotPatients={hotPatients.length}
+              coldPatients={coldPatients.length}
+              riskPatients={riskPatients.length}
+              vipPatients={vipPatients.length}
+              averageScore={averageScore}
+              openBudgetsCount={openBudgets.length}
+              openBudgetRevenue={openBudgetRevenue}
+              averageTicket={averageTicket}
+              conversionProjection={forecast.conversionProjection}
+              campaignRevenueProjection={forecast.campaignRevenueProjection}
+              sourceStats={sourceStats}
+              sourceWithoutOriginCount={sourceWithoutOriginCount}
+              totalPatients={patients.length}
+              formatCurrency={formatCurrency}
+            />
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
