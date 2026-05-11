@@ -1260,8 +1260,8 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
+          <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-[0.95fr_1.05fr]">
+            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
@@ -1403,7 +1403,7 @@ export default function DashboardExecutivoPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
                     Pipeline comercial
