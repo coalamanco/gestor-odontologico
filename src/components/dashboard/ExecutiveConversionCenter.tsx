@@ -73,24 +73,24 @@ export default function ExecutiveConversionCenter({
       : 0;
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm xl:p-5">
-      <div className="mb-5 flex min-w-0 items-start gap-3">
-        <div className="shrink-0 rounded-2xl bg-purple-50 p-3 text-purple-600">
+    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="mb-6 flex items-start gap-3">
+        <div className="rounded-2xl bg-purple-50 p-3 text-purple-600">
           <Brain size={22} />
         </div>
 
-        <div className="min-w-0">
-          <h2 className="break-words text-xl font-black text-slate-800">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">
             Central Executiva de Conversão
           </h2>
 
-          <p className="mt-1 break-words text-sm leading-6 text-slate-500">
+          <p className="mt-1 text-sm leading-6 text-slate-500">
             Visão consolidada de CRM, comercial e marketing da clínica.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 2xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <SectionCard
           icon={<Users size={18} />}
           title="CRM Executivo"
@@ -98,7 +98,7 @@ export default function ExecutiveConversionCenter({
         >
           <MetricLine label="Pacientes quentes" value={hotPatients} />
           <MetricLine label="Pacientes frios" value={coldPatients} />
-          <MetricLine label="Risco de abandono" value={riskPatients} />
+          <MetricLine label="Risco abandono" value={riskPatients} />
           <MetricLine label="Pacientes VIP" value={vipPatients} />
           <MetricLine label="Score médio" value={`${averageScore}/100`} />
         </SectionCard>
@@ -110,7 +110,7 @@ export default function ExecutiveConversionCenter({
         >
           <MetricLine label="Orçamentos abertos" value={openBudgetsCount} />
           <MetricLine
-            label="Valor em oportunidade"
+            label="Valor oportunidade"
             value={formatCurrency(openBudgetRevenue)}
           />
           <MetricLine
@@ -118,11 +118,11 @@ export default function ExecutiveConversionCenter({
             value={formatCurrency(averageTicket)}
           />
           <MetricLine
-            label="Previsão de conversão"
+            label="Conversão"
             value={`${conversionProjection}%`}
           />
           <MetricLine
-            label="Campanhas previstas"
+            label="Campanhas"
             value={formatCurrency(campaignRevenueProjection)}
           />
         </SectionCard>
@@ -133,12 +133,12 @@ export default function ExecutiveConversionCenter({
           tone="bg-amber-50 text-amber-700"
         >
           <MetricLine
-            label="Origem que mais faturou"
+            label="Maior faturamento"
             value={bestSource?.source || "Sem dados"}
           />
 
           <MetricLine
-            label="Receita da origem"
+            label="Receita origem"
             value={formatCurrency(bestSource?.confirmedRevenue || 0)}
           />
 
@@ -152,12 +152,12 @@ export default function ExecutiveConversionCenter({
           />
 
           <MetricLine
-            label="Canal mais eficiente"
+            label="Canal eficiente"
             value={bestConversionSource?.source || "Sem dados"}
           />
 
           <MetricLine
-            label="Pacientes fora/região"
+            label="Pacientes região"
             value={outsidePatients}
           />
 
@@ -168,22 +168,27 @@ export default function ExecutiveConversionCenter({
         </SectionCard>
       </div>
 
-      <div className="mt-4 rounded-3xl border border-cyan-100 bg-cyan-50 p-4">
+      <div className="mt-5 rounded-3xl border border-cyan-100 bg-cyan-50 p-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0">
+          <div>
             <p className="text-sm font-black text-cyan-800">
               Recomendação executiva
             </p>
 
-            <p className="mt-1 break-words text-sm leading-6 text-cyan-700">
-              Priorize pacientes quentes, orçamentos em aberto e canais com maior
-              conversão. Complete a origem dos pacientes para melhorar a precisão do BI.
+            <p className="mt-1 text-sm leading-6 text-cyan-700">
+              Priorize pacientes quentes, orçamentos em aberto e campanhas com melhor conversão.
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-cyan-700">
-            <TrendingUp size={18} />
-            {originCoverage}% dos pacientes com origem definida
+          <div className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-black text-cyan-700">
+            <div className="flex items-center justify-center gap-2">
+              <TrendingUp size={18} />
+              {originCoverage}%
+            </div>
+
+            <p className="mt-1 text-xs font-bold text-slate-500">
+              dos pacientes com origem definida
+            </p>
           </div>
         </div>
       </div>
@@ -212,7 +217,7 @@ function SectionCard({
         </p>
       </div>
 
-      <div className="space-y-3">{children}</div>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }
@@ -225,12 +230,12 @@ function MetricLine({
   value: string | number;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-1 rounded-2xl bg-white/80 px-4 py-3 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3">
-      <span className="min-w-0 break-words text-sm font-bold leading-5 text-slate-600">
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/80 px-3 py-3">
+      <span className="text-sm font-bold text-slate-600">
         {label}
       </span>
 
-      <span className="min-w-0 break-words text-sm font-black leading-5 text-slate-800 sm:text-right">
+      <span className="text-sm font-black text-slate-800 text-right">
         {value}
       </span>
     </div>
