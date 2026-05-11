@@ -1,16 +1,3 @@
-# ETAPA — ORIENTAÇÃO ESTRATÉGICA DA SEMANA
-
-## 1. CRIAR NOVO COMPONENTE
-
-Crie o arquivo:
-
-```txt
-src/components/crm/StrategicWeeklyOrientation.tsx
-```
-
-Cole ESTE ARQUIVO COMPLETO:
-
-```tsx
 "use client";
 
 import {
@@ -44,19 +31,19 @@ export default function StrategicWeeklyOrientation({
   implantTreatmentsCount,
   totalPatients,
 }: StrategicWeeklyOrientationProps) {
-  const insights: {
-    icon: any;
+  const insights: Array<{
+    icon: typeof Brain;
     title: string;
     description: string;
     tone: string;
-  }[] = [];
+  }> = [];
 
   if (openBudgetValue >= 15000) {
     insights.push({
       icon: DollarSign,
       title: "Potencial financeiro represado",
       description: `A clínica possui ${formatCurrency(
-        openBudgetValue,
+        openBudgetValue
       )} em orçamentos pendentes. O maior crescimento imediato provavelmente está na recuperação comercial desses pacientes.`,
       tone: "border-cyan-100 bg-cyan-50 text-cyan-800",
     });
@@ -67,8 +54,8 @@ export default function StrategicWeeklyOrientation({
       icon: AlertTriangle,
       title: "Atenção financeira",
       description: `A inadimplência atual está em ${formatCurrency(
-        overdueValue,
-      )}. Reforçar negociação preventiva pode melhorar previsibilidade do caixa.`,
+        overdueValue
+      )}. Reforçar negociação preventiva pode melhorar a previsibilidade do caixa.`,
       tone: "border-amber-100 bg-amber-50 text-amber-800",
     });
   }
@@ -125,7 +112,7 @@ export default function StrategicWeeklyOrientation({
 
           return (
             <div
-              key={index}
+              key={`${item.title}-${index}`}
               className={`rounded-2xl border p-4 ${item.tone}`}
             >
               <div className="flex items-start gap-3">
@@ -148,80 +135,3 @@ export default function StrategicWeeklyOrientation({
     </div>
   );
 }
-```
-
----
-
-# 2. ABRIR:
-
-```txt
-src/app/crm/ia/page.tsx
-```
-
----
-
-# 3. ADICIONAR IMPORT
-
-Logo nos imports superiores:
-
-```tsx
-import StrategicWeeklyOrientation from "@/components/crm/StrategicWeeklyOrientation";
-```
-
----
-
-# 4. ADICIONAR O BLOCO
-
-PROCURE:
-
-```tsx
-<div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-```
-
-E ACIMA dele cole:
-
-```tsx
-<div className="mb-6">
-  <StrategicWeeklyOrientation
-    openBudgetValue={analysis.openBudgetValue}
-    overdueValue={analysis.overdueValue}
-    inactivePatientsCount={analysis.inactivePatientsCount}
-    implantTreatmentsCount={analysis.implantTreatmentsCount}
-    totalPatients={analysis.totalPatients}
-  />
-</div>
-```
-
----
-
-# 5. FINALIZAR
-
-Execute:
-
-```bash
-git add .
-
-git commit -m "Adiciona orientacao estrategica semanal da IA"
-
-git push
-```
-
----
-
-# RESULTADO
-
-A IA começará a:
-
-* interpretar o negócio;
-* orientar administração;
-* sugerir foco comercial;
-* analisar risco financeiro;
-* mostrar oportunidades reais.
-
-Isso transforma o sistema de:
-
-* dashboard tradicional
-
-para:
-
-* consultor estratégico da clínica.
