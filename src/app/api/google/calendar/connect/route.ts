@@ -46,16 +46,17 @@ export async function GET(request: NextRequest) {
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
       prompt: "consent",
+      include_granted_scopes: true,
       scope: GOOGLE_CALENDAR_SCOPES,
       state,
     });
 
     return NextResponse.redirect(url);
   } catch (error) {
-    console.error("Erro ao iniciar conexão Google Calendar:", error);
+    console.error("Erro ao iniciar conexão Google:", error);
 
     return NextResponse.json(
-      { error: "Erro ao iniciar conexão com Google Agenda." },
+      { error: "Erro ao iniciar conexão com Google." },
       { status: 500 }
     );
   }

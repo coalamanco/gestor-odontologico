@@ -1124,6 +1124,35 @@ export default function ConfiguracoesPage() {
     }
   };
 
+  const connectGoogleDriveBackup = async () => {
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!user?.id) {
+        alert("Usuário não autenticado. Faça login novamente antes de conectar o Google Drive.");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        userId: user.id,
+        redirect: "/configuracoes?tab=backup",
+        origin: "google_drive_backup",
+      });
+
+      window.location.href = `/api/google/calendar/connect?${params.toString()}`;
+    } catch (error: any) {
+      console.error("Erro ao iniciar conexão Google Drive:", error);
+      alert(error?.message || "Erro ao iniciar conexão com Google Drive.");
+    }
+  };
+
   const generateGoogleDriveBackupNow = async () => {
     try {
       setCloudBackupLoading(true);
@@ -1167,7 +1196,7 @@ export default function ConfiguracoesPage() {
         if (result?.reconnectRequired) {
           throw new Error(
             result?.error ||
-              "O Google Drive ainda não foi autorizado. Reconecte o Google Agenda em Configurações > Equipe para liberar o Drive."
+              "O Google Drive ainda não foi autorizado. Clique em Conectar Google Drive nesta aba Backup e autorize novamente."
           );
         }
 
@@ -1187,7 +1216,7 @@ export default function ConfiguracoesPage() {
       console.error("Erro ao salvar backup no Google Drive:", error);
       alert(
         error?.message ||
-          "Erro ao salvar backup no Google Drive. Verifique se a conta Google está conectada e se o Drive foi autorizado."
+          "Erro ao salvar backup no Google Drive. Clique em Conectar Google Drive nesta aba e autorize a permissão do Drive."
       );
     } finally {
       setCloudBackupLoading(false);
@@ -2799,9 +2828,18 @@ export default function ConfiguracoesPage() {
 
                 <button
                   type="button"
-                  onClick={generateGoogleDriveBackupNow}
+                  onClick={connectGoogleDriveBackup}
                   disabled={cloudBackupLoading}
                   className="rounded-2xl border border-[#c2dddd] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa] disabled:opacity-60"
+                >
+                  Conectar Google Drive
+                </button>
+
+                <button
+                  type="button"
+                  onClick={generateGoogleDriveBackupNow}
+                  disabled={cloudBackupLoading}
+                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 shadow-sm hover:bg-emerald-100 disabled:opacity-60"
                 >
                   {cloudBackupLoading ? "Processando..." : "Enviar ao Google Drive"}
                 </button>
@@ -2810,7 +2848,7 @@ export default function ConfiguracoesPage() {
 
             <div className="mt-5 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
               <span className="font-black text-[#239d9a]">Modo atual:</span>{" "}
-              backup manual online. Agora também há envio manual ao Google Drive; a automação por horário será feita na próxima etapa com rota segura e agendamento.
+              backup manual online. Para usar o Drive, conecte primeiro o Google Drive por esta aba. Essa conexão é global do sistema e não depende do profissional selecionado na agenda.
             </div>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-[#c2dddd] bg-white">

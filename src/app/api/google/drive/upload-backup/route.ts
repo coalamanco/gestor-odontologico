@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     if (!connection?.refresh_token) {
       return NextResponse.json(
         {
-          error: "Google não conectado. Reconecte o Google Agenda antes de enviar backup ao Drive.",
+          error: "Google Drive não conectado. Clique em Conectar Google Drive na aba Backup antes de enviar o backup ao Drive.",
           reconnectRequired: true,
         },
         { status: 400 }
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: reconnectRequired
-          ? "Google Drive não autorizado. Reconecte o Google Agenda para liberar a permissão do Drive."
+          ? "Google Drive não autorizado. Clique em Conectar Google Drive na aba Backup para liberar a permissão do Drive."
           : "Erro ao enviar backup para Google Drive.",
         details: error?.message || String(error),
         reconnectRequired,
