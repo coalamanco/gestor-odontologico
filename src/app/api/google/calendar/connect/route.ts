@@ -20,6 +20,7 @@ function encodeState(state: GoogleConnectState) {
 export async function GET(request: NextRequest) {
   try {
     const userId = request.nextUrl.searchParams.get("userId");
+
     const professionalId =
       request.nextUrl.searchParams.get("professionalId") ||
       request.nextUrl.searchParams.get("professional_id");
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
-      prompt: "consent",
+      prompt: "consent select_account",
       include_granted_scopes: true,
       scope: GOOGLE_CALENDAR_SCOPES,
       state,
