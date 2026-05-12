@@ -28,7 +28,7 @@ function decodeState(rawState: string | null): GoogleConnectState | null {
       };
     }
   } catch {
-    // Mantém compatibilidade com a conexão antiga, onde o state era apenas o userId.
+    // Compatibilidade com conexão antiga.
   }
 
   return {
@@ -59,18 +59,26 @@ export async function GET(request: NextRequest) {
 
     const userId = state.userId;
     const professionalId = state.professionalId || null;
+    const origin = state.origin || null;
     const redirectPath = safeRedirectPath(state.redirect);
+
+    const isDriveBackupConnection = origin === "google_drive_backup";
+
     const successRedirect =
       redirectPath ||
-      (professionalId
-        ? "/configuracoes?tab=equipe&googleCalendar=conectado"
-        : "/agenda?googleCalendar=conectado");
+      (isDriveBackupConnection
+        ? "/configuracoes?tab=backup&googleDrive=conectado"
+        : professionalId
+          ? "/configuracoes?tab=equipe&googleCalendar=conectado"
+          : "/agenda?googleCalendar=conectado");
 
     const errorRedirect =
       redirectPath ||
-      (professionalId
-        ? "/configuracoes?tab=equipe&googleCalendar=erro"
-        : "/agenda?googleCalendar=erro");
+      (isDriveBackupConnection
+        ? "/configuracoes?tab=backup&googleDrive=erro"
+        : professionalId
+          ? "/configuracoes?tab=equipe&googleCalendar=erro"
+          : "/agenda?googleCalendar=erro");
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -80,7 +88,6 @@ export async function GET(request: NextRequest) {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
     const oauth2Client = getGoogleOAuthClient();
 
     const { tokens } = await oauth2Client.getToken(code);
@@ -91,24 +98,22 @@ export async function GET(request: NextRequest) {
       expiry_date: tokens.expiry_date || undefined,
     });
 
-    const calendar = google.calendar({
-      version: "v3",
-      auth: oauth2Client,
-    });
-
     let googleCalendarId = "primary";
     let googleCalendarEmail: string | null = null;
 
     try {
+      const calendar = google.calendar({
+        version: "v3",
+        auth: oauth2Client,
+      });
+
       const primaryCalendar = await calendar.calendars.get({
         calendarId: "primary",
       });
 
       googleCalendarId = primaryCalendar.data.id || "primary";
       googleCalendarEmail =
-        primaryCalendar.data.id ||
-        primaryCalendar.data.summary ||
-        null;
+        primaryCalendar.data.id || primaryCalendar.data.summary || null;
     } catch (calendarError) {
       console.warn(
         "Não foi possível ler o calendário principal. Usando primary.",
@@ -118,14 +123,24 @@ export async function GET(request: NextRequest) {
 
     const { data: existingConnection } = await supabaseAdmin
       .from("google_calendar_connections")
-      .select("refresh_token")
+      .select("refresh_token, scope")
       .eq("user_id", userId)
       .maybeSingle();
 
     const refreshToken =
-      tokens.refresh_token ||
-      existingConnection?.refresh_token ||
-      null;
+      tokens.refresh_token || existingConnection?.refresh_token || null;
+
+    const previousScope = String(existingConnection?.scope || "");
+    const newScope = String(tokens.scope || "");
+
+    const mergedScope = Array.from(
+      new Set(
+        `${previousScope} ${newScope}`
+          .split(" ")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    ).join(" ");
 
     const { error } = await supabaseAdmin
       .from("google_calendar_connections")
@@ -135,7 +150,7 @@ export async function GET(request: NextRequest) {
           google_email: googleCalendarEmail,
           access_token: tokens.access_token || null,
           refresh_token: refreshToken,
-          scope: tokens.scope || null,
+          scope: mergedScope || null,
           token_type: tokens.token_type || null,
           expiry_date: tokens.expiry_date || null,
           calendar_id: googleCalendarId || "primary",
@@ -148,11 +163,10 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Erro ao salvar conexão Google:", error);
-
       return NextResponse.redirect(`${appUrl}${errorRedirect}`);
     }
 
-    if (professionalId) {
+    if (professionalId && !isDriveBackupConnection) {
       const { error: professionalError } = await supabaseAdmin
         .from("professionals")
         .update({
@@ -175,7 +189,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}${successRedirect}`);
   } catch (error) {
     console.error("Erro no callback Google Calendar:", error);
-
     return NextResponse.redirect(`${appUrl}/agenda?googleCalendar=erro`);
   }
 }
