@@ -1124,6 +1124,76 @@ export default function ConfiguracoesPage() {
     }
   };
 
+  const generateGoogleDriveBackupNow = async () => {
+    try {
+      setCloudBackupLoading(true);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      if (!user?.id) {
+        alert("Usuário não autenticado. Faça login novamente antes de enviar o backup ao Google Drive.");
+        return;
+      }
+
+      const backup = await buildSystemBackup();
+      backup.backup_type = "manual_google_drive";
+
+      const fileName = `backup-consultorio-${new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")}.json`;
+
+      const response = await fetch("/api/google/drive/upload-backup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          fileName,
+          backup,
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.success) {
+        if (result?.reconnectRequired) {
+          throw new Error(
+            result?.error ||
+              "O Google Drive ainda não foi autorizado. Reconecte o Google Agenda em Configurações > Equipe para liberar o Drive."
+          );
+        }
+
+        throw new Error(
+          result?.details ||
+            result?.error ||
+            "Erro ao enviar backup para o Google Drive."
+        );
+      }
+
+      alert(
+        `Backup salvo com sucesso no Google Drive.\n\nPasta: ${
+          result.folderName || "Backups Gestor Odontológico"
+        }\nArquivo: ${result.fileName || fileName}`
+      );
+    } catch (error: any) {
+      console.error("Erro ao salvar backup no Google Drive:", error);
+      alert(
+        error?.message ||
+          "Erro ao salvar backup no Google Drive. Verifique se a conta Google está conectada e se o Drive foi autorizado."
+      );
+    } finally {
+      setCloudBackupLoading(false);
+    }
+  };
+
   const downloadCloudBackup = async (path: string) => {
     const { data, error } = await supabase.storage
       .from("backups")
@@ -2704,7 +2774,7 @@ export default function ConfiguracoesPage() {
                 </h2>
 
                 <p className="mt-2 max-w-3xl text-sm text-slate-500">
-                  Salve uma cópia do backup no Supabase Storage. O bucket usado é privado e se chama backups.
+                  Salve uma cópia do backup no Supabase Storage e, quando desejar, envie também uma cópia externa para o Google Drive.
                 </p>
               </div>
 
@@ -2726,12 +2796,21 @@ export default function ConfiguracoesPage() {
                 >
                   {cloudBackupLoading ? "Processando..." : "Gerar backup online agora"}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={generateGoogleDriveBackupNow}
+                  disabled={cloudBackupLoading}
+                  className="rounded-2xl border border-[#c2dddd] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa] disabled:opacity-60"
+                >
+                  {cloudBackupLoading ? "Processando..." : "Enviar ao Google Drive"}
+                </button>
               </div>
             </div>
 
             <div className="mt-5 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
               <span className="font-black text-[#239d9a]">Modo atual:</span>{" "}
-              backup manual online. A automação por horário será feita na próxima etapa com rota segura e agendamento.
+              backup manual online. Agora também há envio manual ao Google Drive; a automação por horário será feita na próxima etapa com rota segura e agendamento.
             </div>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-[#c2dddd] bg-white">

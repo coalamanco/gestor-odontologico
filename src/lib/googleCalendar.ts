@@ -2,6 +2,7 @@ import { google } from "googleapis";
 
 export const GOOGLE_CALENDAR_SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/drive.file",
 ];
 
 export function getGoogleOAuthClient() {
