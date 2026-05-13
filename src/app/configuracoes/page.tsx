@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { CalendarDays, Database, Settings2, ShieldCheck, Users2, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type ConfigTab = "clinica" | "procedimentos" | "equipe" | "anamnese" | "comunicacao" | "financeiro" | "backup";
@@ -1597,6 +1599,159 @@ export default function ConfiguracoesPage() {
           </div>
         )}
       </div>
+
+
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <Link
+          href="/configuracoes?tab=clinica"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+              <Settings2 size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Clínica
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                Sistema
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Dados do consultório, horários e informações gerais.
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/configuracoes?tab=equipe"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+              <Users2 size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Profissionais
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                Equipe
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Gestão da equipe e Google Agenda individual.
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/configuracoes?tab=procedimentos"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+              <Wallet size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Procedimentos
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                Precificação
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Valores, categorias e procedimentos clínicos.
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/configuracoes?tab=comunicacao"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-violet-50 p-3 text-violet-700">
+              <CalendarDays size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Comunicação
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                WhatsApp
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Mensagens automáticas, lembretes e retorno.
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/configuracoes?tab=financeiro"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
+              <ShieldCheck size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Financeiro
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                Fiscal
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                PIX, juros, recibos e parâmetros financeiros.
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/configuracoes?tab=backup"
+          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-rose-50 p-3 text-rose-700">
+              <Database size={20} />
+            </div>
+
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Segurança
+              </div>
+
+              <h2 className="mt-1 text-sm font-black text-slate-800">
+                Backup
+              </h2>
+
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                Backup local, online e restauração segura.
+              </p>
+            </div>
+          </div>
+        </Link>
+      </section>
 
       <div className="flex flex-wrap gap-2 border-b border-[#d9eeee]">
         <button
