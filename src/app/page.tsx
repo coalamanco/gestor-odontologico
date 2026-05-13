@@ -25,6 +25,7 @@ import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import DashboardStats from "@/components/dashboard/DashboardStats";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DashboardInsights from "@/components/dashboard/DashboardInsights";
 import DashboardAgendaHoje from "@/components/dashboard/DashboardAgendaHoje";
 import DashboardDebtors from "@/components/dashboard/DashboardDebtors";
@@ -1057,8 +1058,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 sm:p-4">
-      <div className="max-w-7xl mx-auto space-y-3 pb-28 md:space-y-4 md:pb-10">
+    <DashboardLayout>
         <DashboardHeader
           period={period}
           setPeriod={setPeriod}
@@ -1418,7 +1418,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }
