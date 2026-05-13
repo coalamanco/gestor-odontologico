@@ -27,6 +27,7 @@ import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions"
 import DashboardCards from "@/components/dashboard/DashboardCards";
 import DashboardInsights from "@/components/dashboard/DashboardInsights";
 import DashboardAgendaHoje from "@/components/dashboard/DashboardAgendaHoje";
+import DashboardDebtors from "@/components/dashboard/DashboardDebtors";
 import {
   Area,
   AreaChart,
@@ -1311,22 +1312,8 @@ export default function Dashboard() {
           )}
 
           {isAdminUser && (
-            <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <CardTitle className="text-lg font-bold text-slate-800">
-                  Pacientes com saldo em aberto
-              </CardTitle>
-              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Prioridade para cobrança
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-2 px-5 pb-5">
-              {debtors.length === 0 && (
-                <div className="rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
-                  Nenhum saldo em aberto.
-                </div>
-              )}
+            <DashboardDebtors debtors={debtors} formatCurrency={formatCurrency} />
+          )}
 
               {debtors.map((debtor, index) => (
                 <div
