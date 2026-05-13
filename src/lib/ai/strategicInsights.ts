@@ -103,7 +103,9 @@ function formatCurrency(value: number) {
 }
 
 function normalizeStatus(status?: string | null) {
-  return String(status || "").trim().toLowerCase();
+  return String(status || "")
+    .trim()
+    .toLowerCase();
 }
 
 function isPaidStatus(status?: string | null) {
@@ -166,14 +168,12 @@ function daysBetween(value?: string | null) {
   const today = new Date();
   today.setHours(12, 0, 0, 0);
 
-  return Math.floor(
-    (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  return Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 function getPatientSource(patient: StrategicPatient) {
   const source = String(
-    patient.patient_source || patient.source || patient.origin || ""
+    patient.patient_source || patient.source || patient.origin || "",
   ).trim();
 
   return source || "Origem não informada";
@@ -181,7 +181,10 @@ function getPatientSource(patient: StrategicPatient) {
 
 function getTreatmentText(treatment: StrategicTreatment) {
   return String(
-    treatment.procedure_name || treatment.treatment_name || treatment.title || ""
+    treatment.procedure_name ||
+      treatment.treatment_name ||
+      treatment.title ||
+      "",
   ).toLowerCase();
 }
 
@@ -203,7 +206,9 @@ function calculateOverdueValue(financialRecords: StrategicFinancialRecord[]) {
       const today = new Date();
       today.setHours(12, 0, 0, 0);
 
-      return dueDate.getTime() < today.getTime() && !isPaidStatus(record.status);
+      return (
+        dueDate.getTime() < today.getTime() && !isPaidStatus(record.status)
+      );
     })
     .reduce((sum, record) => {
       const amount = parseMoney(record.amount);
@@ -274,7 +279,10 @@ function getPatientOpportunities(params: {
       }, 0);
 
       const openBudgetTotal = patientBudgets.reduce((sum, budget) => {
-        if (isApprovedStatus(budget.status) || isRejectedStatus(budget.status)) {
+        if (
+          isApprovedStatus(budget.status) ||
+          isRejectedStatus(budget.status)
+        ) {
           return sum;
         }
 
@@ -440,11 +448,70 @@ function buildSocialPosts(params: {
   const { inactivePatientsCount, openBudgetValue, implantTreatmentsCount } =
     params;
 
-  const posts: StrategicSocialPost[] = [];
+  const permanentPosts: StrategicSocialPost[] = [
+    {
+      id: "post-limpeza",
+      title: "Limpeza profissional",
+      objective: "Conteúdo educativo permanente",
+      content:
+        "A limpeza profissional ajuda a prevenir gengivite, mau hálito e acúmulo de tártaro. Manter esse cuidado em dia é uma forma simples de proteger sua saúde bucal. 🦷✨",
+    },
+    {
+      id: "post-checkup",
+      title: "Check-up odontológico",
+      objective: "Estimular revisões periódicas",
+      content:
+        "Mesmo sem dor, o acompanhamento odontológico regular é essencial. Muitas alterações bucais começam silenciosamente e são mais simples de tratar quando identificadas no início.",
+    },
+    {
+      id: "post-gengiva",
+      title: "Saúde gengival",
+      objective: "Conscientização periodontal",
+      content:
+        "Sangramento na gengiva não deve ser ignorado. Esse pode ser um sinal de inflamação e merece avaliação profissional para evitar que o problema avance.",
+    },
+    {
+      id: "post-clareamento",
+      title: "Clareamento dental",
+      objective: "Estimular estética e autoestima",
+      content:
+        "Um sorriso mais claro pode melhorar a autoestima, mas o clareamento dental precisa de avaliação e acompanhamento profissional para ser feito com segurança.",
+    },
+    {
+      id: "post-prevencao-infantil",
+      title: "Odontologia infantil",
+      objective: "Educação preventiva",
+      content:
+        "Levar a criança ao dentista regularmente ajuda a criar bons hábitos desde cedo. A prevenção torna as consultas mais tranquilas e evita problemas futuros. 🧒🦷",
+    },
+    {
+      id: "post-sensibilidade",
+      title: "Sensibilidade dental",
+      objective: "Atrair pacientes com sintomas comuns",
+      content:
+        "Sentir dor ou incômodo com alimentos frios, quentes ou doces pode indicar sensibilidade dental. Uma avaliação ajuda a identificar a causa e orientar o melhor cuidado.",
+    },
+    {
+      id: "post-estetica",
+      title: "Estética do sorriso",
+      objective: "Fortalecer tratamentos estéticos",
+      content:
+        "Pequenos detalhes podem transformar a harmonia do sorriso. O planejamento estético avalia saúde, função e naturalidade antes de qualquer procedimento. ✨",
+    },
+    {
+      id: "post-manutencao",
+      title: "Manutenção preventiva",
+      objective: "Reforçar acompanhamento contínuo",
+      content:
+        "Cuidar do sorriso não é apenas tratar quando dói. Consultas preventivas ajudam a manter a saúde bucal em dia e reduzem o risco de tratamentos mais complexos.",
+    },
+  ];
+
+  const strategicPosts: StrategicSocialPost[] = [];
 
   if (inactivePatientsCount >= 10) {
-    posts.push({
-      id: "post-prevencao",
+    strategicPosts.push({
+      id: "post-prevencao-retorno",
       title: "Prevenção e retorno",
       objective: "Reativar pacientes antigos",
       content:
@@ -453,7 +520,7 @@ function buildSocialPosts(params: {
   }
 
   if (openBudgetValue >= 10000) {
-    posts.push({
+    strategicPosts.push({
       id: "post-planejamento",
       title: "Planejamento odontológico",
       objective: "Estimular pacientes com orçamento pendente",
@@ -463,7 +530,7 @@ function buildSocialPosts(params: {
   }
 
   if (implantTreatmentsCount >= 5) {
-    posts.push({
+    strategicPosts.push({
       id: "post-implantes",
       title: "Implantes dentários",
       objective: "Fortalecer autoridade em tratamentos de alto ticket",
@@ -472,15 +539,26 @@ function buildSocialPosts(params: {
     });
   }
 
-  posts.push({
-    id: "post-limpeza",
-    title: "Limpeza profissional",
-    objective: "Conteúdo educativo permanente",
-    content:
-      "A limpeza profissional ajuda a prevenir gengivite, mau hálito e acúmulo de tártaro. Manter esse cuidado em dia é uma forma simples de proteger sua saúde bucal. 🦷✨",
-  });
+  const allPosts = [...strategicPosts, ...permanentPosts];
 
-  return posts.slice(0, 4);
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+
+  const daySeed = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+
+  const rotatedPosts = allPosts
+    .map((post, index) => ({
+      post,
+      order:
+        (post.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) +
+          daySeed +
+          index * 17) %
+        997,
+    }))
+    .sort((a, b) => a.order - b.order)
+    .map((item) => item.post);
+
+  return rotatedPosts.slice(0, 4);
 }
 
 export function generateStrategicAnalysis(params: {
