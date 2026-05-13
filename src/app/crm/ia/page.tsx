@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Brain,
   CalendarClock,
+  Check,
+  Copy,
   Crown,
   DollarSign,
   HeartHandshake,
@@ -68,6 +70,13 @@ type Treatment = {
   created_at?: string | null;
 };
 
+type SocialPost = {
+  id: string;
+  title: string;
+  content: string;
+  objective: string;
+};
+
 function formatCurrency(value: number) {
   return Number(value || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -98,6 +107,42 @@ function getRecommendationIconClass(severity: string) {
   return "bg-emerald-100 text-emerald-700";
 }
 
+function buildSocialHashtags(item: SocialPost) {
+  const title = String(item.title || "").toLowerCase();
+  const objective = String(item.objective || "").toLowerCase();
+  const text = `${title} ${objective}`;
+
+  const tags = ["#odontologia", "#saudebucal", "#sorriso", "#dentista"];
+
+  if (text.includes("limpeza") || text.includes("preven")) {
+    tags.push("#prevencao", "#limpezadental");
+  }
+
+  if (text.includes("clareamento") || text.includes("estética") || text.includes("estetica")) {
+    tags.push("#esteticadental", "#clareamentodental");
+  }
+
+  if (text.includes("implante")) {
+    tags.push("#implantesdentarios", "#reabilitacaooral");
+  }
+
+  if (text.includes("infantil") || text.includes("criança") || text.includes("crianca")) {
+    tags.push("#odontopediatria", "#saudeinfantil");
+  }
+
+  if (text.includes("gengiva") || text.includes("periodontal")) {
+    tags.push("#gengiva", "#periodontia");
+  }
+
+  return Array.from(new Set(tags)).slice(0, 8).join(" ");
+}
+
+function buildSocialCaption(item: SocialPost) {
+  const hashtags = buildSocialHashtags(item);
+
+  return `${item.content}\n\nQuer cuidar melhor do seu sorriso? Agende uma avaliação e mantenha sua saúde bucal em dia.\n\n${hashtags}`;
+}
+
 export default function CrmIaPage() {
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -107,6 +152,7 @@ export default function CrmIaPage() {
     []
   );
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
 
   async function loadData() {
     try {
@@ -145,6 +191,22 @@ export default function CrmIaPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCopySocialPost(item: SocialPost) {
+    const caption = buildSocialCaption(item);
+
+    try {
+      await navigator.clipboard.writeText(caption);
+      setCopiedPostId(item.id);
+
+      window.setTimeout(() => {
+        setCopiedPostId((current) => (current === item.id ? null : current));
+      }, 2200);
+    } catch (error) {
+      console.error("Erro ao copiar legenda:", error);
+      alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
     }
   }
 
@@ -520,34 +582,71 @@ export default function CrmIaPage() {
                     </h2>
 
                     <p className="text-sm text-slate-500">
-                      Sugestões curtas baseadas na leitura da clínica.
+                      Legendas prontas com CTA e hashtags para copiar e publicar.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {analysis.socialPosts.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
-                    >
-                      <div className="mb-2 flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-[#239d9a]" />
+                  {analysis.socialPosts.map((item) => {
+                    const caption = buildSocialCaption(item);
+                    const hashtags = buildSocialHashtags(item);
+                    const isCopied = copiedPostId === item.id;
 
-                        <h3 className="font-black text-slate-800">
-                          {item.title}
-                        </h3>
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4"
+                      >
+                        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="mb-2 flex items-center gap-2">
+                              <Sparkles className="h-4 w-4 text-[#239d9a]" />
+
+                              <h3 className="font-black text-slate-800">
+                                {item.title}
+                              </h3>
+                            </div>
+
+                            <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                              Objetivo: {item.objective}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCopySocialPost(item)}
+                            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-black transition sm:w-auto ${
+                              isCopied
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-[#239d9a] text-white hover:bg-[#1f8d8a]"
+                            }`}
+                          >
+                            {isCopied ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                            {isCopied ? "Copiado" : "Copiar legenda"}
+                          </button>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4">
+                          <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            Legenda pronta
+                          </p>
+
+                          <p className="whitespace-pre-line text-sm leading-6 text-slate-700">
+                            {caption}
+                          </p>
+                        </div>
+
+                        <div className="mt-3 rounded-2xl bg-violet-50 px-4 py-3 text-xs font-bold leading-5 text-violet-700">
+                          {hashtags}
+                        </div>
                       </div>
-
-                      <p className="mb-2 text-xs font-black uppercase tracking-widest text-slate-400">
-                        Objetivo: {item.objective}
-                      </p>
-
-                      <p className="text-sm leading-6 text-slate-600">
-                        {item.content}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
