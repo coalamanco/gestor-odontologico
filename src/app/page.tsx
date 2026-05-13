@@ -24,7 +24,7 @@ import {
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
-import DashboardCards from "@/components/dashboard/DashboardCards";
+import DashboardStats from "@/components/dashboard/DashboardStats";
 import DashboardInsights from "@/components/dashboard/DashboardInsights";
 import DashboardAgendaHoje from "@/components/dashboard/DashboardAgendaHoje";
 import DashboardDebtors from "@/components/dashboard/DashboardDebtors";
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
 
         <DashboardQuickActions actions={quickActions} />
 
-        <DashboardCards cards={cards} />
+        <DashboardStats cards={cards} />
 
         <DashboardInsights insights={intelligentInsights} />
 
