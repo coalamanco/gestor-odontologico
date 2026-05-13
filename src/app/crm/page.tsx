@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   AlertCircle,
   Bot,
+  Brain,
   CalendarClock,
   Cake,
   CheckCircle2,
@@ -15,6 +16,7 @@ import {
   Search,
   Sparkles,
   Stethoscope,
+  Target,
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -420,6 +422,83 @@ export default function CrmPage() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <Link
+            href="/crm/campanhas"
+            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a] transition group-hover:bg-[#239d9a] group-hover:text-white">
+                <MessageCircle size={21} />
+              </div>
+
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Execução comercial
+                </div>
+
+                <h2 className="mt-1 text-base font-black text-slate-800">
+                  Campanhas
+                </h2>
+
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                  Acesse campanhas por perfil, listas de pacientes, funil e mensagens prontas.
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/crm/ia"
+            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-[#f0f9ff] p-3 text-cyan-700 transition group-hover:bg-cyan-600 group-hover:text-white">
+                <Brain size={21} />
+              </div>
+
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Inteligência estratégica
+                </div>
+
+                <h2 className="mt-1 text-base font-black text-slate-800">
+                  IA Estratégica
+                </h2>
+
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                  Veja recomendações, pacientes estratégicos e ideias de conteúdo para marketing.
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/crm/automacoes"
+            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 transition group-hover:bg-emerald-600 group-hover:text-white">
+                <Target size={21} />
+              </div>
+
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Rotinas inteligentes
+                </div>
+
+                <h2 className="mt-1 text-base font-black text-slate-800">
+                  Automações
+                </h2>
+
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                  Configure ações automáticas de relacionamento, retorno e campanhas.
+                </p>
+              </div>
+            </div>
+          </Link>
         </section>
 
         <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
