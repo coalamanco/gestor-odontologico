@@ -1146,6 +1146,35 @@ export default function Dashboard() {
           </div>
         )}
 
+        {isAdminUser && (
+          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+            <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+                  <BarChart3 size={20} />
+                </div>
+
+                <div>
+                  <div className="text-sm font-black text-slate-800">
+                    Dashboard principal focado na operação
+                  </div>
+
+                  <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                    Use esta tela para acompanhar o dia a dia. Para análise profunda, metas, forecast, marketing e BI completo, acesse o Dashboard Executivo.
+                  </div>
+                </div>
+              </div>
+
+              <a
+                href="/dashboard/executivo"
+                className="inline-flex items-center justify-center rounded-xl bg-[#239d9a] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1f8d8a]"
+              >
+                Abrir BI Executivo
+              </a>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {executiveInsights.map((insight) => (
             <div
