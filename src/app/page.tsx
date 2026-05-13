@@ -24,6 +24,7 @@ import {
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
+import DashboardCards from "@/components/dashboard/DashboardCards";
 import {
   Area,
   AreaChart,
@@ -1209,40 +1210,7 @@ export default function Dashboard() {
 
         <DashboardQuickActions actions={quickActions} />
 
-        <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-3">
-          {cards.map((card) => (
-            <Card
-              key={card.title}
-              className="min-w-[78vw] snap-start overflow-hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:min-w-0"
-            >
-              <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2 px-5 pt-5">
-                <div>
-                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                    {card.title}
-                  </CardTitle>
-                  <div className={`mt-2 text-2xl font-bold tracking-tight ${card.color}`}>
-                    {card.value}
-                  </div>
-                </div>
-
-                <div className={`rounded-xl p-2.5 ${card.bg} ${card.color}`}>
-                  <card.icon size={18} />
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                <p className="text-xs text-slate-500">
-                  {card.description}
-                </p>
-                {"trend" in card && (card as any).trend && (
-                  <div className="mt-2 inline-flex rounded-full bg-[#f2fcfc] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#239d9a] ring-1 ring-[#d9eeee]">
-                    {(card as any).trend}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DashboardCards cards={cards} />
 
         <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
           <CardHeader className="px-5 pt-5 pb-3">
