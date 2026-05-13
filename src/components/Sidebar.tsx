@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Megaphone,
   MessageCircle,
-  MonitorSmartphone,
   Package,
   Receipt,
   Settings,
@@ -58,13 +57,6 @@ const menu: MenuItem[] = [
     roles: ["admin", "secretaria"],
     section: "Atendimento",
     mobile: true,
-  },
-  {
-    label: "Recepção",
-    href: "/recepcao",
-    icon: MonitorSmartphone,
-    roles: ["admin", "secretaria"],
-    section: "Atendimento",
   },
   {
     label: "Pacientes",
