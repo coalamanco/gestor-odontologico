@@ -1314,34 +1314,6 @@ export default function Dashboard() {
           {isAdminUser && (
             <DashboardDebtors debtors={debtors} formatCurrency={formatCurrency} />
           )}
-
-              {debtors.map((debtor, index) => (
-                <div
-                  key={debtor.patientId}
-                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3 flex items-center justify-between gap-3"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-black">
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-bold text-slate-800 truncate">
-                        {debtor.name}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Saldo pendente
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="font-black text-amber-700">
-                    {formatCurrency(debtor.amount)}
-                  </div>
-                </div>
-              ))}
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
