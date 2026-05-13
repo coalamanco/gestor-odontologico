@@ -1175,7 +1175,7 @@ export default function Dashboard() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="hidden">
           {executiveInsights.map((insight) => (
             <div
               key={insight.label}
@@ -1342,7 +1342,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {isAdminUser && (
-            <Card className="xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+            <Card className="hidden xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
               <CardHeader className="px-5 pt-5 pb-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -1450,7 +1450,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {isAdminUser && (
-            <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+            <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
               <CardHeader className="px-5 pt-5 pb-3">
                 <CardTitle className="text-lg font-bold text-slate-800">
                   Recebimentos por dia da semana
@@ -1540,7 +1540,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {isAdminUser && (
-            <Card className="xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
+            <Card className="hidden xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
               <CardHeader className="px-5 pt-5 pb-3">
                 <CardTitle className="text-lg font-bold text-slate-800">
                   Produção da clínica
@@ -1596,7 +1596,7 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+          <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
             <CardHeader className="px-5 pt-5 pb-3">
               <CardTitle className="text-lg font-bold text-slate-800">
                 Status da agenda
@@ -1653,7 +1653,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+        <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
           <CardHeader className="px-5 pt-5 pb-3">
             <CardTitle className="text-lg font-bold text-slate-800">
               Movimento da agenda
@@ -1694,7 +1694,7 @@ export default function Dashboard() {
         </Card>
 
         {isAdminUser && (
-          <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
+          <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
             <CardHeader className="px-5 pt-5 pb-3">
               <CardTitle className="text-lg font-bold text-slate-800">
                 Formas de pagamento
