@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Brain,
   Calendar,
+  Calculator,
   DollarSign,
   LayoutDashboard,
   Megaphone,
+  MessageCircle,
   MonitorSmartphone,
   Package,
   Receipt,
   Settings,
   Users,
   X,
-  Calculator,
-  Brain,
 } from "lucide-react";
 import { getUserRole } from "@/lib/getUserRole";
 
@@ -25,13 +26,23 @@ type SidebarProps = {
   onCloseMobile?: () => void;
 };
 
-const menu = [
+type MenuItem = {
+  label: string;
+  href: string;
+  icon: any;
+  roles: string[];
+  section: "Visão geral" | "Atendimento" | "Relacionamento" | "Gestão" | "Sistema";
+  mobile?: boolean;
+};
+
+const menu: MenuItem[] = [
   {
     label: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
     roles: ["admin", "secretaria"],
     section: "Visão geral",
+    mobile: true,
   },
   {
     label: "BI Executivo",
@@ -46,6 +57,7 @@ const menu = [
     icon: Calendar,
     roles: ["admin", "secretaria"],
     section: "Atendimento",
+    mobile: true,
   },
   {
     label: "Recepção",
@@ -60,11 +72,20 @@ const menu = [
     icon: Users,
     roles: ["admin", "secretaria"],
     section: "Atendimento",
+    mobile: true,
   },
   {
     label: "CRM",
     href: "/crm",
     icon: Megaphone,
+    roles: ["admin", "secretaria"],
+    section: "Relacionamento",
+    mobile: true,
+  },
+  {
+    label: "Campanhas",
+    href: "/crm/campanhas",
+    icon: MessageCircle,
     roles: ["admin", "secretaria"],
     section: "Relacionamento",
   },
@@ -81,6 +102,7 @@ const menu = [
     icon: DollarSign,
     roles: ["admin", "secretaria"],
     section: "Gestão",
+    mobile: true,
   },
   {
     label: "Despesas",
@@ -112,24 +134,29 @@ const menu = [
   },
 ];
 
+const sections: MenuItem["section"][] = [
+  "Visão geral",
+  "Atendimento",
+  "Relacionamento",
+  "Gestão",
+  "Sistema",
+];
+
+function isActiveRoute(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 function SidebarContent({
   visibleMenu,
   onNavigate,
   showCloseButton,
 }: {
-  visibleMenu: typeof menu;
+  visibleMenu: MenuItem[];
   onNavigate?: () => void;
   showCloseButton?: boolean;
 }) {
   const pathname = usePathname();
-
-  const sections = [
-    "Visão geral",
-    "Atendimento",
-    "Relacionamento",
-    "Gestão",
-    "Sistema",
-  ];
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#0f766e] via-[#159e96] to-[#35bcb3] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
@@ -183,11 +210,7 @@ function SidebarContent({
 
                 <div className="space-y-1">
                   {sectionItems.map((item) => {
-                    const active =
-                      pathname === item.href ||
-                      (item.href !== "/" &&
-                        pathname.startsWith(item.href));
-
+                    const active = isActiveRoute(pathname, item.href);
                     const Icon = item.icon;
 
                     return (
@@ -230,9 +253,7 @@ function SidebarContent({
         <div className="rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(74,222,128,0.15)]" />
-            <span className="text-xs font-black text-white">
-              Sistema ativo
-            </span>
+            <span className="text-xs font-black text-white">Sistema ativo</span>
           </div>
 
           <div className="mt-1 text-[10px] font-semibold text-emerald-100/60">
@@ -260,13 +281,13 @@ export default function Sidebar({
     loadRole();
   }, []);
 
-  const visibleMenu = menu.filter((item) =>
-    item.roles.includes(role || "admin"),
-  );
+  const visibleMenu = useMemo(() => {
+    return menu.filter((item) => item.roles.includes(role || "admin"));
+  }, [role]);
 
-  const mainMobileMenu = visibleMenu.filter((item) =>
-    ["/", "/agenda", "/pacientes", "/crm", "/financeiro"].includes(item.href),
-  );
+  const mainMobileMenu = useMemo(() => {
+    return visibleMenu.filter((item) => item.mobile);
+  }, [visibleMenu]);
 
   return (
     <>
@@ -298,11 +319,7 @@ export default function Sidebar({
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#d8f1ee] bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden">
         <div className="grid grid-cols-5">
           {mainMobileMenu.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/" &&
-                pathname.startsWith(item.href));
-
+            const active = isActiveRoute(pathname, item.href);
             const Icon = item.icon;
 
             return (
