@@ -32,6 +32,7 @@ type MenuItem = {
   roles: string[];
   section: "Visão geral" | "Atendimento" | "Relacionamento" | "Gestão" | "Sistema";
   mobile?: boolean;
+  child?: boolean;
 };
 
 const menu: MenuItem[] = [
@@ -80,6 +81,7 @@ const menu: MenuItem[] = [
     icon: MessageCircle,
     roles: ["admin", "secretaria"],
     section: "Relacionamento",
+    child: true,
   },
   {
     label: "IA Estratégica",
@@ -87,6 +89,7 @@ const menu: MenuItem[] = [
     icon: Brain,
     roles: ["admin", "secretaria"],
     section: "Relacionamento",
+    child: true,
   },
   {
     label: "Financeiro",
@@ -210,24 +213,34 @@ function SidebarContent({
                         key={item.href}
                         href={item.href}
                         onClick={onNavigate}
-                        className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-black transition-all duration-200 ${
+                        className={`group relative flex items-center gap-3 rounded-2xl transition-all duration-200 ${
+                          item.child ? "ml-4 px-3 py-2 text-xs font-black" : "px-3 py-2.5 text-sm font-black"
+                        } ${
                           active
                             ? "bg-white text-[#159e96] shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
-                            : "text-white/75 hover:translate-x-1 hover:bg-white/10 hover:text-white"
+                            : item.child
+                              ? "text-white/60 hover:translate-x-1 hover:bg-white/10 hover:text-white"
+                              : "text-white/75 hover:translate-x-1 hover:bg-white/10 hover:text-white"
                         }`}
                       >
                         {active && (
                           <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#159e96]" />
                         )}
 
+                        {item.child && !active && (
+                          <span className="absolute -left-2 top-1/2 h-px w-3 -translate-y-1/2 bg-white/25" />
+                        )}
+
                         <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition ${
+                          className={`flex shrink-0 items-center justify-center rounded-xl transition ${
+                            item.child ? "h-7 w-7" : "h-8 w-8"
+                          } ${
                             active
                               ? "bg-[#dff8f5] text-[#159e96]"
                               : "bg-white/10 text-white/85 group-hover:bg-white/15 group-hover:text-white"
                           }`}
                         >
-                          <Icon size={17} />
+                          <Icon size={item.child ? 15 : 17} />
                         </span>
 
                         <span className="truncate">{item.label}</span>
