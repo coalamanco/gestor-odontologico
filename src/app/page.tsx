@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
+import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import {
   Area,
   AreaChart,
@@ -1206,39 +1207,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-          <CardHeader className="px-5 pt-5 pb-3">
-            <CardTitle className="text-lg font-bold text-slate-800">
-              Ações rápidas
-            </CardTitle>
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
-              Atalhos principais do consultório
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
-            {quickActions.map((action) => (
-              <a
-                key={action.title}
-                href={action.href}
-                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
-                    <action.icon size={18} />
-                  </div>
-
-                  <div>
-                    <div className="font-bold text-slate-800">{action.title}</div>
-                    <div className="mt-1 text-xs text-slate-500">
-                      {action.description}
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </CardContent>
-        </Card>
+        <DashboardQuickActions actions={quickActions} />
 
         <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-3">
           {cards.map((card) => (
