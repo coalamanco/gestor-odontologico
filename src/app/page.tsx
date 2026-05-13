@@ -25,6 +25,7 @@ import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import DashboardCards from "@/components/dashboard/DashboardCards";
+import DashboardInsights from "@/components/dashboard/DashboardInsights";
 import {
   Area,
   AreaChart,
@@ -369,23 +370,6 @@ const statusColors: Record<string, string> = {
   Faltou: "#dc2626",
   Cancelado: "#64748b",
 };
-
-function CheckCircleIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
 
 export default function Dashboard() {
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
@@ -1212,70 +1196,7 @@ export default function Dashboard() {
 
         <DashboardCards cards={cards} />
 
-        <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-          <CardHeader className="px-5 pt-5 pb-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg font-bold text-slate-800">
-                  Indicadores inteligentes
-                </CardTitle>
-                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
-                  Alertas automáticos para decisões rápidas
-                </CardDescription>
-              </div>
-
-              <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
-                <Zap size={18} />
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
-            {intelligentInsights.map((item) => {
-              const classes =
-                item.level === "danger"
-                  ? "border-red-100 bg-red-50 text-red-700"
-                  : item.level === "warning"
-                    ? "border-amber-100 bg-amber-50 text-amber-700"
-                    : item.level === "info"
-                      ? "border-blue-100 bg-blue-50 text-blue-700"
-                      : "border-emerald-100 bg-emerald-50 text-emerald-700";
-
-              return (
-                <div
-                  key={item.id}
-                  className={`rounded-xl border p-3 ${classes}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      {item.level === "success" ? (
-                        <CheckCircleIcon />
-                      ) : (
-                        <AlertTriangle size={16} />
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="text-sm font-black leading-tight">
-                        {item.title}
-                      </div>
-                      <div className="mt-1 text-xs font-medium opacity-90">
-                        {item.description}
-                      </div>
-
-                      <a
-                        href={item.href}
-                        className="mt-2 inline-flex rounded-lg bg-white/70 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest hover:bg-white"
-                      >
-                        {item.action}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <DashboardInsights insights={intelligentInsights} />
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {isAdminUser && (
