@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ComunicadoMassaCard from "../../../components/crm/ComunicadoMassaCard";
 import {
   Activity,
   Brain,
