@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import ComunicadoMassaCard from "../../../components/crm/ComunicadoMassaCard";
 import {
   Activity,
   Brain,
@@ -531,10 +530,6 @@ export default function CampanhasInteligentesPage() {
       .filter((item) => item.closingChance >= 70)
       .sort((a, b) => b.closingChance - a.closingChance);
 
-    const riscoAudience = scoredPatients
-      .filter((item) => item.abandonmentRisk === "Alto")
-      .sort((a, b) => b.daysWithoutReturn || 0 - (a.daysWithoutReturn || 0));
-
     const retornoAudience = scoredPatients
       .filter((item) => item.daysWithoutReturn === null || item.daysWithoutReturn >= 120)
       .sort((a, b) => (b.daysWithoutReturn || 0) - (a.daysWithoutReturn || 0));
@@ -595,18 +590,18 @@ export default function CampanhasInteligentesPage() {
       },
       {
         key: "risco",
-        title: "Recuperação de Risco",
+        title: "Comunicado em Massa",
         description:
-          "Pacientes com risco alto de abandono ou muito tempo sem retorno.",
-        icon: RefreshCw,
-        gradient: "from-rose-500 to-red-500",
-        audience: riscoAudience,
-        estimatedConversion: 20,
-        estimatedRevenue: calcEstimatedRevenue(riscoAudience, 650, 20),
+          "Envie avisos gerais para todos os pacientes cadastrados com WhatsApp.",
+        icon: Megaphone,
+        gradient: "from-cyan-500 to-teal-500",
+        audience: scoredPatients,
+        estimatedConversion: 100,
+        estimatedRevenue: 0,
         strategy:
-          "Contato acolhedor, sem pressão comercial, focado em reaproximação e revisão preventiva.",
+          "Use para fechamento da clínica, recesso, avisos importantes ou comunicados institucionais.",
         message:
-          "Olá, {nome}! Tudo bem?\n\nPassando para saber como você está. Faz um tempo que não nos vemos por aqui e gostaríamos de acompanhar sua saúde bucal.\n\nSe desejar, podemos organizar uma revisão com tranquilidade.\n\nFicamos à disposição 🙂",
+          "Olá, {nome}! 😊\n\nEstamos entrando em contato para compartilhar um comunicado importante da clínica.\n\nQualquer dúvida, estamos à disposição. 🦷",
       },
       {
         key: "retorno",
@@ -862,7 +857,14 @@ export default function CampanhasInteligentesPage() {
                 <button
                   key={campaign.key}
                   type="button"
-                  onClick={() => setSelectedCampaign(campaign.key)}
+                  onClick={() => {
+                    if (campaign.key === "risco") {
+                      window.location.href = "/crm/campanhas/comunicado";
+                      return;
+                    }
+
+                    setSelectedCampaign(campaign.key);
+                  }}
                   className={`rounded-3xl border p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
                     isActive
                       ? "border-cyan-200 bg-cyan-50/40 ring-2 ring-cyan-100"
