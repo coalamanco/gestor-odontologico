@@ -579,7 +579,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes com maior score comercial e maior chance de fechamento.",
         icon: Brain,
-        gradient: "from-emerald-500 to-teal-500",
+        gradient: "from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1]",
         audience: quentesAudience,
         estimatedConversion: 42,
         estimatedRevenue: calcEstimatedRevenue(quentesAudience, 1800, 42),
@@ -594,7 +594,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Envie avisos gerais para todos os pacientes cadastrados com WhatsApp.",
         icon: Megaphone,
-        gradient: "from-cyan-500 to-teal-500",
+        gradient: "from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1]",
         audience: scoredPatients,
         estimatedConversion: 100,
         estimatedRevenue: 0,
@@ -609,7 +609,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes sem consulta recente ou sem retorno registrado.",
         icon: HeartHandshake,
-        gradient: "from-emerald-500 to-teal-500",
+        gradient: "from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1]",
         audience: retornoAudience,
         estimatedConversion: 18,
         estimatedRevenue: calcEstimatedRevenue(retornoAudience, 450, 18),
@@ -624,7 +624,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes com orçamento pendente e oportunidade comercial aberta.",
         icon: FileText,
-        gradient: "from-cyan-500 to-sky-500",
+        gradient: "from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1]",
         audience: orcamentosAudience,
         estimatedConversion: 28,
         estimatedRevenue: calcEstimatedRevenue(orcamentosAudience, 1800, 28),
@@ -639,7 +639,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes com maior histórico financeiro e relacionamento com a clínica.",
         icon: Crown,
-        gradient: "from-yellow-400 to-orange-400",
+        gradient: "from-[#5fd6d3] via-[#8ee6e3] to-[#d8fbfa]",
         audience: vipAudience,
         estimatedConversion: 35,
         estimatedRevenue: calcEstimatedRevenue(vipAudience, 2200, 35),
@@ -654,7 +654,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes com alto potencial financeiro, histórico ou interesse em reabilitação.",
         icon: Target,
-        gradient: "from-purple-500 to-indigo-500",
+        gradient: "from-[#44c1bf] via-[#85d4d2] to-[#d8fbfa]",
         audience: implantesAudience,
         estimatedConversion: 16,
         estimatedRevenue: calcEstimatedRevenue(implantesAudience, 4500, 16),
@@ -669,7 +669,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes sem retorno há bastante tempo, ideais para campanha preventiva.",
         icon: CalendarClock,
-        gradient: "from-green-500 to-emerald-500",
+        gradient: "from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1]",
         audience: limpezaAudience,
         estimatedConversion: 32,
         estimatedRevenue: calcEstimatedRevenue(limpezaAudience, 280, 32),
@@ -684,7 +684,7 @@ export default function CampanhasInteligentesPage() {
         description:
           "Pacientes com histórico ortodôntico, interesse ou oportunidade de avaliação.",
         icon: Activity,
-        gradient: "from-pink-500 to-rose-500",
+        gradient: "from-[#5fd6d3] via-[#8ee6e3] to-[#d8fbfa]",
         audience: ortodontiaAudience,
         estimatedConversion: 14,
         estimatedRevenue: calcEstimatedRevenue(ortodontiaAudience, 2500, 14),
@@ -729,102 +729,107 @@ export default function CampanhasInteligentesPage() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] p-4 md:p-6">
-      <div className="mb-6 flex flex-col gap-3">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-          <Sparkles size={14} />
-          CRM premium
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-4 md:p-6">
+      <div className="mb-6 overflow-hidden rounded-[1.5rem] border border-[#c7eceb] bg-white shadow-sm">
+        <div className="relative bg-gradient-to-r from-[#2cc6c3] via-[#5fd6d3] to-[#baf3f1] px-5 py-5 text-white md:px-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/20 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-cyan-100/30 blur-3xl" />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 md:text-3xl">
-              Central de Campanhas Inteligentes
-            </h1>
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/22 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white ring-1 ring-white/25">
+                <Sparkles size={14} />
+                CRM premium
+              </div>
 
-            <p className="mt-1 max-w-3xl text-sm text-slate-500">
-              Campanhas segmentadas com score comercial, chance de fechamento,
-              risco de abandono e previsão de faturamento.
-            </p>
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">
+                Central de Campanhas Inteligentes
+              </h1>
+
+              <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-white/90">
+                Campanhas segmentadas com score comercial, chance de fechamento,
+                risco de abandono e previsão de faturamento.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadData}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-4 py-3 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-[#f2fcfc]"
+            >
+              <RefreshCw size={17} />
+              Atualizar
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={loadData}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-100 bg-white px-4 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
-          >
-            <RefreshCw size={17} />
-            Atualizar
-          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Campanhas ativas</p>
+              <p className="text-sm font-semibold text-slate-500">Campanhas ativas</p>
               <h2 className="mt-2 text-2xl font-black text-slate-800">
                 {loading ? "..." : campaignCards.length}
               </h2>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 p-3 text-white">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
               <Megaphone size={22} />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Pacientes elegíveis</p>
+              <p className="text-sm font-semibold text-slate-500">Pacientes elegíveis</p>
               <h2 className="mt-2 text-2xl font-black text-slate-800">
                 {loading ? "..." : totalEligible}
               </h2>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 p-3 text-white">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
               <Users size={22} />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Receita prevista</p>
+              <p className="text-sm font-semibold text-slate-500">Receita prevista</p>
               <h2 className="mt-2 text-2xl font-black text-slate-800">
                 {loading ? "..." : formatCurrency(totalEstimatedRevenue)}
               </h2>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 p-3 text-white">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
               <DollarSign size={22} />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Score médio</p>
+              <p className="text-sm font-semibold text-slate-500">Score médio</p>
               <h2 className="mt-2 text-2xl font-black text-slate-800">
                 {loading ? "..." : `${averageScore}/100`}
               </h2>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 p-3 text-white">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
               <Brain size={22} />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Melhor campanha</p>
+              <p className="text-sm font-semibold text-slate-500">Melhor campanha</p>
               <h2 className="mt-2 line-clamp-1 text-2xl font-black text-slate-800">
                 {loading ? "..." : bestCampaign?.title || "-"}
               </h2>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-400 p-3 text-white">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
               <TrendingUp size={22} />
             </div>
           </div>
@@ -832,9 +837,9 @@ export default function CampanhasInteligentesPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
               <Brain size={22} />
             </div>
 
@@ -842,7 +847,7 @@ export default function CampanhasInteligentesPage() {
               <h2 className="text-xl font-black text-slate-800">
                 Campanhas sugeridas
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm font-semibold text-slate-500">
                 Agora ordenadas pelo score comercial centralizado.
               </p>
             </div>
@@ -867,19 +872,21 @@ export default function CampanhasInteligentesPage() {
                   }}
                   className={`rounded-3xl border p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
                     isActive
-                      ? "border-cyan-200 bg-cyan-50/40 ring-2 ring-cyan-100"
-                      : "border-slate-100 bg-white"
+                      ? "border-[#9ee7e4] bg-[#f2fcfc] ring-2 ring-[#d9eeee]"
+                      : "border-[#d9eeee] bg-white"
                   }`}
                 >
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div
-                      className={`rounded-2xl bg-gradient-to-br ${campaign.gradient} p-3 text-white`}
+                      className={`rounded-2xl bg-gradient-to-br ${campaign.gradient} p-3 text-[#0f766e] ring-1 ring-white/60`}
                     >
                       <Icon size={22} />
                     </div>
 
                     <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">
-                      {campaign.audience.length} pacientes
+                      {campaign.key === "risco"
+                        ? "Comunicado geral"
+                        : `${campaign.audience.length} pacientes`}
                     </span>
                   </div>
 
@@ -892,21 +899,25 @@ export default function CampanhasInteligentesPage() {
                   </p>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-slate-50 p-3">
+                    <div className="rounded-2xl bg-[#fbffff] p-3">
                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                        Conversão
+                        {campaign.key === "risco" ? "Tipo" : "Conversão"}
                       </p>
-                      <p className="mt-1 font-black text-cyan-600">
-                        {campaign.estimatedConversion}%
+                      <p className="mt-1 font-black text-[#239d9a]">
+                        {campaign.key === "risco"
+                          ? "Manual"
+                          : `${campaign.estimatedConversion}%`}
                       </p>
                     </div>
 
-                    <div className="rounded-2xl bg-slate-50 p-3">
+                    <div className="rounded-2xl bg-[#fbffff] p-3">
                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                        Previsão
+                        {campaign.key === "risco" ? "Envio" : "Previsão"}
                       </p>
-                      <p className="mt-1 font-black text-emerald-600">
-                        {formatCurrency(campaign.estimatedRevenue)}
+                      <p className="mt-1 font-black text-emerald-700">
+                        {campaign.key === "risco"
+                          ? "WhatsApp"
+                          : formatCurrency(campaign.estimatedRevenue)}
                       </p>
                     </div>
                   </div>
@@ -917,9 +928,9 @@ export default function CampanhasInteligentesPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#d9eeee] bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
                 <Target size={22} />
               </div>
 
@@ -927,7 +938,7 @@ export default function CampanhasInteligentesPage() {
                 <h2 className="text-xl font-black text-slate-800">
                   Estratégia da campanha
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm font-semibold text-slate-500">
                   Orientação comercial sugerida.
                 </p>
               </div>
@@ -937,16 +948,16 @@ export default function CampanhasInteligentesPage() {
               {selectedCampaignData?.title}
             </h3>
 
-            <p className="mt-3 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            <p className="mt-3 rounded-2xl bg-[#fbffff] p-4 text-sm leading-6 text-slate-600">
               {selectedCampaignData?.strategy}
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-cyan-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">
+              <div className="rounded-2xl bg-[#eefafa] p-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#239d9a]">
                   Elegíveis
                 </p>
-                <p className="mt-1 text-2xl font-black text-cyan-700">
+                <p className="mt-1 text-2xl font-black text-[#239d9a]">
                   {selectedCampaignData?.audience.length || 0}
                 </p>
               </div>
@@ -962,9 +973,9 @@ export default function CampanhasInteligentesPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#d9eeee] bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
                 <CheckCircle2 size={22} />
               </div>
 
@@ -972,38 +983,38 @@ export default function CampanhasInteligentesPage() {
                 <h2 className="text-xl font-black text-slate-800">
                   Mensagem sugerida
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm font-semibold text-slate-500">
                   Use como base para WhatsApp assistido.
                 </p>
               </div>
             </div>
 
-            <pre className="whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+            <pre className="whitespace-pre-wrap rounded-2xl bg-[#fbffff] p-4 text-sm leading-6 text-slate-700">
               {selectedCampaignData?.message.replace("{nome}", "Paciente")}
             </pre>
           </div>
         </div>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="mt-8 rounded-2xl border border-[#d9eeee] bg-white p-6 shadow-sm">
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-black text-slate-800">
               Pacientes elegíveis
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm font-semibold text-slate-500">
               Lista ordenada por maior chance de fechamento e score comercial.
             </p>
           </div>
 
-          <div className="rounded-full bg-cyan-50 px-4 py-2 text-sm font-black text-cyan-700">
+          <div className="rounded-full bg-[#eefafa] px-4 py-2 text-sm font-black text-[#239d9a]">
             {selectedCampaignData?.audience.length || 0} pacientes
           </div>
         </div>
 
         {!selectedCampaignData || selectedCampaignData.audience.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-[#d9eeee] p-8 text-center">
+            <p className="text-sm font-semibold text-slate-500">
               Nenhum paciente elegível para esta campanha no momento.
             </p>
           </div>
@@ -1023,7 +1034,7 @@ export default function CampanhasInteligentesPage() {
               return (
                 <div
                   key={patient.id}
-                  className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 xl:grid-cols-[1fr_1.25fr_auto] xl:items-center"
+                  className="grid grid-cols-1 gap-3 rounded-2xl bg-[#fbffff] p-4 xl:grid-cols-[1fr_1.25fr_auto] xl:items-center"
                 >
                   <div>
                     <Link
@@ -1033,7 +1044,7 @@ export default function CampanhasInteligentesPage() {
                       {patient.name || "Paciente"}
                     </Link>
 
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm font-semibold text-slate-500">
                       Origem: {item.source || "Não informado"}
                     </p>
 
@@ -1060,7 +1071,7 @@ export default function CampanhasInteligentesPage() {
                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                         Fechamento
                       </p>
-                      <p className="font-black text-cyan-600">
+                      <p className="font-black text-[#239d9a]">
                         {item.closingChance}%
                       </p>
                     </div>
@@ -1082,7 +1093,7 @@ export default function CampanhasInteligentesPage() {
                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                         Pago
                       </p>
-                      <p className="font-black text-emerald-600">
+                      <p className="font-black text-emerald-700">
                         {formatCurrency(paidTotal)}
                       </p>
                     </div>
@@ -1103,7 +1114,7 @@ export default function CampanhasInteligentesPage() {
                         <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                           Orçamento aberto
                         </p>
-                        <p className="font-black text-cyan-600">
+                        <p className="font-black text-[#239d9a]">
                           {formatCurrency(openBudgetTotal)}
                         </p>
                       </div>
@@ -1113,7 +1124,7 @@ export default function CampanhasInteligentesPage() {
                   <div className="flex flex-col gap-2 sm:flex-row xl:flex-col">
                     <Link
                       href={`/pacientes/${patient.id}`}
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50"
+                      className="inline-flex items-center justify-center rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-[#f2fcfc]"
                     >
                       Prontuário
                     </Link>
