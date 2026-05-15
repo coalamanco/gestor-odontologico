@@ -846,7 +846,8 @@ export default function OrcamentoPage({
       if (itemsError) throw itemsError;
 
       alert("Orçamento salvo com sucesso.");
-      router.push(`/pacientes/${params.id}/orcamento?budgetId=${currentBudgetId}`);
+      resetForm();
+      router.push(`/pacientes/${params.id}/orcamento`);
       await loadData();
     } catch (error: any) {
       alert("Erro ao salvar orçamento: " + error.message);
@@ -1168,6 +1169,35 @@ export default function OrcamentoPage({
 
   const selectedBudget = budgets.find((b) => b.id === budgetId);
 
+  const pendingBudgets = budgets.filter(
+    (budget) => normalizeBudgetStatus(budget.status) !== "aprovado"
+  );
+
+  const approvedBudgets = budgets.filter(
+    (budget) => normalizeBudgetStatus(budget.status) === "aprovado"
+  );
+
+  const orderedBudgets = [...pendingBudgets, ...approvedBudgets];
+
+  const budgetStatusBadgeClass = (status?: string | null) => {
+    if (normalizeBudgetStatus(status) === "aprovado") {
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    }
+
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  };
+
+  const budgetStatusLabel = (status?: string | null) => {
+    if (normalizeBudgetStatus(status) === "aprovado") return "Aprovado";
+    return "Pendente";
+  };
+
+  const budgetCreatedDate = (budget: Budget) => {
+    return budget.created_at
+      ? new Date(budget.created_at).toLocaleDateString("pt-BR")
+      : "-";
+  };
+
   if (loading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -1479,113 +1509,158 @@ export default function OrcamentoPage({
         </div>
 
         <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-800 mb-3">
-            Orçamentos cadastrados
-          </h2>
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-black text-slate-800">
+                Orçamentos cadastrados
+              </h2>
+              <p className="text-sm text-slate-500">
+                Pendentes em destaque. Aprovados ficam como histórico do paciente.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-xs font-black">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">
+                Pendentes: {pendingBudgets.length}
+              </span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+                Aprovados: {approvedBudgets.length}
+              </span>
+            </div>
+          </div>
 
           {budgets.length === 0 && (
-            <p className="text-slate-500">Nenhum orçamento encontrado.</p>
+            <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-6 text-center text-sm text-slate-500">
+              Nenhum orçamento encontrado para este paciente.
+            </div>
           )}
 
-          <div className="space-y-3">
-            {budgets.map((budget) => (
-              <div
-                key={budget.id}
-                className="border border-[#e3f2f2] rounded-xl p-4 flex flex-col gap-3 bg-[#fbffff]"
-              >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <div className="font-semibold text-slate-800">Orçamento</div>
-                    <div className="text-sm text-slate-600">
-                      Criado em{" "}
-                      {budget.created_at
-                        ? new Date(budget.created_at).toLocaleDateString("pt-BR")
-                        : "-"}
+          <div className="space-y-2">
+            {orderedBudgets.map((budget) => {
+              const isApproved = normalizeBudgetStatus(budget.status) === "aprovado";
+              const isSelected = selectedBudget?.id === budget.id;
+
+              return (
+                <div
+                  key={budget.id}
+                  className={`rounded-2xl border p-3 transition ${
+                    isSelected
+                      ? "border-[#1db7b3] bg-white shadow-sm"
+                      : isApproved
+                        ? "border-[#e8f2f2] bg-white/70 opacity-85"
+                        : "border-[#d9eeee] bg-[#fbffff] hover:bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-black text-slate-800">
+                          Orçamento de {budgetCreatedDate(budget)}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${budgetStatusBadgeClass(
+                            budget.status
+                          )}`}
+                        >
+                          {budgetStatusLabel(budget.status)}
+                        </span>
+                      </div>
+
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                        <span>
+                          Total: <strong className="text-slate-800">{formatCurrency(parseMoney(budget.total))}</strong>
+                        </span>
+                        <span>Entrada: {formatCurrency(parseMoney(budget.entry_value))}</span>
+                        <span>{budget.installments || 1} parcela(s)</span>
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-600">
-                      Subtotal: {formatCurrency(parseMoney(budget.subtotal))}
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      Total: {formatCurrency(parseMoney(budget.total))}
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      Entrada: {formatCurrency(parseMoney(budget.entry_value))} {budget.entry_value ? `(${budget.entry_status === "pendente" ? "pendente" : "paga"})` : ""}
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      Parcelas do saldo: {budget.installments || 1}
+
+                    <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                      <Link
+                        href={`/pacientes/${params.id}/orcamento?budgetId=${budget.id}`}
+                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-[#f7ffff]"
+                      >
+                        Abrir
+                      </Link>
+
+                      <Link
+                        href={`/print/orcamento/${budget.id}`}
+                        target="_blank"
+                        className="rounded-xl border border-[#bde8e7] bg-[#eefafa] px-3 py-2 text-sm font-black text-[#239d9a] hover:bg-[#dff5f4]"
+                      >
+                        PDF
+                      </Link>
+
+                      {!isApproved && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => confirmApproveBudget(budget)}
+                            disabled={approvingBudgetId === budget.id}
+                            className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                          >
+                            {approvingBudgetId === budget.id ? "Aprovando..." : "Aprovar"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteBudget(budget)}
+                            disabled={deletingBudgetId === budget.id}
+                            className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                          >
+                            {deletingBudgetId === budget.id ? "Excluindo..." : "Excluir"}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
-
-                  <div className="text-sm font-medium text-slate-700">
-                    {budget.status || "pendente"}
-                  </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    href={`/pacientes/${params.id}/orcamento?budgetId=${budget.id}`}
-                    className="px-4 py-2 rounded-xl border border-[#d9eeee] text-sm bg-white"
-                  >
-                    Abrir
-                  </Link>
-
-                  <Link
-                    href={`/print/orcamento/${budget.id}`}
-                    target="_blank"
-                    className="px-4 py-2 rounded-xl border border-[#bde8e7] bg-[#eefafa] text-sm font-bold text-[#239d9a] hover:bg-[#dff5f4]"
-                  >
-                    Imprimir / PDF
-                  </Link>
-
-                  {normalizeBudgetStatus(budget.status) !== "aprovado" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => confirmApproveBudget(budget)}
-                        disabled={approvingBudgetId === budget.id}
-                        className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-60"
-                      >
-                        {approvingBudgetId === budget.id
-                          ? "Aprovando..."
-                          : "Aprovar"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => deleteBudget(budget)}
-                        disabled={deletingBudgetId === budget.id}
-                        className="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-60"
-                      >
-                        {deletingBudgetId === budget.id
-                          ? "Excluindo..."
-                          : "Excluir"}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {selectedBudget && (
           <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
-            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <h2 className="text-lg font-bold text-slate-800">
-                Itens do orçamento
-              </h2>
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-black text-slate-800">
+                    Itens do orçamento aberto
+                  </h2>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${budgetStatusBadgeClass(
+                      selectedBudget.status
+                    )}`}
+                  >
+                    {budgetStatusLabel(selectedBudget.status)}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500">
+                  Exibindo apenas o orçamento selecionado na lista.
+                </p>
+              </div>
 
-              <Link
-                href={`/print/orcamento/${selectedBudget.id}`}
-                target="_blank"
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-95"
-              >
-                Imprimir orçamento premium
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/print/orcamento/${selectedBudget.id}`}
+                  target="_blank"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-95"
+                >
+                  Imprimir orçamento premium
+                </Link>
+
+                <Link
+                  href={`/pacientes/${params.id}/orcamento`}
+                  className="inline-flex items-center justify-center rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-[#f7ffff]"
+                >
+                  Fechar detalhes
+                </Link>
+              </div>
             </div>
 
             {budgetItems.length === 0 && (
-              <p className="text-sm text-slate-500">
+              <p className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-sm text-slate-500">
                 Nenhum item encontrado neste orçamento.
               </p>
             )}
@@ -1594,30 +1669,38 @@ export default function OrcamentoPage({
               {budgetItems.map((item) => (
                 <div
                   key={item.id}
-                  className="border border-[#e3f2f2] rounded-xl p-3 bg-[#fbffff] text-sm text-slate-700"
+                  className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3 text-sm text-slate-700"
                 >
-                  <div className="font-semibold text-slate-800">
-                    {item.procedure_name || item.treatment_name || "Procedimento"}
-                  </div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0">
+                      <div className="font-black text-slate-800">
+                        {item.procedure_name || item.treatment_name || "Procedimento"}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[#168f8d]">
+                        {item.tooth && (
+                          <span className="rounded-full bg-[#e9fbfb] px-2 py-1">
+                            Dente {item.tooth}
+                          </span>
+                        )}
+                        {item.face && (
+                          <span className="rounded-full bg-[#e9fbfb] px-2 py-1">
+                            Face(s) {item.face}
+                          </span>
+                        )}
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                          Qtd. {item.quantity || 1}
+                        </span>
+                      </div>
+                    </div>
 
-                  {item.tooth && (
-                    <div className="text-slate-600">Dente: {item.tooth}</div>
-                  )}
-
-                  {item.face && (
-                    <div className="text-slate-600">Face(s): {item.face}</div>
-                  )}
-
-                  <div className="text-slate-600">
-                    Quantidade: {item.quantity || 1}
-                  </div>
-
-                  <div className="text-slate-600">
-                    Valor unitário: {formatCurrency(parseMoney(item.unit_price))}
-                  </div>
-
-                  <div className="text-slate-600">
-                    Valor total: {formatCurrency(parseMoney(item.total || item.amount))}
+                    <div className="text-left md:text-right">
+                      <div className="text-xs text-slate-500">
+                        Unitário: {formatCurrency(parseMoney(item.unit_price))}
+                      </div>
+                      <div className="text-sm font-black text-slate-800">
+                        {formatCurrency(parseMoney(item.total || item.amount))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
