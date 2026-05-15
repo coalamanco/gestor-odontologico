@@ -1511,7 +1511,7 @@ export default function OrcamentoPage({
         <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-lg font-black text-slate-800">
+              <h2 className="text-[17px] font-bold text-slate-800">
                 Orçamentos cadastrados
               </h2>
               <p className="text-sm text-slate-500">
@@ -1520,10 +1520,10 @@ export default function OrcamentoPage({
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs font-black">
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-amber-700">
                 Pendentes: {pendingBudgets.length}
               </span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-emerald-700">
                 Aprovados: {approvedBudgets.length}
               </span>
             </div>
@@ -1543,7 +1543,7 @@ export default function OrcamentoPage({
               return (
                 <div
                   key={budget.id}
-                  className={`rounded-2xl border p-3 transition ${
+                  className={`rounded-2xl border px-3 py-2.5 transition ${
                     isSelected
                       ? "border-[#1db7b3] bg-white shadow-sm"
                       : isApproved
@@ -1554,11 +1554,11 @@ export default function OrcamentoPage({
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-black text-slate-800">
+                        <span className="text-sm font-semibold text-slate-800">
                           Orçamento de {budgetCreatedDate(budget)}
                         </span>
                         <span
-                          className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${budgetStatusBadgeClass(
+                          className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-normal ${budgetStatusBadgeClass(
                             budget.status
                           )}`}
                         >
@@ -1578,7 +1578,7 @@ export default function OrcamentoPage({
                     <div className="flex flex-wrap items-center gap-2 md:justify-end">
                       <Link
                         href={`/pacientes/${params.id}/orcamento?budgetId=${budget.id}`}
-                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-[#f7ffff]"
+                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-[#f7ffff]"
                       >
                         Abrir
                       </Link>
@@ -1597,7 +1597,7 @@ export default function OrcamentoPage({
                             type="button"
                             onClick={() => confirmApproveBudget(budget)}
                             disabled={approvingBudgetId === budget.id}
-                            className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                            className="rounded-xl bg-emerald-600 px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
                           >
                             {approvingBudgetId === budget.id ? "Aprovando..." : "Aprovar"}
                           </button>
@@ -1606,7 +1606,7 @@ export default function OrcamentoPage({
                             type="button"
                             onClick={() => deleteBudget(budget)}
                             disabled={deletingBudgetId === budget.id}
-                            className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                            className="rounded-xl bg-rose-600 px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
                           >
                             {deletingBudgetId === budget.id ? "Excluindo..." : "Excluir"}
                           </button>
@@ -1625,11 +1625,11 @@ export default function OrcamentoPage({
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-bold text-slate-800">
                     Itens do orçamento aberto
                   </h2>
                   <span
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${budgetStatusBadgeClass(
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-normal ${budgetStatusBadgeClass(
                       selectedBudget.status
                     )}`}
                   >
@@ -1652,7 +1652,7 @@ export default function OrcamentoPage({
 
                 <Link
                   href={`/pacientes/${params.id}/orcamento`}
-                  className="inline-flex items-center justify-center rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-[#f7ffff]"
+                  className="inline-flex items-center justify-center rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-[#f7ffff]"
                 >
                   Fechar detalhes
                 </Link>
@@ -1697,7 +1697,7 @@ export default function OrcamentoPage({
                       <div className="text-xs text-slate-500">
                         Unitário: {formatCurrency(parseMoney(item.unit_price))}
                       </div>
-                      <div className="text-sm font-black text-slate-800">
+                      <div className="text-sm font-semibold text-slate-800">
                         {formatCurrency(parseMoney(item.total || item.amount))}
                       </div>
                     </div>
