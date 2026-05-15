@@ -4919,37 +4919,36 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
         )}
 
         {activeTab === "tratamentos" && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5 xl:col-span-2">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,0.9fr)] gap-4">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
+              <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">
+                  <h2 className="text-base font-black text-slate-800">
                     Tratamentos em andamento
                   </h2>
-                  <p className="text-sm text-slate-500">
-                    Procedimentos aprovados que ainda não foram finalizados.
+                  <p className="text-xs text-slate-500 md:text-sm">
+                    Lista compacta dos procedimentos aprovados ainda não finalizados.
                   </p>
+                </div>
 
-                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                    <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">
-                      Pendentes: {treatmentSummary.pendentes}
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-700 font-semibold">
-                      Em atendimento: {treatmentSummary.emAtendimento}
-                    </span>
-                  </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-amber-50 px-3 py-1 font-bold text-amber-700 ring-1 ring-amber-100">
+                    Pendentes: {treatmentSummary.pendentes}
+                  </span>
+                  <span className="rounded-full bg-sky-50 px-3 py-1 font-bold text-sky-700 ring-1 ring-sky-100">
+                    Em atendimento: {treatmentSummary.emAtendimento}
+                  </span>
                 </div>
               </div>
 
               <div className="space-y-2.5">
                 {activeTreatments.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-center">
-                    <p className="text-sm text-slate-500">
+                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-center">
+                    <p className="text-sm font-bold text-slate-700">
                       Nenhum tratamento em andamento.
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Quando um tratamento for finalizado, sua evolução ficará
-                      na linha do tempo.
+                    <p className="mt-1 text-xs text-slate-500">
+                      Quando um tratamento for finalizado, sua evolução ficará na linha do tempo.
                     </p>
                   </div>
                 )}
@@ -4958,142 +4957,138 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                   const notesForTreatment =
                     treatmentNotesByTreatment[treatment.id] || [];
 
+                  const treatmentName =
+                    treatment.procedure_name ||
+                    treatment.treatment_name ||
+                    treatment.title ||
+                    "Tratamento";
+
+                  const createdAtLabel = treatment.created_at
+                    ? new Date(treatment.created_at).toLocaleDateString("pt-BR")
+                    : "-";
+
+                  const completedAtLabel = treatment.completed_at
+                    ? new Date(treatment.completed_at).toLocaleDateString("pt-BR")
+                    : null;
+
                   return (
                     <div
                       key={treatment.id}
-                      className={`border rounded-xl p-3 space-y-2.5 ${
+                      className={`rounded-2xl border px-3 py-3 transition hover:border-[#bde8e7] md:px-4 ${
                         treatment.status === "finalizado"
-                          ? "bg-slate-50 opacity-70"
-                          : "bg-white shadow-sm border-[#d9eeee]"
+                          ? "border-slate-200 bg-slate-50 opacity-80"
+                          : "border-[#d9eeee] bg-white shadow-sm"
                       }`}
                     >
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                        <div className="space-y-1.5">
-                          <div className="font-semibold text-slate-800 text-sm leading-tight">
-                            {treatment.procedure_name ||
-                              treatment.treatment_name ||
-                              treatment.title ||
-                              "Tratamento"}
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-black leading-snug text-slate-800 md:text-[15px]">
+                              {treatmentName}
+                            </h3>
+
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${treatmentStatusColor(
+                                treatment.status,
+                              )}`}
+                            >
+                              {treatment.status || "pendente"}
+                            </span>
                           </div>
 
                           {treatment.treatment_name &&
                             treatment.procedure_name &&
                             treatment.treatment_name !==
                               treatment.procedure_name && (
-                              <div className="text-sm text-slate-600">
-                                Plano/tratamento: {treatment.treatment_name}
-                              </div>
+                              <p className="mt-1 text-xs font-semibold text-slate-500">
+                                Plano: {treatment.treatment_name}
+                              </p>
                             )}
 
-                          <div className="flex flex-wrap gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
                             {treatment.tooth && (
-                              <span className="px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium">
-                                Dente: {treatment.tooth}
+                              <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 font-bold text-cyan-700">
+                                Dente {treatment.tooth}
                               </span>
                             )}
 
                             {treatment.face && (
-                              <span className="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">
-                                Face: {treatment.face}
+                              <span className="rounded-full bg-teal-50 px-2.5 py-0.5 font-bold text-teal-700">
+                                Face {treatment.face}
                               </span>
                             )}
-                          </div>
 
-                          <div className="flex flex-wrap gap-3 text-xs text-slate-600">
-                            <span>Qtd: {treatment.quantity || 1}</span>
-                            <span>
-                              Valor:{" "}
+                            <span>Qtd. {treatment.quantity || 1}</span>
+                            <span className="font-bold text-slate-700">
                               {formatCurrency(parseMoney(treatment.total))}
                             </span>
-                          </div>
-
-                          {treatment.created_at && (
-                            <div className="text-xs text-slate-500">
-                              Criado em:{" "}
-                              {new Date(
-                                treatment.created_at,
-                              ).toLocaleDateString("pt-BR")}
-                            </div>
-                          )}
-
-                          {treatment.completed_at && (
-                            <div className="text-xs text-slate-500">
-                              Finalizado em:{" "}
-                              {new Date(
-                                treatment.completed_at,
-                              ).toLocaleDateString("pt-BR")}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col items-start md:items-end gap-2">
-                          <span
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${treatmentStatusColor(
-                              treatment.status,
-                            )}`}
-                          >
-                            {treatment.status || "pendente"}
-                          </span>
-
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openEvolutionModal(treatment)}
-                              className="bg-white border border-[#d9eeee] text-[#239d9a] px-3 py-1.5 rounded-lg text-xs font-medium"
-                            >
-                              Evolução
-                            </button>
-
-                            {treatment.status !== "finalizado" && (
-                              <button
-                                type="button"
-                                onClick={() => openFinalizeModal(treatment)}
-                                className="bg-[#239d9a] text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-                              >
-                                Finalizar
-                              </button>
+                            <span>Criado em {createdAtLabel}</span>
+                            {completedAtLabel && (
+                              <span>Finalizado em {completedAtLabel}</span>
                             )}
                           </div>
+                        </div>
+
+                        <div className="flex shrink-0 flex-row flex-wrap gap-2 lg:justify-end">
+                          <button
+                            type="button"
+                            onClick={() => openEvolutionModal(treatment)}
+                            className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-xs font-bold text-[#239d9a] hover:bg-[#f7ffff]"
+                          >
+                            Evolução
+                          </button>
+
+                          {treatment.status !== "finalizado" && (
+                            <button
+                              type="button"
+                              onClick={() => openFinalizeModal(treatment)}
+                              className="rounded-xl bg-[#239d9a] px-3 py-2 text-xs font-bold text-white shadow-sm hover:brightness-95"
+                            >
+                              Finalizar
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      <div className="border-t pt-3 space-y-2">
-                        <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                          Evoluções do tratamento
-                        </h3>
-
-                        <div className="space-y-2">
-                          {notesForTreatment.length === 0 && (
-                            <p className="text-sm text-slate-500">
-                              Nenhuma evolução registrada para este tratamento.
-                            </p>
-                          )}
-
-                          {notesForTreatment.map((note) => (
-                            <div
-                              key={note.id}
-                              className="bg-[#fbffff] border border-[#e3f2f2] rounded-lg p-3"
-                            >
-                              <div className="text-xs text-slate-500">
-                                {note.created_at
-                                  ? new Date(
-                                      note.created_at,
-                                    ).toLocaleDateString("pt-BR")
-                                  : "-"}
-                              </div>
-
-                              {note.title && (
-                                <div className="font-semibold text-sm text-slate-800">
-                                  {note.title}
-                                </div>
-                              )}
-
-                              <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                {note.content}
-                              </div>
+                      <div className="mt-3 border-t border-[#edf7f7] pt-2">
+                        {notesForTreatment.length === 0 ? (
+                          <p className="text-xs text-slate-400">
+                            Sem evolução registrada neste tratamento.
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                              Evoluções registradas
                             </div>
-                          ))}
-                        </div>
+
+                            {notesForTreatment.map((note) => (
+                              <div
+                                key={note.id}
+                                className="rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-3"
+                              >
+                                <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
+                                  {note.title && (
+                                    <span className="font-black text-slate-800">
+                                      {note.title}
+                                    </span>
+                                  )}
+
+                                  <span className="text-slate-400">
+                                    {note.created_at
+                                      ? new Date(
+                                          note.created_at,
+                                        ).toLocaleDateString("pt-BR")
+                                      : "-"}
+                                  </span>
+                                </div>
+
+                                <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+                                  {note.content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -5101,30 +5096,29 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </div>
             </div>
 
-            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5 xl:col-span-1">
-              <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
+              <div className="mb-3 flex items-start justify-between gap-2">
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">
-                    Evolução do tratamento
+                  <h2 className="text-base font-black text-slate-800">
+                    Evolução clínica
                   </h2>
-                  <p className="text-sm text-slate-500">
-                    Linha do tempo clínica deste paciente.
+                  <p className="text-xs text-slate-500 md:text-sm">
+                    Linha do tempo resumida deste paciente.
                   </p>
                 </div>
               </div>
 
               <div className="max-h-[720px] overflow-y-auto pr-1">
                 {clinicalTimeline.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-6 text-center">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#eefafa] text-sm font-black text-[#239d9a]">
+                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-5 text-center">
+                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#eefafa] text-sm font-black text-[#239d9a]">
                       +
                     </div>
                     <p className="text-sm font-bold text-slate-700">
                       Nenhuma evolução registrada.
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      As evoluções clínicas aparecerão aqui por data, sem
-                      misturar orçamento ou financeiro.
+                      As evoluções clínicas aparecerão aqui por data.
                     </p>
                   </div>
                 )}
@@ -5132,15 +5126,15 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 {groupedClinicalTimeline.map((group) => (
                   <div
                     key={group.dateLabel}
-                    className="relative pb-5 last:pb-0"
+                    className="relative pb-4 last:pb-0"
                   >
-                    <div className="sticky top-0 z-10 mb-3 bg-white/90 py-1 backdrop-blur">
+                    <div className="sticky top-0 z-10 mb-2 bg-white/90 py-1 backdrop-blur">
                       <span className="inline-flex rounded-full border border-[#d9eeee] bg-[#f7ffff] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a] shadow-sm">
                         {group.dateLabel}
                       </span>
                     </div>
 
-                    <div className="relative space-y-3 pl-5 before:absolute before:left-[7px] before:top-1 before:h-[calc(100%-0.25rem)] before:w-px before:bg-[#d8eeee]">
+                    <div className="relative space-y-2.5 pl-4 before:absolute before:left-[6px] before:top-1 before:h-[calc(100%-0.25rem)] before:w-px before:bg-[#d8eeee]">
                       {group.items.map((item) => {
                         const lines = String(item.content || "")
                           .split("\n")
@@ -5196,19 +5190,19 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                         return (
                           <article
                             key={item.id}
-                            className="group relative rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-4 shadow-sm transition hover:border-[#bde8e7] hover:bg-white"
+                            className="group relative rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3 shadow-sm transition hover:border-[#bde8e7] hover:bg-white"
                           >
-                            <div className="absolute -left-[18px] top-5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#239d9a] shadow-sm ring-2 ring-[#c8eeee]" />
+                            <div className="absolute -left-[15px] top-4 h-3 w-3 rounded-full border-2 border-white bg-[#239d9a] shadow-sm ring-2 ring-[#c8eeee]" />
 
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                              <div className="min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="text-sm font-black text-slate-800">
+                                  <h3 className="text-sm font-black leading-snug text-slate-800">
                                     {procedureLine}
                                   </h3>
 
                                   {isFinished && (
-                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-700">
                                       Finalizado
                                     </span>
                                   )}
@@ -5223,7 +5217,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                                   )}
                               </div>
 
-                              <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-[#e8f5f5]">
+                              <div className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-[#e8f5f5]">
                                 {item.date
                                   ? new Date(item.date).toLocaleTimeString(
                                       "pt-BR",
@@ -5237,7 +5231,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             </div>
 
                             {descriptionLines.length > 0 && (
-                              <div className="mt-3 rounded-xl border border-[#edf7f7] bg-white/70 p-3 text-sm leading-relaxed text-slate-600">
+                              <div className="mt-2 rounded-xl border border-[#edf7f7] bg-white/70 p-2.5 text-sm leading-relaxed text-slate-600">
                                 {descriptionLines.map((line, index) => (
                                   <p key={`${item.id}-line-${index}`}>{line}</p>
                                 ))}
@@ -5245,7 +5239,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             )}
 
                             {(professionalLine || dateLine) && (
-                              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
+                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
                                 {professionalLine && (
                                   <span className="rounded-full bg-[#eefafa] px-2.5 py-1 text-[#239d9a]">
                                     {professionalLine.replace(
