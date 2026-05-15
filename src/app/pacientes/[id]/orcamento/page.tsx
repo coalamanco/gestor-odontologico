@@ -110,7 +110,7 @@ function ToothIcon({
   selected: boolean;
 }) {
   return (
-    <svg viewBox="0 0 80 120" className="w-12 h-16">
+    <svg viewBox="0 0 80 120" className="w-10 h-14">
       {upper ? (
         <path
           d="M20 12
@@ -125,7 +125,7 @@ function ToothIcon({
              C12 38, 10 22, 20 12Z"
           fill={selected ? "#d5f5f4" : "#ffffff"}
           stroke={selected ? "#1db7b3" : "#cbd5e1"}
-          strokeWidth="3"
+          strokeWidth="2.4"
         />
       ) : (
         <path
@@ -139,7 +139,7 @@ function ToothIcon({
              C12 44, 12 26, 20 18Z"
           fill={selected ? "#d5f5f4" : "#ffffff"}
           stroke={selected ? "#1db7b3" : "#cbd5e1"}
-          strokeWidth="3"
+          strokeWidth="2.4"
         />
       )}
     </svg>
@@ -161,8 +161,8 @@ function FaceChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border text-[10px] font-bold transition ${
-        compact ? "px-1.5 py-0.5 min-w-[24px]" : "px-2 py-1"
+      className={`rounded-full border text-[9px] font-semibold transition ${
+        compact ? "px-1.5 py-0.5 min-w-[22px]" : "px-2 py-0.5"
       } ${
         active
           ? "bg-[#1db7b3] text-white border-[#1db7b3]"
@@ -206,16 +206,16 @@ function ToothPicker({
 
   return (
     <div
-      className={`flex flex-col items-center gap-2 rounded-2xl border p-2 transition ${
+      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-1.5 transition ${
         selected
-          ? "border-[#1db7b3] bg-[#f5ffff] shadow-sm"
-          : "border-[#d9eeee] bg-white hover:bg-[#fbffff]"
+          ? "border-[#7cd8d6] bg-[#f6ffff] shadow-sm"
+          : "border-[#e1f1f1] bg-white hover:bg-[#fbffff]"
       }`}
     >
       <button
         type="button"
         onClick={() => onSelectTooth(tooth)}
-        className={`text-base font-black leading-none ${
+        className={`text-[13px] font-bold leading-none ${
           selected ? "text-[#1b8f8d]" : "text-slate-800"
         }`}
       >
@@ -313,9 +313,9 @@ function OdontogramaProfissional({
   };
 
   return (
-    <div className="bg-white border border-[#d9eeee] rounded-2xl overflow-hidden">
-      <div className="border-b border-[#e8f5f5] px-4 py-3 flex items-center justify-between">
-        <div className="text-sm font-semibold text-slate-700">
+    <div className="bg-white border border-[#d9eeee] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(15,118,110,0.04)]">
+      <div className="border-b border-[#e8f5f5] px-4 py-2.5 flex items-center justify-between">
+        <div className="text-[13px] font-semibold text-slate-700">
           Selecionar Dente/Região
         </div>
         <button
@@ -328,11 +328,11 @@ function OdontogramaProfissional({
       </div>
 
       <div className="px-4 pt-2 border-b border-[#eef6f6]">
-        <div className="flex gap-6 text-sm">
+        <div className="flex gap-5 text-xs">
           <button
             type="button"
             onClick={() => setTab("permanentes")}
-            className={`pb-3 border-b-2 font-semibold ${
+            className={`pb-2.5 border-b-2 font-semibold ${
               tab === "permanentes"
                 ? "border-[#1db7b3] text-[#1b8f8d]"
                 : "border-transparent text-slate-500"
@@ -344,7 +344,7 @@ function OdontogramaProfissional({
           <button
             type="button"
             onClick={() => setTab("deciduos")}
-            className={`pb-3 border-b-2 font-semibold ${
+            className={`pb-2.5 border-b-2 font-semibold ${
               tab === "deciduos"
                 ? "border-[#1db7b3] text-[#1b8f8d]"
                 : "border-transparent text-slate-500"
@@ -356,7 +356,7 @@ function OdontogramaProfissional({
           <button
             type="button"
             onClick={() => setTab("hof")}
-            className={`pb-3 border-b-2 font-semibold ${
+            className={`pb-2.5 border-b-2 font-semibold ${
               tab === "hof"
                 ? "border-[#1db7b3] text-[#1b8f8d]"
                 : "border-transparent text-slate-500"
@@ -372,11 +372,11 @@ function OdontogramaProfissional({
           Nesta etapa deixei funcional a arcada <strong>permanente</strong>, que é a usada no fluxo principal.
         </div>
       ) : (
-        <div className="p-4 space-y-6">
+        <div className="p-3.5 space-y-4">
           <div className="overflow-x-auto">
-            <div className="min-w-[980px] space-y-8">
-              <div className="grid grid-cols-2 gap-8 items-start">
-                <div className="grid grid-cols-8 gap-2">
+            <div className="min-w-[900px] space-y-5">
+              <div className="grid grid-cols-2 gap-5 items-start">
+                <div className="grid grid-cols-8 gap-1.5">
                   {superioresEsquerda.map((tooth) => (
                     <ToothPicker
                       key={tooth}
@@ -390,7 +390,7 @@ function OdontogramaProfissional({
                   ))}
                 </div>
 
-                <div className="grid grid-cols-8 gap-2">
+                <div className="grid grid-cols-8 gap-1.5">
                   {superioresDireita.map((tooth) => (
                     <ToothPicker
                       key={tooth}
@@ -407,8 +407,8 @@ function OdontogramaProfissional({
 
               <div className="border-t border-dashed border-[#d9eeee]" />
 
-              <div className="grid grid-cols-2 gap-8 items-start">
-                <div className="grid grid-cols-8 gap-2">
+              <div className="grid grid-cols-2 gap-5 items-start">
+                <div className="grid grid-cols-8 gap-1.5">
                   {inferioresEsquerda.map((tooth) => (
                     <ToothPicker
                       key={tooth}
@@ -422,7 +422,7 @@ function OdontogramaProfissional({
                   ))}
                 </div>
 
-                <div className="grid grid-cols-8 gap-2">
+                <div className="grid grid-cols-8 gap-1.5">
                   {inferioresDireita.map((tooth) => (
                     <ToothPicker
                       key={tooth}
@@ -439,12 +439,12 @@ function OdontogramaProfissional({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {["Maxila", "Mandíbula", "Face", "Arcada superior", "Arcada inferior", "Arcadas"].map(
               (label) => (
                 <span
                   key={label}
-                  className="px-4 py-2 rounded-full border border-[#d9eeee] bg-[#fbffff] text-sm text-slate-700"
+                  className="px-3 py-1.5 rounded-full border border-[#d9eeee] bg-[#fbffff] text-xs text-slate-600"
                 >
                   {label}
                 </span>
@@ -452,7 +452,7 @@ function OdontogramaProfissional({
             )}
           </div>
 
-          <div className="rounded-xl bg-[#f7ffff] border border-[#d9eeee] px-4 py-3 text-sm text-slate-700">
+          <div className="rounded-xl bg-[#f7ffff] border border-[#d9eeee] px-3 py-2.5 text-xs text-slate-600">
             Dente selecionado:{" "}
             <span className="font-bold text-slate-900">{draftItem.tooth || "-"}</span>
             {" "}• Face(s):{" "}
@@ -1327,7 +1327,7 @@ export default function OrcamentoPage({
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 rounded-2xl border border-[#e4f3f3] bg-white/80 p-2 shadow-[0_8px_24px_rgba(15,118,110,0.035)]">
             <OdontogramaNovo
               key={odontogramResetKey}
               draftItem={draftItem}
@@ -1678,16 +1678,16 @@ export default function OrcamentoPage({
                       </div>
                       <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[#168f8d]">
                         {item.tooth && (
-                          <span className="rounded-full bg-[#e9fbfb] px-2 py-1">
+                          <span className="rounded-full bg-[#e9fbfb] px-2 py-0.5">
                             Dente {item.tooth}
                           </span>
                         )}
                         {item.face && (
-                          <span className="rounded-full bg-[#e9fbfb] px-2 py-1">
+                          <span className="rounded-full bg-[#e9fbfb] px-2 py-0.5">
                             Face(s) {item.face}
                           </span>
                         )}
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
                           Qtd. {item.quantity || 1}
                         </span>
                       </div>
