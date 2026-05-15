@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { createClinicalFollowupsForProtocol } from "@/lib/clinicalCRM";
-import PatientSmartInsights from "@/components/PatientSmartInsights";
 import {
   calculatePatientCrmScore,
   normalizePatientSource,
@@ -4472,39 +4471,27 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
   return (
     <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-1.5 pb-28 sm:p-3 md:p-6">
       <div className="mx-auto max-w-7xl space-y-2.5 pb-28 md:space-y-4 md:pb-24">
-        <div className="flex flex-col gap-3 rounded-[1.15rem] border border-[#d8eeee] bg-white p-2.5 shadow-sm md:flex-row md:items-start md:justify-between md:p-5">
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dfeff0] text-lg font-semibold text-[#5f7f84] md:h-20 md:w-20 md:text-2xl">
+        <div className="flex flex-col gap-3 rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between md:p-4">
+          <div className="flex min-w-0 items-center gap-3 md:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#dfeff0] text-base font-black text-[#5f7f84] md:h-16 md:w-16 md:text-xl">
               {patient.name?.charAt(0)?.toUpperCase() || "P"}
             </div>
 
-            <div>
-              <h1 className="text-base font-black leading-tight text-slate-800 md:text-3xl">
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-black leading-tight text-slate-900 md:text-3xl">
                 {patient.name}
               </h1>
 
-              <div className="mt-0.5 space-y-0.5 text-[11px] text-slate-600 md:mt-2 md:space-y-1 md:text-sm">
-                {patient.phone && <p>{patient.phone}</p>}
-                {patient.cpf && <p>CPF: {patient.cpf}</p>}
-                {(patient.patient_source ||
-                  patient.referral_name ||
-                  patient.origin_city) && (
-                  <p>
-                    Origem: {patient.patient_source || "Não informado"}
-                    {patient.referral_name
-                      ? ` • Indicação/campanha: ${patient.referral_name}`
-                      : ""}
-                    {patient.origin_city
-                      ? ` • ${patient.origin_city}${patient.origin_state ? `/${patient.origin_state}` : ""}`
-                      : ""}
-                  </p>
-                )}
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-slate-500 md:text-sm">
+                {patient.phone && <span>{patient.phone}</span>}
+                {patient.cpf && <span>CPF: {patient.cpf}</span>}
+                <span>{patient.plan || "Particular"}</span>
               </div>
 
               {(patient.allergies ||
                 patient.health_alert ||
                 patient.medical_alert) && (
-                <div className="mt-2 inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 md:mt-3 md:px-3 md:text-sm">
+                <div className="mt-2 inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 md:px-3">
                   Alerta clínico:{" "}
                   {patient.allergies ||
                     patient.health_alert ||
@@ -4627,13 +4614,6 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </h2>
 
               <div className="grid grid-cols-1 gap-y-2 gap-x-4 text-sm md:grid-cols-2 md:gap-y-3 md:gap-x-6">
-                <div>
-                  <div className="text-slate-500">Nome</div>
-                  <div className="text-slate-800 font-medium">
-                    {patient.name || "-"}
-                  </div>
-                </div>
-
                 <div>
                   <div className="text-slate-500">CPF</div>
                   <div className="text-slate-800 font-medium">
@@ -4768,15 +4748,60 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
             </div>
 
             <div className="space-y-4">
-              <PatientSmartInsights
-                patientName={smartInsights.patientName}
-                source={smartInsights.source}
-                vipLevel={smartInsights.vipLevel}
-                closingChance={smartInsights.closingChance}
-                abandonmentRisk={smartInsights.abandonmentRisk}
-                financialPotential={smartInsights.financialPotential}
-                lastCRMContact={smartInsights.lastCRMContact}
-              />
+              <div className="rounded-[1.15rem] border border-[#d8eeee] bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">
+                      Inteligência comercial
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Resumo automático sem repetir os dados do cabeçalho.
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
+                    IA
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Fechamento
+                    </div>
+                    <div className="mt-1 text-lg font-black text-slate-900">
+                      {smartInsights.closingChance}%
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Risco
+                    </div>
+                    <div className="mt-1 text-sm font-black text-slate-900">
+                      {smartInsights.abandonmentRisk}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      VIP
+                    </div>
+                    <div className="mt-1 text-sm font-black text-slate-900">
+                      {smartInsights.vipLevel}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Origem
+                    </div>
+                    <div className="mt-1 truncate text-sm font-black text-slate-900">
+                      {smartInsights.source}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
                 <div className="flex flex-col gap-4">
