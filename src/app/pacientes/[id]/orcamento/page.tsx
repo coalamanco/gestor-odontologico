@@ -321,7 +321,7 @@ function OdontogramaProfissional({
         <button
           type="button"
           onClick={clearSelection}
-          className="text-sm text-slate-500 hover:text-slate-700"
+          className="text-[13px] text-slate-500 hover:text-slate-700"
         >
           Limpar seleção
         </button>
@@ -368,7 +368,7 @@ function OdontogramaProfissional({
       </div>
 
       {tab !== "permanentes" ? (
-        <div className="p-8 text-center text-sm text-slate-500">
+        <div className="p-8 text-center text-[13px] text-slate-500">
           Nesta etapa deixei funcional a arcada <strong>permanente</strong>, que é a usada no fluxo principal.
         </div>
       ) : (
@@ -1205,9 +1205,9 @@ export default function OrcamentoPage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-6 overflow-y-auto">
       <div className="max-w-7xl mx-auto space-y-4 pb-24">
-        <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
+        <div className="bg-white border border-[#d9eeee] rounded-2xl p-4 shadow-sm">
           <div className="flex items-center justify-between gap-4 mb-4">
-            <h1 className="text-2xl font-black text-slate-800">
+            <h1 className="text-xl font-bold text-slate-800">
               Orçamentos do paciente
             </h1>
 
@@ -1215,7 +1215,7 @@ export default function OrcamentoPage({
               <button
                 type="button"
                 onClick={closePage}
-                className="px-4 py-2 border border-[#d9eeee] rounded-xl text-sm bg-white"
+                className="px-3.5 py-2 border border-[#d9eeee] rounded-xl text-[13px] bg-white"
               >
                 Fechar
               </button>
@@ -1226,20 +1226,20 @@ export default function OrcamentoPage({
                   resetForm();
                   router.push(`/pacientes/${params.id}/orcamento`);
                 }}
-                className="px-4 py-2 border border-[#d9eeee] rounded-xl text-sm bg-white"
+                className="px-3.5 py-2 border border-[#d9eeee] rounded-xl text-[13px] bg-white"
               >
                 Novo orçamento
               </button>
             </div>
           </div>
 
-          <h2 className="text-lg font-bold text-slate-800 mb-4">
+          <h2 className="text-[16px] font-semibold text-slate-800 mb-3">
             {budgetId ? "Editar orçamento" : "Novo orçamento"}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
             <div className="md:col-span-6 relative">
-              <label className="block text-sm text-slate-500 mb-1">Procedimento</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Procedimento</label>
               <input
                 value={search}
                 onChange={(e) => {
@@ -1253,7 +1253,7 @@ export default function OrcamentoPage({
                   }));
                 }}
                 placeholder="Digite o procedimento..."
-                className="border border-[#d9eeee] rounded-xl p-3 text-sm w-full bg-[#fbffff]"
+                className="border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] w-full bg-[#fbffff]"
               />
 
               {showDropdown && filteredProcedures.length > 0 && (
@@ -1279,7 +1279,7 @@ export default function OrcamentoPage({
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm text-slate-500 mb-1">Valor</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Valor</label>
               <input
                 type="number"
                 step="0.01"
@@ -1291,12 +1291,12 @@ export default function OrcamentoPage({
                     unit_price: e.target.value,
                   }))
                 }
-                className="border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff] w-full"
+                className="border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff] w-full"
               />
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-sm text-slate-500 mb-1">Dente / Região</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Dente / Região</label>
               <select
                 value={draftItem.tooth}
                 onChange={(e) =>
@@ -1306,7 +1306,7 @@ export default function OrcamentoPage({
                     face: "",
                   }))
                 }
-                className="w-full h-[46px] border border-[#d9eeee] rounded-xl px-3 text-sm bg-[#fbffff] text-slate-700"
+                className="w-full h-[42px] border border-[#d9eeee] rounded-xl px-3 text-[13px] bg-[#fbffff] text-slate-700"
               >
                 <option value="">Selecionar dente</option>
                 {[...superioresEsquerda, ...superioresDireita, ...inferioresEsquerda, ...inferioresDireita].map((tooth) => (
@@ -1320,14 +1320,14 @@ export default function OrcamentoPage({
               <button
                 type="button"
                 onClick={addItem}
-                className="w-full bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] text-white px-4 py-3 rounded-xl text-sm font-semibold shadow-sm"
+                className="w-full bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] text-white px-4 py-2.5 rounded-xl text-[13px] font-semibold shadow-sm"
               >
                 +
               </button>
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <OdontogramaNovo
               key={odontogramResetKey}
               draftItem={draftItem}
@@ -1335,9 +1335,9 @@ export default function OrcamentoPage({
             />
           </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-3 space-y-2">
             {draftItems.length === 0 && (
-              <p className="text-sm text-slate-500">
+              <p className="text-[13px] text-slate-500">
                 Nenhum item adicionado ainda.
               </p>
             )}
@@ -1380,9 +1380,9 @@ export default function OrcamentoPage({
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-2.5 mt-3">
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Parcelas do saldo
               </label>
               <input
@@ -1390,12 +1390,12 @@ export default function OrcamentoPage({
                 min="1"
                 value={installments}
                 onChange={(e) => setInstallments(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Entrada
               </label>
               <input
@@ -1404,18 +1404,18 @@ export default function OrcamentoPage({
                 min="0"
                 value={entryValue}
                 onChange={(e) => setEntryValue(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Status entrada
               </label>
               <select
                 value={entryStatus}
                 onChange={(e) => setEntryStatus(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               >
                 <option value="pago">Paga</option>
                 <option value="pendente">Pendente</option>
@@ -1423,13 +1423,13 @@ export default function OrcamentoPage({
             </div>
 
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Tipo de desconto
               </label>
               <select
                 value={discountType}
                 onChange={(e) => setDiscountType(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               >
                 <option value="valor">Desconto R$</option>
                 <option value="percentual">Desconto %</option>
@@ -1437,7 +1437,7 @@ export default function OrcamentoPage({
             </div>
 
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Desconto
               </label>
               <input
@@ -1446,18 +1446,18 @@ export default function OrcamentoPage({
                 min="0"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-500 mb-1">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
                 Tipo de recibo
               </label>
               <select
                 value={receiptType}
                 onChange={(e) => setReceiptType(e.target.value)}
-                className="w-full border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               >
                 <option value="nenhum">Sem recibo</option>
                 <option value="simples">Recibo simples</option>
@@ -1465,7 +1465,7 @@ export default function OrcamentoPage({
               </select>
             </div>
 
-            <div className="bg-[#f7ffff] border border-[#d9eeee] rounded-xl p-3 text-sm">
+            <div className="bg-[#f7ffff] border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px]">
               <div>Subtotal: {formatCurrency(subtotal)}</div>
               <div>Desconto: {formatCurrency(computedDiscount)}</div>
               <div>Entrada: {formatCurrency(Math.max(0, Math.min(parseMoney(entryValue), total)))}</div>
@@ -1476,14 +1476,14 @@ export default function OrcamentoPage({
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm text-slate-500 mb-1">
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-slate-500 mb-1">
               Observações
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full min-h-[100px] border border-[#d9eeee] rounded-xl p-3 text-sm bg-[#fbffff]"
+              className="w-full min-h-[100px] border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               placeholder="Observações do orçamento"
             />
           </div>
@@ -1492,7 +1492,7 @@ export default function OrcamentoPage({
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2 border border-[#d9eeee] rounded-xl text-sm bg-white"
+              className="px-3.5 py-2 border border-[#d9eeee] rounded-xl text-[13px] bg-white"
             >
               Limpar
             </button>
@@ -1501,20 +1501,20 @@ export default function OrcamentoPage({
               type="button"
               onClick={saveBudget}
               disabled={savingBudget}
-              className="bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-60 shadow-sm"
+              className="bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] text-white px-3.5 py-2 rounded-xl text-[13px] font-semibold disabled:opacity-60 shadow-sm"
             >
               {savingBudget ? "Salvando..." : "Salvar orçamento"}
             </button>
           </div>
         </div>
 
-        <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
+        <div className="bg-white border border-[#d9eeee] rounded-2xl p-4 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-[17px] font-bold text-slate-800">
                 Orçamentos cadastrados
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-[13px] text-slate-500">
                 Pendentes em destaque. Aprovados ficam como histórico do paciente.
               </p>
             </div>
@@ -1530,7 +1530,7 @@ export default function OrcamentoPage({
           </div>
 
           {budgets.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-6 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-6 text-center text-[13px] text-slate-500">
               Nenhum orçamento encontrado para este paciente.
             </div>
           )}
@@ -1578,7 +1578,7 @@ export default function OrcamentoPage({
                     <div className="flex flex-wrap items-center gap-2 md:justify-end">
                       <Link
                         href={`/pacientes/${params.id}/orcamento?budgetId=${budget.id}`}
-                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-[#f7ffff]"
+                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-[#f7ffff]"
                       >
                         Abrir
                       </Link>
@@ -1586,7 +1586,7 @@ export default function OrcamentoPage({
                       <Link
                         href={`/print/orcamento/${budget.id}`}
                         target="_blank"
-                        className="rounded-xl border border-[#bde8e7] bg-[#eefafa] px-3 py-2 text-sm font-black text-[#239d9a] hover:bg-[#dff5f4]"
+                        className="rounded-xl border border-[#bde8e7] bg-[#eefafa] px-3 py-2 text-[13px] font-semibold text-[#239d9a] hover:bg-[#dff5f4]"
                       >
                         PDF
                       </Link>
@@ -1621,7 +1621,7 @@ export default function OrcamentoPage({
         </div>
 
         {selectedBudget && (
-          <div className="bg-white border border-[#d9eeee] rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-[#d9eeee] rounded-2xl p-4 shadow-sm">
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1636,7 +1636,7 @@ export default function OrcamentoPage({
                     {budgetStatusLabel(selectedBudget.status)}
                   </span>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   Exibindo apenas o orçamento selecionado na lista.
                 </p>
               </div>
@@ -1660,7 +1660,7 @@ export default function OrcamentoPage({
             </div>
 
             {budgetItems.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-sm text-slate-500">
+              <p className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-[13px] text-slate-500">
                 Nenhum item encontrado neste orçamento.
               </p>
             )}
@@ -1669,7 +1669,7 @@ export default function OrcamentoPage({
               {budgetItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3 text-sm text-slate-700"
+                  className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700"
                 >
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0">
@@ -1712,7 +1712,7 @@ export default function OrcamentoPage({
           <button
             type="button"
             onClick={closePage}
-            className="px-4 py-2 border border-[#d9eeee] rounded-xl text-sm bg-white"
+            className="px-3.5 py-2 border border-[#d9eeee] rounded-xl text-[13px] bg-white"
           >
             Fechar
           </button>
