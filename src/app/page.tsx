@@ -1060,6 +1060,8 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      <div className="page-shell">
+        <div className="page-container space-y-5">
         <DashboardHeader
           period={period}
           setPeriod={setPeriod}
@@ -1083,16 +1085,16 @@ export default function Dashboard() {
 
         <DashboardInsights insights={intelligentInsights} />
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           {isAdminUser && (
-            <Card className="hidden xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <div className="flex items-center justify-between gap-4">
+            <Card className="hidden xl:col-span-2 page-card overflow-hidden overflow-hidden">
+              <CardHeader className="px-5 pt-4 pb-2.5">
+                <div className="flex items-center justify-between gap-5">
                   <div>
-                    <CardTitle className="text-lg font-bold text-slate-800">
+                    <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                       Evolução financeira
                     </CardTitle>
-                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+                  <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 mt-1">
                     Recebimentos dos últimos meses
                   </CardDescription>
                 </div>
@@ -1103,7 +1105,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
 
-            <CardContent className="px-4 pb-6">
+            <CardContent className="px-4 pb-5">
               <div className="h-[220px] min-h-[220px] min-w-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={monthlyRevenue}>
@@ -1151,14 +1153,14 @@ export default function Dashboard() {
           <DashboardAgendaHoje appointments={todayAppointments} />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
           {isAdminUser && (
-            <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <CardTitle className="text-lg font-bold text-slate-800">
+            <Card className="hidden page-card overflow-hidden">
+              <CardHeader className="px-5 pt-4 pb-2.5">
+                <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                   Recebimentos por dia da semana
               </CardTitle>
-              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+              <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Distribuição diária
               </CardDescription>
             </CardHeader>
@@ -1199,21 +1201,21 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           {isAdminUser && (
-            <Card className="hidden xl:col-span-2 rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <CardTitle className="text-lg font-bold text-slate-800">
+            <Card className="hidden xl:col-span-2 page-card overflow-hidden overflow-hidden">
+              <CardHeader className="px-5 pt-4 pb-2.5">
+                <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                   Produção da clínica
               </CardTitle>
-              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+              <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Faturamento por procedimento no período selecionado
               </CardDescription>
             </CardHeader>
 
             <CardContent>
               {productionByProcedure.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
+                <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-[13px] text-slate-400">
                   Nenhuma produção registrada neste mês.
                 </div>
               ) : (
@@ -1225,19 +1227,19 @@ export default function Dashboard() {
                     return (
                       <div
                         key={item.name}
-                        className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3"
+                        className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5"
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start justify-between gap-5">
                           <div className="min-w-0">
-                            <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                               #{index + 1} • {item.count} lançamento(s)
                             </div>
-                            <div className="mt-1 truncate font-bold text-slate-800">
+                            <div className="mt-1 truncate text-[14px] font-semibold text-slate-800">
                               {item.name}
                             </div>
                           </div>
 
-                          <div className="text-right font-black text-[#239d9a]">
+                          <div className="text-right text-[14px] font-semibold text-[#239d9a]">
                             {formatCurrency(item.amount)}
                           </div>
                         </div>
@@ -1257,12 +1259,12 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
-            <CardHeader className="px-5 pt-5 pb-3">
-              <CardTitle className="text-lg font-bold text-slate-800">
+          <Card className="hidden page-card overflow-hidden">
+            <CardHeader className="px-5 pt-4 pb-2.5">
+              <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Status da agenda
               </CardTitle>
-              <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+              <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Distribuição do período selecionado
               </CardDescription>
             </CardHeader>
@@ -1300,7 +1302,7 @@ export default function Dashboard() {
               {appointmentStatusData.length > 0 && (
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {appointmentStatusData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                    <div key={item.name} className="flex items-center gap-2 text-[11px] font-medium text-slate-500">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: statusColors[item.name] || "#239d9a" }}
@@ -1314,12 +1316,12 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
-          <CardHeader className="px-5 pt-5 pb-3">
-            <CardTitle className="text-lg font-bold text-slate-800">
+        <Card className="hidden page-card overflow-hidden">
+          <CardHeader className="px-5 pt-4 pb-2.5">
+            <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
               Movimento da agenda
             </CardTitle>
-            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+            <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Consultas por dia da semana no período selecionado
             </CardDescription>
           </CardHeader>
@@ -1355,12 +1357,12 @@ export default function Dashboard() {
         </Card>
 
         {isAdminUser && (
-          <Card className="hidden rounded-2xl border border-[#d9eeee] bg-white shadow-sm">
-            <CardHeader className="px-5 pt-5 pb-3">
-              <CardTitle className="text-lg font-bold text-slate-800">
+          <Card className="hidden page-card overflow-hidden">
+            <CardHeader className="px-5 pt-4 pb-2.5">
+              <CardTitle className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Formas de pagamento
             </CardTitle>
-            <CardDescription className="text-xs font-black uppercase tracking-widest text-slate-400">
+            <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Principais métodos recebidos
             </CardDescription>
           </CardHeader>
@@ -1368,7 +1370,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {paymentMethods.length === 0 && (
-                <div className="md:col-span-5 rounded-xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-4 text-center text-sm text-slate-400">
+                <div className="md:col-span-5 rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-center text-[13px] text-slate-400">
                   Nenhum pagamento registrado ainda.
                 </div>
               )}
@@ -1376,12 +1378,12 @@ export default function Dashboard() {
               {paymentMethods.map((method) => (
                 <div
                   key={method.name}
-                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3"
+                  className="rounded-2xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5"
                 >
-                  <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     {method.name}
                   </div>
-                  <div className="mt-2 text-base font-bold text-[#239d9a]">
+                  <div className="mt-2 text-[15px] font-semibold text-[#239d9a]">
                     {formatCurrency(method.amount)}
                   </div>
                 </div>
@@ -1390,6 +1392,8 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+        </div>
+      </div>
     </DashboardLayout>
   );
 }
