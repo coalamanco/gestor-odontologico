@@ -1081,15 +1081,15 @@ export default function DashboardExecutivoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-5">
-      <div className="mb-5 overflow-hidden rounded-[26px] border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-5 shadow-lg shadow-cyan-900/10 md:px-6">
+      <div className="mb-5 overflow-hidden rounded-[26px] border border-[#b6e3e2] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 shadow-lg shadow-cyan-900/10 md:px-6">
         <div className="flex h-[76px] items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25">
+            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[20px] bg-white/15 text-white ring-1 ring-white/25">
               <Sparkles size={17} />
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-black uppercase tracking-[0.22em] text-white">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-white/95">
                 Dashboard Executivo
               </p>
             </div>
@@ -1098,7 +1098,7 @@ export default function DashboardExecutivoPage() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/configuracoes/metas"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-4 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/35 bg-white px-4 text-[13px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
             >
               <Target size={17} />
               <span className="hidden sm:inline">Metas</span>
@@ -1106,7 +1106,7 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-[#239d9a] px-4 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8f8c]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/25 bg-[#239d9a] px-4 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
             >
               <Megaphone size={17} />
               <span className="hidden sm:inline">Campanhas</span>
@@ -1115,7 +1115,7 @@ export default function DashboardExecutivoPage() {
             <button
               type="button"
               onClick={loadData}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-4 text-sm font-black text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/35 bg-white px-4 text-[13px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
             >
               <RefreshCw size={17} />
               <span className="hidden sm:inline">Atualizar</span>
@@ -1128,7 +1128,7 @@ export default function DashboardExecutivoPage() {
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
-          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
             activeDashboardTab === "geral"
               ? "bg-[#239d9a] text-white shadow-sm"
               : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
@@ -1140,7 +1140,7 @@ export default function DashboardExecutivoPage() {
         <button
           type="button"
           onClick={() => setActiveDashboardTab("analises")}
-          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
             activeDashboardTab === "analises"
               ? "bg-[#239d9a] text-white shadow-sm"
               : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
@@ -1152,7 +1152,7 @@ export default function DashboardExecutivoPage() {
         <button
           type="button"
           onClick={() => setActiveDashboardTab("acessos")}
-          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
             activeDashboardTab === "acessos"
               ? "bg-[#239d9a] text-white shadow-sm"
               : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
@@ -1163,7 +1163,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
           {activeDashboardTab === "geral"
             ? "Resumo executivo"
             : activeDashboardTab === "analises"
@@ -1171,13 +1171,13 @@ export default function DashboardExecutivoPage() {
               : "Atalhos principais"}
         </p>
 
-        <p className="hidden text-xs font-bold text-slate-400 md:block">
+        <p className="hidden text-[11px] font-medium text-slate-400 md:block">
           Dados atualizados ao clicar em Atualizar
         </p>
       </div>
 
       {loading && (
-        <div className="mb-4 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-700">
+        <div className="mb-4 rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[13px] font-semibold text-cyan-700">
           Atualizando informações executivas...
         </div>
       )}
@@ -1188,16 +1188,16 @@ export default function DashboardExecutivoPage() {
             <ExecutiveKPIs loading={loading} cards={executiveCards} />
           </div>
 
-          <div className="mb-5 rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm ring-1 ring-white/70">
+          <div className="mb-5 rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] ring-1 ring-white/70">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                   Leitura executiva do mês
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-3 py-1.5 text-xs font-black ${getTrendClass(
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getTrendClass(
                       goals.monthlyTrend,
                     )}`}
                   >
@@ -1205,20 +1205,20 @@ export default function DashboardExecutivoPage() {
                   </span>
 
                   <span
-                    className={`rounded-full px-3 py-1.5 text-xs font-black ${getGoalChanceClass(
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getGoalChanceClass(
                       goals.chanceToHitGoal,
                     )}`}
                   >
                     Meta {goals.chanceToHitGoal}
                   </span>
 
-                  <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
+                  <span className="rounded-full bg-slate-50/70 px-3 py-1 text-[11px] font-medium text-slate-500">
                     Gap: <strong className="text-slate-800">{formatCurrency(goals.gapToGoal)}</strong>
                   </span>
                 </div>
               </div>
 
-              <p className="max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="max-w-3xl text-[13px] leading-6 text-slate-600">
                 {goals.executiveSummary}
               </p>
             </div>
@@ -1261,17 +1261,17 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm xl:col-span-2">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] xl:col-span-2">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                <div className="rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-semibold text-slate-800">
                     Metas e Performance
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-[13px] text-slate-500">
                     Meta, projeção e execução.
                   </p>
                 </div>
@@ -1292,7 +1292,7 @@ export default function DashboardExecutivoPage() {
                   />
                 </div>
 
-                <div className="mt-2 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
+                <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-medium text-slate-500">
                   <span>
                     Confirmado: {formatCurrency(goals.confirmedRevenue)}
                   </span>
@@ -1304,57 +1304,57 @@ export default function DashboardExecutivoPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/40 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
                     Progresso provável
                   </p>
-                  <p className="mt-2 text-xl font-black text-emerald-700">
+                  <p className="mt-2 text-xl font-bold text-emerald-700">
                     {goals.probableProgress}%
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
                     Conversão comercial
                   </p>
-                  <p className="mt-2 text-xl font-black text-cyan-700">
+                  <p className="mt-2 text-xl font-bold text-cyan-700">
                     {goals.commercialConversion}%
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-purple-700">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-600">
                     Recuperação prevista
                   </p>
-                  <p className="mt-2 text-xl font-black text-purple-700">
+                  <p className="mt-2 text-xl font-bold text-violet-600">
                     {goals.recoveredPatientsProjection}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-yellow-50 p-3 text-yellow-600">
+                <div className="rounded-[20px] bg-yellow-50 p-3 text-yellow-600">
                   <Trophy size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-semibold text-slate-800">
                     Destaques
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-[13px] text-slate-500">
                     Destaques do período.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                <div className="rounded-[20px] bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Procedimento destaque
                   </p>
-                  <p className="mt-1 font-black text-slate-800">
+                  <p className="mt-1 font-semibold text-slate-800">
                     {goals.topProcedure?.name || "Sem dados"}
                   </p>
                   <p className="mt-1 text-sm font-bold text-emerald-600">
@@ -1362,11 +1362,11 @@ export default function DashboardExecutivoPage() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                <div className="rounded-[20px] bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Profissional destaque
                   </p>
-                  <p className="mt-1 font-black text-slate-800">
+                  <p className="mt-1 font-semibold text-slate-800">
                     {goals.topProfessional?.name || "Sem dados"}
                   </p>
                   <p className="mt-1 text-sm font-bold text-emerald-600">
@@ -1374,11 +1374,11 @@ export default function DashboardExecutivoPage() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                <div className="rounded-[20px] bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Ticket médio
                   </p>
-                  <p className="mt-1 text-xl font-black text-[#239d9a]">
+                  <p className="mt-1 text-xl font-bold text-[#239d9a]">
                     {formatCurrency(goals.averageTicket || averageTicket)}
                   </p>
                 </div>
@@ -1387,55 +1387,55 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[520px_minmax(0,1fr)]">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                <div className="rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-semibold text-slate-800">
                     Pipeline Executivo
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-[13px] text-slate-500">
                     Pipeline e oportunidades abertas.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/40 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
                     Pipeline comercial
                   </p>
-                  <p className="mt-2 text-xl font-black text-emerald-700">
+                  <p className="mt-2 text-xl font-bold text-emerald-700">
                     {formatCurrency(forecast.commercialPipeline)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-cyan-700">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
                     Orçamentos abertos
                   </p>
-                  <p className="mt-2 text-xl font-black text-cyan-700">
+                  <p className="mt-2 text-xl font-bold text-cyan-700">
                     {formatCurrency(openBudgetRevenue)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-blue-700">
+                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
                     Ticket médio aprovado
                   </p>
-                  <p className="mt-2 text-xl font-black text-blue-700">
+                  <p className="mt-2 text-xl font-bold text-cyan-700">
                     {formatCurrency(averageTicket)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-purple-700">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-600">
                     Campanhas previstas
                   </p>
-                  <p className="mt-2 text-xl font-black text-purple-700">
+                  <p className="mt-2 text-xl font-bold text-violet-600">
                     {formatCurrency(forecast.campaignRevenueProjection)}
                   </p>
                 </div>
@@ -1461,17 +1461,17 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+                <div className="rounded-[20px] bg-emerald-50 p-3 text-emerald-600">
                   <Users size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-semibold text-slate-800">
                     Top Pacientes por Score
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-[13px] text-slate-500">
                     Prioridade comercial.
                   </p>
                 </div>
@@ -1482,10 +1482,10 @@ export default function DashboardExecutivoPage() {
                   <Link
                     key={item.patient.id}
                     href={`/pacientes/${item.patient.id}`}
-                    className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50 md:grid-cols-[1fr_auto]"
+                    className="grid grid-cols-1 gap-3 rounded-[20px] bg-slate-50/70 p-4 transition hover:bg-cyan-50 md:grid-cols-[1fr_auto]"
                   >
                     <div>
-                      <p className="font-black text-slate-800">
+                      <p className="font-semibold text-slate-800">
                         {item.patient.name || "Paciente"}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
@@ -1495,14 +1495,14 @@ export default function DashboardExecutivoPage() {
 
                     <div className="flex items-center gap-2">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-black ${getScoreClass(
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getScoreClass(
                           item.score,
                         )}`}
                       >
                         {item.score}/100
                       </span>
 
-                      <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-black text-cyan-700">
+                      <span className="rounded-full bg-cyan-100 px-3 py-1 text-[11px] font-semibold text-cyan-700">
                         {item.closingChance}%
                       </span>
                     </div>
@@ -1510,7 +1510,7 @@ export default function DashboardExecutivoPage() {
                 ))}
 
                 {scoredPatients.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
                     Ainda não há pacientes suficientes para análise.
                   </div>
                 )}
@@ -1526,49 +1526,49 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
               <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">
+                  <h2 className="text-[17px] font-semibold text-slate-800">
                     Rentabilidade dos procedimentos
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-[13px] text-slate-500">
                     Margem estimada por procedimento.
                   </p>
                 </div>
 
                 <Link
                   href="/configuracoes/precificacao"
-                  className="inline-flex items-center justify-center rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-xs font-black text-[#239d9a] hover:bg-cyan-100"
+                  className="inline-flex items-center justify-center rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[11px] font-semibold text-[#239d9a] hover:bg-cyan-100"
                 >
                   Abrir precificação
                 </Link>
               </div>
 
               <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <div className="rounded-[20px] bg-slate-50/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                     Procedimentos mapeados
                   </p>
-                  <p className="mt-1 text-lg font-black text-slate-800">
+                  <p className="mt-1 text-[17px] font-semibold text-slate-800">
                     {profitabilitySummary.mapped}/{profitabilitySummary.total}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-emerald-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                <div className="rounded-[20px] bg-emerald-50 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
                     Lucro estimado
                   </p>
-                  <p className="mt-1 text-xl font-black text-emerald-700">
+                  <p className="mt-1 text-xl font-bold text-emerald-700">
                     {formatCurrency(profitabilitySummary.profit)}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-cyan-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-cyan-700">
+                <div className="rounded-[20px] bg-cyan-50 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
                     Margem média
                   </p>
-                  <p className="mt-1 text-xl font-black text-cyan-700">
+                  <p className="mt-1 text-xl font-bold text-cyan-700">
                     {profitabilitySummary.averageMargin}%
                   </p>
                 </div>
@@ -1580,11 +1580,11 @@ export default function DashboardExecutivoPage() {
                   .map((item, index) => (
                     <div
                       key={item.name}
-                      className="rounded-2xl bg-slate-50 p-4"
+                      className="rounded-[20px] bg-slate-50/70 p-4"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
-                          <p className="font-black text-slate-800">
+                          <p className="font-semibold text-slate-800">
                             {index + 1}. {item.name}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
@@ -1594,7 +1594,7 @@ export default function DashboardExecutivoPage() {
                         </div>
 
                         <span
-                          className={`w-fit rounded-full px-3 py-1 text-xs font-black ${getProfitabilityClass(
+                          className={`w-fit rounded-full px-3 py-1 text-[11px] font-semibold ${getProfitabilityClass(
                             item.margin,
                           )}`}
                         >
@@ -1604,34 +1604,34 @@ export default function DashboardExecutivoPage() {
                       </div>
 
                       {item.hasPricing ? (
-                        <div className="mt-4 grid grid-cols-1 gap-3 text-xs font-bold text-slate-500 md:grid-cols-3">
-                          <div className="rounded-2xl bg-white p-3">
+                        <div className="mt-4 grid grid-cols-1 gap-3 text-[11px] font-medium text-slate-500 md:grid-cols-3">
+                          <div className="rounded-[20px] bg-white p-3">
                             <p className="text-slate-400">Custo estimado</p>
-                            <p className="mt-1 text-sm font-black text-slate-800">
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
                               {formatCurrency(
                                 item.estimatedCost + item.estimatedFees,
                               )}
                             </p>
                           </div>
 
-                          <div className="rounded-2xl bg-white p-3">
+                          <div className="rounded-[20px] bg-white p-3">
                             <p className="text-slate-400">Lucro estimado</p>
-                            <p className="mt-1 text-sm font-black text-emerald-700">
+                            <p className="mt-1 text-[13px] font-semibold text-emerald-700">
                               {formatCurrency(item.estimatedProfit)}
                             </p>
                           </div>
 
-                          <div className="rounded-2xl bg-white p-3">
+                          <div className="rounded-[20px] bg-white p-3">
                             <p className="text-slate-400">
                               Custo unitário base
                             </p>
-                            <p className="mt-1 text-sm font-black text-slate-800">
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
                               {formatCurrency(item.unitCost)}
                             </p>
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-700">
+                        <div className="mt-4 rounded-[20px] border border-dashed border-amber-200 bg-amber-50/60 p-3 text-[11px] font-medium text-amber-700">
                           Este procedimento ainda não possui precificação
                           cadastrada. Cadastre o custo para calcular margem
                           real.
@@ -1641,18 +1641,18 @@ export default function DashboardExecutivoPage() {
                   ))}
 
                 {procedureProfitabilityRanking.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
                     Ainda não há dados suficientes para calcular rentabilidade.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm">
-              <h2 className="text-lg font-black text-slate-800">
+            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
+              <h2 className="text-[17px] font-semibold text-slate-800">
                 Ranking por profissional
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-500">
                 Produção agrupada por profissional quando disponível.
               </p>
 
@@ -1660,10 +1660,10 @@ export default function DashboardExecutivoPage() {
                 {goals.professionalRanking.slice(0, 6).map((item, index) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4"
+                    className="flex items-center justify-between gap-3 rounded-[20px] bg-slate-50/70 p-4"
                   >
                     <div>
-                      <p className="font-black text-slate-800">
+                      <p className="font-semibold text-slate-800">
                         {index + 1}. {item.name}
                       </p>
                       <p className="text-xs text-slate-500">
@@ -1671,14 +1671,14 @@ export default function DashboardExecutivoPage() {
                       </p>
                     </div>
 
-                    <p className="font-black text-emerald-600">
+                    <p className="font-semibold text-emerald-600">
                       {formatCurrency(item.value)}
                     </p>
                   </div>
                 ))}
 
                 {goals.professionalRanking.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
                     Ainda não há ranking por profissional.
                   </div>
                 )}
@@ -1693,13 +1693,13 @@ export default function DashboardExecutivoPage() {
           <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
             <Link
               href="/crm"
-              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+              <div className="mb-4 inline-flex rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
                 <Activity size={22} />
               </div>
-              <h3 className="text-lg font-black text-slate-800">CRM</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="text-[17px] font-semibold text-slate-800">CRM</h3>
+              <p className="mt-1 text-[13px] text-slate-500">
                 Acessar relacionamento, aniversários, orçamentos e tratamentos
                 parados.
               </p>
@@ -1707,26 +1707,26 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-2xl bg-blue-50 p-3 text-blue-600">
+              <div className="mb-4 inline-flex rounded-[20px] bg-cyan-50/40 p-3 text-cyan-600">
                 <Megaphone size={22} />
               </div>
-              <h3 className="text-lg font-black text-slate-800">Campanhas</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="text-[17px] font-semibold text-slate-800">Campanhas</h3>
+              <p className="mt-1 text-[13px] text-slate-500">
                 Acessar campanhas segmentadas por score e chance de fechamento.
               </p>
             </Link>
 
             <Link
               href="/financeiro"
-              className="rounded-[24px] border border-slate-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+              <div className="mb-4 inline-flex rounded-[20px] bg-emerald-50 p-3 text-emerald-600">
                 <DollarSign size={22} />
               </div>
-              <h3 className="text-lg font-black text-slate-800">Financeiro</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="text-[17px] font-semibold text-slate-800">Financeiro</h3>
+              <p className="mt-1 text-[13px] text-slate-500">
                 Abrir o financeiro operacional do consultório.
               </p>
             </Link>
