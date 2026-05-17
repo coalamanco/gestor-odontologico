@@ -1581,20 +1581,20 @@ export default function ConfiguracoesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-3 pb-24 md:p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">
+          <h1 className="text-[24px] font-semibold tracking-tight text-slate-800">
             Configurações do Consultório
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-[13px] text-slate-500">
             Dados usados na agenda, comunicações, recibos e procedimentos.
           </p>
         </div>
 
         {(loadingSettings || procedureLoading || teamLoading || anamnesisLoading || messageLoading || financialLoading) && (
-          <div className="rounded-full bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a]">
+          <div className="rounded-full bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] ring-1 ring-[#d9eeee]">
             Carregando...
           </div>
         )}
@@ -1604,23 +1604,23 @@ export default function ConfiguracoesPage() {
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <Link
           href="/configuracoes?tab=clinica"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <Settings2 size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Clínica
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 Sistema
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 Dados do consultório, horários e informações gerais.
               </p>
             </div>
@@ -1629,23 +1629,23 @@ export default function ConfiguracoesPage() {
 
         <Link
           href="/configuracoes?tab=equipe"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <Users2 size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Profissionais
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 Equipe
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 Gestão da equipe e Google Agenda individual.
               </p>
             </div>
@@ -1654,23 +1654,23 @@ export default function ConfiguracoesPage() {
 
         <Link
           href="/configuracoes?tab=procedimentos"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <Wallet size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Procedimentos
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 Precificação
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 Valores, categorias e procedimentos clínicos.
               </p>
             </div>
@@ -1679,23 +1679,23 @@ export default function ConfiguracoesPage() {
 
         <Link
           href="/configuracoes?tab=comunicacao"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-violet-50 p-3 text-violet-700">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <CalendarDays size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Comunicação
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 WhatsApp
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 Mensagens automáticas, lembretes e retorno.
               </p>
             </div>
@@ -1704,23 +1704,23 @@ export default function ConfiguracoesPage() {
 
         <Link
           href="/configuracoes?tab=financeiro"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <ShieldCheck size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Financeiro
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 Fiscal
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 PIX, juros, recibos e parâmetros financeiros.
               </p>
             </div>
@@ -1729,23 +1729,23 @@ export default function ConfiguracoesPage() {
 
         <Link
           href="/configuracoes?tab=backup"
-          className="group rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-rose-50 p-3 text-rose-700">
+            <div className="rounded-[18px] bg-[#eefafa] p-2.5 text-[#239d9a]">
               <Database size={20} />
             </div>
 
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Segurança
               </div>
 
-              <h2 className="mt-1 text-sm font-black text-slate-800">
+              <h2 className="mt-1 text-[13px] font-semibold text-slate-800">
                 Backup
               </h2>
 
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                 Backup local, online e restauração segura.
               </p>
             </div>
@@ -1753,14 +1753,14 @@ export default function ConfiguracoesPage() {
         </Link>
       </section>
 
-      <div className="flex flex-wrap gap-2 border-b border-[#d9eeee]">
+      <div className="flex flex-wrap gap-1.5 rounded-[24px] border border-[#d9eeee] bg-white/95 p-1.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
         <button
           type="button"
           onClick={() => setTab("clinica")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "clinica"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Clínica
@@ -1769,10 +1769,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("procedimentos")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "procedimentos"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Procedimentos
@@ -1781,10 +1781,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("equipe")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "equipe"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Equipe
@@ -1793,10 +1793,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("anamnese")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "anamnese"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Anamnese
@@ -1805,10 +1805,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("comunicacao")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "comunicacao"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Comunicação
@@ -1817,10 +1817,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("financeiro")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "financeiro"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Financeiro/Fiscal
@@ -1829,10 +1829,10 @@ export default function ConfiguracoesPage() {
         <button
           type="button"
           onClick={() => setTab("backup")}
-          className={`px-4 py-3 text-sm font-black border-b-2 ${
+          className={`rounded-[18px] border-b-0 px-3.5 py-2.5 text-[12px] font-semibold transition ${
             tab === "backup"
-              ? "border-[#239d9a] text-[#239d9a]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
+              ? "bg-[#239d9a] text-white shadow-sm"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Backup
@@ -1841,22 +1841,22 @@ export default function ConfiguracoesPage() {
 
       {tab === "clinica" && (
         <>
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="font-bold text-slate-700">Dados do Consultório</h2>
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <h2 className="text-[15px] font-semibold text-slate-700">Dados do Consultório</h2>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
               <input
                 placeholder="Nome do consultório"
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
-                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="xl:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <div className="flex gap-2">
                 <select
                   value={form.document_type}
                   onChange={(e) => handleChange("document_type", e.target.value)}
-                  className="border border-[#c2dddd] p-3 rounded-xl w-28 bg-white"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm w-28 bg-white"
                 >
                   <option value="cpf">CPF</option>
                   <option value="cnpj">CNPJ</option>
@@ -1866,7 +1866,7 @@ export default function ConfiguracoesPage() {
                   placeholder={form.document_type === "cpf" ? "CPF" : "CNPJ"}
                   value={form.document}
                   onChange={(e) => handleChange("document", e.target.value)}
-                  className="border border-[#c2dddd] p-3 rounded-xl flex-1"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm flex-1"
                 />
               </div>
 
@@ -1874,27 +1874,27 @@ export default function ConfiguracoesPage() {
                 placeholder="Nome para comunicação"
                 value={form.display_name}
                 onChange={(e) => handleChange("display_name", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Responsável pelo consultório"
                 value={form.owner}
                 onChange={(e) => handleChange("owner", e.target.value)}
-                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="xl:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="CRO do responsável técnico"
                 value={form.cro}
                 onChange={(e) => handleChange("cro", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="font-bold text-slate-700">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <h2 className="text-[15px] font-semibold text-slate-700">
               Horário de funcionamento
             </h2>
 
@@ -1903,7 +1903,7 @@ export default function ConfiguracoesPage() {
                 type="number"
                 value={form.start_hour}
                 onChange={(e) => handleChange("start_hour", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 placeholder="Horário inicial"
               />
 
@@ -1911,14 +1911,14 @@ export default function ConfiguracoesPage() {
                 type="number"
                 value={form.end_hour}
                 onChange={(e) => handleChange("end_hour", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 placeholder="Horário final"
               />
 
               <select
                 value={form.timezone}
                 onChange={(e) => handleChange("timezone", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl md:col-span-2 bg-white"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm md:col-span-2 bg-white"
               >
                 <option value="America/Sao_Paulo">
                   Brasília / São Paulo
@@ -1931,14 +1931,14 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   handleChange("max_patients_day", e.target.value)
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 placeholder="Máx pacientes"
               />
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="font-bold text-slate-700">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <h2 className="text-[15px] font-semibold text-slate-700">
               Informações do consultório
             </h2>
 
@@ -1947,62 +1947,62 @@ export default function ConfiguracoesPage() {
                 placeholder="Email"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Telefone"
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="WhatsApp"
                 value={form.whatsapp}
                 onChange={(e) => handleChange("whatsapp", e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="font-bold text-slate-700">Endereço do consultório</h2>
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <h2 className="text-[15px] font-semibold text-slate-700">Endereço do consultório</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
               <input
                 placeholder="CEP"
                 value={form.zip_code}
                 onChange={(e) => handleChange("zip_code", e.target.value)}
-                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="md:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Rua / Avenida"
                 value={form.address}
                 onChange={(e) => handleChange("address", e.target.value)}
-                className="md:col-span-4 border border-[#c2dddd] p-3 rounded-xl"
+                className="md:col-span-4 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Número"
                 value={form.number}
                 onChange={(e) => handleChange("number", e.target.value)}
-                className="md:col-span-1 border border-[#c2dddd] p-3 rounded-xl"
+                className="md:col-span-1 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Bairro"
                 value={form.district}
                 onChange={(e) => handleChange("district", e.target.value)}
-                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="md:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
                 placeholder="Cidade"
                 value={form.city}
                 onChange={(e) => handleChange("city", e.target.value)}
-                className="md:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="md:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2010,20 +2010,20 @@ export default function ConfiguracoesPage() {
                 value={form.state}
                 onChange={(e) => handleChange("state", e.target.value)}
                 maxLength={2}
-                className="md:col-span-1 border border-[#c2dddd] p-3 rounded-xl uppercase"
+                className="md:col-span-1 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm uppercase"
               />
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] text-slate-400">
               Estes dados ficarão prontos para aparecer automaticamente em recibos, termos e prontuários impressos.
             </p>
           </div>
 
-          <div className="sticky bottom-0 bg-slate-50/90 backdrop-blur-sm border-t border-[#d9eeee] py-4 flex justify-end">
+          <div className="sticky bottom-0 flex justify-end border-t border-[#d9eeee] bg-[#f7ffff]/90 py-3 backdrop-blur-sm">
             <button
               onClick={saveClinicSettings}
               disabled={loading}
-              className="bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-60 shadow-sm"
+              className="rounded-xl bg-[#239d9a] px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1f8f8c] disabled:opacity-60"
             >
               {loading ? "Salvando..." : "Salvar configurações"}
             </button>
@@ -2033,13 +2033,13 @@ export default function ConfiguracoesPage() {
 
       {tab === "procedimentos" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
-                <h2 className="font-bold text-slate-700">
+                <h2 className="text-[15px] font-semibold text-slate-700">
                   Cadastro de procedimentos
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   Base usada nos orçamentos e tratamentos.
                 </p>
               </div>
@@ -2048,7 +2048,7 @@ export default function ConfiguracoesPage() {
                 placeholder="Buscar procedimento"
                 value={procedureSearch}
                 onChange={(e) => setProcedureSearch(e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm lg:w-80"
               />
             </div>
 
@@ -2059,7 +2059,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setProcedureForm((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="xl:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2071,7 +2071,7 @@ export default function ConfiguracoesPage() {
                     categoria: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2081,7 +2081,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setProcedureForm((prev) => ({ ...prev, price: e.target.value }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
 
@@ -2090,7 +2090,7 @@ export default function ConfiguracoesPage() {
                 <button
                   type="button"
                   onClick={resetProcedureForm}
-                  className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                  className="rounded-xl border border-[#d9eeee] bg-white px-3.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-[#fbffff]"
                 >
                   Cancelar edição
                 </button>
@@ -2100,15 +2100,15 @@ export default function ConfiguracoesPage() {
                 type="button"
                 onClick={saveProcedure}
                 disabled={procedureLoading}
-                className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                className="rounded-xl bg-[#239d9a] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1f8f8c] disabled:opacity-60"
               >
                 {procedureForm.id ? "Salvar alteração" : "Adicionar procedimento"}
               </button>
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[2fr_1fr_1fr_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+          <div className="overflow-hidden rounded-[24px] border border-[#d9eeee] bg-white/95 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_150px] border-b border-[#d9eeee] bg-[#fbffff] text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
               <div className="p-3">Procedimento</div>
               <div className="p-3">Categoria</div>
               <div className="p-3">Valor</div>
@@ -2116,16 +2116,16 @@ export default function ConfiguracoesPage() {
             </div>
 
             {filteredProcedures.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
+              <div className="p-6 text-center text-[13px] text-slate-500">
                 Nenhum procedimento encontrado.
               </div>
             ) : (
               filteredProcedures.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[2fr_1fr_1fr_150px] border-b border-slate-100 text-sm last:border-b-0"
+                  className="grid grid-cols-[2fr_1fr_1fr_150px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                 >
-                  <div className="p-3 font-black text-slate-700">
+                  <div className="p-3 font-medium text-slate-700">
                     {item.name}
                   </div>
 
@@ -2133,7 +2133,7 @@ export default function ConfiguracoesPage() {
                     {item.categoria || "-"}
                   </div>
 
-                  <div className="p-3 font-bold text-slate-700">
+                  <div className="p-3 text-[15px] font-semibold text-slate-700">
                     {formatCurrency(item.price)}
                   </div>
 
@@ -2141,7 +2141,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => editProcedure(item)}
-                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                     >
                       Editar
                     </button>
@@ -2149,7 +2149,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => deleteProcedure(item)}
-                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                      className="rounded-lg border border-[#d9eeee] bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 hover:bg-[#fbffff]"
                     >
                       Excluir
                     </button>
@@ -2163,13 +2163,13 @@ export default function ConfiguracoesPage() {
 
       {tab === "equipe" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
-                <h2 className="font-bold text-slate-700">
+                <h2 className="text-[15px] font-semibold text-slate-700">
                   Cadastro da equipe
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   Profissionais que poderão ser vinculados à agenda, prontuário, financeiro e Google Agenda individual.
                 </p>
               </div>
@@ -2178,7 +2178,7 @@ export default function ConfiguracoesPage() {
                 placeholder="Buscar profissional"
                 value={teamSearch}
                 onChange={(e) => setTeamSearch(e.target.value)}
-                className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm lg:w-80"
               />
             </div>
 
@@ -2189,7 +2189,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setMemberForm((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="xl:col-span-2 border border-[#c2dddd] p-3 rounded-xl"
+                className="xl:col-span-2 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2198,7 +2198,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setMemberForm((prev) => ({ ...prev, cro: e.target.value }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2210,7 +2210,7 @@ export default function ConfiguracoesPage() {
                     specialty: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2219,7 +2219,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setMemberForm((prev) => ({ ...prev, phone: e.target.value }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <input
@@ -2228,12 +2228,12 @@ export default function ConfiguracoesPage() {
                 onChange={(e) =>
                   setMemberForm((prev) => ({ ...prev, email: e.target.value }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-[13px] font-semibold text-slate-600">
                 <input
                   type="checkbox"
                   checked={memberForm.active}
@@ -2252,7 +2252,7 @@ export default function ConfiguracoesPage() {
                   <button
                     type="button"
                     onClick={resetMemberForm}
-                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-[#d9eeee] bg-white px-3.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-[#fbffff]"
                   >
                     Cancelar edição
                   </button>
@@ -2262,7 +2262,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={saveMember}
                   disabled={teamLoading}
-                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1f8f8c] disabled:opacity-60"
                 >
                   {memberForm.id ? "Salvar alteração" : "Adicionar profissional"}
                 </button>
@@ -2270,13 +2270,13 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
-            <span className="font-black text-[#239d9a]">Google Agenda individual:</span>{" "}
+          <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+            <span className="font-semibold text-[#239d9a]">Google Agenda individual:</span>{" "}
             conecte cada profissional ao próprio calendário. Na próxima etapa, cada consulta poderá ser enviada para o calendário do profissional selecionado.
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+          <div className="overflow-hidden rounded-[24px] border border-[#d9eeee] bg-white/95 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
               <div className="p-3">Profissional</div>
               <div className="p-3">CRO</div>
               <div className="p-3">Especialidade</div>
@@ -2286,7 +2286,7 @@ export default function ConfiguracoesPage() {
             </div>
 
             {filteredTeam.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
+              <div className="p-6 text-center text-[13px] text-slate-500">
                 Nenhum profissional encontrado.
               </div>
             ) : (
@@ -2296,13 +2296,13 @@ export default function ConfiguracoesPage() {
                 return (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] border-b border-slate-100 text-sm last:border-b-0"
+                    className="grid grid-cols-[1.4fr_0.8fr_1fr_1fr_1.3fr_220px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                   >
                     <div className="p-3">
-                      <div className="font-black text-slate-700">
+                      <div className="font-semibold text-slate-700">
                         {item.name}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-[11px] text-slate-400">
                         {item.active === false ? "Inativo" : "Ativo"}
                       </div>
                     </div>
@@ -2317,21 +2317,21 @@ export default function ConfiguracoesPage() {
 
                     <div className="p-3 text-slate-600">
                       <div>{item.phone || "-"}</div>
-                      <div className="text-xs text-slate-400">{item.email || ""}</div>
+                      <div className="text-[11px] text-slate-400">{item.email || ""}</div>
                     </div>
 
                     <div className="p-3">
                       <div
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                        className={`inline-flex rounded-full px-3 py-1 text-[12px] font-semibold ${
                           isGoogleConnected
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-emerald-100 text-[#239d9a]"
                             : "bg-slate-100 text-slate-500"
                         }`}
                       >
                         {isGoogleConnected ? "Conectado" : "Desconectado"}
                       </div>
 
-                      <div className="mt-2 text-xs text-slate-500 break-all">
+                      <div className="mt-2 text-[12px] text-slate-500 break-all">
                         {item.google_calendar_email || "Nenhum e-mail Google vinculado"}
                       </div>
 
@@ -2347,7 +2347,7 @@ export default function ConfiguracoesPage() {
                         <button
                           type="button"
                           onClick={() => editMember(item)}
-                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                         >
                           Editar
                         </button>
@@ -2355,7 +2355,7 @@ export default function ConfiguracoesPage() {
                         <button
                           type="button"
                           onClick={() => deleteMember(item)}
-                          className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                          className="rounded-lg border border-[#d9eeee] bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 hover:bg-[#fbffff]"
                         >
                           Excluir
                         </button>
@@ -2365,7 +2365,7 @@ export default function ConfiguracoesPage() {
                         <button
                           type="button"
                           onClick={() => connectProfessionalGoogle(item)}
-                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                          className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                         >
                           {isGoogleConnected ? "Reconectar Google" : "Conectar Google"}
                         </button>
@@ -2374,7 +2374,7 @@ export default function ConfiguracoesPage() {
                           <button
                             type="button"
                             onClick={() => removeProfessionalGoogleConnection(item)}
-                            className="rounded-lg bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 hover:bg-amber-100"
+                            className="rounded-lg bg-[#f7ffff] px-3 py-1 text-[12px] font-semibold text-[#0f766e] hover:bg-amber-100"
                           >
                             Remover Google
                           </button>
@@ -2391,13 +2391,13 @@ export default function ConfiguracoesPage() {
 
       {tab === "anamnese" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
-                <h2 className="font-bold text-slate-700">
+                <h2 className="text-[15px] font-semibold text-slate-700">
                   Modelo de anamnese odontológica
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   Perguntas que serão usadas depois no prontuário do paciente.
                 </p>
               </div>
@@ -2407,7 +2407,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={seedDefaultAnamnesis}
                   disabled={anamnesisLoading}
-                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-sm font-black text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
+                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
                 >
                   Inserir anamnese completa
                 </button>
@@ -2416,7 +2416,7 @@ export default function ConfiguracoesPage() {
                   placeholder="Buscar pergunta"
                   value={anamnesisSearch}
                   onChange={(e) => setAnamnesisSearch(e.target.value)}
-                  className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm lg:w-80"
                 />
               </div>
             </div>
@@ -2431,7 +2431,7 @@ export default function ConfiguracoesPage() {
                     question: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
 
               <select
@@ -2442,7 +2442,7 @@ export default function ConfiguracoesPage() {
                     type: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl bg-white"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm bg-white"
               >
                 <option value="yes_no">Sim/Não</option>
                 <option value="text">Texto</option>
@@ -2458,12 +2458,12 @@ export default function ConfiguracoesPage() {
                     options: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-[13px] font-semibold text-slate-600">
                 <input
                   type="checkbox"
                   checked={anamnesisForm.active}
@@ -2482,7 +2482,7 @@ export default function ConfiguracoesPage() {
                   <button
                     type="button"
                     onClick={resetAnamnesisForm}
-                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-[#d9eeee] bg-white px-3.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-[#fbffff]"
                   >
                     Cancelar edição
                   </button>
@@ -2492,7 +2492,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={saveAnamnesisQuestion}
                   disabled={anamnesisLoading}
-                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1f8f8c] disabled:opacity-60"
                 >
                   {anamnesisForm.id ? "Salvar alteração" : "Adicionar pergunta"}
                 </button>
@@ -2500,8 +2500,8 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[2fr_180px_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+          <div className="overflow-hidden rounded-[24px] border border-[#d9eeee] bg-white/95 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="grid grid-cols-[2fr_180px_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
               <div className="p-3">Pergunta</div>
               <div className="p-3">Tipo</div>
               <div className="p-3">Status</div>
@@ -2509,21 +2509,21 @@ export default function ConfiguracoesPage() {
             </div>
 
             {filteredAnamnesis.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
+              <div className="p-6 text-center text-[13px] text-slate-500">
                 Nenhuma pergunta encontrada.
               </div>
             ) : (
               filteredAnamnesis.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[2fr_180px_120px_150px] border-b border-slate-100 text-sm last:border-b-0"
+                  className="grid grid-cols-[2fr_180px_120px_150px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                 >
                   <div className="p-3">
-                    <div className="font-black text-slate-700">
+                    <div className="font-semibold text-slate-700">
                       {item.question}
                     </div>
                     {item.options && (
-                      <div className="mt-1 text-xs text-slate-400">
+                      <div className="mt-1 text-[11px] text-slate-400">
                         Opções: {item.options}
                       </div>
                     )}
@@ -2535,10 +2535,10 @@ export default function ConfiguracoesPage() {
 
                   <div className="p-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-black ${
+                      className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
                         item.active === false
                           ? "bg-slate-100 text-slate-500"
-                          : "bg-emerald-100 text-emerald-700"
+                          : "bg-emerald-100 text-[#239d9a]"
                       }`}
                     >
                       {item.active === false ? "Inativa" : "Ativa"}
@@ -2549,7 +2549,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => editAnamnesisQuestion(item)}
-                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                     >
                       Editar
                     </button>
@@ -2557,7 +2557,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => deleteAnamnesisQuestion(item)}
-                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                      className="rounded-lg border border-[#d9eeee] bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 hover:bg-[#fbffff]"
                     >
                       Excluir
                     </button>
@@ -2571,13 +2571,13 @@ export default function ConfiguracoesPage() {
 
       {tab === "comunicacao" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
-                <h2 className="font-bold text-slate-700">
+                <h2 className="text-[15px] font-semibold text-slate-700">
                   Modelos de comunicação
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   Mensagens usadas em WhatsApp, lembretes, cobranças e retornos.
                 </p>
               </div>
@@ -2587,7 +2587,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={seedDefaultMessages}
                   disabled={messageLoading}
-                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-sm font-black text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
+                  className="rounded-xl border border-[#c2dddd] bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#239d9a] hover:bg-[#dff3f2] disabled:opacity-60"
                 >
                   Inserir mensagens padrão
                 </button>
@@ -2596,13 +2596,13 @@ export default function ConfiguracoesPage() {
                   placeholder="Buscar mensagem"
                   value={messageSearch}
                   onChange={(e) => setMessageSearch(e.target.value)}
-                  className="border border-[#c2dddd] p-3 rounded-xl lg:w-80"
+                  className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm lg:w-80"
                 />
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
-              <span className="font-black text-[#239d9a]">Campos disponíveis:</span>{" "}
+            <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-[12px] text-slate-600">
+              <span className="font-semibold text-[#239d9a]">Campos disponíveis:</span>{" "}
               {"{{nome}}"}, {"{{data}}"}, {"{{hora}}"}, {"{{valor}}"}, {"{{procedimento}}"}.
               Eles serão preenchidos automaticamente nas próximas integrações.
             </div>
@@ -2616,7 +2616,7 @@ export default function ConfiguracoesPage() {
                     type: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl bg-white"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm bg-white"
               >
                 <option value="confirmacao">Confirmação</option>
                 <option value="lembrete">Lembrete</option>
@@ -2635,7 +2635,7 @@ export default function ConfiguracoesPage() {
                     title: e.target.value,
                   }))
                 }
-                className="border border-[#c2dddd] p-3 rounded-xl"
+                className="rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
 
@@ -2648,11 +2648,11 @@ export default function ConfiguracoesPage() {
                   content: e.target.value,
                 }))
               }
-              className="min-h-[140px] w-full border border-[#c2dddd] p-3 rounded-xl"
+              className="min-h-[140px] w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-[13px] font-semibold text-slate-600">
                 <input
                   type="checkbox"
                   checked={messageForm.active}
@@ -2671,7 +2671,7 @@ export default function ConfiguracoesPage() {
                   <button
                     type="button"
                     onClick={resetMessageForm}
-                    className="rounded-xl border border-[#c2dddd] px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-[#d9eeee] bg-white px-3.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-[#fbffff]"
                   >
                     Cancelar edição
                   </button>
@@ -2681,7 +2681,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={saveMessageTemplate}
                   disabled={messageLoading}
-                  className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1f8f8c] disabled:opacity-60"
                 >
                   {messageForm.id ? "Salvar alteração" : "Adicionar mensagem"}
                 </button>
@@ -2689,8 +2689,8 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#c2dddd] rounded-2xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[160px_1fr_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+          <div className="overflow-hidden rounded-[24px] border border-[#d9eeee] bg-white/95 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="grid grid-cols-[160px_1fr_120px_150px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
               <div className="p-3">Tipo</div>
               <div className="p-3">Mensagem</div>
               <div className="p-3">Status</div>
@@ -2698,34 +2698,34 @@ export default function ConfiguracoesPage() {
             </div>
 
             {filteredMessages.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
+              <div className="p-6 text-center text-[13px] text-slate-500">
                 Nenhuma mensagem encontrada.
               </div>
             ) : (
               filteredMessages.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[160px_1fr_120px_150px] border-b border-slate-100 text-sm last:border-b-0"
+                  className="grid grid-cols-[160px_1fr_120px_150px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                 >
                   <div className="p-3 font-bold text-slate-600">
                     {getMessageTypeLabel(item.type)}
                   </div>
 
                   <div className="p-3">
-                    <div className="font-black text-slate-700">
+                    <div className="font-semibold text-slate-700">
                       {item.title || "-"}
                     </div>
-                    <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                    <div className="mt-1 line-clamp-2 text-[12px] text-slate-500">
                       {item.content || ""}
                     </div>
                   </div>
 
                   <div className="p-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-black ${
+                      className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
                         item.active === false
                           ? "bg-slate-100 text-slate-500"
-                          : "bg-emerald-100 text-emerald-700"
+                          : "bg-emerald-100 text-[#239d9a]"
                       }`}
                     >
                       {item.active === false ? "Inativa" : "Ativa"}
@@ -2736,7 +2736,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => editMessageTemplate(item)}
-                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                      className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                     >
                       Editar
                     </button>
@@ -2744,7 +2744,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => deleteMessageTemplate(item)}
-                      className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                      className="rounded-lg border border-[#d9eeee] bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 hover:bg-[#fbffff]"
                     >
                       Excluir
                     </button>
@@ -2758,19 +2758,19 @@ export default function ConfiguracoesPage() {
 
       {tab === "financeiro" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#c2dddd] rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-4 space-y-4 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
             <div>
-              <h2 className="font-bold text-slate-700">
+              <h2 className="text-[15px] font-semibold text-slate-700">
                 Configurações financeiro/fiscal
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-[13px] text-slate-500">
                 Dados usados em cobranças, recibos, financeiro do paciente e orçamentos.
               </p>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                   Tipo de recibo padrão
                 </label>
                 <select
@@ -2778,7 +2778,7 @@ export default function ConfiguracoesPage() {
                   onChange={(e) =>
                     handleFinancialChange("default_receipt_type", e.target.value)
                   }
-                  className="w-full border border-[#c2dddd] p-3 rounded-xl bg-white"
+                  className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm bg-white"
                 >
                   <option value="simples">Recibo simples</option>
                   <option value="ir">Recibo para declaração de IR</option>
@@ -2787,7 +2787,7 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                   Vencimento padrão
                 </label>
                 <input
@@ -2797,25 +2797,25 @@ export default function ConfiguracoesPage() {
                     handleFinancialChange("default_due_days", e.target.value)
                   }
                   placeholder="Dias após lançamento"
-                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                  className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                   Chave Pix do consultório
                 </label>
                 <input
                   value={financialSettings.pix_key}
                   onChange={(e) => handleFinancialChange("pix_key", e.target.value)}
                   placeholder="CPF, celular, e-mail ou chave aleatória"
-                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                  className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+              <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                 Formas de pagamento aceitas
               </label>
               <input
@@ -2824,16 +2824,16 @@ export default function ConfiguracoesPage() {
                   handleFinancialChange("accepted_payment_methods", e.target.value)
                 }
                 placeholder="Pix, Dinheiro, Cartão de crédito..."
-                className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-[11px] text-slate-400">
                 Separe as formas de pagamento por vírgula.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                   Multa por atraso (%)
                 </label>
                 <input
@@ -2842,12 +2842,12 @@ export default function ConfiguracoesPage() {
                   onChange={(e) =>
                     handleFinancialChange("late_fee_percent", e.target.value)
                   }
-                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                  className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                   Juros ao mês (%)
                 </label>
                 <input
@@ -2856,13 +2856,13 @@ export default function ConfiguracoesPage() {
                   onChange={(e) =>
                     handleFinancialChange("interest_percent_month", e.target.value)
                   }
-                  className="w-full border border-[#c2dddd] p-3 rounded-xl"
+                  className="w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+              <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
                 Observação padrão do recibo
               </label>
               <textarea
@@ -2871,7 +2871,7 @@ export default function ConfiguracoesPage() {
                   handleFinancialChange("receipt_note", e.target.value)
                 }
                 placeholder="Ex.: Recebemos a importância referente aos serviços odontológicos prestados."
-                className="min-h-[120px] w-full border border-[#c2dddd] p-3 rounded-xl"
+                className="min-h-[120px] w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2.5 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
               />
             </div>
 
@@ -2880,15 +2880,15 @@ export default function ConfiguracoesPage() {
                 type="button"
                 onClick={saveFinancialSettings}
                 disabled={financialLoading}
-                className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-3 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                className="rounded-xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-3 text-[13px] font-semibold text-white shadow-sm disabled:opacity-60"
               >
                 {financialLoading ? "Salvando..." : "Salvar financeiro/fiscal"}
               </button>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
-            <span className="font-black text-[#239d9a]">Próxima integração:</span>{" "}
+          <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+            <span className="font-semibold text-[#239d9a]">Próxima integração:</span>{" "}
             usar estas configurações automaticamente no financeiro do paciente,
             emissão de recibo e mensagem de cobrança por WhatsApp.
           </div>
@@ -2898,14 +2898,14 @@ export default function ConfiguracoesPage() {
 
       {tab === "backup" && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+          <div className="rounded-[20px] border border-[#c2dddd] bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-800">
+                <h2 className="text-xl font-semibold text-slate-800">
                   Backup completo do sistema
                 </h2>
 
-                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                <p className="mt-2 max-w-3xl text-[13px] text-slate-500">
                   Gere uma cópia completa dos principais dados do consultório em arquivo JSON.
                   Esse backup não altera o banco de dados e serve como cópia de segurança local.
                 </p>
@@ -2914,50 +2914,50 @@ export default function ConfiguracoesPage() {
               <button
                 type="button"
                 onClick={generateSystemBackup}
-                className="rounded-2xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-4 text-sm font-black text-white shadow-sm hover:opacity-90"
+                className="rounded-[20px] bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-6 py-4 text-[13px] font-semibold text-white shadow-sm hover:opacity-90"
               >
                 Gerar backup completo
               </button>
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                <div className="text-sm font-black text-slate-800">
+              <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                <div className="text-[13px] font-semibold text-slate-800">
                   Dados incluídos
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-[12px] text-slate-500">
                   Pacientes, agenda, financeiro, pagamentos, orçamentos, tratamentos, imagens/RX e configurações.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                <div className="text-sm font-black text-slate-800">
+              <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                <div className="text-[13px] font-semibold text-slate-800">
                   Formato
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-[12px] text-slate-500">
                   Arquivo .json, ideal para guarda, auditoria e futura restauração.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <div className="text-sm font-black text-amber-800">
+              <div className="rounded-[20px] border border-amber-200 bg-[#f7ffff] p-4">
+                <div className="text-[13px] font-semibold text-amber-800">
                   Recomendação
                 </div>
-                <p className="mt-1 text-xs text-amber-700">
+                <p className="mt-1 text-[12px] text-[#0f766e]">
                   Faça um backup semanal e guarde em local seguro, como HD externo ou nuvem.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+          <div className="rounded-[20px] border border-[#c2dddd] bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-800">
+                <h2 className="text-xl font-semibold text-slate-800">
                   Backup online
                 </h2>
 
-                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                <p className="mt-2 max-w-3xl text-[13px] text-slate-500">
                   Salve uma cópia do backup no Supabase Storage e, quando desejar, envie também uma cópia externa para o Google Drive.
                 </p>
               </div>
@@ -2967,7 +2967,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={loadCloudBackups}
                   disabled={cloudBackupLoading}
-                  className="rounded-2xl border border-[#c2dddd] bg-[#f7ffff] px-5 py-3 text-sm font-black text-[#239d9a] hover:bg-[#eefafa] disabled:opacity-60"
+                  className="rounded-[20px] border border-[#c2dddd] bg-[#f7ffff] px-5 py-3 text-[13px] font-semibold text-[#239d9a] hover:bg-[#eefafa] disabled:opacity-60"
                 >
                   Atualizar histórico
                 </button>
@@ -2976,7 +2976,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={generateCloudBackupNow}
                   disabled={cloudBackupLoading}
-                  className="rounded-2xl bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-3 text-sm font-black text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+                  className="rounded-[20px] bg-gradient-to-r from-[#1db7b3] to-[#7ccfce] px-5 py-3 text-[13px] font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
                 >
                   {cloudBackupLoading ? "Processando..." : "Gerar backup online agora"}
                 </button>
@@ -2985,7 +2985,7 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={connectGoogleDriveBackup}
                   disabled={cloudBackupLoading}
-                  className="rounded-2xl border border-[#c2dddd] bg-white px-5 py-3 text-sm font-black text-[#239d9a] shadow-sm hover:bg-[#eefafa] disabled:opacity-60"
+                  className="rounded-[20px] border border-[#c2dddd] bg-white px-5 py-3 text-[13px] font-semibold text-[#239d9a] shadow-sm hover:bg-[#eefafa] disabled:opacity-60"
                 >
                   Conectar Google Drive
                 </button>
@@ -2994,20 +2994,20 @@ export default function ConfiguracoesPage() {
                   type="button"
                   onClick={generateGoogleDriveBackupNow}
                   disabled={cloudBackupLoading}
-                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 shadow-sm hover:bg-emerald-100 disabled:opacity-60"
+                  className="rounded-[20px] border border-emerald-200 bg-[#eefafa] px-5 py-3 text-[13px] font-semibold text-[#239d9a] shadow-sm hover:bg-emerald-100 disabled:opacity-60"
                 >
                   {cloudBackupLoading ? "Processando..." : "Enviar ao Google Drive"}
                 </button>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-xs text-slate-600">
-              <span className="font-black text-[#239d9a]">Modo atual:</span>{" "}
+            <div className="mt-5 rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-[12px] text-slate-600">
+              <span className="font-semibold text-[#239d9a]">Modo atual:</span>{" "}
               backup manual online. Para usar o Drive, conecte primeiro o Google Drive por esta aba. Essa conexão é global do sistema e não depende do profissional selecionado na agenda.
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-[#c2dddd] bg-white">
-              <div className="grid grid-cols-[1fr_130px_170px_180px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+            <div className="mt-5 overflow-hidden rounded-[20px] border border-[#c2dddd] bg-white">
+              <div className="grid grid-cols-[1fr_130px_170px_180px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 <div className="p-3">Arquivo</div>
                 <div className="p-3 text-center">Tamanho</div>
                 <div className="p-3 text-center">Criado em</div>
@@ -3015,21 +3015,21 @@ export default function ConfiguracoesPage() {
               </div>
 
               {cloudBackups.length === 0 ? (
-                <div className="p-6 text-center text-sm text-slate-500">
+                <div className="p-6 text-center text-[13px] text-slate-500">
                   {cloudBackupLoading ? "Carregando backups online..." : "Nenhum backup online encontrado ainda."}
                 </div>
               ) : (
                 cloudBackups.map((item) => (
                   <div
                     key={item.path}
-                    className="grid grid-cols-[1fr_130px_170px_180px] border-b border-slate-100 text-sm last:border-b-0"
+                    className="grid grid-cols-[1fr_130px_170px_180px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                   >
                     <div className="p-3">
-                      <div className="font-black text-slate-700 break-all">{item.name}</div>
-                      <div className="text-xs text-slate-400 break-all">{item.path}</div>
+                      <div className="font-semibold text-slate-700 break-all">{item.name}</div>
+                      <div className="text-[11px] text-slate-400 break-all">{item.path}</div>
                     </div>
 
-                    <div className="p-3 text-center font-bold text-slate-700">
+                    <div className="p-3 text-center text-[15px] font-semibold text-slate-700">
                       {formatFileSize(item.size)}
                     </div>
 
@@ -3041,7 +3041,7 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         onClick={() => downloadCloudBackup(item.path)}
-                        className="rounded-lg bg-[#eefafa] px-3 py-1 text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
+                        className="rounded-lg bg-[#eefafa] px-3 py-1 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
                       >
                         Download
                       </button>
@@ -3049,7 +3049,7 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         onClick={() => deleteCloudBackup(item.path)}
-                        className="rounded-lg bg-red-50 px-3 py-1 text-xs font-black text-red-700 hover:bg-red-100"
+                        className="rounded-lg border border-[#d9eeee] bg-white px-3 py-1 text-[11px] font-semibold text-slate-500 hover:bg-[#fbffff]"
                       >
                         Excluir
                       </button>
@@ -3060,20 +3060,20 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#c2dddd] bg-white p-6 shadow-sm">
+          <div className="rounded-[20px] border border-[#c2dddd] bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-800">
+                <h2 className="text-xl font-semibold text-slate-800">
                   Verificar backup
                 </h2>
 
-                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                <p className="mt-2 max-w-3xl text-[13px] text-slate-500">
                   Selecione um arquivo .json para validar a versão, a estrutura e as tabelas do backup.
                   Esta etapa é apenas uma leitura de segurança e não altera nenhuma informação do banco de dados.
                 </p>
               </div>
 
-              <label className="cursor-pointer rounded-2xl border border-[#c2dddd] bg-[#f7ffff] px-6 py-4 text-center text-sm font-black text-[#239d9a] hover:bg-[#eefafa]">
+              <label className="cursor-pointer rounded-[20px] border border-[#c2dddd] bg-[#f7ffff] px-6 py-4 text-center text-[13px] font-semibold text-[#239d9a] hover:bg-[#eefafa]">
                 Selecionar arquivo JSON
                 <input
                   type="file"
@@ -3085,14 +3085,14 @@ export default function ConfiguracoesPage() {
             </div>
 
             {backupFileName && (
-              <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
-                <span className="font-black text-[#239d9a]">Arquivo selecionado:</span>{" "}
+              <div className="mt-4 rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+                <span className="font-semibold text-[#239d9a]">Arquivo selecionado:</span>{" "}
                 {backupFileName}
               </div>
             )}
 
             {backupChecking && (
-              <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm font-black text-[#239d9a]">
+              <div className="mt-4 rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-[13px] font-semibold text-[#239d9a]">
                 Verificando backup...
               </div>
             )}
@@ -3100,15 +3100,15 @@ export default function ConfiguracoesPage() {
             {backupValidation && !backupChecking && (
               <div className="mt-6 space-y-4">
                 <div
-                  className={`rounded-2xl border p-4 ${
+                  className={`rounded-[20px] border p-4 ${
                     backupValidation.valid
-                      ? "border-emerald-200 bg-emerald-50"
-                      : "border-red-200 bg-red-50"
+                      ? "border-emerald-200 bg-[#eefafa]"
+                      : "border-[#d9eeee] bg-[#f7ffff]"
                   }`}
                 >
                   <div
-                    className={`text-sm font-black ${
-                      backupValidation.valid ? "text-emerald-800" : "text-red-800"
+                    className={`text-[13px] font-semibold ${
+                      backupValidation.valid ? "text-emerald-800" : "text-[#0f766e]"
                     }`}
                   >
                     {backupValidation.valid
@@ -3117,8 +3117,8 @@ export default function ConfiguracoesPage() {
                   </div>
 
                   <p
-                    className={`mt-1 text-xs ${
-                      backupValidation.valid ? "text-emerald-700" : "text-red-700"
+                    className={`mt-1 text-[12px] ${
+                      backupValidation.valid ? "text-[#239d9a]" : "text-[#0f766e]"
                     }`}
                   >
                     A verificação foi feita apenas no navegador. Nenhum dado foi enviado ou alterado no banco.
@@ -3126,59 +3126,59 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                       Data do backup
                     </div>
-                    <div className="mt-1 text-sm font-black text-slate-800">
+                    <div className="mt-1 text-[13px] font-semibold text-slate-800">
                       {backupValidation.generatedAtLabel}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                       Versão
                     </div>
-                    <div className="mt-1 text-sm font-black text-slate-800">
+                    <div className="mt-1 text-[13px] font-semibold text-slate-800">
                       {backupValidation.version}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                       Pacientes
                     </div>
-                    <div className="mt-1 text-2xl font-black text-slate-800">
+                    <div className="mt-1 text-[24px] font-semibold tracking-tight text-slate-800">
                       {backupValidation.patientsCount}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                       Consultas
                     </div>
-                    <div className="mt-1 text-2xl font-black text-slate-800">
+                    <div className="mt-1 text-[24px] font-semibold tracking-tight text-slate-800">
                       {backupValidation.appointmentsCount}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                       Financeiro
                     </div>
-                    <div className="mt-1 text-2xl font-black text-slate-800">
+                    <div className="mt-1 text-[24px] font-semibold tracking-tight text-slate-800">
                       {backupValidation.financialCount}
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#c2dddd] bg-white p-5 shadow-sm">
+                <div className="rounded-[20px] border border-[#c2dddd] bg-white p-5 shadow-sm">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <h3 className="text-base font-black text-slate-800">
+                      <h3 className="text-base font-semibold text-slate-800">
                         Compatibilidade do backup
                       </h3>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-[13px] text-slate-500">
                         Tabelas obrigatórias: {backupValidation.requiredPresentCount} de {backupValidation.requiredTotalCount} encontradas.
                         {backupValidation.optionalMissingCount > 0
                           ? ` ${backupValidation.optionalMissingCount} tabelas opcionais não vieram neste arquivo, mas isso não impede a restauração segura.`
@@ -3186,36 +3186,36 @@ export default function ConfiguracoesPage() {
                       </p>
                     </div>
 
-                    <div className="rounded-full bg-[#eefafa] px-4 py-2 text-sm font-black text-[#239d9a]">
+                    <div className="rounded-full bg-[#eefafa] px-4 py-2 text-[13px] font-semibold text-[#239d9a]">
                       {backupValidation.compatibilityPercent}% compatível
                     </div>
                   </div>
 
                   <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
                     <div
-                      className={backupValidation.valid ? "h-full rounded-full bg-[#239d9a]" : "h-full rounded-full bg-red-500"}
+                      className={backupValidation.valid ? "h-full rounded-full bg-[#239d9a]" : "h-full rounded-full bg-[#f7ffff]0"}
                       style={{ width: `${Math.max(backupValidation.compatibilityPercent, 6)}%` }}
                     />
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
-                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Total</div>
-                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.totalRecords}</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">Total</div>
+                      <div className="mt-1 text-lg font-semibold text-slate-800">{backupValidation.totalRecords}</div>
                     </div>
                     <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
-                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Obrigatórias OK</div>
-                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.requiredPresentCount}/{backupValidation.requiredTotalCount}</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">Obrigatórias OK</div>
+                      <div className="mt-1 text-lg font-semibold text-slate-800">{backupValidation.requiredPresentCount}/{backupValidation.requiredTotalCount}</div>
                     </div>
                     <div className="rounded-xl border border-[#d9eeee] bg-[#f7ffff] p-3">
-                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">Opcionais presentes</div>
-                      <div className="mt-1 text-lg font-black text-slate-800">{backupValidation.optionalPresentCount}/{backupValidation.optionalTotalCount}</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400">Opcionais presentes</div>
+                      <div className="mt-1 text-lg font-semibold text-slate-800">{backupValidation.optionalPresentCount}/{backupValidation.optionalTotalCount}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#c2dddd] bg-white overflow-hidden">
-                  <div className="grid grid-cols-[1fr_120px_120px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+                <div className="rounded-[20px] border border-[#c2dddd] bg-white overflow-hidden">
+                  <div className="grid grid-cols-[1fr_120px_120px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                     <div className="p-3">Tabela</div>
                     <div className="p-3 text-center">Registros</div>
                     <div className="p-3 text-right">Status</div>
@@ -3224,27 +3224,27 @@ export default function ConfiguracoesPage() {
                   {backupValidation.tables.map((item) => (
                     <div
                       key={item.key}
-                      className="grid grid-cols-[1fr_120px_120px] border-b border-slate-100 text-sm last:border-b-0"
+                      className="grid grid-cols-[1fr_120px_120px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                     >
                       <div className="p-3">
-                        <div className="font-black text-slate-700">{item.label}</div>
-                        <div className="text-xs text-slate-400">
+                        <div className="font-semibold text-slate-700">{item.label}</div>
+                        <div className="text-[11px] text-slate-400">
                           {item.required ? "Obrigatória" : "Opcional"}
                         </div>
                       </div>
 
-                      <div className="p-3 text-center font-black text-slate-700">
+                      <div className="p-3 text-center font-semibold text-slate-700">
                         {item.count}
                       </div>
 
                       <div className="p-3 text-right">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-black ${
+                          className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
                             item.present
-                              ? "bg-emerald-100 text-emerald-700"
+                              ? "bg-emerald-100 text-[#239d9a]"
                               : item.required
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-700"
+                                ? "bg-[#eefafa] text-[#0f766e]"
+                                : "bg-amber-100 text-[#0f766e]"
                           }`}
                         >
                           {item.present ? "OK" : item.required ? "Ausente" : "Opcional"}
@@ -3255,8 +3255,8 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 {backupValidation.optionalMissingCount > 0 && backupValidation.valid && (
-                  <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
-                    <span className="font-black text-[#239d9a]">Observação:</span>{" "}
+                  <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-sm text-slate-600">
+                    <span className="font-semibold text-[#239d9a]">Observação:</span>{" "}
                     este backup não contém algumas tabelas opcionais. Isso é normal em backups antigos ou quando essas áreas ainda não tinham registros.
                   </div>
                 )}
@@ -3264,11 +3264,11 @@ export default function ConfiguracoesPage() {
                 {(backupValidation.errors.length > 0 || backupValidation.warnings.length > 0) && (
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {backupValidation.errors.length > 0 && (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-                        <div className="text-sm font-black text-red-800">
+                      <div className="rounded-[20px] border border-[#d9eeee] bg-[#f7ffff] p-4">
+                        <div className="text-[13px] font-semibold text-[#0f766e]">
                           Erros encontrados
                         </div>
-                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-red-700">
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-[#0f766e]">
                           {backupValidation.errors.map((item) => (
                             <li key={item}>{item}</li>
                           ))}
@@ -3277,11 +3277,11 @@ export default function ConfiguracoesPage() {
                     )}
 
                     {backupValidation.warnings.length > 0 && (
-                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                        <div className="text-sm font-black text-amber-800">
+                      <div className="rounded-[20px] border border-amber-200 bg-[#f7ffff] p-4">
+                        <div className="text-[13px] font-semibold text-amber-800">
                           Alertas importantes
                         </div>
-                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-700">
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-[#0f766e]">
                           {backupValidation.warnings.map((item) => (
                             <li key={item}>{item}</li>
                           ))}
@@ -3292,9 +3292,9 @@ export default function ConfiguracoesPage() {
                 )}
 
                 {backupValidation.valid && (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 space-y-4">
+                  <div className="rounded-[20px] border border-amber-200 bg-[#f7ffff] p-5 space-y-4">
                     <div>
-                      <h3 className="text-lg font-black text-amber-900">
+                      <h3 className="text-lg font-semibold text-amber-900">
                         Restaurar backup
                       </h3>
                       <p className="mt-1 text-sm text-amber-800">
@@ -3302,7 +3302,7 @@ export default function ConfiguracoesPage() {
                       </p>
                     </div>
 
-                    <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-white/70 p-4 text-sm text-amber-900">
+                    <label className="flex items-start gap-3 rounded-[20px] border border-amber-200 bg-white/70 p-4 text-sm text-amber-900">
                       <input
                         type="checkbox"
                         checked={restoreModeAccepted}
@@ -3319,7 +3319,7 @@ export default function ConfiguracoesPage() {
                         value={restoreConfirmation}
                         onChange={(event) => setRestoreConfirmation(event.target.value)}
                         placeholder="Digite RESTAURAR para liberar o botão"
-                        className="rounded-xl border border-amber-200 bg-white p-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+                        className="rounded-xl border border-amber-200 bg-white p-3 text-sm text-[15px] font-semibold text-slate-700 outline-none focus:border-amber-400"
                       />
 
                       <button
@@ -3330,22 +3330,22 @@ export default function ConfiguracoesPage() {
                           !restoreModeAccepted ||
                           restoreConfirmation.trim().toUpperCase() !== "RESTAURAR"
                         }
-                        className="rounded-xl bg-amber-600 px-6 py-3 text-sm font-black text-white shadow-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl bg-amber-600 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {backupRestoring ? "Restaurando..." : "Restaurar backup seguro"}
                       </button>
                     </div>
 
-                    <div className="rounded-2xl border border-amber-200 bg-white/70 p-4 text-xs text-amber-800">
-                      <span className="font-black">Importante:</span>{" "}
+                    <div className="rounded-[20px] border border-amber-200 bg-white/70 p-4 text-[12px] text-amber-800">
+                      <span className="font-semibold">Importante:</span>{" "}
                       se alguma tabela falhar, o processo será interrompido e mostrará exatamente onde parou. Por segurança, o ideal é gerar um novo backup antes de qualquer restauração.
                     </div>
                   </div>
                 )}
 
                 {backupRestoreResults.length > 0 && (
-                  <div className="rounded-2xl border border-[#c2dddd] bg-white overflow-hidden">
-                    <div className="grid grid-cols-[1fr_120px_160px] bg-[#f7ffff] border-b border-[#c2dddd] text-xs font-black uppercase tracking-widest text-slate-500">
+                  <div className="rounded-[20px] border border-[#c2dddd] bg-white overflow-hidden">
+                    <div className="grid grid-cols-[1fr_120px_160px] bg-[#f7ffff] border-b border-[#c2dddd] text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                       <div className="p-3">Restauração</div>
                       <div className="p-3 text-center">Registros</div>
                       <div className="p-3 text-right">Resultado</div>
@@ -3354,23 +3354,23 @@ export default function ConfiguracoesPage() {
                     {backupRestoreResults.map((item) => (
                       <div
                         key={item.key}
-                        className="grid grid-cols-[1fr_120px_160px] border-b border-slate-100 text-sm last:border-b-0"
+                        className="grid grid-cols-[1fr_120px_160px] border-b border-[#edf7f7] text-[13px] last:border-b-0"
                       >
                         <div className="p-3">
-                          <div className="font-black text-slate-700">{item.label}</div>
-                          <div className="text-xs text-slate-400">{item.message}</div>
+                          <div className="font-semibold text-slate-700">{item.label}</div>
+                          <div className="text-[11px] text-slate-400">{item.message}</div>
                         </div>
 
-                        <div className="p-3 text-center font-black text-slate-700">
+                        <div className="p-3 text-center font-semibold text-slate-700">
                           {item.count}
                         </div>
 
                         <div className="p-3 text-right">
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-black ${
+                            className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
                               item.success
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-red-100 text-red-700"
+                                ? "bg-emerald-100 text-[#239d9a]"
+                                : "bg-[#eefafa] text-[#0f766e]"
                             }`}
                           >
                             {item.success ? "OK" : "Erro"}
