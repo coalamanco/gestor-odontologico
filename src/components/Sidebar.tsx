@@ -135,21 +135,21 @@ function SidebarContent({
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#0f766e] via-[#159e96] to-[#35bcb3] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
-      <div className="border-b border-white/10 p-4">
+    <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#168f8d] via-[#239d9a] to-[#6ad3cf] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
+      <div className="border-b border-white/10 p-3.5">
         <div className="flex items-start justify-between gap-3">
-          <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 shadow-sm backdrop-blur-md">
+          <div className="w-full rounded-2xl border border-white/10 bg-white/10 p-3 shadow-sm backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[#159e96] shadow-sm">
-                <span className="text-sm font-black">HP</span>
+              <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-2xl bg-white text-[#159e96] shadow-sm">
+                <span className="text-[13px] font-bold">HP</span>
               </div>
 
               <div className="min-w-0">
-                <div className="truncate text-sm font-black leading-tight">
+                <div className="truncate text-[13px] font-bold leading-tight">
                   Dr. Henrique S. Pasquali
                 </div>
 
-                <div className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100/70">
+                <div className="mt-0.5 truncate text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
                   Implantodontia
                 </div>
               </div>
@@ -160,7 +160,7 @@ function SidebarContent({
             <button
               type="button"
               onClick={onNavigate}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
+              className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
               aria-label="Fechar menu"
             >
               <X size={20} />
@@ -169,8 +169,8 @@ function SidebarContent({
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="space-y-5">
+      <nav className="flex-1 overflow-y-auto px-3 py-3">
+        <div className="space-y-4">
           {sections.map((section) => {
             const sectionItems = visibleMenu.filter(
               (item) => item.section === section,
@@ -179,8 +179,8 @@ function SidebarContent({
             if (sectionItems.length === 0) return null;
 
             return (
-              <div key={section} className="space-y-1.5">
-                <div className="px-3 text-[9px] font-black uppercase tracking-[0.22em] text-emerald-100/45">
+              <div key={section} className="space-y-1">
+                <div className="px-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
                   {section}
                 </div>
 
@@ -194,24 +194,24 @@ function SidebarContent({
                         key={item.href}
                         href={item.href}
                         onClick={onNavigate}
-                        className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-black transition-all duration-200 ${
+                        className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-bold transition-all duration-200 ${
                           active
-                            ? "bg-white text-[#159e96] shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+                            ? "bg-white text-[#159e96] shadow-[0_10px_24px_rgba(0,0,0,0.16)]"
                             : "text-white/75 hover:translate-x-1 hover:bg-white/10 hover:text-white"
                         }`}
                       >
                         {active && (
-                          <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#159e96]" />
+                          <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[#159e96]" />
                         )}
 
                         <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition ${
+                          className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[14px] transition ${
                             active
                               ? "bg-[#dff8f5] text-[#159e96]"
                               : "bg-white/10 text-white/85 group-hover:bg-white/15 group-hover:text-white"
                           }`}
                         >
-                          <Icon size={17} />
+                          <Icon size={16} />
                         </span>
 
                         <span className="truncate">{item.label}</span>
@@ -225,14 +225,14 @@ function SidebarContent({
         </div>
       </nav>
 
-      <div className="border-t border-white/10 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
+      <div className="border-t border-white/10 p-3.5 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(74,222,128,0.15)]" />
-            <span className="text-xs font-black text-white">Sistema ativo</span>
+            <span className="text-[12px] font-semibold text-white">Sistema ativo</span>
           </div>
 
-          <div className="mt-1 text-[10px] font-semibold text-emerald-100/60">
+          <div className="mt-1 text-[10px] font-medium text-emerald-100/65">
             Operação clínica online
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="hidden h-screen w-56 shrink-0 flex-col md:flex">
+      <aside className="hidden h-screen w-[240px] shrink-0 flex-col md:flex">
         <SidebarContent visibleMenu={visibleMenu} />
       </aside>
 
@@ -281,7 +281,7 @@ export default function Sidebar({
       />
 
       <aside
-        className={`fixed left-0 top-0 z-[80] h-[100dvh] w-[82vw] max-w-[310px] overflow-hidden rounded-r-[2rem] shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-[80] h-[100dvh] w-[80vw] max-w-[295px] overflow-hidden rounded-r-[2rem] shadow-2xl transition-transform duration-300 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -302,16 +302,16 @@ export default function Sidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-black ${
+                className={`flex flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold ${
                   active ? "text-[#159e96]" : "text-slate-500"
                 }`}
               >
                 <span
-                  className={`flex h-8 w-8 items-center justify-center rounded-2xl ${
+                  className={`flex h-7.5 w-7.5 items-center justify-center rounded-2xl ${
                     active ? "bg-[#dff8f5]" : "bg-transparent"
                   }`}
                 >
-                  <Icon size={17} />
+                  <Icon size={16} />
                 </span>
 
                 <span className="truncate">{item.label}</span>
