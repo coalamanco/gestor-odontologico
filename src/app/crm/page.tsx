@@ -350,10 +350,10 @@ export default function CrmPage() {
   }, [activeFilter, returnRows, birthdayRows, openBudgetRows, stoppedTreatmentRows, search]);
 
   const stats = [
-    { title: "Sem retorno", value: returnRows.length, description: `${daysThreshold}+ dias sem nova consulta`, icon: CalendarClock, filter: "retorno" as CrmFilter, tone: "text-amber-700 bg-amber-50 border-amber-100" },
-    { title: "Aniversariantes", value: birthdayRows.length, description: "Pacientes do mês", icon: Cake, filter: "aniversariantes" as CrmFilter, tone: "text-pink-700 bg-pink-50 border-pink-100" },
-    { title: "Orçamentos pendentes", value: openBudgetRows.length, description: formatCurrency(openBudgetRows.reduce((acc, row) => acc + Number(row.openBudgetTotal || 0), 0)), icon: FileText, filter: "orcamentos" as CrmFilter, tone: "text-cyan-700 bg-cyan-50 border-cyan-100" },
-    { title: "Tratamentos parados", value: stoppedTreatmentRows.length, description: "Há mais de 30 dias", icon: Stethoscope, filter: "tratamentos" as CrmFilter, tone: "text-purple-700 bg-purple-50 border-purple-100" },
+    { title: "Sem retorno", value: returnRows.length, description: `${daysThreshold}+ dias sem nova consulta`, icon: CalendarClock, filter: "retorno" as CrmFilter, tone: "text-amber-600 bg-amber-50/70 border-amber-100" },
+    { title: "Aniversariantes", value: birthdayRows.length, description: "Pacientes do mês", icon: Cake, filter: "aniversariantes" as CrmFilter, tone: "text-rose-500 bg-rose-50/70 border-rose-100" },
+    { title: "Orçamentos pendentes", value: openBudgetRows.length, description: formatCurrency(openBudgetRows.reduce((acc, row) => acc + Number(row.openBudgetTotal || 0), 0)), icon: FileText, filter: "orcamentos" as CrmFilter, tone: "text-[#239d9a] bg-[#eefafa] border-[#bde8e7]" },
+    { title: "Tratamentos parados", value: stoppedTreatmentRows.length, description: "Há mais de 30 dias", icon: Stethoscope, filter: "tratamentos" as CrmFilter, tone: "text-violet-600 bg-violet-50/70 border-violet-100" },
   ];
 
   const buildMessage = (row: CrmPatientRow) => {
@@ -384,20 +384,20 @@ export default function CrmPage() {
   }[activeFilter];
 
   return (
-    <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-2 pb-28 md:p-6 md:pb-10">
+    <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-28 md:p-5 md:pb-10">
       <div className="mx-auto max-w-7xl space-y-4">
         <section className="overflow-hidden rounded-[1.35rem] border border-[#bde4e3] bg-white shadow-sm md:rounded-[2rem]">
-          <div className="bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-6 py-3 text-white">
+          <div className="bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 py-3.5 text-white">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-50 ring-1 ring-white/20">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-50 ring-1 ring-white/20">
                   <Sparkles size={13} />
                   CRM inteligente
                 </div>
-                <h1 className="mt-3 text-xl md:text-2xl font-black tracking-tight">
+                <h1 className="mt-3 text-xl md:text-2xl font-bold tracking-tight">
                   Relacionamento e Marketing
                 </h1>
-                <p className="mt-2 max-w-3xl text-xs opacity-90 font-medium leading-5 text-cyan-50">
+                <p className="mt-2 max-w-3xl text-[13px] opacity-90 font-medium leading-5 text-cyan-50">
                   Acompanhe pacientes sem retorno, aniversariantes, orçamentos pendentes e tratamentos parados com mensagens prontas para WhatsApp.
                 </p>
               </div>
@@ -405,7 +405,7 @@ export default function CrmPage() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href="/crm/automacoes"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-black text-[#239d9a] shadow-sm hover:bg-cyan-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-[#239d9a] shadow-sm hover:bg-cyan-50"
                 >
                   <Bot size={17} />
                   Automações
@@ -414,7 +414,7 @@ export default function CrmPage() {
                 <button
                   type="button"
                   onClick={loadData}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-black text-white shadow-sm backdrop-blur hover:bg-white/20"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur hover:bg-white/20"
                 >
                   <RefreshCw size={17} />
                   Atualizar
@@ -427,7 +427,7 @@ export default function CrmPage() {
         <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <Link
             href="/crm/campanhas"
-            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="group overflow-hidden rounded-[1.35rem] border border-[#d9eeee] bg-white p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a] transition group-hover:bg-[#239d9a] group-hover:text-white">
@@ -435,15 +435,15 @@ export default function CrmPage() {
               </div>
 
               <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Execução comercial
                 </div>
 
-                <h2 className="mt-1 text-base font-black text-slate-800">
+                <h2 className="mt-1 text-[15px] font-semibold text-slate-800">
                   Campanhas
                 </h2>
 
-                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                   Acesse campanhas por perfil, listas de pacientes, funil e mensagens prontas.
                 </p>
               </div>
@@ -452,23 +452,23 @@ export default function CrmPage() {
 
           <Link
             href="/crm/ia"
-            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="group overflow-hidden rounded-[1.35rem] border border-[#d9eeee] bg-white p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-[#f0f9ff] p-3 text-cyan-700 transition group-hover:bg-cyan-600 group-hover:text-white">
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a] transition group-hover:bg-[#239d9a] group-hover:text-white">
                 <Brain size={21} />
               </div>
 
               <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Inteligência estratégica
                 </div>
 
-                <h2 className="mt-1 text-base font-black text-slate-800">
+                <h2 className="mt-1 text-[15px] font-semibold text-slate-800">
                   IA Estratégica
                 </h2>
 
-                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                   Veja recomendações, pacientes estratégicos e ideias de conteúdo para marketing.
                 </p>
               </div>
@@ -477,23 +477,23 @@ export default function CrmPage() {
 
           <Link
             href="/crm/automacoes"
-            className="group overflow-hidden rounded-[1.25rem] border border-[#bde4e3] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="group overflow-hidden rounded-[1.35rem] border border-[#d9eeee] bg-white p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 transition group-hover:bg-emerald-600 group-hover:text-white">
+              <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a] transition group-hover:bg-[#239d9a] group-hover:text-white">
                 <Target size={21} />
               </div>
 
               <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Rotinas inteligentes
                 </div>
 
-                <h2 className="mt-1 text-base font-black text-slate-800">
+                <h2 className="mt-1 text-[15px] font-semibold text-slate-800">
                   Automações
                 </h2>
 
-                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
                   Configure ações automáticas de relacionamento, retorno e campanhas.
                 </p>
               </div>
@@ -507,15 +507,15 @@ export default function CrmPage() {
               key={item.title}
               type="button"
               onClick={() => setActiveFilter(item.filter)}
-              className={`rounded-[1.25rem] border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+              className={`rounded-[1.35rem] border bg-white p-4 text-left shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
                 activeFilter === item.filter ? "border-[#84d5d3] ring-2 ring-[#dff5f4]" : "border-[#d9eeee]"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{item.title}</div>
-                  <div className="mt-2 text-3xl font-black text-slate-800">{item.value}</div>
-                  <div className="mt-1 text-xs font-semibold text-slate-500">{item.description}</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-400">{item.title}</div>
+                  <div className="mt-2 text-2xl font-bold text-slate-800">{item.value}</div>
+                  <div className="mt-1 text-[12px] font-medium text-slate-500">{item.description}</div>
                 </div>
                 <div className={`rounded-2xl border p-2.5 ${item.tone}`}>
                   <item.icon size={20} />
@@ -525,15 +525,15 @@ export default function CrmPage() {
           ))}
         </section>
 
-        <section className="rounded-[1.25rem] border border-[#d9eeee] bg-white p-4 shadow-sm">
+        <section className="rounded-[1.35rem] border border-[#d9eeee] bg-white p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-[#eefafa] p-2.5 text-[#239d9a]">
                 <Megaphone size={20} />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-800">Painel de ação</h2>
-                <p className="mt-1 text-sm text-slate-500">Use esta tela para campanhas manuais rápidas. Para listas automáticas, clique em Automações.</p>
+                <h2 className="text-[15px] font-semibold text-slate-800">Painel de ação</h2>
+                <p className="mt-1 text-[13px] text-slate-500">Use esta tela para campanhas manuais rápidas. Para listas automáticas, clique em Automações.</p>
               </div>
             </div>
 
@@ -544,7 +544,7 @@ export default function CrmPage() {
                     key={days}
                     type="button"
                     onClick={() => setDaysThreshold(days)}
-                    className={`rounded-xl px-3 py-2 text-xs font-black ${
+                    className={`rounded-xl px-3 py-2 text-xs font-semibold ${
                       daysThreshold === days ? "bg-[#239d9a] text-white" : "border border-[#d9eeee] bg-[#fbffff] text-slate-600"
                     }`}
                   >
@@ -561,17 +561,17 @@ export default function CrmPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar paciente, telefone, CPF ou e-mail..."
-              className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
+              className="w-full bg-transparent text-[13px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
             />
           </div>
         </section>
 
-        <section className="rounded-[1.25rem] border border-[#d9eeee] bg-white shadow-sm">
+        <section className="rounded-[1.35rem] border border-[#d9eeee] bg-white shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
           <div className="border-b border-[#e8f5f5] px-4 py-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-lg font-black text-slate-800">{activeTitle}</h2>
-                <p className="mt-1 text-xs font-black uppercase tracking-widest text-slate-400">{visibleRows.length} paciente(s) encontrado(s)</p>
+                <h2 className="text-[17px] font-semibold text-slate-800">{activeTitle}</h2>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{visibleRows.length} paciente(s) encontrado(s)</p>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full bg-[#f7ffff] px-3 py-1.5 text-xs font-bold text-[#239d9a] ring-1 ring-[#d9eeee]">
                 <CheckCircle2 size={14} />
@@ -581,15 +581,15 @@ export default function CrmPage() {
           </div>
 
           <div className="divide-y divide-[#edf7f7]">
-            {loading && <div className="p-6 text-center text-sm font-semibold text-slate-500">Carregando CRM...</div>}
+            {loading && <div className="p-6 text-center text-[13px] font-medium text-slate-500">Carregando CRM...</div>}
 
             {!loading && visibleRows.length === 0 && (
               <div className="p-8 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eefafa] text-[#239d9a]">
                   <CheckCircle2 size={22} />
                 </div>
-                <h3 className="mt-3 text-base font-black text-slate-800">Nenhum paciente nesta lista</h3>
-                <p className="mt-1 text-sm text-slate-500">Tudo certo para este filtro no momento.</p>
+                <h3 className="mt-3 text-[15px] font-semibold text-slate-800">Nenhum paciente nesta lista</h3>
+                <p className="mt-1 text-[13px] text-slate-500">Tudo certo para este filtro no momento.</p>
               </div>
             )}
 
@@ -604,14 +604,14 @@ export default function CrmPage() {
                   <div key={patient.id} className="grid grid-cols-1 gap-4 p-4 transition hover:bg-[#fbffff] xl:grid-cols-[1fr_1.1fr_auto]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link href={`/pacientes/${patient.id}`} className="truncate text-base font-black text-slate-800 hover:text-[#239d9a]">
+                        <Link href={`/pacientes/${patient.id}`} className="truncate text-[15px] font-semibold text-slate-800 hover:text-[#239d9a]">
                           {patient.name || "Paciente"}
                         </Link>
                         {activeFilter === "aniversariantes" && isBirthdayToday(patient, new Date()) && (
-                          <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-pink-700">Hoje</span>
+                          <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-pink-700">Hoje</span>
                         )}
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-slate-500">
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[12px] font-medium text-slate-500">
                         <span>Telefone: {patient.phone || "-"}</span>
                         {patient.cpf && <span>CPF: {patient.cpf}</span>}
                       </div>
@@ -619,15 +619,15 @@ export default function CrmPage() {
 
                     <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-2">
                       <div className="rounded-2xl border border-[#e8f5f5] bg-[#fbffff] p-3">
-                        <div className="font-black uppercase tracking-widest text-slate-400">Última consulta</div>
-                        <div className="mt-1 font-bold text-slate-700">
+                        <div className="font-semibold uppercase tracking-[0.12em] text-slate-400">Última consulta</div>
+                        <div className="mt-1 font-medium text-slate-700">
                           {row.lastAppointment ? `${formatDateBr(row.lastAppointment.date)} • ${row.lastAppointment.status || "agendado"}` : "Sem consulta registrada"}
                         </div>
                       </div>
 
                       <div className="rounded-2xl border border-[#e8f5f5] bg-[#fbffff] p-3">
-                        <div className="font-black uppercase tracking-widest text-slate-400">Motivo do contato</div>
-                        <div className="mt-1 font-bold text-slate-700">
+                        <div className="font-semibold uppercase tracking-[0.12em] text-slate-400">Motivo do contato</div>
+                        <div className="mt-1 font-medium text-slate-700">
                           {activeFilter === "retorno" && `${row.daysWithoutReturn || 0} dias sem retorno`}
                           {activeFilter === "aniversariantes" && `Aniversário: ${formatDateBr(getBirthDate(patient))}`}
                           {activeFilter === "orcamentos" && `${row.openBudgetCount || 0} orçamento(s) • ${formatCurrency(row.openBudgetTotal || 0)}`}
@@ -637,18 +637,18 @@ export default function CrmPage() {
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row xl:flex-col xl:items-stretch">
-                      <Link href={`/pacientes/${patient.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-[#fbffff]">
+                      <Link href={`/pacientes/${patient.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-[#fbffff]">
                         <Users size={15} />
                         Prontuário
                       </Link>
 
                       {hasPhone ? (
-                        <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1c9f63]">
+                        <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1fb36e] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#1c9f63]">
                           <MessageCircle size={15} />
                           WhatsApp
                         </a>
                       ) : (
-                        <button type="button" disabled className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-4 py-2 text-xs font-black text-slate-500">
+                        <button type="button" disabled className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-4 py-2 text-xs font-semibold text-slate-500">
                           <AlertCircle size={15} />
                           Sem telefone
                         </button>
