@@ -310,13 +310,13 @@ export default function FinanceiroPage() {
   const statusBadgeClass = (value: unknown) => {
     const v = String(value ?? "").trim().toLowerCase();
     if (v === "pago" || v === "paid") {
-      return "border border-emerald-200 bg-emerald-50/90 text-emerald-700 shadow-sm shadow-emerald-900/5";
+      return "border border-emerald-200 bg-emerald-50/90 text-emerald-600 shadow-sm shadow-emerald-900/5";
     }
     if (v === "parcial") {
-      return "border border-amber-200 bg-amber-50/90 text-amber-800 shadow-sm shadow-amber-900/5";
+      return "border border-amber-100 bg-white/90 text-amber-800 shadow-sm shadow-amber-900/5";
     }
     if (v === "atrasado" || v === "em_atraso") {
-      return "border border-red-200 bg-red-50/95 text-red-700 shadow-sm shadow-red-900/5";
+      return "border border-red-100 bg-white/95 text-red-600 shadow-sm shadow-red-900/5";
     }
     if (v === "pendente" || v === "pending") {
       return "border border-slate-200 bg-slate-50/95 text-slate-600 shadow-sm";
@@ -331,11 +331,11 @@ export default function FinanceiroPage() {
     const analysis = getFinancialRecordAnalysis(record);
 
     if (analysis.overdueBalance > 0) {
-      return "border-l-4 border-l-red-400 bg-red-50/45 hover:bg-red-50";
+      return "border-l-4 border-l-red-400 bg-red-50/45 hover:bg-white";
     }
 
     if (analysis.dueTodayBalance > 0) {
-      return "border-l-4 border-l-amber-400 bg-amber-50/40 hover:bg-amber-50";
+      return "border-l-4 border-l-amber-400 bg-amber-50/40 hover:bg-white";
     }
 
     if (analysis.futureBalance > 0) {
@@ -442,7 +442,7 @@ export default function FinanceiroPage() {
     const v = String(value ?? "").trim().toLowerCase();
 
     if (v === "imposto_renda") {
-      return "bg-purple-50 text-purple-700 border border-purple-200";
+      return "bg-purple-50 text-purple-600 border border-purple-200";
     }
 
     if (v === "simples") {
@@ -1540,20 +1540,20 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f2fcfc] to-[#eaf7f7] p-1 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#88d4d3] px-6 py-5 shadow-xl shadow-cyan-900/10 ring-1 ring-white/40">
+    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-4 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 py-4 shadow-[0_12px_30px_rgba(35,157,154,0.12)] ring-1 ring-white/50">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             Financeiro
           </h1>
-          <p className="mt-1 text-sm text-cyan-50">
+          <p className="mt-1 text-[13px] font-medium text-cyan-50/95">
             Controle financeiro inteligente com vencimentos reais, parcelas e cobrança premium.
           </p>
         </div>
       </div>
 
 
-      <div className="rounded-2xl border border-[#d9eeee] bg-white p-4 shadow-sm overflow-visible">
+      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] overflow-visible">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -1565,7 +1565,7 @@ export default function FinanceiroPage() {
                 <button
                   type="button"
                   onClick={() => setPeriodoMenuOpen((prev) => !prev)}
-                  className="min-w-[250px] h-11 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-4 text-left text-sm font-medium text-slate-700 flex items-center justify-between hover:bg-white transition"
+                  className="min-w-[250px] h-10 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-4 text-left text-sm font-medium text-slate-700 flex items-center justify-between hover:bg-white transition"
                 >
                   <span>{labelPeriodoSelecionado()}</span>
                   <ChevronDown
@@ -1586,7 +1586,7 @@ export default function FinanceiroPage() {
                           applyPeriodo(option.value);
                           setPeriodoMenuOpen(false);
                         }}
-                        className={`w-full px-4 py-3 text-left text-sm transition hover:bg-[#f2fcfc] ${
+                        className={`w-full px-4 py-2.5 text-left text-[13px] transition hover:bg-[#f2fcfc] ${
                           periodoFiltro === option.value
                             ? "bg-[#eefafa] text-[#239d9a] font-semibold"
                             : "text-slate-700"
@@ -1599,7 +1599,7 @@ export default function FinanceiroPage() {
                 )}
               </div>
 
-              <div className="text-xs text-slate-500">
+              <div className="text-[11px] text-slate-500">
                 {labelPeriodoAtual()}
               </div>
             </div>
@@ -1612,13 +1612,13 @@ export default function FinanceiroPage() {
                   if (smartFilter !== "todos") setSmartFilter("todos");
                 }}
                 placeholder="Busque por paciente, procedimento, status ou valor..."
-                className="h-11 rounded-xl border-[#d9eeee] bg-[#fbffff]"
+                className="h-10 rounded-xl border-[#d9eeee] bg-[#fbffff]"
               />
 
               <Button
                 type="button"
                 onClick={generateFinancialPdfReport}
-                className="h-11 rounded-xl bg-slate-800 px-4 text-sm font-black text-white hover:bg-slate-900"
+                className="h-10 rounded-xl bg-slate-700 px-4 text-[13px] font-semibold text-white hover:bg-slate-800"
               >
                 <FileText size={16} className="mr-2" />
                 Relatório PDF
@@ -1627,7 +1627,7 @@ export default function FinanceiroPage() {
               <Button
                 type="button"
                 onClick={exportFinanceiroExcel}
-                className="h-11 rounded-xl bg-[#239d9a] px-4 text-sm font-black text-white hover:bg-[#1f8f8c]"
+                className="h-10 rounded-xl bg-[#239d9a] px-4 text-[13px] font-semibold text-white hover:bg-[#1f8f8c]"
               >
                 <Download size={16} className="mr-2" />
                 Exportar Excel
@@ -1641,7 +1641,7 @@ export default function FinanceiroPage() {
                     setSearchTerm("");
                     setSmartFilter("todos");
                   }}
-                  className="h-11 rounded-xl border-[#d9eeee]"
+                  className="h-10 rounded-xl border-[#d9eeee]"
                 >
                   Limpar
                 </Button>
@@ -1658,7 +1658,7 @@ export default function FinanceiroPage() {
           {periodoFiltro === "custom" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Data inicial
                 </label>
                 <Input
@@ -1670,7 +1670,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Data final
                 </label>
                 <Input
@@ -1687,24 +1687,24 @@ export default function FinanceiroPage() {
 
 
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-5 shadow-sm ring-1 ring-white/60">
+      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] ring-1 ring-white/60">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
           <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-red-50 p-3 text-red-700">
+            <div className="rounded-2xl bg-red-50/70 p-3 text-red-600">
               <AlertTriangle size={24} />
             </div>
 
             <div>
-              <h2 className="text-xl font-black text-slate-800">
+              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Alertas inteligentes
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-500">
                 Avisos automáticos para priorizar cobranças e pendências importantes.
               </p>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[#eefafa] px-4 py-3 text-sm font-black text-[#239d9a]">
+          <div className="rounded-2xl bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#239d9a]">
             {smartAlerts.overduePatients.length +
               smartAlerts.highDebtPatients.length +
               smartAlerts.receiptWithPayment.length} alerta(s)
@@ -1715,19 +1715,19 @@ export default function FinanceiroPage() {
           <div
             className={`rounded-2xl border p-4 ${
               smartAlerts.overduePatients.length > 0
-                ? "border-red-200 bg-red-50"
-                : "border-emerald-100 bg-emerald-50"
+                ? "border-red-100 bg-white"
+                : "border-[#d9eeee] bg-white"
             }`}
           >
-            <div className="text-sm font-black text-slate-800">
+            <div className="text-[13px] font-semibold text-slate-800">
               Débitos com mais de 30 dias
             </div>
 
             <div
-              className={`mt-2 text-2xl font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 smartAlerts.overduePatients.length > 0
-                  ? "text-red-700"
-                  : "text-emerald-700"
+                  ? "text-red-600"
+                  : "text-emerald-600"
               }`}
             >
               {smartAlerts.overduePatients.length}
@@ -1745,7 +1745,7 @@ export default function FinanceiroPage() {
                   setSmartFilter("atrasados");
                   scrollToResultados();
                 }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-700 border border-red-100 hover:bg-red-100"
+                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600 border border-red-100 hover:bg-red-100"
               >
                 Ver atrasados
               </button>
@@ -1755,19 +1755,19 @@ export default function FinanceiroPage() {
           <div
             className={`rounded-2xl border p-4 ${
               smartAlerts.highDebtPatients.length > 0
-                ? "border-amber-200 bg-amber-50"
-                : "border-emerald-100 bg-emerald-50"
+                ? "border-amber-100 bg-white"
+                : "border-[#d9eeee] bg-white"
             }`}
           >
-            <div className="text-sm font-black text-slate-800">
+            <div className="text-[13px] font-semibold text-slate-800">
               Dívidas acima de R$ 500
             </div>
 
             <div
-              className={`mt-2 text-2xl font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 smartAlerts.highDebtPatients.length > 0
-                  ? "text-amber-700"
-                  : "text-emerald-700"
+                  ? "text-amber-600"
+                  : "text-emerald-600"
               }`}
             >
               {smartAlerts.highDebtPatients.length}
@@ -1786,7 +1786,7 @@ export default function FinanceiroPage() {
                   scrollToResultados();
                   window.open(buildChargeAllWhatsappHref(), "_blank", "noopener,noreferrer");
                 }}
-                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-amber-700 border border-amber-100 hover:bg-amber-100"
+                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-600 border border-amber-100 hover:bg-amber-100"
               >
                 Gerar cobrança
               </button>
@@ -1796,19 +1796,19 @@ export default function FinanceiroPage() {
           <div
             className={`rounded-2xl border p-4 ${
               smartAlerts.receiptWithPayment.length > 0
-                ? "border-purple-200 bg-purple-50"
-                : "border-emerald-100 bg-emerald-50"
+                ? "border-purple-100 bg-white"
+                : "border-[#d9eeee] bg-white"
             }`}
           >
-            <div className="text-sm font-black text-slate-800">
+            <div className="text-[13px] font-semibold text-slate-800">
               Recibos para emitir
             </div>
 
             <div
-              className={`mt-2 text-2xl font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 smartAlerts.receiptWithPayment.length > 0
-                  ? "text-purple-700"
-                  : "text-emerald-700"
+                  ? "text-purple-600"
+                  : "text-emerald-600"
               }`}
             >
               {smartAlerts.receiptWithPayment.length}
@@ -1826,7 +1826,7 @@ export default function FinanceiroPage() {
                   setSmartFilter("recibos");
                   scrollToResultados();
                 }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-purple-700 border border-purple-100 hover:bg-purple-100"
+                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-purple-600 border border-purple-100 hover:bg-purple-100"
               >
                 Ver recibos
               </button>
@@ -1837,18 +1837,18 @@ export default function FinanceiroPage() {
             className={`rounded-2xl border p-4 ${
               smartAlerts.totalOpen > 0
                 ? "border-[#bfe8e7] bg-[#f2fcfc]"
-                : "border-emerald-100 bg-emerald-50"
+                : "border-[#d9eeee] bg-white"
             }`}
           >
-            <div className="text-sm font-black text-slate-800">
+            <div className="text-[13px] font-semibold text-slate-800">
               Total em aberto
             </div>
 
             <div
-              className={`mt-2 text-xl font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 smartAlerts.totalOpen > 0
                   ? "text-[#239d9a]"
-                  : "text-emerald-700"
+                  : "text-emerald-600"
               }`}
             >
               {formatCurrency(smartAlerts.totalOpen)}
@@ -1867,7 +1867,7 @@ export default function FinanceiroPage() {
                   setPeriodoFiltro("mes_atual");
                   scrollToResultados();
                 }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#239d9a] border border-[#bfe8e7] hover:bg-[#eefafa]"
+                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] border border-[#bfe8e7] hover:bg-[#eefafa]"
               >
                 Ver todos
               </button>
@@ -1876,26 +1876,26 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-[#fbffff] p-5 shadow-sm">
+      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)]">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-amber-100 p-3 text-amber-700">
+            <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
               <MessageCircle size={24} />
             </div>
 
             <div>
-              <h2 className="text-xl font-black text-slate-800">
+              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Cobrança inteligente
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-500">
                 Lista automática dos principais pacientes com parcela vencida em aberto.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full bg-white px-3 py-1 font-black text-amber-700 border border-amber-100">
+                <span className="rounded-full bg-white px-2.5 py-0.5 font-semibold text-amber-600 border border-amber-100">
                   {patientsToCharge.length} paciente(s)
                 </span>
-                <span className="rounded-full bg-white px-3 py-1 font-black text-amber-700 border border-amber-100">
+                <span className="rounded-full bg-white px-2.5 py-0.5 font-semibold text-amber-600 border border-amber-100">
                   Total: {formatCurrency(
                     patientsToCharge.reduce((acc, item) => acc + item.overdueBalance, 0)
                   )}
@@ -1909,7 +1909,7 @@ export default function FinanceiroPage() {
               href={buildChargeAllWhatsappHref()}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1fb36e] px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-[#18975d]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1fb36e] px-5 py-3 text-[13px] font-semibold text-white shadow-sm hover:bg-[#18975d]"
             >
               <MessageCircle size={18} />
               Gerar lista no WhatsApp
@@ -1918,7 +1918,7 @@ export default function FinanceiroPage() {
             <button
               type="button"
               disabled
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 py-3 text-sm font-black text-slate-400"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 py-3 text-[13px] font-semibold text-slate-400"
             >
               Nenhuma cobrança pendente
             </button>
@@ -1932,23 +1932,23 @@ export default function FinanceiroPage() {
                 key={item.record.id}
                 className={`rounded-2xl border p-3 ${
                   item.visualStatus === "em_atraso"
-                    ? "border-red-100 bg-red-50"
+                    ? "border-red-100 bg-white"
                     : "border-amber-100 bg-white"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-black text-slate-800 truncate">
+                    <div className="text-[13px] font-semibold text-slate-800 truncate">
                       {index + 1}. {item.patientName}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-[11px] text-slate-500">
                       {item.visualStatus === "em_atraso"
                         ? `Em atraso há ${item.daysOpen} dia(s)`
                         : `Pendente há ${item.daysOpen} dia(s)`}
                     </div>
                   </div>
 
-                  <div className="text-sm font-black text-amber-700 whitespace-nowrap">
+                  <div className="text-[13px] font-semibold text-amber-600 whitespace-nowrap">
                     {formatCurrency(item.overdueBalance)}
                   </div>
                 </div>
@@ -1965,10 +1965,10 @@ export default function FinanceiroPage() {
               <Wallet size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Total lançado
               </p>
-              <p className="text-lg font-black text-slate-800">
+              <p className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
                 {formatCurrency(summary.totalLancado)}
               </p>
             </div>
@@ -1981,10 +1981,10 @@ export default function FinanceiroPage() {
               <TrendingUp size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Recebido no período
               </p>
-              <p className="text-lg font-black text-emerald-600">
+              <p className="text-lg font-semibold text-emerald-600">
                 {formatCurrency(summary.totalRecebido)}
               </p>
             </div>
@@ -1993,14 +1993,14 @@ export default function FinanceiroPage() {
 
         <div className="rounded-3xl border border-amber-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">
+            <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
               <DollarSign size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 A receber
               </p>
-              <p className="text-lg font-black text-amber-700">
+              <p className="text-lg font-semibold text-amber-600">
                 {formatCurrency(summary.totalAReceber)}
               </p>
             </div>
@@ -2013,10 +2013,10 @@ export default function FinanceiroPage() {
               <Trash2 size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Despesas pagas
               </p>
-              <p className="text-lg font-black text-rose-700">
+              <p className="text-lg font-semibold text-rose-700">
                 {formatCurrency(summary.despesasPagas)}
               </p>
             </div>
@@ -2029,10 +2029,10 @@ export default function FinanceiroPage() {
               <PlusCircle size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Saldo real
               </p>
-              <p className="text-lg font-black text-sky-700">
+              <p className="text-lg font-semibold text-sky-700">
                 {formatCurrency(summary.saldo)}
               </p>
             </div>
@@ -2043,27 +2043,27 @@ export default function FinanceiroPage() {
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
         <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
               <TrendingUp size={24} />
             </div>
 
             <div>
-              <h2 className="text-xl font-black text-slate-800">
+              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Previsão de caixa e DRE simplificado
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-500">
                 Projeção financeira operacional usando recebíveis, despesas, inadimplência e saldo previsto.
               </p>
             </div>
           </div>
 
           <div
-            className={`rounded-2xl px-4 py-3 text-sm font-black ${
+            className={`rounded-2xl px-4 py-3 text-[13px] font-semibold ${
               financialPrediction.riskLevel === "Alto"
-                ? "bg-red-50 text-red-700"
+                ? "bg-red-50 text-red-600"
                 : financialPrediction.riskLevel === "Médio"
-                  ? "bg-amber-50 text-amber-700"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "bg-amber-50 text-amber-600"
+                  : "bg-emerald-50 text-emerald-600"
             }`}
           >
             Risco financeiro: {financialPrediction.riskLevel}
@@ -2071,19 +2071,19 @@ export default function FinanceiroPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
-            <div className="mb-3 flex items-center gap-2 text-emerald-700">
+          <div className="rounded-3xl border border-[#d9eeee] bg-white p-5">
+            <div className="mb-3 flex items-center gap-2 text-emerald-600">
               <CalendarDays size={18} />
-              <p className="text-xs font-black uppercase tracking-widest">
+              <p className="text-[11px] font-semibold uppercase tracking-widest">
                 Próximos 30 dias
               </p>
             </div>
 
-            <p className="text-2xl font-black text-emerald-700">
+            <p className="text-2xl font-semibold text-emerald-600">
               {formatCurrency(financialPrediction.net30)}
             </p>
 
-            <div className="mt-3 space-y-2 text-xs font-bold text-emerald-700">
+            <div className="mt-3 space-y-2 text-xs font-bold text-emerald-600">
               <div className="flex justify-between gap-3">
                 <span>A receber</span>
                 <span>{formatCurrency(financialPrediction.receivable30)}</span>
@@ -2098,12 +2098,12 @@ export default function FinanceiroPage() {
           <div className="rounded-3xl border border-cyan-100 bg-cyan-50 p-5">
             <div className="mb-3 flex items-center gap-2 text-cyan-700">
               <CalendarDays size={18} />
-              <p className="text-xs font-black uppercase tracking-widest">
+              <p className="text-[11px] font-semibold uppercase tracking-widest">
                 Próximos 60 dias
               </p>
             </div>
 
-            <p className="text-2xl font-black text-cyan-700">
+            <p className="text-2xl font-semibold text-cyan-700">
               {formatCurrency(financialPrediction.net60)}
             </p>
 
@@ -2122,12 +2122,12 @@ export default function FinanceiroPage() {
           <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
             <div className="mb-3 flex items-center gap-2 text-blue-700">
               <CalendarDays size={18} />
-              <p className="text-xs font-black uppercase tracking-widest">
+              <p className="text-[11px] font-semibold uppercase tracking-widest">
                 Próximos 90 dias
               </p>
             </div>
 
-            <p className="text-2xl font-black text-blue-700">
+            <p className="text-2xl font-semibold text-blue-700">
               {formatCurrency(financialPrediction.net90)}
             </p>
 
@@ -2146,31 +2146,31 @@ export default function FinanceiroPage() {
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Receita do mês
             </p>
-            <p className="mt-2 text-lg font-black text-slate-800">
+            <p className="mt-2 text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
               {formatCurrency(financialPrediction.receivedThisMonth)}
             </p>
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Despesas pagas
             </p>
-            <p className="mt-2 text-lg font-black text-rose-700">
+            <p className="mt-2 text-lg font-semibold text-rose-700">
               {formatCurrency(financialPrediction.paidExpensesThisMonth)}
             </p>
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Lucro operacional
             </p>
             <p
-              className={`mt-2 text-lg font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 financialPrediction.grossProfit >= 0
-                  ? "text-emerald-700"
+                  ? "text-emerald-600"
                   : "text-rose-700"
               }`}
             >
@@ -2179,15 +2179,15 @@ export default function FinanceiroPage() {
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Margem estimada
             </p>
             <p
-              className={`mt-2 text-lg font-black ${
+              className={`mt-2 text-lg font-semibold ${
                 financialPrediction.margin >= 20
-                  ? "text-emerald-700"
+                  ? "text-emerald-600"
                   : financialPrediction.margin >= 0
-                    ? "text-amber-700"
+                    ? "text-amber-600"
                     : "text-rose-700"
               }`}
             >
@@ -2210,10 +2210,10 @@ export default function FinanceiroPage() {
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-black text-slate-800">
+            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
               Despesas da clínica
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Saídas registradas em Financeiro &gt; Despesas, consideradas no saldo real.
             </p>
           </div>
@@ -2224,7 +2224,7 @@ export default function FinanceiroPage() {
         </div>
 
         {despesasFiltradas.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-[13px] text-slate-500">
             Nenhuma despesa encontrada neste período.
           </div>
         ) : (
@@ -2238,22 +2238,22 @@ export default function FinanceiroPage() {
                   <div className="font-bold text-slate-800">
                     {expense.description || "Despesa"}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-[11px] text-slate-500">
                     {expense.category || "Sem categoria"} • {getExpenseDate(expense) ? new Date(String(getExpenseDate(expense))).toLocaleDateString("pt-BR") : "Sem data"}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                       isExpensePaid(expense)
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
                         : "bg-rose-50 text-rose-700 border border-rose-100"
                     }`}
                   >
                     {isExpensePaid(expense) ? "Pago" : "Pendente"}
                   </span>
-                  <span className="font-black text-rose-700">
+                  <span className="font-semibold text-rose-700">
                     {formatCurrency(expense.amount)}
                   </span>
                 </div>
@@ -2266,10 +2266,10 @@ export default function FinanceiroPage() {
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-black text-slate-800">
+            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
               Dashboard inteligente
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Indicadores rápidos para acompanhar a saúde financeira da clínica.
             </p>
           </div>
@@ -2280,56 +2280,56 @@ export default function FinanceiroPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">
+          <div className="rounded-2xl border border-[#d9eeee] bg-white/50 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
               Hoje
             </p>
-            <p className="mt-2 text-lg font-black text-emerald-700">
+            <p className="mt-2 text-lg font-semibold text-emerald-600">
               {formatCurrency(intelligentSummary.recebidoHoje)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700">
               Este mês
             </p>
-            <p className="mt-2 text-lg font-black text-sky-700">
+            <p className="mt-2 text-lg font-semibold text-sky-700">
               {formatCurrency(intelligentSummary.recebidoMes)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
               Em aberto
             </p>
-            <p className="mt-2 text-lg font-black text-amber-700">
+            <p className="mt-2 text-lg font-semibold text-amber-600">
               {formatCurrency(intelligentSummary.totalEmAberto)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-700">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700">
               Inadimplência
             </p>
-            <p className="mt-2 text-lg font-black text-rose-700">
+            <p className="mt-2 text-lg font-semibold text-rose-700">
               {intelligentSummary.taxaInadimplencia.toFixed(1)}%
             </p>
           </div>
 
           <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-purple-700">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
               Ticket médio
             </p>
-            <p className="mt-2 text-lg font-black text-purple-700">
+            <p className="mt-2 text-lg font-semibold text-purple-600">
               {formatCurrency(intelligentSummary.ticketMedio)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-700">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
               Recibos
             </p>
-            <p className="mt-2 text-lg font-black text-cyan-700">
+            <p className="mt-2 text-lg font-semibold text-cyan-700">
               {intelligentSummary.recibosPendentes}
             </p>
           </div>
@@ -2339,10 +2339,10 @@ export default function FinanceiroPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
           <div className="mb-4">
-            <h2 className="text-base font-black text-slate-800">
+            <h2 className="text-base font-semibold text-slate-800">
               Formas de pagamento
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Recebimentos do período selecionado.
             </p>
           </div>
@@ -2360,7 +2360,7 @@ export default function FinanceiroPage() {
                   <span className="font-semibold text-slate-700">
                     {item.label}
                   </span>
-                  <span className="font-black text-[#239d9a]">
+                  <span className="font-semibold text-[#239d9a]">
                     {formatCurrency(item.total)}
                   </span>
                 </div>
@@ -2378,10 +2378,10 @@ export default function FinanceiroPage() {
 
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
           <div className="mb-4">
-            <h2 className="text-base font-black text-slate-800">
+            <h2 className="text-base font-semibold text-slate-800">
               Maiores saldos vencidos
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Pacientes com maior valor realmente vencido.
             </p>
           </div>
@@ -2402,12 +2402,12 @@ export default function FinanceiroPage() {
                   <div className="truncate text-sm font-semibold text-slate-800">
                     {item.name}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-[11px] text-slate-500">
                     Pago: {formatCurrency(item.paid)}
                   </div>
                 </div>
 
-                <div className="text-sm font-black text-amber-700 whitespace-nowrap">
+                <div className="text-[13px] font-semibold text-amber-600 whitespace-nowrap">
                   {formatCurrency(item.overdueBalance)}
                 </div>
               </div>
@@ -2417,35 +2417,35 @@ export default function FinanceiroPage() {
 
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
           <div className="mb-4">
-            <h2 className="text-base font-black text-slate-800">
+            <h2 className="text-base font-semibold text-slate-800">
               Controle de recibos
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Visão rápida dos recibos solicitados.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-700">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
                 Simples
               </p>
-              <p className="mt-2 text-2xl font-black text-cyan-700">
+              <p className="mt-2 text-lg font-semibold text-cyan-700">
                 {receiptSummary.simples}
               </p>
             </div>
 
             <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-purple-700">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
                 IR
               </p>
-              <p className="mt-2 text-2xl font-black text-purple-700">
+              <p className="mt-2 text-lg font-semibold text-purple-600">
                 {receiptSummary.impostoRenda}
               </p>
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-[#edf7f7] bg-[#fbffff] p-3 text-sm text-slate-600">
+          <div className="mt-4 rounded-2xl border border-[#edf7f7] bg-[#fbffff] p-3 text-[13px] text-slate-600">
             Dica: os lançamentos com recibo ficam destacados no histórico financeiro.
           </div>
         </div>
@@ -2454,16 +2454,16 @@ export default function FinanceiroPage() {
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-black text-slate-800">
+            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
               Pacientes para cobrar
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-slate-500">
               Lista automática baseada apenas em parcelas vencidas com saldo pendente. Parcelas futuras não entram aqui.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black uppercase tracking-widest text-red-700 border border-red-100">
+            <span className="rounded-xl bg-red-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-red-600 border border-red-100">
               {patientsToCharge.filter((item) => item.visualStatus === "em_atraso").length} em atraso
             </span>
 
@@ -2472,7 +2472,7 @@ export default function FinanceiroPage() {
                 href={buildChargeAllWhatsappHref()}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-xl bg-[#1fb36e] px-3 py-2 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#199c5f]"
+                className="rounded-xl bg-[#1fb36e] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-white shadow-sm hover:bg-[#199c5f]"
               >
                 Cobrar todos
               </a>
@@ -2492,18 +2492,18 @@ export default function FinanceiroPage() {
               key={item.record.id}
               className={`rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
                 item.visualStatus === "em_atraso"
-                  ? "border-red-200 bg-red-50/60"
+                  ? "border-red-100 bg-white/60"
                   : "border-[#d9eeee] bg-[#fbffff]"
               }`}
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm font-black text-slate-800 truncate">
+                  <h3 className="text-[13px] font-semibold text-slate-800 truncate">
                     {item.patientName}
                   </h3>
 
                   <span
-                    className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
+                    className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusBadgeClass(
                       item.visualStatus
                     )}`}
                   >
@@ -2511,24 +2511,24 @@ export default function FinanceiroPage() {
                   </span>
                 </div>
 
-                <p className="mt-1 text-xs text-slate-500 truncate">
+                <p className="mt-1 text-[11px] text-slate-500 truncate">
                   {item.record.description || "Débito financeiro"}
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-[11px] text-slate-500">
                   Vencido há {item.daysOpen} dia(s)
                 </p>
               </div>
 
               <div className="flex flex-col md:items-end gap-2">
-                <div className="text-base font-black text-[#239d9a]">
+                <div className="text-base font-semibold text-[#239d9a]">
                   {formatCurrency(item.overdueBalance)}
                 </div>
 
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-8 rounded-lg border-[#bfe8e7] px-3 text-[10px] font-black uppercase tracking-widest text-[#239d9a] hover:bg-[#f2fcfc]"
+                  className="h-8 rounded-lg border-[#bfe8e7] px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] hover:bg-[#f2fcfc]"
                   onClick={() => openReceberModal(item.record)}
                 >
                   Receber
@@ -2542,7 +2542,7 @@ export default function FinanceiroPage() {
       <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
         <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-5 px-6">
           <div>
-            <CardTitle className="text-base font-black tracking-tight text-[#239d9a]">
+            <CardTitle className="text-base font-semibold tracking-tight text-[#239d9a]">
               Saldo devedor por paciente
             </CardTitle>
             <CardDescription className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -2555,12 +2555,12 @@ export default function FinanceiroPage() {
           <Table>
             <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
               <TableRow className="h-10 border-none hover:bg-transparent">
-                <TableHead className="px-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
-                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Total</TableHead>
-                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Já pagou</TableHead>
-                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Vencido</TableHead>
-                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">A vencer</TableHead>
-                <TableHead className="px-6 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Falta pagar</TableHead>
+                <TableHead className="px-6 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Total</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Já pagou</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Vencido</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">A vencer</TableHead>
+                <TableHead className="px-6 text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Falta pagar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -2579,10 +2579,10 @@ export default function FinanceiroPage() {
                     <TableCell className="text-sm font-semibold text-slate-700">
                       {formatCurrency(r.total)}
                     </TableCell>
-                    <TableCell className="text-sm font-semibold text-emerald-700">
+                    <TableCell className="text-sm font-semibold text-emerald-600">
                       {formatCurrency(r.paid)}
                     </TableCell>
-                    <TableCell className="text-sm font-semibold text-red-700">
+                    <TableCell className="text-sm font-semibold text-red-600">
                       {formatCurrency(r.overdueBalance)}
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-cyan-700">
@@ -2606,7 +2606,7 @@ export default function FinanceiroPage() {
               <div className="rounded-2xl bg-gradient-to-br from-[#dff4f4] to-[#c9eded] p-2.5">
                 <PlusCircle className="h-5 w-5" />
               </div>
-              <span className="text-lg font-black tracking-tight">Lançamento</span>
+              <span className="text-lg font-semibold tracking-tight">Lançamento</span>
             </CardTitle>
             <CardDescription className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Novo débito financeiro
@@ -2616,7 +2616,7 @@ export default function FinanceiroPage() {
           <CardContent className="px-6 pt-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Paciente
                 </label>
                 <select
@@ -2635,7 +2635,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Descrição
                 </label>
                 <Input
@@ -2649,7 +2649,7 @@ export default function FinanceiroPage() {
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Valor
                   </label>
                   <Input
@@ -2662,7 +2662,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Parcelas
                   </label>
                   <Input
@@ -2677,7 +2677,7 @@ export default function FinanceiroPage() {
 
               <Button
                 type="submit"
-                className="mt-2 h-10 w-full rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] text-xs font-black uppercase tracking-[0.18em] text-white shadow-sm hover:from-[#18a6a2] hover:to-[#67c8c7]"
+                className="mt-2 h-10 w-full rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] text-[11px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm hover:from-[#18a6a2] hover:to-[#67c8c7]"
                 disabled={loading}
               >
                 {loading ? "Salvando..." : "Confirmar lançamento"}
@@ -2689,7 +2689,7 @@ export default function FinanceiroPage() {
         <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm ring-1 ring-white/60 scroll-mt-6">
           <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
             <div>
-              <CardTitle className="text-lg font-black tracking-tight text-[#239d9a]">
+              <CardTitle className="text-lg font-semibold tracking-tight text-[#239d9a]">
                 Histórico financeiro
               </CardTitle>
               <CardDescription className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -2702,13 +2702,13 @@ export default function FinanceiroPage() {
             <Table>
               <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
                 <TableRow className="h-10 border-none hover:bg-transparent">
-                  <TableHead className="px-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Data</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Paciente</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Lançamento</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Pagamento</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
-                  <TableHead className="text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Valor</TableHead>
-                  <TableHead className="px-6 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Ações</TableHead>
+                  <TableHead className="px-6 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Data</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Lançamento</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Pagamento</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Status</TableHead>
+                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Valor</TableHead>
+                  <TableHead className="px-6 text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ações</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -2720,7 +2720,7 @@ export default function FinanceiroPage() {
                         <div className="rounded-full bg-[#f3fbfb] p-5">
                           <DollarSign className="h-10 w-10 opacity-20" />
                         </div>
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
                           Nenhum lançamento encontrado no período
                         </p>
                       </div>
@@ -2742,12 +2742,12 @@ export default function FinanceiroPage() {
                             {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
                           </div>
                           {getFinancialRecordAnalysis(t).overdueBalance > 0 && (
-                            <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-red-600">
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600">
                               {getFinancialRecordAnalysis(t).daysOverdue} dia(s) em atraso
                             </div>
                           )}
                           {getFinancialRecordAnalysis(t).futureBalance > 0 && getFinancialRecordAnalysis(t).overdueBalance <= 0 && (
-                            <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-cyan-600">
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-600">
                               A vencer
                             </div>
                           )}
@@ -2778,13 +2778,13 @@ export default function FinanceiroPage() {
 
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs text-slate-500">
+                            <span className="text-[11px] text-slate-500">
                               {labelFormaPagamento(t.payment_method)}
                             </span>
 
                             {hasReceipt(t.receipt_type) ? (
                               <span
-                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest ${receiptBadgeClass(
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${receiptBadgeClass(
                                   t.receipt_type
                                 )}`}
                                 title="Paciente solicitou recibo"
@@ -2802,7 +2802,7 @@ export default function FinanceiroPage() {
 
                         <TableCell>
                           <span
-                            className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${statusBadgeClass(
+                            className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusBadgeClass(
                               getVisualFinancialStatus(t)
                             )}`}
                           >
@@ -2810,7 +2810,7 @@ export default function FinanceiroPage() {
                           </span>
                         </TableCell>
 
-                        <TableCell className="text-right text-sm font-black text-slate-800">
+                        <TableCell className="text-right text-[13px] font-semibold text-slate-800">
                           <div>{formatCurrency(total)}</div>
                           {balance > 0 && (
                             <div className="mt-0.5 text-[10px] font-bold text-slate-400">
@@ -2825,7 +2825,7 @@ export default function FinanceiroPage() {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="h-7 rounded-lg border-[#bfe8e7] px-3 text-[10px] font-black uppercase tracking-widest text-[#239d9a] hover:bg-[#f2fcfc]"
+                                className="h-7 rounded-lg border-[#bfe8e7] px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] hover:bg-[#f2fcfc]"
                                 onClick={() => openReceberModal(t)}
                               >
                                 Receber
@@ -2943,7 +2943,7 @@ export default function FinanceiroPage() {
                             <button
                               type="button"
                               onClick={() => openEditPaymentModal(tx)}
-                              className="rounded-lg border border-[#d9eeee] bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#239d9a] hover:bg-[#eefafa]"
+                              className="rounded-lg border border-[#d9eeee] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] hover:bg-[#eefafa]"
                             >
                               Editar
                             </button>
@@ -2982,7 +2982,7 @@ export default function FinanceiroPage() {
 
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Lançamento
                 </p>
                 <p className="font-semibold text-slate-800">
@@ -2990,10 +2990,10 @@ export default function FinanceiroPage() {
                     ? `Parcela ${receberTarget.installment_number || 1}/${receberTarget.installments}`
                     : "Débito"}
                 </p>
-                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Valor total
                 </p>
-                <p className="text-xl font-black text-emerald-700">
+                <p className="text-xl font-semibold text-emerald-600">
                   {formatCurrency(receberTarget.amount)}
                 </p>
                 <p className="text-sm font-medium text-slate-500">
@@ -3005,7 +3005,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Valor recebido agora
                 </label>
                 <Input
@@ -3017,7 +3017,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Forma de pagamento
                 </label>
                 <select
@@ -3036,7 +3036,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Tipo de recibo
                 </label>
                 <select
@@ -3051,7 +3051,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Observação
                 </label>
                 <Input
@@ -3066,7 +3066,7 @@ export default function FinanceiroPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 rounded-xl border-[#d9eeee] font-black text-slate-700"
+                  className="h-10 rounded-xl border-[#d9eeee] font-semibold text-slate-700"
                   onClick={() => setIsReceberOpen(false)}
                   disabled={receberSaving}
                 >
@@ -3075,7 +3075,7 @@ export default function FinanceiroPage() {
 
                 <Button
                   type="button"
-                  className="h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] font-black text-white hover:from-[#18a6a2] hover:to-[#67c8c7]"
+                  className="h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] font-semibold text-white hover:from-[#18a6a2] hover:to-[#67c8c7]"
                   onClick={handleReceberConfirmar}
                   disabled={receberSaving}
                 >
@@ -3110,10 +3110,10 @@ export default function FinanceiroPage() {
 
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Pagamento selecionado
                 </p>
-                <p className="text-xl font-black text-[#239d9a]">
+                <p className="text-xl font-semibold text-[#239d9a]">
                   {formatCurrency(editingPayment.amount)}
                 </p>
                 <p className="text-sm font-medium text-slate-500">
@@ -3127,7 +3127,7 @@ export default function FinanceiroPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Valor recebido
                   </label>
                   <Input
@@ -3139,7 +3139,7 @@ export default function FinanceiroPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Data do recebimento
                   </label>
                   <Input
@@ -3152,7 +3152,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Forma de pagamento
                 </label>
                 <select
@@ -3171,7 +3171,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Tipo de recibo
                 </label>
                 <select
@@ -3186,7 +3186,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Observação
                 </label>
                 <Input
@@ -3201,7 +3201,7 @@ export default function FinanceiroPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 rounded-xl border-[#d9eeee] font-black text-slate-700"
+                  className="h-10 rounded-xl border-[#d9eeee] font-semibold text-slate-700"
                   onClick={closeEditPaymentModal}
                   disabled={editPaymentSaving}
                 >
@@ -3210,7 +3210,7 @@ export default function FinanceiroPage() {
 
                 <Button
                   type="button"
-                  className="h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] font-black text-white hover:from-[#18a6a2] hover:to-[#67c8c7]"
+                  className="h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] font-semibold text-white hover:from-[#18a6a2] hover:to-[#67c8c7]"
                   onClick={handleEditPaymentConfirmar}
                   disabled={editPaymentSaving}
                 >
