@@ -257,31 +257,22 @@ function isFinancialRecordOverdue(record: FinancialRecord) {
 
 
 function getTrendClass(trend: string) {
-  if (trend === "Alta") return "bg-emerald-100 text-emerald-700";
-  if (trend === "Atenção") return "bg-rose-100 text-rose-700";
-  return "bg-amber-100 text-amber-700";
+  if (trend === "Alta") return "bg-[#e8f7f6] text-[#0f766e]";
+  if (trend === "Atenção") return "bg-[#f2fcfc] text-[#0f766e]";
+  return "bg-[#f7ffff] text-[#0f766e]";
 }
 
 function getGoalChanceClass(chance: string) {
-  if (chance === "Alta") return "bg-emerald-100 text-emerald-700";
-  if (chance === "Média") return "bg-amber-100 text-amber-700";
-  return "bg-rose-100 text-rose-700";
+  if (chance === "Alta") return "bg-[#e8f7f6] text-[#0f766e]";
+  if (chance === "Média") return "bg-[#f2fcfc] text-[#0f766e]";
+  return "bg-[#f7ffff] text-[#0f766e]";
 }
 
 function getAlertClass(severity: string) {
-  if (severity === "critico") {
-    return "border-rose-100 bg-rose-50 text-rose-700";
-  }
-
-  if (severity === "atencao") {
-    return "border-amber-100 bg-amber-50 text-amber-700";
-  }
-
-  if (severity === "oportunidade") {
-    return "border-cyan-100 bg-cyan-50 text-cyan-700";
-  }
-
-  return "border-emerald-100 bg-emerald-50 text-emerald-700";
+  if (severity === "critico") return "border-[#bde8e7] bg-[#f2fcfc] text-[#0f766e]";
+  if (severity === "atencao") return "border-[#cdeeed] bg-[#f7ffff] text-[#0f766e]";
+  if (severity === "oportunidade") return "border-[#bde8e7] bg-[#eefafa] text-[#0f766e]";
+  return "border-[#bde8e7] bg-[#f2fcfc] text-[#0f766e]";
 }
 
 function getAlertLabel(severity: string) {
@@ -292,9 +283,9 @@ function getAlertLabel(severity: string) {
 }
 
 function getScoreClass(score: number) {
-  if (score >= 80) return "bg-emerald-100 text-emerald-700";
-  if (score >= 50) return "bg-amber-100 text-amber-700";
-  return "bg-rose-100 text-rose-700";
+  if (score >= 80) return "bg-[#e8f7f6] text-[#0f766e]";
+  if (score >= 50) return "bg-[#f7ffff] text-[#0f766e]";
+  return "bg-[#f2fcfc] text-[#0f766e]";
 }
 
 function normalizeText(value: unknown) {
@@ -329,10 +320,10 @@ function normalizeProcedureName(value: unknown) {
 
 function getProfitabilityClass(margin: number | null) {
   if (margin === null) return "bg-slate-100 text-slate-600";
-  if (margin >= 50) return "bg-emerald-100 text-emerald-700";
-  if (margin >= 35) return "bg-cyan-100 text-cyan-700";
-  if (margin >= 20) return "bg-amber-100 text-amber-700";
-  return "bg-rose-100 text-rose-700";
+  if (margin >= 50) return "bg-[#e8f7f6] text-[#0f766e]";
+  if (margin >= 35) return "bg-[#e8f7f6] text-[#0f766e]";
+  if (margin >= 20) return "bg-[#f7ffff] text-[#0f766e]";
+  return "bg-[#f2fcfc] text-[#0f766e]";
 }
 
 function getProfitabilityLabel(margin: number | null) {
@@ -1054,42 +1045,42 @@ export default function DashboardExecutivoPage() {
       value: formatCurrency(forecast.confirmedRevenue),
       subtitle: "Receita já registrada",
       icon: DollarSign,
-      color: "from-emerald-500 to-green-500",
+      color: "from-[#239d9a] to-[#68d4d0]",
     },
     {
       title: "Provável",
       value: formatCurrency(forecast.probableRevenue),
       subtitle: "Previsão com CRM",
       icon: TrendingUp,
-      color: "from-cyan-500 to-teal-500",
+      color: "from-[#239d9a] to-[#68d4d0]",
     },
     {
       title: "Potencial",
       value: formatCurrency(forecast.potentialRevenue),
       subtitle: "Pipeline máximo",
       icon: Target,
-      color: "from-blue-500 to-indigo-500",
+      color: "from-[#239d9a] to-[#68d4d0]",
     },
     {
       title: "Meta atingida",
       value: `${goals.monthlyProgress}%`,
       subtitle: `Meta: ${formatCurrency(goals.monthlyGoal)}`,
       icon: Trophy,
-      color: "from-yellow-400 to-orange-400",
+      color: "from-[#239d9a] to-[#68d4d0]",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-5">
-      <div className="mb-5 overflow-hidden rounded-[26px] border border-[#b6e3e2] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 shadow-lg shadow-cyan-900/10 md:px-6">
-        <div className="flex h-[76px] items-center justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-3.5">
+      <div className="mb-4 overflow-hidden rounded-[26px] border border-[#cdeeed] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-4 shadow-[0_8px_22px_rgba(35,157,154,0.08)] md:px-5">
+        <div className="flex h-[58px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[20px] bg-white/15 text-white ring-1 ring-white/25">
+            <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[18px] bg-white/15 text-white ring-1 ring-white/25">
               <Sparkles size={17} />
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-white/95">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.10em] text-white/95">
                 Dashboard Executivo
               </p>
             </div>
@@ -1098,7 +1089,7 @@ export default function DashboardExecutivoPage() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/configuracoes/metas"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/35 bg-white px-4 text-[13px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/35 bg-white px-3 text-[12px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#eefafa]"
             >
               <Target size={17} />
               <span className="hidden sm:inline">Metas</span>
@@ -1106,7 +1097,7 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/25 bg-[#239d9a] px-4 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/25 bg-[#239d9a] px-3 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
             >
               <Megaphone size={17} />
               <span className="hidden sm:inline">Campanhas</span>
@@ -1115,7 +1106,7 @@ export default function DashboardExecutivoPage() {
             <button
               type="button"
               onClick={loadData}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-[20px] border border-white/35 bg-white px-4 text-[13px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/35 bg-white px-3 text-[12px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#eefafa]"
             >
               <RefreshCw size={17} />
               <span className="hidden sm:inline">Atualizar</span>
@@ -1124,14 +1115,14 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <div className="sticky top-3 z-20 mb-5 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-2 shadow-sm backdrop-blur">
+      <div className="sticky top-3 z-20 mb-4 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-1.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)] backdrop-blur">
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
-          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
+          className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "geral"
               ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Visão Geral
@@ -1140,10 +1131,10 @@ export default function DashboardExecutivoPage() {
         <button
           type="button"
           onClick={() => setActiveDashboardTab("analises")}
-          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
+          className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "analises"
               ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Análises Executivas
@@ -1152,10 +1143,10 @@ export default function DashboardExecutivoPage() {
         <button
           type="button"
           onClick={() => setActiveDashboardTab("acessos")}
-          className={`rounded-[20px] px-4 py-3 text-[13px] font-semibold transition ${
+          className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "acessos"
               ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-cyan-50 hover:text-[#239d9a]"
+              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
           }`}
         >
           Acessos Rápidos
@@ -1163,7 +1154,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
           {activeDashboardTab === "geral"
             ? "Resumo executivo"
             : activeDashboardTab === "analises"
@@ -1177,27 +1168,27 @@ export default function DashboardExecutivoPage() {
       </div>
 
       {loading && (
-        <div className="mb-4 rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[13px] font-semibold text-cyan-700">
+        <div className="mb-4 rounded-[18px] border border-cyan-100 bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#0f766e]">
           Atualizando informações executivas...
         </div>
       )}
 
       {activeDashboardTab === "geral" && (
         <>
-          <div className="mb-5">
+          <div className="mb-4">
             <ExecutiveKPIs loading={loading} cards={executiveCards} />
           </div>
 
-          <div className="mb-5 rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] ring-1 ring-white/70">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="mb-4 rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] ring-1 ring-white/70">
+            <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
                   Leitura executiva do mês
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getTrendClass(
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${getTrendClass(
                       goals.monthlyTrend,
                     )}`}
                   >
@@ -1205,20 +1196,20 @@ export default function DashboardExecutivoPage() {
                   </span>
 
                   <span
-                    className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getGoalChanceClass(
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${getGoalChanceClass(
                       goals.chanceToHitGoal,
                     )}`}
                   >
                     Meta {goals.chanceToHitGoal}
                   </span>
 
-                  <span className="rounded-full bg-slate-50/70 px-3 py-1 text-[11px] font-medium text-slate-500">
+                  <span className="rounded-full bg-[#fbffff] px-3 py-1 text-[11px] font-medium text-slate-500">
                     Gap: <strong className="text-slate-800">{formatCurrency(goals.gapToGoal)}</strong>
                   </span>
                 </div>
               </div>
 
-              <p className="max-w-3xl text-[13px] leading-6 text-slate-600">
+              <p className="max-w-3xl text-[12.5px] leading-6 text-slate-600">
                 {goals.executiveSummary}
               </p>
             </div>
@@ -1260,25 +1251,25 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] xl:col-span-2">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] xl:col-span-2">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[17px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Metas e Performance
                   </h2>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[12px] text-slate-500">
                     Meta, projeção e execução.
                   </p>
                 </div>
               </div>
 
-              <div className="mb-5">
-                <div className="mb-2 flex items-center justify-between text-sm font-bold text-slate-600">
+              <div className="mb-4">
+                <div className="mb-2 flex items-center justify-between text-[13px] font-semibold text-slate-600">
                   <span>Meta mensal</span>
                   <span>{goals.monthlyProgress}%</span>
                 </div>
@@ -1303,82 +1294,82 @@ export default function DashboardExecutivoPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+              <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Progresso provável
                   </p>
-                  <p className="mt-2 text-xl font-bold text-emerald-700">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {goals.probableProgress}%
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Conversão comercial
                   </p>
-                  <p className="mt-2 text-xl font-bold text-cyan-700">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {goals.commercialConversion}%
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-600">
+                <div className="rounded-[18px] border border-[#e7f3f3] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Recuperação prevista
                   </p>
-                  <p className="mt-2 text-xl font-bold text-violet-600">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {goals.recoveredPatientsProjection}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-[20px] bg-yellow-50 p-3 text-yellow-600">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                   <Trophy size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[17px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Destaques
                   </h2>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[12px] text-slate-500">
                     Destaques do período.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-[20px] bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
                     Procedimento destaque
                   </p>
                   <p className="mt-1 font-semibold text-slate-800">
                     {goals.topProcedure?.name || "Sem dados"}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-emerald-600">
+                  <p className="mt-1 text-[13px] font-semibold text-[#239d9a]">
                     {formatCurrency(goals.topProcedure?.value || 0)}
                   </p>
                 </div>
 
-                <div className="rounded-[20px] bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
                     Profissional destaque
                   </p>
                   <p className="mt-1 font-semibold text-slate-800">
                     {goals.topProfessional?.name || "Sem dados"}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-emerald-600">
+                  <p className="mt-1 text-[13px] font-semibold text-[#239d9a]">
                     {formatCurrency(goals.topProfessional?.value || 0)}
                   </p>
                 </div>
 
-                <div className="rounded-[20px] bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
                     Ticket médio
                   </p>
-                  <p className="mt-1 text-xl font-bold text-[#239d9a]">
+                  <p className="mt-1 text-lg font-semibold text-[#239d9a]">
                     {formatCurrency(goals.averageTicket || averageTicket)}
                   </p>
                 </div>
@@ -1386,56 +1377,56 @@ export default function DashboardExecutivoPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[520px_minmax(0,1fr)]">
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[520px_minmax(0,1fr)]">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[17px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Pipeline Executivo
                   </h2>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[12px] text-slate-500">
                     Pipeline e oportunidades abertas.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+              <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Pipeline comercial
                   </p>
-                  <p className="mt-2 text-xl font-bold text-emerald-700">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {formatCurrency(forecast.commercialPipeline)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Orçamentos abertos
                   </p>
-                  <p className="mt-2 text-xl font-bold text-cyan-700">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {formatCurrency(openBudgetRevenue)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/40 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Ticket médio aprovado
                   </p>
-                  <p className="mt-2 text-xl font-bold text-cyan-700">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {formatCurrency(averageTicket)}
                   </p>
                 </div>
 
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-600">
+                <div className="rounded-[18px] border border-[#e7f3f3] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Campanhas previstas
                   </p>
-                  <p className="mt-2 text-xl font-bold text-violet-600">
+                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
                     {formatCurrency(forecast.campaignRevenueProjection)}
                   </p>
                 </div>
@@ -1460,18 +1451,18 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-[20px] bg-emerald-50 p-3 text-emerald-600">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                   <Users size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[17px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Top Pacientes por Score
                   </h2>
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[12px] text-slate-500">
                     Prioridade comercial.
                   </p>
                 </div>
@@ -1482,7 +1473,7 @@ export default function DashboardExecutivoPage() {
                   <Link
                     key={item.patient.id}
                     href={`/pacientes/${item.patient.id}`}
-                    className="grid grid-cols-1 gap-3 rounded-[20px] bg-slate-50/70 p-4 transition hover:bg-cyan-50 md:grid-cols-[1fr_auto]"
+                    className="grid grid-cols-1 gap-3 rounded-[18px] bg-[#fbffff] p-3.5 transition hover:bg-[#eefafa] md:grid-cols-[1fr_auto]"
                   >
                     <div>
                       <p className="font-semibold text-slate-800">
@@ -1495,14 +1486,14 @@ export default function DashboardExecutivoPage() {
 
                     <div className="flex items-center gap-2">
                       <span
-                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${getScoreClass(
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${getScoreClass(
                           item.score,
                         )}`}
                       >
                         {item.score}/100
                       </span>
 
-                      <span className="rounded-full bg-cyan-100 px-3 py-1 text-[11px] font-semibold text-cyan-700">
+                      <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-semibold text-[#0f766e]">
                         {item.closingChance}%
                       </span>
                     </div>
@@ -1510,7 +1501,7 @@ export default function DashboardExecutivoPage() {
                 ))}
 
                 {scoredPatients.length === 0 && (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
                     Ainda não há pacientes suficientes para análise.
                   </div>
                 )}
@@ -1525,50 +1516,50 @@ export default function DashboardExecutivoPage() {
             />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-[17px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Rentabilidade dos procedimentos
                   </h2>
-                  <p className="mt-1 text-[13px] text-slate-500">
+                  <p className="mt-1 text-[12px] text-slate-500">
                     Margem estimada por procedimento.
                   </p>
                 </div>
 
                 <Link
                   href="/configuracoes/precificacao"
-                  className="inline-flex items-center justify-center rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[11px] font-semibold text-[#239d9a] hover:bg-cyan-100"
+                  className="inline-flex items-center justify-center rounded-[18px] border border-cyan-100 bg-[#eefafa] px-4 py-3 text-[11px] font-semibold text-[#239d9a] hover:bg-[#e8f7f6]"
                 >
                   Abrir precificação
                 </Link>
               </div>
 
-              <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-[20px] bg-slate-50/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
                     Procedimentos mapeados
                   </p>
-                  <p className="mt-1 text-[17px] font-semibold text-slate-800">
+                  <p className="mt-1 text-[15px] font-semibold text-slate-800">
                     {profitabilitySummary.mapped}/{profitabilitySummary.total}
                   </p>
                 </div>
 
-                <div className="rounded-[20px] bg-emerald-50 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+                <div className="rounded-[18px] bg-[#eefafa] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Lucro estimado
                   </p>
-                  <p className="mt-1 text-xl font-bold text-emerald-700">
+                  <p className="mt-1 text-lg font-semibold text-[#0f766e]">
                     {formatCurrency(profitabilitySummary.profit)}
                   </p>
                 </div>
 
-                <div className="rounded-[20px] bg-cyan-50 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                <div className="rounded-[18px] bg-[#eefafa] p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
                     Margem média
                   </p>
-                  <p className="mt-1 text-xl font-bold text-cyan-700">
+                  <p className="mt-1 text-lg font-semibold text-[#0f766e]">
                     {profitabilitySummary.averageMargin}%
                   </p>
                 </div>
@@ -1580,7 +1571,7 @@ export default function DashboardExecutivoPage() {
                   .map((item, index) => (
                     <div
                       key={item.name}
-                      className="rounded-[20px] bg-slate-50/70 p-4"
+                      className="rounded-[18px] bg-[#fbffff] p-3.5"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
@@ -1594,7 +1585,7 @@ export default function DashboardExecutivoPage() {
                         </div>
 
                         <span
-                          className={`w-fit rounded-full px-3 py-1 text-[11px] font-semibold ${getProfitabilityClass(
+                          className={`w-fit rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${getProfitabilityClass(
                             item.margin,
                           )}`}
                         >
@@ -1605,7 +1596,7 @@ export default function DashboardExecutivoPage() {
 
                       {item.hasPricing ? (
                         <div className="mt-4 grid grid-cols-1 gap-3 text-[11px] font-medium text-slate-500 md:grid-cols-3">
-                          <div className="rounded-[20px] bg-white p-3">
+                          <div className="rounded-[18px] bg-white p-3">
                             <p className="text-slate-400">Custo estimado</p>
                             <p className="mt-1 text-sm font-semibold text-slate-800">
                               {formatCurrency(
@@ -1614,14 +1605,14 @@ export default function DashboardExecutivoPage() {
                             </p>
                           </div>
 
-                          <div className="rounded-[20px] bg-white p-3">
+                          <div className="rounded-[18px] bg-white p-3">
                             <p className="text-slate-400">Lucro estimado</p>
-                            <p className="mt-1 text-[13px] font-semibold text-emerald-700">
+                            <p className="mt-1 text-[13px] font-semibold text-[#0f766e]">
                               {formatCurrency(item.estimatedProfit)}
                             </p>
                           </div>
 
-                          <div className="rounded-[20px] bg-white p-3">
+                          <div className="rounded-[18px] bg-white p-3">
                             <p className="text-slate-400">
                               Custo unitário base
                             </p>
@@ -1631,7 +1622,7 @@ export default function DashboardExecutivoPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-4 rounded-[20px] border border-dashed border-amber-200 bg-amber-50/60 p-3 text-[11px] font-medium text-amber-700">
+                        <div className="mt-4 rounded-[18px] border border-dashed border-[#d9eeee] bg-[#f7ffff] p-3 text-[11px] font-medium text-[#0f766e]">
                           Este procedimento ainda não possui precificação
                           cadastrada. Cadastre o custo para calcular margem
                           real.
@@ -1641,18 +1632,18 @@ export default function DashboardExecutivoPage() {
                   ))}
 
                 {procedureProfitabilityRanking.length === 0 && (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
                     Ainda não há dados suficientes para calcular rentabilidade.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-              <h2 className="text-[17px] font-semibold text-slate-800">
+            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+              <h2 className="text-[15px] font-semibold text-slate-800">
                 Ranking por profissional
               </h2>
-              <p className="mt-1 text-[13px] text-slate-500">
+              <p className="mt-1 text-[12px] text-slate-500">
                 Produção agrupada por profissional quando disponível.
               </p>
 
@@ -1660,7 +1651,7 @@ export default function DashboardExecutivoPage() {
                 {goals.professionalRanking.slice(0, 6).map((item, index) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between gap-3 rounded-[20px] bg-slate-50/70 p-4"
+                    className="flex items-center justify-between gap-3 rounded-[18px] bg-[#fbffff] p-3.5"
                   >
                     <div>
                       <p className="font-semibold text-slate-800">
@@ -1671,14 +1662,14 @@ export default function DashboardExecutivoPage() {
                       </p>
                     </div>
 
-                    <p className="font-semibold text-emerald-600">
+                    <p className="font-semibold text-[#239d9a]">
                       {formatCurrency(item.value)}
                     </p>
                   </div>
                 ))}
 
                 {goals.professionalRanking.length === 0 && (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 p-8 text-center text-[13px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
                     Ainda não há ranking por profissional.
                   </div>
                 )}
@@ -1690,16 +1681,16 @@ export default function DashboardExecutivoPage() {
 
       {activeDashboardTab === "acessos" && (
         <>
-          <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Link
               href="/crm"
-              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[20px] bg-cyan-50 p-3 text-cyan-600">
+              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                 <Activity size={22} />
               </div>
-              <h3 className="text-[17px] font-semibold text-slate-800">CRM</h3>
-              <p className="mt-1 text-[13px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-slate-800">CRM</h3>
+              <p className="mt-1 text-[12px] text-slate-500">
                 Acessar relacionamento, aniversários, orçamentos e tratamentos
                 parados.
               </p>
@@ -1707,26 +1698,26 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[20px] bg-cyan-50/40 p-3 text-cyan-600">
+              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa]/40 p-3 text-[#239d9a]">
                 <Megaphone size={22} />
               </div>
-              <h3 className="text-[17px] font-semibold text-slate-800">Campanhas</h3>
-              <p className="mt-1 text-[13px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-slate-800">Campanhas</h3>
+              <p className="mt-1 text-[12px] text-slate-500">
                 Acessar campanhas segmentadas por score e chance de fechamento.
               </p>
             </Link>
 
             <Link
               href="/financeiro"
-              className="rounded-[26px] border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.05)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[20px] bg-emerald-50 p-3 text-emerald-600">
+              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
                 <DollarSign size={22} />
               </div>
-              <h3 className="text-[17px] font-semibold text-slate-800">Financeiro</h3>
-              <p className="mt-1 text-[13px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-slate-800">Financeiro</h3>
+              <p className="mt-1 text-[12px] text-slate-500">
                 Abrir o financeiro operacional do consultório.
               </p>
             </Link>
