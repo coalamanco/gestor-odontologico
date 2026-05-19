@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import FinancialHeader from "../../components/financeiro/FinancialHeader";
 import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryCards";
+import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   getFinancialRecordAnalysis,
@@ -1695,194 +1696,36 @@ export default function FinanceiroPage() {
         recibosPendentes={intelligentSummary.recibosPendentes}
       />
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] ring-1 ring-white/60">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
-          <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-red-50/70 p-3 text-red-600">
-              <AlertTriangle size={24} />
-            </div>
-
-            <div>
-              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
-                Alertas inteligentes
-              </h2>
-              <p className="mt-1 text-[13px] text-slate-500">
-                Avisos automáticos para priorizar cobranças e pendências importantes.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#239d9a]">
-            {smartAlerts.overduePatients.length +
-              smartAlerts.highDebtPatients.length +
-              smartAlerts.receiptWithPayment.length} alerta(s)
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-          <div
-            className={`rounded-2xl border p-4 ${
-              smartAlerts.overduePatients.length > 0
-                ? "border-red-100 bg-white"
-                : "border-[#d9eeee] bg-white"
-            }`}
-          >
-            <div className="text-[13px] font-semibold text-slate-800">
-              Débitos com mais de 30 dias
-            </div>
-
-            <div
-              className={`mt-2 text-lg font-semibold ${
-                smartAlerts.overduePatients.length > 0
-                  ? "text-red-600"
-                  : "text-emerald-600"
-              }`}
-            >
-              {smartAlerts.overduePatients.length}
-            </div>
-
-            <div className="mt-1 text-xs font-medium text-slate-600">
-              Total: {formatCurrency(smartAlerts.totalOverdue)}
-            </div>
-
-            {smartAlerts.overduePatients.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSmartFilter("atrasados");
-                  scrollToResultados();
-                }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600 border border-red-100 hover:bg-red-100"
-              >
-                Ver atrasados
-              </button>
-            )}
-          </div>
-
-          <div
-            className={`rounded-2xl border p-4 ${
-              smartAlerts.highDebtPatients.length > 0
-                ? "border-amber-100 bg-white"
-                : "border-[#d9eeee] bg-white"
-            }`}
-          >
-            <div className="text-[13px] font-semibold text-slate-800">
-              Dívidas acima de R$ 500
-            </div>
-
-            <div
-              className={`mt-2 text-lg font-semibold ${
-                smartAlerts.highDebtPatients.length > 0
-                  ? "text-amber-600"
-                  : "text-emerald-600"
-              }`}
-            >
-              {smartAlerts.highDebtPatients.length}
-            </div>
-
-            <div className="mt-1 text-xs font-medium text-slate-600">
-              Prioridade alta para cobrança
-            </div>
-
-            {smartAlerts.highDebtPatients.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSmartFilter("cobranca");
-                  scrollToResultados();
-                  window.open(buildChargeAllWhatsappHref(), "_blank", "noopener,noreferrer");
-                }}
-                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-600 border border-amber-100 hover:bg-amber-100"
-              >
-                Gerar cobrança
-              </button>
-            )}
-          </div>
-
-          <div
-            className={`rounded-2xl border p-4 ${
-              smartAlerts.receiptWithPayment.length > 0
-                ? "border-purple-100 bg-white"
-                : "border-[#d9eeee] bg-white"
-            }`}
-          >
-            <div className="text-[13px] font-semibold text-slate-800">
-              Recibos para emitir
-            </div>
-
-            <div
-              className={`mt-2 text-lg font-semibold ${
-                smartAlerts.receiptWithPayment.length > 0
-                  ? "text-purple-600"
-                  : "text-emerald-600"
-              }`}
-            >
-              {smartAlerts.receiptWithPayment.length}
-            </div>
-
-            <div className="mt-1 text-xs font-medium text-slate-600">
-              Pagamentos com recibo solicitado
-            </div>
-
-            {smartAlerts.receiptWithPayment.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSmartFilter("recibos");
-                  scrollToResultados();
-                }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-purple-600 border border-purple-100 hover:bg-purple-100"
-              >
-                Ver recibos
-              </button>
-            )}
-          </div>
-
-          <div
-            className={`rounded-2xl border p-4 ${
-              smartAlerts.totalOpen > 0
-                ? "border-[#bfe8e7] bg-[#f2fcfc]"
-                : "border-[#d9eeee] bg-white"
-            }`}
-          >
-            <div className="text-[13px] font-semibold text-slate-800">
-              Total em aberto
-            </div>
-
-            <div
-              className={`mt-2 text-lg font-semibold ${
-                smartAlerts.totalOpen > 0
-                  ? "text-[#239d9a]"
-                  : "text-emerald-600"
-              }`}
-            >
-              {formatCurrency(smartAlerts.totalOpen)}
-            </div>
-
-            <div className="mt-1 text-xs font-medium text-slate-600">
-              {patientsToCharge.length} paciente(s) com atraso real
-            </div>
-
-            {patientsToCharge.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSmartFilter("todos");
-                  setPeriodoFiltro("mes_atual");
-                  scrollToResultados();
-                }}
-                className="mt-3 rounded-xl bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] border border-[#bfe8e7] hover:bg-[#eefafa]"
-              >
-                Ver todos
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <FinancialAlerts
+        overduePatientsCount={smartAlerts.overduePatients.length}
+        highDebtPatientsCount={smartAlerts.highDebtPatients.length}
+        receiptWithPaymentCount={smartAlerts.receiptWithPayment.length}
+        totalOpenFormatted={formatCurrency(smartAlerts.totalOpen)}
+        totalOverdueFormatted={formatCurrency(smartAlerts.totalOverdue)}
+        patientsToChargeCount={patientsToCharge.length}
+        onViewOverdue={() => {
+          setSearchTerm("");
+          setSmartFilter("atrasados");
+          scrollToResultados();
+        }}
+        onGenerateCharge={() => {
+          setSearchTerm("");
+          setSmartFilter("cobranca");
+          scrollToResultados();
+          window.open(buildChargeAllWhatsappHref(), "_blank", "noopener,noreferrer");
+        }}
+        onViewReceipts={() => {
+          setSearchTerm("");
+          setSmartFilter("recibos");
+          scrollToResultados();
+        }}
+        onViewAll={() => {
+          setSearchTerm("");
+          setSmartFilter("todos");
+          setPeriodoFiltro("mes_atual");
+          scrollToResultados();
+        }}
+      />
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)]">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
