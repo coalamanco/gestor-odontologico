@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import FinancialHeader from "@/components/financeiro/FinancialHeader";
+import FinancialHeader from "../../components/financeiro/FinancialHeader";
+import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryCards";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   getFinancialRecordAnalysis,
@@ -1678,6 +1679,21 @@ export default function FinanceiroPage() {
       </div>
 
 
+
+      <FinancialSummaryCards
+        totalLancado={formatCurrency(summary.totalLancado)}
+        totalRecebido={formatCurrency(summary.totalRecebido)}
+        totalAReceber={formatCurrency(summary.totalAReceber)}
+        despesasPagas={formatCurrency(summary.despesasPagas)}
+        despesasPendentes={formatCurrency(summary.despesasPendentes)}
+        saldo={formatCurrency(summary.saldo)}
+        recebidoHoje={formatCurrency(intelligentSummary.recebidoHoje)}
+        recebidoMes={formatCurrency(intelligentSummary.recebidoMes)}
+        totalEmAberto={formatCurrency(intelligentSummary.totalEmAberto)}
+        taxaInadimplencia={`${intelligentSummary.taxaInadimplencia.toFixed(1)}%`}
+        ticketMedio={formatCurrency(intelligentSummary.ticketMedio)}
+        recibosPendentes={intelligentSummary.recibosPendentes}
+      />
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] ring-1 ring-white/60">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
