@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import FinancialHeader from "@/components/financeiro/FinancialHeader";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   getFinancialRecordAnalysis,
@@ -1541,16 +1542,7 @@ export default function FinanceiroPage() {
 
   return (
     <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-4 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="rounded-3xl border border-[#b6e3e2] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 py-4 shadow-[0_12px_30px_rgba(35,157,154,0.12)] ring-1 ring-white/50">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Financeiro
-          </h1>
-          <p className="mt-1 text-[13px] font-medium text-cyan-50/95">
-            Controle financeiro inteligente com vencimentos reais, parcelas e cobrança premium.
-          </p>
-        </div>
-      </div>
+      <FinancialHeader />
 
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] overflow-visible">
