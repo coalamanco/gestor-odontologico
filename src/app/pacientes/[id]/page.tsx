@@ -4631,7 +4631,13 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 <div>
                   <div className="text-slate-500">Nascimento</div>
                   <div className="text-slate-800 font-medium">
-                    {patient.birth_date || patient.date_of_birth || "-"}
+                    {
+  patient.birth_date || patient.date_of_birth
+    ? new Date(
+        (patient.birth_date || patient.date_of_birth) + "T00:00:00"
+      ).toLocaleDateString("pt-BR")
+    : "-"
+}
                   </div>
                 </div>
 
