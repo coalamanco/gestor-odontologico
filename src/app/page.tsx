@@ -1061,7 +1061,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="page-shell">
-        <div className="page-container space-y-5">
+        <div className="page-container space-y-5 pt-0">
         <DashboardHeader
           period={period}
           setPeriod={setPeriod}
