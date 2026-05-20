@@ -2026,7 +2026,7 @@ export default function AgendaPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8]">
-      <div className="hidden px-2.5 pt-2.5 md:block">
+      <div className="relative z-[80] hidden px-2.5 pt-2.5 md:block">
         <PremiumPageHeader
           title="Agenda Clínica"
           eyebrow="Gestão operacional"
@@ -2044,12 +2044,12 @@ export default function AgendaPage() {
                   setWeekBaseDate(new Date());
                   setMiniCalendarDate(new Date());
                 }}
-                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
+                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
               >
                 Hoje
               </button>
 
-              <div className="flex h-9 w-[250px] items-center gap-2 rounded-2xl border border-white/25 bg-white/18 px-2 shadow-sm backdrop-blur-sm">
+              <div className="flex h-8 w-[250px] items-center gap-2 rounded-2xl border border-white/25 bg-white/18 px-2 shadow-sm backdrop-blur-sm">
                 <div
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/25 text-[10px] font-semibold text-white shadow-sm"
                   style={{ backgroundColor: selectedProfessionalColor }}
@@ -2079,14 +2079,14 @@ export default function AgendaPage() {
                     setMiniCalendarDate(weekBaseDate);
                     setShowMiniCalendar((prev) => !prev);
                   }}
-                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
+                  className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
                   title="Abrir mini calendário"
                 >
                   📅
                 </button>
 
                 {showMiniCalendar && (
-                  <div className="absolute right-0 top-11 z-[80] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                  <div className="absolute right-0 top-11 z-[99999] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <button
                         type="button"
@@ -2195,7 +2195,7 @@ export default function AgendaPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 w-[132px] rounded-2xl border border-white/25 bg-white/18 px-3 text-[12px] font-semibold text-white outline-none backdrop-blur-sm [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
+                className="h-8 w-[132px] rounded-2xl border border-white/25 bg-white/18 px-3 text-[12px] font-semibold text-white outline-none backdrop-blur-sm [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
                 title="Filtrar agenda por status"
               >
                 <option value="todos">Todos</option>
@@ -2210,7 +2210,7 @@ export default function AgendaPage() {
               <button
                 type="button"
                 onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
-                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-slate-700/90 px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-slate-700/90 px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
                 title="Bloquear horário na agenda"
               >
                 Bloquear
@@ -2219,7 +2219,7 @@ export default function AgendaPage() {
               <button
                 type="button"
                 onClick={syncExistingGoogleAppointments}
-                className="hidden h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/18 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30 xl:inline-flex"
+                className="hidden h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/18 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30 xl:inline-flex"
                 title="Sincronizar consultas existentes com Google Agenda"
               >
                 Sincronizar
@@ -2228,7 +2228,7 @@ export default function AgendaPage() {
               <button
                 type="button"
                 onClick={connectGoogleCalendar}
-                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/30 bg-white px-3 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/30 bg-white px-3 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
                 title="Conectar sua conta ao Google Agenda"
               >
                 Google Agenda
