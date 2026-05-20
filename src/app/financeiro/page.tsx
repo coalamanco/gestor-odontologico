@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import FinancialHeader from "../../components/financeiro/FinancialHeader";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryCards";
 import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
@@ -1544,7 +1544,41 @@ export default function FinanceiroPage() {
 
   return (
     <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-4 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <FinancialHeader />
+      <PremiumPageHeader
+        title="Financeiro"
+        eyebrow="Gestão financeira"
+        subtitle="Recebimentos, despesas, inadimplência, recibos e projeção de caixa da clínica."
+        icon={Wallet}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={reloadAll}
+              className="inline-flex h-8 items-center justify-center rounded-xl border border-white/25 bg-white/15 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+            >
+              Atualizar
+            </button>
+
+            <button
+              type="button"
+              onClick={generateFinancialPdfReport}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+            >
+              <FileText size={14} />
+              PDF
+            </button>
+
+            <button
+              type="button"
+              onClick={exportFinanceiroExcel}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-white/35 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+            >
+              <Download size={14} />
+              Excel
+            </button>
+          </>
+        }
+      />
 
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] overflow-visible">
