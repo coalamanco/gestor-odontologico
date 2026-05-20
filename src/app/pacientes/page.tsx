@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Search, Plus, Users, RefreshCw, AlertTriangle, Download } from "lucide-react";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 import * as XLSX from "xlsx";
 
 type Patient = {
@@ -215,30 +216,17 @@ export default function PacientesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-4">
       <div className="mx-auto max-w-6xl space-y-4">
-        <div className="relative overflow-hidden rounded-[28px] border border-[#cbeceb] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-4 py-3 shadow-[0_8px_24px_rgba(35,157,154,0.08)] md:px-5">
-          <div className="absolute -right-16 -top-20 h-40 w-40 rounded-full bg-white/15" />
-          <div className="absolute -bottom-24 left-10 h-36 w-36 rounded-full bg-white/10" />
-
-          <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="inline-flex rounded-full border border-white/25 bg-white/15 px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-50 backdrop-blur">
-                Central de relacionamento
-              </div>
-
-              <h1 className="mt-1 text-[22px] font-semibold tracking-tight text-white md:text-[24px]">
-                Pacientes
-              </h1>
-
-              <p className="mt-1 max-w-2xl text-[12px] font-medium leading-5 text-cyan-50">
-                Encontre rapidamente pacientes, abra prontuários, exporte a base e mantenha o atendimento organizado.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row">
+        <PremiumPageHeader
+          title="Pacientes"
+          eyebrow="Central de relacionamento"
+          subtitle="Base clínica, prontuários e cadastro de pacientes"
+          icon={Users}
+          actions={
+            <>
               <button
                 type="button"
                 onClick={loadPatients}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-3.5 py-2 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 text-[12px] font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <RefreshCw size={18} />
                 Atualizar
@@ -247,7 +235,7 @@ export default function PacientesPage() {
               <button
                 type="button"
                 onClick={exportPatientsExcel}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-3.5 py-2 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 text-[12px] font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <Download size={18} />
                 Exportar Excel
@@ -255,14 +243,14 @@ export default function PacientesPage() {
 
               <Link
                 href="/pacientes/novo"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white px-3.5 py-2 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white px-4 text-[12px] font-bold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
               >
                 <Plus size={18} />
                 Novo paciente
               </Link>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {errorMessage && (
           <div className="rounded-[24px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-[#0f766e] shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
