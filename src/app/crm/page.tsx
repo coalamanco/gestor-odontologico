@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 
 type Patient = {
   id: string;
@@ -386,43 +387,32 @@ export default function CrmPage() {
   return (
     <div className="min-h-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-28 md:p-5 md:pb-10">
       <div className="mx-auto max-w-7xl space-y-4">
-        <section className="overflow-hidden rounded-[1.35rem] border border-[#bde4e3] bg-white shadow-sm md:rounded-[2rem]">
-          <div className="bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-5 py-3.5 text-white">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-50 ring-1 ring-white/20">
-                  <Sparkles size={13} />
-                  CRM inteligente
-                </div>
-                <h1 className="mt-3 text-xl md:text-2xl font-bold tracking-tight">
-                  Relacionamento e Marketing
-                </h1>
-                <p className="mt-2 max-w-3xl text-[13px] opacity-90 font-medium leading-5 text-cyan-50">
-                  Acompanhe pacientes sem retorno, aniversariantes, orçamentos pendentes e tratamentos parados com mensagens prontas para WhatsApp.
-                </p>
-              </div>
+        <PremiumPageHeader
+          title="Relacionamento e Marketing"
+          eyebrow="CRM inteligente"
+          subtitle="Pacientes sem retorno, aniversariantes, orçamentos pendentes e tratamentos parados com mensagens prontas para WhatsApp."
+          icon={Sparkles}
+          actions={
+            <>
+              <Link
+                href="/crm/automacoes"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-[11px] font-black uppercase tracking-[0.08em] text-[#239d9a] shadow-sm transition hover:bg-cyan-50"
+              >
+                <Bot size={16} />
+                Automações
+              </Link>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Link
-                  href="/crm/automacoes"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-[#239d9a] shadow-sm hover:bg-cyan-50"
-                >
-                  <Bot size={17} />
-                  Automações
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={loadData}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur hover:bg-white/20"
-                >
-                  <RefreshCw size={17} />
-                  Atualizar
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+              <button
+                type="button"
+                onClick={loadData}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-sm backdrop-blur transition hover:bg-white/25"
+              >
+                <RefreshCw size={16} />
+                Atualizar
+              </button>
+            </>
+          }
+        />
 
         <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <Link
