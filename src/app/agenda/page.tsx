@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { CalendarDays } from "lucide-react";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 
 type MainType = "consulta" | "compromisso";
 type ConsultaMotivo = "consulta" | "retorno" | "tratamento";
@@ -940,25 +942,25 @@ export default function AgendaPage() {
     const minute = Number(String(timeValue || "").split(":")[1] || 0);
 
     if (minute === 0) {
-      return "border-b border-[#b8d7d7] bg-white shadow-[inset_0_1px_0_rgba(15,23,42,0.04)]";
+      return "border-b border-[#c4dddd] bg-white shadow-[inset_0_1px_0_rgba(15,23,42,0.04)]";
     }
 
     if (minute === 30) {
-      return "border-b border-[#cfe5e5] bg-white";
+      return "border-b border-[#d7eaea] bg-white";
     }
 
-    return "border-b border-[#e6f0f0] bg-white";
+    return "border-b border-[#edf5f5] bg-white";
   };
 
   const timeColumnClass = (timeValue: string) => {
     const minute = Number(String(timeValue || "").split(":")[1] || 0);
 
     if (minute === 0) {
-      return "bg-[#f1fbfb] text-slate-600 font-black";
+      return "bg-[#f5ffff] text-slate-600 font-semibold";
     }
 
     if (minute === 30) {
-      return "bg-[#f7ffff] text-slate-500 font-extrabold";
+      return "bg-[#fbffff] text-slate-500 font-extrabold";
     }
 
     return "bg-[#fbffff] text-slate-400 font-bold";
@@ -2023,248 +2025,235 @@ export default function AgendaPage() {
   }, [filteredAppointmentsByProfessional, financialRecords]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#f5f7f8]">
-      <div className="hidden border-b border-[#d7e7e7] bg-white/95 px-3 py-1 shadow-sm md:block">
-        <div className="grid min-h-[38px] grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowMiniCalendar(false);
-                setWeekBaseDate(new Date());
-                setMiniCalendarDate(new Date());
-              }}
-              className="h-7 rounded-lg bg-[#239d9a] px-3 text-xs font-black text-white shadow-sm hover:opacity-90"
-            >
-              Hoje
-            </button>
-
-            <div className="hidden w-[250px] items-center gap-2 rounded-xl border border-[#c2dddd] bg-white px-2 py-1 shadow-sm md:flex">
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm"
-                style={{ backgroundColor: selectedProfessionalColor }}
-              >
-                {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
-              </div>
-
-              <select
-                value={selectedAgendaProfessionalId}
-                onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
-                className="h-7 min-w-0 flex-1 bg-transparent text-xs font-black text-slate-700 outline-none"
-                title="Selecionar agenda do profissional"
-              >
-                <option value="">Todos os profissionais</option>
-                {activeProfessionals.map((professional) => (
-                  <option key={professional.id} value={professional.id}>
-                    {professional.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="relative hidden md:block">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8]">
+      <div className="hidden px-2.5 pt-2.5 md:block">
+        <PremiumPageHeader
+          title="Agenda Clínica"
+          eyebrow="Gestão operacional"
+          subtitle={new Date(weekBaseDate).toLocaleDateString("pt-BR", {
+            month: "long",
+            year: "numeric",
+          })}
+          icon={CalendarDays}
+          actions={
+            <>
               <button
                 type="button"
                 onClick={() => {
-                  setMiniCalendarDate(weekBaseDate);
-                  setShowMiniCalendar((prev) => !prev);
+                  setShowMiniCalendar(false);
+                  setWeekBaseDate(new Date());
+                  setMiniCalendarDate(new Date());
                 }}
-                className="h-7 rounded-lg bg-white px-3 text-[12px] font-black text-[#239d9a] ring-1 ring-[#d9eeee] hover:bg-[#f2fcfc]"
-                title="Abrir mini calendário"
+                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
               >
-                📅
+                Hoje
               </button>
 
-              {showMiniCalendar && (
-                <div className="absolute left-0 top-9 z-[80] w-[292px] rounded-2xl border border-[#d4e8e8] bg-white p-3 shadow-xl">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMiniCalendarDate((prev) => {
-                          const next = new Date(prev);
-                          next.setMonth(next.getMonth() - 1);
-                          return next;
-                        })
-                      }
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
-                      title="Mês anterior"
-                    >
-                      ◀
-                    </button>
+              <div className="flex h-9 w-[250px] items-center gap-2 rounded-2xl border border-white/25 bg-white/18 px-2 shadow-sm backdrop-blur-sm">
+                <div
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/25 text-[10px] font-semibold text-white shadow-sm"
+                  style={{ backgroundColor: selectedProfessionalColor }}
+                >
+                  {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
+                </div>
 
-                    <div className="text-center">
-                      <div className="text-sm font-black capitalize text-slate-800">
-                        {miniCalendarDate.toLocaleDateString("pt-BR", {
-                          month: "long",
-                          year: "numeric",
-                        })}
+                <select
+                  value={selectedAgendaProfessionalId}
+                  onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
+                  className="h-7 min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-white outline-none [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
+                  title="Selecionar agenda do profissional"
+                >
+                  <option value="">Todos os profissionais</option>
+                  {activeProfessionals.map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMiniCalendarDate(weekBaseDate);
+                    setShowMiniCalendar((prev) => !prev);
+                  }}
+                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
+                  title="Abrir mini calendário"
+                >
+                  📅
+                </button>
+
+                {showMiniCalendar && (
+                  <div className="absolute right-0 top-11 z-[80] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMiniCalendarDate((prev) => {
+                            const next = new Date(prev);
+                            next.setMonth(next.getMonth() - 1);
+                            return next;
+                          })
+                        }
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
+                        title="Mês anterior"
+                      >
+                        ◀
+                      </button>
+
+                      <div className="text-center">
+                        <div className="text-[13px] font-semibold capitalize text-slate-800">
+                          {miniCalendarDate.toLocaleDateString("pt-BR", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                          escolher dia
+                        </div>
                       </div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                        escolher dia
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMiniCalendarDate((prev) => {
+                            const next = new Date(prev);
+                            next.setMonth(next.getMonth() + 1);
+                            return next;
+                          })
+                        }
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
+                        title="Próximo mês"
+                      >
+                        ▶
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMiniCalendarDate((prev) => {
-                          const next = new Date(prev);
-                          next.setMonth(next.getMonth() + 1);
-                          return next;
-                        })
-                      }
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-xs font-black text-[#239d9a] hover:bg-[#dff3f2]"
-                      title="Próximo mês"
-                    >
-                      ▶
-                    </button>
+                    <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-slate-400">
+                      {["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (
+                        <div key={`${item}-${index}`} className="py-1">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1">
+                      {miniCalendarDays.map((item) => {
+                        const selected = item.dateKey === formatDate(weekBaseDate);
+                        const holiday = getHolidayInfo(item.dateKey);
+
+                        return (
+                          <button
+                            key={item.dateKey}
+                            type="button"
+                            onClick={() => selectMiniCalendarDay(item.date)}
+                            title={holiday?.name || formatDateBr(item.dateKey)}
+                            className={`relative flex h-8 items-center justify-center rounded-lg text-[12px] font-medium transition ${
+                              selected
+                                ? "bg-[#239d9a] text-white"
+                                : item.today
+                                  ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20"
+                                  : item.currentMonth
+                                    ? "text-slate-700 hover:bg-[#f2fcfc]"
+                                    : "text-slate-300 hover:bg-slate-50"
+                            }`}
+                          >
+                            {item.day}
+                            {holiday && (
+                              <span className={`absolute bottom-1 h-1 w-1 rounded-full ${
+                                selected ? "bg-white" : "bg-amber-400"
+                              }`} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between border-t border-[#e0eeee] pt-3">
+                      <button
+                        type="button"
+                        onClick={() => selectMiniCalendarDay(new Date())}
+                        className="rounded-xl bg-[#eefafa] px-3 py-2 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
+                      >
+                        Hoje
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowMiniCalendar(false)}
+                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[11px] font-medium text-slate-500 hover:bg-[#f4fbfb]"
+                      >
+                        Fechar
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase text-slate-400">
-                    {["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (
-                      <div key={`${item}-${index}`} className="py-1">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 w-[132px] rounded-2xl border border-white/25 bg-white/18 px-3 text-[12px] font-semibold text-white outline-none backdrop-blur-sm [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
+                title="Filtrar agenda por status"
+              >
+                <option value="todos">Todos</option>
+                <option value="agendado">Agendado</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="em_atendimento">Em atendimento</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="faltou">Faltou</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
 
-                  <div className="grid grid-cols-7 gap-1">
-                    {miniCalendarDays.map((item) => {
-                      const selected = item.dateKey === formatDate(weekBaseDate);
-                      const holiday = getHolidayInfo(item.dateKey);
+              <button
+                type="button"
+                onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
+                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/25 bg-slate-700/90 px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                title="Bloquear horário na agenda"
+              >
+                Bloquear
+              </button>
 
-                      return (
-                        <button
-                          key={item.dateKey}
-                          type="button"
-                          onClick={() => selectMiniCalendarDay(item.date)}
-                          title={holiday?.name || formatDateBr(item.dateKey)}
-                          className={`relative flex h-8 items-center justify-center rounded-lg text-xs font-black transition ${
-                            selected
-                              ? "bg-[#239d9a] text-white"
-                              : item.today
-                                ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20"
-                                : item.currentMonth
-                                  ? "text-slate-700 hover:bg-[#f2fcfc]"
-                                  : "text-slate-300 hover:bg-slate-50"
-                          }`}
-                        >
-                          {item.day}
-                          {holiday && (
-                            <span className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                              selected ? "bg-white" : "bg-amber-400"
-                            }`} />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <button
+                type="button"
+                onClick={syncExistingGoogleAppointments}
+                className="hidden h-9 items-center justify-center rounded-2xl border border-white/25 bg-white/18 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30 xl:inline-flex"
+                title="Sincronizar consultas existentes com Google Agenda"
+              >
+                Sincronizar
+              </button>
 
-                  <div className="mt-3 flex items-center justify-between border-t border-[#e0eeee] pt-3">
-                    <button
-                      type="button"
-                      onClick={() => selectMiniCalendarDay(new Date())}
-                      className="rounded-lg bg-[#eefafa] px-3 py-2 text-[11px] font-black text-[#239d9a] hover:bg-[#dff3f2]"
-                    >
-                      Hoje
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowMiniCalendar(false)}
-                      className="rounded-lg border border-[#d4e8e8] bg-white px-3 py-2 text-[11px] font-bold text-slate-500 hover:bg-[#f4fbfb]"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          <div className="flex min-w-[280px] flex-col items-center justify-center text-center">
-            <h1 className="truncate text-[18px] font-black leading-none text-slate-800 lg:text-[22px]">
-              Agenda Clínica
-            </h1>
-            <p className="mt-0.5 truncate text-[9px] font-black uppercase tracking-[0.28em] text-[#239d9a] lg:text-[10px]">
-              {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-7 w-[126px] rounded-lg border border-[#c2dddd] bg-white px-2 text-xs font-semibold text-slate-700 outline-none"
-              title="Filtrar agenda por status"
-            >
-              <option value="todos">Todos</option>
-              <option value="agendado">Agendado</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="em_atendimento">Em atendimento</option>
-              <option value="finalizado">Finalizado</option>
-              <option value="faltou">Faltou</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-
-
-
-
-
-            <button
-              type="button"
-              onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
-              className="h-7 rounded-lg bg-slate-700 px-3 text-[10px] font-black text-white shadow-sm hover:bg-slate-800"
-              title="Bloquear horário na agenda"
-            >
-              Bloquear
-            </button>
-
-            <button
-              type="button"
-              onClick={syncExistingGoogleAppointments}
-              className="hidden h-7 rounded-lg border border-[#c2dddd] bg-white px-3 text-[10px] font-black text-[#239d9a] shadow-sm hover:bg-[#f4ffff] xl:inline-flex xl:items-center"
-              title="Sincronizar consultas existentes com Google Agenda"
-            >
-              Sincronizar
-            </button>
-
-            <button
-              type="button"
-              onClick={connectGoogleCalendar}
-              className="h-7 rounded-lg border border-[#c2dddd] bg-white px-3 text-[11px] font-black text-[#239d9a] shadow-sm hover:bg-[#f4ffff]"
-              title="Conectar sua conta ao Google Agenda"
-            >
-              Google Agenda
-            </button>
-
-
-          </div>
-        </div>
+              <button
+                type="button"
+                onClick={connectGoogleCalendar}
+                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/30 bg-white px-3 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+                title="Conectar sua conta ao Google Agenda"
+              >
+                Google Agenda
+              </button>
+            </>
+          }
+        />
       </div>
 
       <div className="border-b border-[#d7e7e7] bg-white/95 px-2 py-1.5 shadow-sm md:hidden">
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <button type="button" onClick={() => { setShowMiniCalendar(false); setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); }} className="h-9 rounded-2xl bg-[#239d9a] px-4 text-[13px] font-black text-white shadow-sm active:scale-[0.98]">Hoje</button>
-          <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-[#c2dddd] bg-white px-2 shadow-sm">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
-            <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-9 min-w-0 flex-1 bg-transparent text-[13px] font-black text-slate-700 outline-none" title="Selecionar agenda do profissional">
+          <button type="button" onClick={() => { setShowMiniCalendar(false); setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); }} className="h-9 rounded-[1.35rem] bg-[#239d9a] px-4 text-[13px] font-semibold text-white shadow-sm active:scale-[0.98]">Hoje</button>
+          <div className="flex min-w-0 items-center gap-2 rounded-[1.35rem] border border-[#c2dddd] bg-white px-2 shadow-sm">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
+            <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-9 min-w-0 flex-1 bg-transparent text-[13px] font-semibold text-slate-700 outline-none" title="Selecionar agenda do profissional">
               <option value="">Todos</option>
               {activeProfessionals.map((professional) => (<option key={professional.id} value={professional.id}>{professional.name}</option>))}
             </select>
           </div>
-          <button type="button" onClick={() => { setShowMiniCalendar(false); setMiniCalendarDate(weekBaseDate); setShowMobileAgendaSheet(true); }} className="h-9 rounded-2xl border border-[#c2dddd] bg-white px-3 text-[12px] font-black text-[#239d9a] shadow-sm active:scale-[0.98]">⚙ Agenda</button>
+          <button type="button" onClick={() => { setShowMiniCalendar(false); setMiniCalendarDate(weekBaseDate); setShowMobileAgendaSheet(true); }} className="h-9 rounded-[1.35rem] border border-[#c2dddd] bg-white px-3 text-[12px] font-medium text-[#239d9a] shadow-sm active:scale-[0.98]">⚙ Agenda</button>
         </div>
         <div className="mt-1 flex items-center justify-center gap-2 text-center">
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{mobileView === "day" ? "Modo dia" : "Modo semana"}</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{mobileView === "day" ? "Modo dia" : "Modo semana"}</span>
           <span className="h-1 w-1 rounded-full bg-slate-300" />
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#239d9a]">{new Date(weekBaseDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#239d9a]">{new Date(weekBaseDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
         </div>
       </div>
 
@@ -2273,53 +2262,53 @@ export default function AgendaPage() {
           <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] border border-[#d7e7e7] bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-200" />
             <div className="mb-4 flex items-start justify-between gap-3">
-              <div><h2 className="text-lg font-black text-slate-800">Controles da agenda</h2><p className="text-xs font-semibold text-slate-500">Ajuste a visualização sem ocupar espaço da agenda.</p></div>
-              <button type="button" onClick={() => setShowMobileAgendaSheet(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-600">✕</button>
+              <div><h2 className="text-lg font-semibold text-slate-800">Controles da agenda</h2><p className="text-[12px] font-medium text-slate-500">Ajuste a visualização sem ocupar espaço da agenda.</p></div>
+              <button type="button" onClick={() => setShowMobileAgendaSheet(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-[13px] font-semibold text-slate-600">✕</button>
             </div>
             <div className="space-y-3">
-              <div className="rounded-2xl border border-[#c2dddd] bg-[#fbffff] p-3">
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Profissional</label>
-                <div className="flex items-center gap-2 rounded-2xl border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
-                  <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-10 min-w-0 flex-1 bg-transparent text-sm font-black text-slate-700 outline-none" title="Selecionar agenda do profissional">
+              <div className="rounded-[1.35rem] border border-[#c2dddd] bg-[#fbffff] p-3">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Profissional</label>
+                <div className="flex items-center gap-2 rounded-[1.35rem] border border-[#c2dddd] bg-white px-3 py-2 shadow-sm">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white shadow-sm" style={{ backgroundColor: selectedProfessionalColor }}>{selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}</div>
+                  <select value={selectedAgendaProfessionalId} onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)} className="h-10 min-w-0 flex-1 bg-transparent text-[13px] font-semibold text-slate-700 outline-none" title="Selecionar agenda do profissional">
                     <option value="">Todos os profissionais</option>
                     {activeProfessionals.map((professional) => (<option key={professional.id} value={professional.id}>{professional.name}</option>))}
                   </select>
                 </div>
               </div>
-              <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Visualização</label>
-                <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-[#c2dddd] bg-[#f7ffff]">
-                  <button type="button" onClick={() => setMobileView("day")} className={`h-10 text-sm font-black transition ${mobileView === "day" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Dia</button>
-                  <button type="button" onClick={() => setMobileView("week")} className={`h-10 text-sm font-black transition ${mobileView === "week" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Semana</button>
+              <div className="rounded-[1.35rem] border border-[#c2dddd] bg-white p-3 shadow-sm">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Visualização</label>
+                <div className="grid grid-cols-2 overflow-hidden rounded-[1.35rem] border border-[#c2dddd] bg-[#f7ffff]">
+                  <button type="button" onClick={() => setMobileView("day")} className={`h-10 text-[13px] font-semibold transition ${mobileView === "day" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Dia</button>
+                  <button type="button" onClick={() => setMobileView("week")} className={`h-10 text-[13px] font-semibold transition ${mobileView === "week" ? "bg-[#239d9a] text-white" : "text-slate-600"}`}>Semana</button>
                 </div>
               </div>
               {mobileView === "day" && (
-                <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Navegação</label>
+                <div className="rounded-[1.35rem] border border-[#c2dddd] bg-white p-3 shadow-sm">
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Navegação</label>
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <button type="button" onClick={() => { goToPreviousDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl border border-[#c2dddd] bg-white px-2 text-xs font-black text-[#239d9a]">◀ Anterior</button>
-                    <button type="button" onClick={() => { setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl bg-[#239d9a] px-4 text-xs font-black text-white">Hoje</button>
-                    <button type="button" onClick={() => { goToNextDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-2xl border border-[#c2dddd] bg-white px-2 text-xs font-black text-[#239d9a]">Próximo ▶</button>
+                    <button type="button" onClick={() => { goToPreviousDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-[1.35rem] border border-[#c2dddd] bg-white px-2 text-[12px] font-medium text-[#239d9a]">◀ Anterior</button>
+                    <button type="button" onClick={() => { setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); setShowMobileAgendaSheet(false); }} className="h-10 rounded-[1.35rem] bg-[#239d9a] px-4 text-[12px] font-medium text-white">Hoje</button>
+                    <button type="button" onClick={() => { goToNextDay(); setShowMobileAgendaSheet(false); }} className="h-10 rounded-[1.35rem] border border-[#c2dddd] bg-white px-2 text-[12px] font-medium text-[#239d9a]">Próximo ▶</button>
                   </div>
-                  <button type="button" onClick={() => { setMiniCalendarDate(weekBaseDate); setShowMiniCalendar((prev) => !prev); }} className="mt-2 h-10 w-full rounded-2xl bg-[#eefafa] text-sm font-black text-[#239d9a]">📅 Escolher outro dia</button>
-                  <div className="mt-2 rounded-2xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2 text-center text-[11px] font-bold text-slate-500">Dica: também pode deslizar a agenda para os lados.</div>
+                  <button type="button" onClick={() => { setMiniCalendarDate(weekBaseDate); setShowMiniCalendar((prev) => !prev); }} className="mt-2 h-10 w-full rounded-[1.35rem] bg-[#eefafa] text-[13px] font-semibold text-[#239d9a]">📅 Escolher outro dia</button>
+                  <div className="mt-2 rounded-[1.35rem] border border-[#d9eeee] bg-[#fbffff] px-3 py-2 text-center text-[11px] font-bold text-slate-500">Dica: também pode deslizar a agenda para os lados.</div>
                 </div>
               )}
               {showMiniCalendar && (
-                <div className="rounded-2xl border border-[#d4e8e8] bg-white p-3 shadow-sm">
+                <div className="rounded-[1.35rem] border border-[#d4e8e8] bg-white p-3 shadow-sm">
                   <div className="mb-3 flex items-center justify-between gap-2">
-                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() - 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-xs font-black text-[#239d9a]">◀</button>
-                    <div className="text-center"><div className="text-sm font-black capitalize text-slate-800">{miniCalendarDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</div><div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">escolher dia</div></div>
-                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() + 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-xs font-black text-[#239d9a]">▶</button>
+                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() - 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-[12px] font-medium text-[#239d9a]">◀</button>
+                    <div className="text-center"><div className="text-[13px] font-semibold capitalize text-slate-800">{miniCalendarDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</div><div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">escolher dia</div></div>
+                    <button type="button" onClick={() => setMiniCalendarDate((prev) => { const next = new Date(prev); next.setMonth(next.getMonth() + 1); return next; })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eefafa] text-[12px] font-medium text-[#239d9a]">▶</button>
                   </div>
-                  <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase text-slate-400">{["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (<div key={`${item}-${index}`} className="py-1">{item}</div>))}</div>
+                  <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-slate-400">{["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (<div key={`${item}-${index}`} className="py-1">{item}</div>))}</div>
                   <div className="grid grid-cols-7 gap-1">
                     {miniCalendarDays.map((item) => {
                       const selected = item.dateKey === formatDate(weekBaseDate);
                       const holiday = getHolidayInfo(item.dateKey);
                       return (
-                        <button key={item.dateKey} type="button" onClick={() => { selectMiniCalendarDay(item.date); setShowMobileAgendaSheet(false); }} title={holiday?.name || formatDateBr(item.dateKey)} className={`relative flex h-9 items-center justify-center rounded-xl text-xs font-black transition ${selected ? "bg-[#239d9a] text-white" : item.today ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20" : item.currentMonth ? "text-slate-700 hover:bg-[#f2fcfc]" : "text-slate-300 hover:bg-slate-50"}`}>
+                        <button key={item.dateKey} type="button" onClick={() => { selectMiniCalendarDay(item.date); setShowMobileAgendaSheet(false); }} title={holiday?.name || formatDateBr(item.dateKey)} className={`relative flex h-9 items-center justify-center rounded-xl text-[12px] font-medium transition ${selected ? "bg-[#239d9a] text-white" : item.today ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20" : item.currentMonth ? "text-slate-700 hover:bg-[#f2fcfc]" : "text-slate-300 hover:bg-slate-50"}`}>
                           {item.day}{holiday && (<span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-white" : "bg-amber-400"}`} />)}
                         </button>
                       );
@@ -2328,12 +2317,12 @@ export default function AgendaPage() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => { openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`); setShowMobileAgendaSheet(false); }} className="h-11 rounded-2xl bg-slate-700 px-3 text-xs font-black text-white shadow-sm">Bloquear horário</button>
-                <button type="button" onClick={connectGoogleCalendar} className="h-11 rounded-2xl border border-[#c2dddd] bg-white px-3 text-xs font-black text-[#239d9a] shadow-sm">Google Agenda</button>
+                <button type="button" onClick={() => { openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`); setShowMobileAgendaSheet(false); }} className="h-11 rounded-[1.35rem] bg-slate-700 px-3 text-[12px] font-medium text-white shadow-sm">Bloquear horário</button>
+                <button type="button" onClick={connectGoogleCalendar} className="h-11 rounded-[1.35rem] border border-[#c2dddd] bg-white px-3 text-[12px] font-medium text-[#239d9a] shadow-sm">Google Agenda</button>
               </div>
-              <div className="rounded-2xl border border-[#c2dddd] bg-white p-3 shadow-sm">
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Filtro de status</label>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-11 w-full rounded-2xl border border-[#c2dddd] bg-white px-3 text-sm font-black text-slate-700 outline-none" title="Filtrar agenda por status">
+              <div className="rounded-[1.35rem] border border-[#c2dddd] bg-white p-3 shadow-sm">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Filtro de status</label>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-11 w-full rounded-[1.35rem] border border-[#c2dddd] bg-white px-3 text-[13px] font-semibold text-slate-700 outline-none" title="Filtrar agenda por status">
                   <option value="todos">Todos</option><option value="agendado">Agendado</option><option value="confirmado">Confirmado</option><option value="em_atendimento">Em atendimento</option><option value="finalizado">Finalizado</option><option value="faltou">Faltou</option><option value="cancelado">Cancelado</option>
                 </select>
               </div>
@@ -2372,17 +2361,17 @@ export default function AgendaPage() {
                     }`}
                     title={holiday ? holiday.name : undefined}
                   >
-                    <div className="text-slate-700 font-black text-[11px]">
+                    <div className="text-slate-700 font-semibold text-[11px]">
                       {d.label} {formatDateBr(d.date).slice(0, 5)}
                     </div>
 
                     {holiday && (
-                      <div className="mx-auto mt-1 max-w-[150px] truncate rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+                      <div className="mx-auto mt-1 max-w-[150px] truncate rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
                         Feriado • {holiday.scope === "municipal" ? "Araranguá" : "Brasil"}
                       </div>
                     )}
 
-                    <div className={`mx-auto mt-1 w-fit rounded-full px-2 py-0.5 text-[9px] font-black ${
+                    <div className={`mx-auto mt-1 w-fit rounded-full px-2 py-0.5 text-[9px] font-semibold ${
                       holiday
                         ? "bg-white text-amber-800 ring-1 ring-amber-200"
                         : isTodayDate(d.date)
@@ -2461,7 +2450,7 @@ export default function AgendaPage() {
                           title="Horário bloqueado. Clique para ver detalhes."
                         >
                           <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
-                          <div className="pl-1 font-black uppercase tracking-wide leading-tight truncate text-[9px]">
+                          <div className="pl-1 font-semibold uppercase tracking-wide leading-tight truncate text-[9px]">
                             {block.title || getDefaultBlockTitle(block.block_type)}
                           </div>
                           <div className="mt-0.5 pl-1 text-[8px] font-bold opacity-90 truncate">
@@ -2524,11 +2513,11 @@ export default function AgendaPage() {
                         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/30" />
                         <div className="flex items-start justify-between gap-1 pl-1">
                           <div className="min-w-0">
-                            <div className="truncate pr-1 text-[10px] font-black leading-tight tracking-tight md:text-[12px]">
+                            <div className="truncate pr-1 text-[10px] font-semibold leading-tight tracking-tight md:text-[12px]">
                               {getAppointmentPatientName(a)}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded-md bg-white/15 px-1 py-0.5 text-[6px] font-black leading-none text-white/90 md:px-1.5 md:text-[7px]">
+                          <span className="shrink-0 rounded-md bg-white/15 px-1 py-0.5 text-[6px] font-semibold leading-none text-white/90 md:px-1.5 md:text-[7px]">
                             {a.start_time}
                           </span>
                         </div>
@@ -2536,7 +2525,7 @@ export default function AgendaPage() {
                         {a.professional_id && (
                           <div className="mt-0.5 hidden items-center gap-1 truncate pl-1 pr-1 text-[7px] font-semibold leading-tight opacity-70 md:flex">
                             <span
-                              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[6px] font-black text-white ring-0"
+                              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[6px] font-semibold text-white ring-0"
                               title={getProfessionalLabel(a.professional_id)}
                             >
                               {getProfessionalInitials(getProfessionalById(a.professional_id)?.name)}
@@ -2549,7 +2538,7 @@ export default function AgendaPage() {
 
                         <div className="mt-1 hidden items-center gap-0.5 flex-nowrap overflow-hidden pl-1 md:flex">
                           <span
-                            className="shrink-0 rounded-md bg-white/85 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-slate-700 whitespace-nowrap leading-none ring-1 ring-white/70"
+                            className="shrink-0 rounded-md bg-white/85 px-1.5 py-0.5 text-[6px] font-semibold uppercase tracking-tight text-slate-700 whitespace-nowrap leading-none ring-1 ring-white/70"
                             title="Tipo do agendamento"
                           >
                             {appointmentTypeLabel(a)}
@@ -2557,7 +2546,7 @@ export default function AgendaPage() {
 
                           {a.type !== "compromisso" && (
                             <span
-                              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
+                              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[6px] font-semibold uppercase tracking-tight whitespace-nowrap leading-none ${statusBadgeClass(
                                 a.status
                               )}`}
                             >
@@ -2567,7 +2556,7 @@ export default function AgendaPage() {
 
                           {a.reminder_enabled && !a.reminder_sent_at && (
                             <span
-                              className="shrink-0 rounded-md bg-yellow-50 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-yellow-700 whitespace-nowrap leading-none ring-1 ring-yellow-200/70"
+                              className="shrink-0 rounded-md bg-yellow-50 px-1.5 py-0.5 text-[6px] font-semibold uppercase tracking-tight text-yellow-700 whitespace-nowrap leading-none ring-1 ring-yellow-200/70"
                               title={`Lembrete pendente: ${a.reminder_before_hours || 24}h antes`}
                             >
                               Lemb.
@@ -2576,7 +2565,7 @@ export default function AgendaPage() {
 
                           {a.reminder_sent_at && (
                             <span
-                              className="shrink-0 rounded-md bg-green-50 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-tight text-green-700 whitespace-nowrap leading-none ring-1 ring-green-200/70"
+                              className="shrink-0 rounded-md bg-green-50 px-1.5 py-0.5 text-[6px] font-semibold uppercase tracking-tight text-green-700 whitespace-nowrap leading-none ring-1 ring-green-200/70"
                               title="Lembrete enviado"
                             >
                               Avisado
@@ -2590,7 +2579,7 @@ export default function AgendaPage() {
                                 e.stopPropagation();
                                 openPatientFinance(a.patient_id);
                               }}
-                              className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[6px] font-black text-amber-700 whitespace-nowrap leading-none ring-1 ring-amber-200/70 hover:bg-amber-100"
+                              className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[6px] font-semibold text-amber-700 whitespace-nowrap leading-none ring-1 ring-amber-200/70 hover:bg-amber-100"
                               title={`Abrir financeiro do paciente. Débito: ${formatCurrency(
                                 getPatientDebt(a.patient_id)
                               )}`}
@@ -2633,7 +2622,7 @@ export default function AgendaPage() {
                   className="pointer-events-none absolute left-[70px] right-0 z-[9999] border-t-2 border-[#239d9a]"
                   style={{ top: `${currentTimePosition}px` }}
                 >
-                  <span className="absolute -top-3 left-2 rounded-full bg-[#239d9a] px-2 py-0.5 text-[9px] font-black text-white">
+                  <span className="absolute -top-3 left-2 rounded-full bg-[#239d9a] px-2 py-0.5 text-[9px] font-semibold text-white">
                     agora {pad(now.getHours())}:{pad(now.getMinutes())}
                   </span>
                 </div>
@@ -2645,14 +2634,14 @@ export default function AgendaPage() {
 
       {selectedBlockDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
+          <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className="p-5 text-white"
               style={{ backgroundColor: selectedBlockDetails.color || getBlockColor(selectedBlockDetails.block_type) }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-black leading-tight">
+                  <h2 className="text-xl font-semibold leading-tight">
                     {selectedBlockDetails.title || getDefaultBlockTitle(selectedBlockDetails.block_type)}
                   </h2>
                   <p className="mt-1 text-sm opacity-95">
@@ -2692,7 +2681,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => deleteScheduleBlock(selectedBlockDetails.id)}
-                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 hover:bg-red-100"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700 hover:bg-red-100"
                 >
                   Remover bloqueio
                 </button>
@@ -2704,14 +2693,14 @@ export default function AgendaPage() {
 
       {selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
-          <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-xl border border-[#c2dddd]">
+          <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
               style={getAppointmentStyle(selectedAppointmentDetails)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-black leading-tight">
+                  <h2 className="text-xl font-semibold leading-tight">
                     {getAppointmentPatientName(selectedAppointmentDetails)}
                   </h2>
 
@@ -2740,7 +2729,7 @@ export default function AgendaPage() {
                       onClick={() =>
                         openPatientFinance(selectedAppointmentDetails.patient_id)
                       }
-                      className="mt-3 inline-flex items-center rounded-full bg-black/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-white hover:bg-white/30"
+                      className="mt-3 inline-flex items-center rounded-full bg-black/10 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-white hover:bg-white/30"
                       title="Abrir financeiro do paciente"
                     >
                       💰 Débito:{" "}
@@ -2764,7 +2753,7 @@ export default function AgendaPage() {
             <div className="p-5 space-y-4">
               {selectedAppointmentDetails.type !== "compromisso" && (
                 <div>
-                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                     Status da consulta
                   </label>
                   <select
@@ -2775,7 +2764,7 @@ export default function AgendaPage() {
                         e.target.value as AppointmentStatus
                       )
                     }
-                    className="w-full rounded-xl border border-[#d4e8e8] bg-white p-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#239d9a] focus:ring-2 focus:ring-[#239d9a]/10"
+                    className="w-full rounded-xl border border-[#d4e8e8] bg-white p-3 text-[13px] font-semibold text-slate-700 outline-none transition focus:border-[#239d9a] focus:ring-2 focus:ring-[#239d9a]/10"
                   >
                     <option value="agendado">Agendada</option>
                     <option value="confirmado">Confirmada</option>
@@ -2789,7 +2778,7 @@ export default function AgendaPage() {
 
               {selectedAppointmentDetails.description && (
                 <div className="rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3">
-                  <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                  <div className="text-[12px] font-medium uppercase tracking-widest text-slate-400 mb-1">
                     Descrição
                   </div>
                   <div className="text-sm text-slate-700 whitespace-pre-wrap">
@@ -2815,11 +2804,11 @@ export default function AgendaPage() {
                     </div>
 
                     {selectedAppointmentDetails.reminder_sent_at ? (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-green-700">
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-green-700">
                         Enviado
                       </span>
                     ) : (
-                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-yellow-700">
+                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-yellow-700">
                         Pendente
                       </span>
                     )}
@@ -2846,7 +2835,7 @@ export default function AgendaPage() {
                   <button
                     type="button"
                     onClick={() => openSmartReschedule(selectedAppointmentDetails)}
-                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-black text-amber-800 hover:bg-amber-100"
+                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] font-semibold text-amber-800 hover:bg-amber-100"
                   >
                     Reagendar inteligente
                   </button>
@@ -2867,7 +2856,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => handleDeleteAppointment(selectedAppointmentDetails.id)}
-                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 hover:bg-red-100"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700 hover:bg-red-100"
                 >
                   Excluir agendamento
                 </button>
@@ -2882,7 +2871,7 @@ export default function AgendaPage() {
                       onClick={() =>
                         markReminderAsSent(selectedAppointmentDetails.id)
                       }
-                      className="sm:col-span-2 rounded-xl bg-[#1fb36e] px-4 py-3 text-center text-sm font-black text-white hover:bg-[#18975d]"
+                      className="sm:col-span-2 rounded-xl bg-[#1fb36e] px-4 py-3 text-center text-[13px] font-semibold text-white hover:bg-[#18975d]"
                     >
                       Confirmar por WhatsApp
                     </a>
@@ -2895,9 +2884,9 @@ export default function AgendaPage() {
 
       {showBlockModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
-          <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-xl">
+          <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
-              <h2 className="text-lg font-black tracking-tight text-slate-800">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-800">
                 {blockForm.id ? "Editar bloqueio" : "Bloquear horário"}
               </h2>
 
@@ -2911,7 +2900,7 @@ export default function AgendaPage() {
 
             <div className="flex-1 space-y-4 overflow-y-auto bg-[#fbfefe] p-5">
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Tipo de bloqueio
                 </label>
                 <select
@@ -2939,7 +2928,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Título
                 </label>
                 <input
@@ -2951,7 +2940,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Profissional
                 </label>
                 <select
@@ -2970,7 +2959,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Data
                 </label>
                 <input
@@ -2993,7 +2982,7 @@ export default function AgendaPage() {
               {!blockForm.all_day && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Início
                     </label>
                     <input
@@ -3011,7 +3000,7 @@ export default function AgendaPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Fim
                     </label>
                     <input
@@ -3025,7 +3014,7 @@ export default function AgendaPage() {
               )}
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Observação
                 </label>
                 <textarea
@@ -3036,7 +3025,7 @@ export default function AgendaPage() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-[#d9eeee] bg-[#f7ffff] p-3 text-xs text-slate-600">
+              <div className="rounded-[1.35rem] border border-[#d9eeee] bg-[#f7ffff] p-3 text-xs text-slate-600">
                 Este bloqueio impede novos agendamentos no período selecionado.
               </div>
             </div>
@@ -3047,7 +3036,7 @@ export default function AgendaPage() {
                   <button
                     type="button"
                     onClick={() => deleteScheduleBlock(blockForm.id)}
-                    className="px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-sm font-black text-red-700 hover:bg-red-100"
+                    className="px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-[13px] font-semibold text-red-700 hover:bg-red-100"
                   >
                     Remover
                   </button>
@@ -3076,9 +3065,9 @@ export default function AgendaPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
-          <div className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-xl">
+          <div className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
-              <h2 className="text-lg font-black tracking-tight text-slate-800">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-800">
                 {editingId ? "Editar agendamento" : "Novo agendamento"}
               </h2>
 
@@ -3094,7 +3083,7 @@ export default function AgendaPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setMainType("consulta")}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+                className={`px-4 py-2 rounded-xl text-[13px] font-semibold ${
                   mainType === "consulta"
                     ? "bg-[#239d9a] text-white"
                     : "bg-slate-100 text-slate-600"
@@ -3105,7 +3094,7 @@ export default function AgendaPage() {
 
               <button
                 onClick={() => setMainType("compromisso")}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+                className={`px-4 py-2 rounded-xl text-[13px] font-semibold ${
                   mainType === "compromisso"
                     ? "bg-[#239d9a] text-white"
                     : "bg-slate-100 text-slate-600"
@@ -3119,14 +3108,14 @@ export default function AgendaPage() {
               <>
                 <div>
                   <div className="mb-1 flex items-center justify-between gap-3">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <label className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Paciente
                     </label>
 
                     <button
                       type="button"
                       onClick={openQuickPatientForm}
-                      className="rounded-xl border border-[#b9dddd] bg-white px-3 py-1.5 text-[11px] font-black text-[#239d9a] shadow-sm transition hover:bg-[#f2fcfc]"
+                      className="rounded-xl border border-[#b9dddd] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#f2fcfc]"
                     >
                       + Novo paciente
                     </button>
@@ -3154,13 +3143,13 @@ export default function AgendaPage() {
                 </div>
 
                 {showQuickPatientForm && (
-                  <div className="rounded-2xl border border-[#c2dddd] bg-white p-4 shadow-sm">
+                  <div className="rounded-[1.35rem] border border-[#c2dddd] bg-white p-4 shadow-sm">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-sm font-black text-slate-800">
+                        <h3 className="text-[13px] font-semibold text-slate-800">
                           Cadastro rápido de paciente
                         </h3>
-                        <p className="text-xs font-semibold text-slate-400">
+                        <p className="text-[12px] font-medium text-slate-400">
                           Cadastre sem sair da agenda. O paciente será selecionado automaticamente.
                         </p>
                       </div>
@@ -3176,7 +3165,7 @@ export default function AgendaPage() {
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       <div className="md:col-span-2">
-                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                           Nome completo *
                         </label>
                         <input
@@ -3188,7 +3177,7 @@ export default function AgendaPage() {
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                           WhatsApp
                         </label>
                         <input
@@ -3200,7 +3189,7 @@ export default function AgendaPage() {
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                           CPF
                         </label>
                         <input
@@ -3212,7 +3201,7 @@ export default function AgendaPage() {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                           E-mail
                         </label>
                         <input
@@ -3239,7 +3228,7 @@ export default function AgendaPage() {
                         type="button"
                         onClick={saveQuickPatient}
                         disabled={savingQuickPatient}
-                        className="rounded-xl bg-[#239d9a] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+                        className="rounded-xl bg-[#239d9a] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
                       >
                         {savingQuickPatient ? "Salvando..." : "Salvar e selecionar"}
                       </button>
@@ -3265,7 +3254,7 @@ export default function AgendaPage() {
                 )}
 
                 <div>
-                  <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                     Motivo
                   </label>
                   <select
@@ -3284,7 +3273,7 @@ export default function AgendaPage() {
             )}
 
             <div>
-              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Profissional responsável
               </label>
               <select
@@ -3304,7 +3293,7 @@ export default function AgendaPage() {
 
             {mainType === "compromisso" && (
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Título
                 </label>
                 <input
@@ -3317,7 +3306,7 @@ export default function AgendaPage() {
             )}
 
             <div>
-              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Descrição
               </label>
               <textarea
@@ -3330,7 +3319,7 @@ export default function AgendaPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Data
                 </label>
                 <input
@@ -3342,7 +3331,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Hora
                 </label>
                 <input
@@ -3355,7 +3344,7 @@ export default function AgendaPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Duração
               </label>
               <select
@@ -3374,7 +3363,7 @@ export default function AgendaPage() {
 
             {mainType === "consulta" && (
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Status
                 </label>
                 <select
@@ -3395,7 +3384,7 @@ export default function AgendaPage() {
             )}
 
             {mainType === "consulta" && (
-              <div className="rounded-2xl border border-[#c2dddd] bg-[#fbffff] p-3 space-y-3">
+              <div className="rounded-[1.35rem] border border-[#c2dddd] bg-[#fbffff] p-3 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-bold text-slate-700">
@@ -3419,7 +3408,7 @@ export default function AgendaPage() {
 
                 {reminderEnabled && (
                   <div>
-                    <label className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Enviar lembrete
                     </label>
                     <select
@@ -3455,7 +3444,7 @@ export default function AgendaPage() {
               <button
                 onClick={handleSave}
                 disabled={savingAppointment}
-                className="rounded-xl bg-[#239d9a] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#1f8c89] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-[#239d9a] px-5 py-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1f8c89] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {savingAppointment ? "Salvando..." : "Salvar"}
               </button>
