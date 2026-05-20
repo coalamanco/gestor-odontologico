@@ -1913,15 +1913,6 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
       if (treatmentNoteError) throw treatmentNoteError;
 
-      const { error: clinicalNoteError } = await supabase
-        .from("clinical_notes")
-        .insert({
-          patient_id: params.id,
-          title: evolutionTitle || "Evolução clínica",
-          content: `${nome}${dente}${face}\n\n${content}`,
-        });
-
-      if (clinicalNoteError) throw clinicalNoteError;
 
       setActiveTab("tratamentos");
 
