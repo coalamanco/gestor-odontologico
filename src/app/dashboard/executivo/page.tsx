@@ -1071,31 +1071,22 @@ export default function DashboardExecutivoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 pb-24 md:p-4">
-      <div className="mb-4 overflow-hidden rounded-[28px] border border-[#bde8e7] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-4 shadow-[0_10px_28px_rgba(35,157,154,0.10)] ring-1 ring-white/30 md:px-5">
-        <div className="relative flex min-h-[64px] flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between md:py-2.5">
-          <div className="pointer-events-none absolute -right-14 -top-16 h-32 w-32 rounded-full bg-white/15" />
-          <div className="pointer-events-none absolute -bottom-20 left-12 h-28 w-28 rounded-full bg-white/10" />
-
-          <div className="relative z-10 flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[20px] bg-white/15 text-white ring-1 ring-white/30">
-              <Sparkles size={18} />
+    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-3.5">
+      <div className="mb-4 overflow-hidden rounded-[26px] border border-[#cdeeed] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-4 shadow-[0_8px_22px_rgba(35,157,154,0.08)] md:px-5">
+        <div className="flex h-[58px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[18px] bg-white/15 text-white ring-1 ring-white/25">
+              <Sparkles size={17} />
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-[9px] font-semibold uppercase tracking-[0.18em] text-cyan-50">
-                BI executivo
-              </p>
-              <h1 className="mt-0.5 truncate text-[20px] font-semibold tracking-tight text-white md:text-[22px]">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.10em] text-white/95">
                 Dashboard Executivo
-              </h1>
-              <p className="hidden max-w-3xl truncate text-[11px] font-medium text-cyan-50/95 md:block">
-                Visão gerencial, metas, conversão, previsões e inteligência comercial do consultório.
               </p>
             </div>
           </div>
 
-          <div className="relative z-10 flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/configuracoes/metas"
               className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/35 bg-white px-3 text-[12px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#eefafa]"
@@ -1106,7 +1097,7 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/25 bg-white/15 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur transition hover:bg-white/25"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/25 bg-[#239d9a] px-3 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
             >
               <Megaphone size={17} />
               <span className="hidden sm:inline">Campanhas</span>
@@ -1124,7 +1115,7 @@ export default function DashboardExecutivoPage() {
         </div>
       </div>
 
-      <div className="sticky top-3 z-20 mb-4 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(35,157,154,0.06)] backdrop-blur">
+      <div className="sticky top-3 z-20 mb-4 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-1.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)] backdrop-blur">
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
