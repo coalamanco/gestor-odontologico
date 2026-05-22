@@ -3,8 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { CalendarDays } from "lucide-react";
-import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 
 type MainType = "consulta" | "compromisso";
 type ConsultaMotivo = "consulta" | "retorno" | "tratamento";
@@ -2026,216 +2024,229 @@ export default function AgendaPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8]">
-      <div className="relative z-[80] hidden px-2.5 pt-2.5 md:block">
-        <PremiumPageHeader
-          title="Agenda Clínica"
-          eyebrow="Gestão operacional"
-          subtitle={new Date(weekBaseDate).toLocaleDateString("pt-BR", {
-            month: "long",
-            year: "numeric",
-          })}
-          icon={CalendarDays}
-          actions={
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowMiniCalendar(false);
-                  setWeekBaseDate(new Date());
-                  setMiniCalendarDate(new Date());
-                }}
-                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
+      <div className="hidden border-b border-[#d9eeee] bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(35,157,154,0.06)] backdrop-blur-md md:block">
+        <div className="grid min-h-[42px] grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMiniCalendar(false);
+                setWeekBaseDate(new Date());
+                setMiniCalendarDate(new Date());
+              }}
+              className="h-8 rounded-xl bg-[#239d9a] px-3 text-[12px] font-medium text-white shadow-sm hover:bg-[#1f8f8c]"
+            >
+              Hoje
+            </button>
+
+            <div className="hidden w-[250px] items-center gap-2 rounded-[1.35rem] border border-[#d9eeee] bg-white px-2 py-1.5 shadow-[0_6px_18px_rgba(35,157,154,0.06)] md:flex">
+              <div
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white shadow-sm"
+                style={{ backgroundColor: selectedProfessionalColor }}
               >
-                Hoje
-              </button>
-
-              <div className="flex h-8 w-[250px] items-center gap-2 rounded-2xl border border-white/25 bg-white/18 px-2 shadow-sm backdrop-blur-sm">
-                <div
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/25 text-[10px] font-semibold text-white shadow-sm"
-                  style={{ backgroundColor: selectedProfessionalColor }}
-                >
-                  {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
-                </div>
-
-                <select
-                  value={selectedAgendaProfessionalId}
-                  onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
-                  className="h-7 min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-white outline-none [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
-                  title="Selecionar agenda do profissional"
-                >
-                  <option value="">Todos os profissionais</option>
-                  {activeProfessionals.map((professional) => (
-                    <option key={professional.id} value={professional.id}>
-                      {professional.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMiniCalendarDate(weekBaseDate);
-                    setShowMiniCalendar((prev) => !prev);
-                  }}
-                  className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/20 px-3 text-[12px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30"
-                  title="Abrir mini calendário"
-                >
-                  📅
-                </button>
-
-                {showMiniCalendar && (
-                  <div className="absolute right-0 top-11 z-[99999] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setMiniCalendarDate((prev) => {
-                            const next = new Date(prev);
-                            next.setMonth(next.getMonth() - 1);
-                            return next;
-                          })
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
-                        title="Mês anterior"
-                      >
-                        ◀
-                      </button>
-
-                      <div className="text-center">
-                        <div className="text-[13px] font-semibold capitalize text-slate-800">
-                          {miniCalendarDate.toLocaleDateString("pt-BR", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </div>
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                          escolher dia
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setMiniCalendarDate((prev) => {
-                            const next = new Date(prev);
-                            next.setMonth(next.getMonth() + 1);
-                            return next;
-                          })
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
-                        title="Próximo mês"
-                      >
-                        ▶
-                      </button>
-                    </div>
-
-                    <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-slate-400">
-                      {["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (
-                        <div key={`${item}-${index}`} className="py-1">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1">
-                      {miniCalendarDays.map((item) => {
-                        const selected = item.dateKey === formatDate(weekBaseDate);
-                        const holiday = getHolidayInfo(item.dateKey);
-
-                        return (
-                          <button
-                            key={item.dateKey}
-                            type="button"
-                            onClick={() => selectMiniCalendarDay(item.date)}
-                            title={holiday?.name || formatDateBr(item.dateKey)}
-                            className={`relative flex h-8 items-center justify-center rounded-lg text-[12px] font-medium transition ${
-                              selected
-                                ? "bg-[#239d9a] text-white"
-                                : item.today
-                                  ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20"
-                                  : item.currentMonth
-                                    ? "text-slate-700 hover:bg-[#f2fcfc]"
-                                    : "text-slate-300 hover:bg-slate-50"
-                            }`}
-                          >
-                            {item.day}
-                            {holiday && (
-                              <span className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                                selected ? "bg-white" : "bg-amber-400"
-                              }`} />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between border-t border-[#e0eeee] pt-3">
-                      <button
-                        type="button"
-                        onClick={() => selectMiniCalendarDay(new Date())}
-                        className="rounded-xl bg-[#eefafa] px-3 py-2 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
-                      >
-                        Hoje
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setShowMiniCalendar(false)}
-                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[11px] font-medium text-slate-500 hover:bg-[#f4fbfb]"
-                      >
-                        Fechar
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {selectedAgendaProfessionalId ? selectedProfessionalInitials : "TP"}
               </div>
 
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 w-[132px] rounded-2xl border border-white/25 bg-white/18 px-3 text-[12px] font-semibold text-white outline-none backdrop-blur-sm [text-shadow:0_1px_2px_rgba(15,23,42,0.18)] [&_option]:bg-white [&_option]:text-slate-700"
-                title="Filtrar agenda por status"
+                value={selectedAgendaProfessionalId}
+                onChange={(e) => setSelectedAgendaProfessionalId(e.target.value)}
+                className="h-7 min-w-0 flex-1 bg-transparent text-[12px] font-medium text-slate-700 outline-none"
+                title="Selecionar agenda do profissional"
               >
-                <option value="todos">Todos</option>
-                <option value="agendado">Agendado</option>
-                <option value="confirmado">Confirmado</option>
-                <option value="em_atendimento">Em atendimento</option>
-                <option value="finalizado">Finalizado</option>
-                <option value="faltou">Faltou</option>
-                <option value="cancelado">Cancelado</option>
+                <option value="">Todos os profissionais</option>
+                {activeProfessionals.map((professional) => (
+                  <option key={professional.id} value={professional.id}>
+                    {professional.name}
+                  </option>
+                ))}
               </select>
+            </div>
 
+            <div className="relative hidden md:block">
               <button
                 type="button"
-                onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
-                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/25 bg-slate-700/90 px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
-                title="Bloquear horário na agenda"
+                onClick={() => {
+                  setMiniCalendarDate(weekBaseDate);
+                  setShowMiniCalendar((prev) => !prev);
+                }}
+                className="h-8 rounded-xl bg-white px-3 text-[12px] font-medium text-[#239d9a] ring-1 ring-[#d9eeee] hover:bg-[#f2fcfc]"
+                title="Abrir mini calendário"
               >
-                Bloquear
+                📅
               </button>
 
-              <button
-                type="button"
-                onClick={syncExistingGoogleAppointments}
-                className="hidden h-8 items-center justify-center rounded-2xl border border-white/25 bg-white/18 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/30 xl:inline-flex"
-                title="Sincronizar consultas existentes com Google Agenda"
-              >
-                Sincronizar
-              </button>
+              {showMiniCalendar && (
+                <div className="absolute left-0 top-10 z-[80] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMiniCalendarDate((prev) => {
+                          const next = new Date(prev);
+                          next.setMonth(next.getMonth() - 1);
+                          return next;
+                        })
+                      }
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
+                      title="Mês anterior"
+                    >
+                      ◀
+                    </button>
 
-              <button
-                type="button"
-                onClick={connectGoogleCalendar}
-                className="inline-flex h-8 items-center justify-center rounded-2xl border border-white/30 bg-white px-3 text-[11px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
-                title="Conectar sua conta ao Google Agenda"
-              >
-                Google Agenda
-              </button>
-            </>
-          }
-        />
+                    <div className="text-center">
+                      <div className="text-[13px] font-semibold capitalize text-slate-800">
+                        {miniCalendarDate.toLocaleDateString("pt-BR", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        escolher dia
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMiniCalendarDate((prev) => {
+                          const next = new Date(prev);
+                          next.setMonth(next.getMonth() + 1);
+                          return next;
+                        })
+                      }
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eefafa] text-[12px] font-medium text-[#239d9a] hover:bg-[#dff3f2]"
+                      title="Próximo mês"
+                    >
+                      ▶
+                    </button>
+                  </div>
+
+                  <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-slate-400">
+                    {["S", "T", "Q", "Q", "S", "S", "D"].map((item, index) => (
+                      <div key={`${item}-${index}`} className="py-1">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {miniCalendarDays.map((item) => {
+                      const selected = item.dateKey === formatDate(weekBaseDate);
+                      const holiday = getHolidayInfo(item.dateKey);
+
+                      return (
+                        <button
+                          key={item.dateKey}
+                          type="button"
+                          onClick={() => selectMiniCalendarDay(item.date)}
+                          title={holiday?.name || formatDateBr(item.dateKey)}
+                          className={`relative flex h-8 items-center justify-center rounded-lg text-[12px] font-medium transition ${
+                            selected
+                              ? "bg-[#239d9a] text-white"
+                              : item.today
+                                ? "bg-[#e8f7f6] text-[#239d9a] ring-1 ring-[#239d9a]/20"
+                                : item.currentMonth
+                                  ? "text-slate-700 hover:bg-[#f2fcfc]"
+                                  : "text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          {item.day}
+                          {holiday && (
+                            <span className={`absolute bottom-1 h-1 w-1 rounded-full ${
+                              selected ? "bg-white" : "bg-amber-400"
+                            }`} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-[#e0eeee] pt-3">
+                    <button
+                      type="button"
+                      onClick={() => selectMiniCalendarDay(new Date())}
+                      className="rounded-xl bg-[#eefafa] px-3 py-2 text-[11px] font-semibold text-[#239d9a] hover:bg-[#dff3f2]"
+                    >
+                      Hoje
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowMiniCalendar(false)}
+                      className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[11px] font-medium text-slate-500 hover:bg-[#f4fbfb]"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          <div className="flex min-w-[280px] flex-col items-center justify-center text-center">
+            <h1 className="truncate text-[18px] font-bold leading-none text-slate-800 lg:text-[21px] tracking-[-0.02em]">
+              Agenda Clínica
+            </h1>
+            <p className="mt-1 truncate text-[9px] font-semibold uppercase tracking-[0.20em] text-[#239d9a] lg:text-[10px]">
+              {new Date(weekBaseDate).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 w-[126px] rounded-xl border border-[#d9eeee] bg-white px-2 text-[12px] font-medium text-slate-700 outline-none"
+              title="Filtrar agenda por status"
+            >
+              <option value="todos">Todos</option>
+              <option value="agendado">Agendado</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="em_atendimento">Em atendimento</option>
+              <option value="finalizado">Finalizado</option>
+              <option value="faltou">Faltou</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+
+
+
+
+
+            <button
+              type="button"
+              onClick={() => openNewBlock(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`)}
+              className="h-7 rounded-lg bg-slate-700 px-3 text-[10px] font-semibold text-white shadow-sm hover:bg-slate-800"
+              title="Bloquear horário na agenda"
+            >
+              Bloquear
+            </button>
+
+            <button
+              type="button"
+              onClick={syncExistingGoogleAppointments}
+              className="hidden h-7 rounded-lg border border-[#c2dddd] bg-white px-3 text-[10px] font-semibold text-[#239d9a] shadow-sm hover:bg-[#f4ffff] xl:inline-flex xl:items-center"
+              title="Sincronizar consultas existentes com Google Agenda"
+            >
+              Sincronizar
+            </button>
+
+            <button
+              type="button"
+              onClick={connectGoogleCalendar}
+              className="h-7 rounded-lg border border-[#c2dddd] bg-white px-3 text-[11px] font-semibold text-[#239d9a] shadow-sm hover:bg-[#f4ffff]"
+              title="Conectar sua conta ao Google Agenda"
+            >
+              Google Agenda
+            </button>
+
+
+          </div>
+        </div>
       </div>
 
       <div className="border-b border-[#d7e7e7] bg-white/95 px-2 py-1.5 shadow-sm md:hidden">
@@ -2258,7 +2269,7 @@ export default function AgendaPage() {
       </div>
 
       {showMobileAgendaSheet && (
-        <div className="fixed inset-0 z-[90] bg-slate-900/35 md:hidden" onClick={() => setShowMobileAgendaSheet(false)}>
+        <div className="fixed inset-0 z-[9999] bg-slate-900/35 md:hidden" onClick={() => setShowMobileAgendaSheet(false)}>
           <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] border border-[#d7e7e7] bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-200" />
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -2633,7 +2644,7 @@ export default function AgendaPage() {
       </div>
 
       {selectedBlockDetails && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
           <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className="p-5 text-white"
@@ -2692,7 +2703,7 @@ export default function AgendaPage() {
       )}
 
       {selectedAppointmentDetails && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
           <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
@@ -2883,7 +2894,7 @@ export default function AgendaPage() {
       )}
 
       {showBlockModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-slate-800">
@@ -3064,7 +3075,7 @@ export default function AgendaPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-slate-800">
