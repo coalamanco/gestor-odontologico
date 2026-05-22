@@ -9,8 +9,24 @@ type Patient = {
   phone: string | null;
 };
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+const DEFAULT_BATCH_SIZE = 10;
+const DEFAULT_INTERVAL_MINUTES = 40;
+const DEFAULT_DAILY_LIMIT = 120;
+
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase Service Role não configurado.");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
 
 function normalizeBrazilPhone(phone: string | null | undefined) {
@@ -37,110 +53,68 @@ function buildMessage(template: string, patient: Patient) {
     .replaceAll("{{nome_completo}}", patient.name || "paciente");
 }
 
-async function sendZapiText(phone: string, message: string) {
-  const instanceId = process.env.ZAPI_INSTANCE_ID || "";
-  const token = process.env.ZAPI_TOKEN || "";
-  const clientToken = process.env.ZAPI_CLIENT_TOKEN || "";
+function addMinutes(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+}
 
-  if (!instanceId || !token) {
-    throw new Error("Z-API não configurada no servidor.");
-  }
+function getScheduleDate(index: number) {
+  const batchIndex = Math.floor(index / DEFAULT_BATCH_SIZE);
 
-  const response = await fetch(
-    `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(clientToken ? { "Client-Token": clientToken } : {}),
-      },
-      body: JSON.stringify({
-        phone,
-        message,
-      }),
-    }
-  );
+  const positionInsideBatch = index % DEFAULT_BATCH_SIZE;
 
-  const text = await response.text();
+  const minutesFromNow =
+    batchIndex * DEFAULT_INTERVAL_MINUTES +
+    positionInsideBatch * 2;
 
-  let result: any = null;
-
-  try {
-    result = text ? JSON.parse(text) : null;
-  } catch {
-    result = text;
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      typeof result === "string"
-        ? result
-        : result?.error || result?.message || "Erro ao enviar WhatsApp."
-    );
-  }
-
-  return result;
+  return addMinutes(new Date(), minutesFromNow).toISOString();
 }
 
 export async function POST(request: Request) {
   try {
-    const { title, message, dryRun, confirmSend } = await request.json();
+    const { title, message, dryRun, confirmSend } =
+      await request.json();
 
     const safeTitle = String(title || "").trim();
+
     const safeMessage = String(message || "").trim();
 
     if (safeTitle.length < 3) {
       return NextResponse.json(
-        { error: "Informe um título para o comunicado." },
-        { status: 400 }
+        {
+          error: "Informe um título.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (safeMessage.length < 10) {
       return NextResponse.json(
-        { error: "A mensagem precisa ter pelo menos 10 caracteres." },
-        { status: 400 }
+        {
+          error: "Mensagem muito curta.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
-    if (!dryRun && !confirmSend) {
-      return NextResponse.json(
-        { error: "Confirmação de envio não informada." },
-        { status: 400 }
-      );
-    }
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
-        { error: "Supabase Service Role não configurado no servidor." },
-        { status: 500 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
+    const supabase = getSupabaseAdmin();
 
     const { data: patients, error } = await supabase
       .from("patients")
       .select("id, name, phone")
-      .order("name", { ascending: true });
+      .order("name", {
+        ascending: true,
+      });
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message || "Erro ao buscar pacientes." },
-        { status: 500 }
-      );
+      throw new Error(error.message);
     }
 
-    const allPatients = ((patients || []) as Patient[]).filter((patient) =>
-      Boolean(patient.id)
+    const allPatients = ((patients || []) as Patient[]).filter(
+      (patient) => Boolean(patient.id)
     );
 
     const withPhone = allPatients
@@ -150,7 +124,8 @@ export async function POST(request: Request) {
       }))
       .filter((patient) => Boolean(patient.normalizedPhone));
 
-    const withoutPhone = allPatients.length - withPhone.length;
+    const withoutPhone =
+      allPatients.length - withPhone.length;
 
     if (dryRun) {
       return NextResponse.json({
@@ -159,82 +134,130 @@ export async function POST(request: Request) {
         totalPatients: allPatients.length,
         totalWithPhone: withPhone.length,
         totalWithoutPhone: withoutPhone,
+        batchSize: DEFAULT_BATCH_SIZE,
+        intervalMinutes: DEFAULT_INTERVAL_MINUTES,
       });
     }
 
-    const results: Array<{
-      patientId: string;
-      name: string;
-      phone?: string;
-      ok: boolean;
-      error?: string;
-    }> = [];
-
-    let sent = 0;
-    let failed = 0;
-    const skipped = withoutPhone;
-
-    for (const patient of withPhone) {
-      const phone = patient.normalizedPhone;
-      const personalizedMessage = buildMessage(safeMessage, patient);
-
-      try {
-        await sendZapiText(phone, personalizedMessage);
-
-        sent += 1;
-        results.push({
-          patientId: patient.id,
-          name: patient.name || "Paciente",
-          phone,
-          ok: true,
-        });
-      } catch (error: any) {
-        failed += 1;
-        results.push({
-          patientId: patient.id,
-          name: patient.name || "Paciente",
-          phone,
-          ok: false,
-          error: error?.message || "Erro ao enviar mensagem.",
-        });
-      }
-
-      await sleep(2500);
+    if (!confirmSend) {
+      return NextResponse.json(
+        {
+          error: "Confirmação obrigatória.",
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
-    try {
-      await supabase.from("crm_campaign_logs").insert({
-        title: safeTitle,
-        message: safeMessage,
-        target: "todos_pacientes",
-        total_patients: allPatients.length,
-        total_with_phone: withPhone.length,
-        total_without_phone: withoutPhone,
-        sent_count: sent,
-        failed_count: failed,
-        skipped_count: skipped,
+    const { data: activeCampaigns } = await supabase
+      .from("crm_whatsapp_campaigns")
+      .select("*")
+      .in("status", [
+        "agendada",
+        "em_andamento",
+      ]);
+
+    if ((activeCampaigns || []).length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Já existe uma campanha em andamento.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    const { data: campaign, error: campaignError } =
+      await supabase
+        .from("crm_whatsapp_campaigns")
+        .insert({
+          title: safeTitle,
+          message_template: safeMessage,
+          target: "todos_pacientes",
+          status: "agendada",
+          total_patients: allPatients.length,
+          total_with_phone: withPhone.length,
+          total_without_phone: withoutPhone,
+          batch_size: DEFAULT_BATCH_SIZE,
+          interval_minutes:
+            DEFAULT_INTERVAL_MINUTES,
+          daily_limit: DEFAULT_DAILY_LIMIT,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select("*")
+        .single();
+
+    if (campaignError) {
+      throw new Error(campaignError.message);
+    }
+
+    const queueRows = withPhone.map(
+      (patient, index) => ({
+        campaign_id: campaign.id,
+        patient_id: patient.id,
+        patient_name: patient.name || "Paciente",
+        phone: patient.normalizedPhone,
+        message: buildMessage(
+          safeMessage,
+          patient
+        ),
+        status: "pendente",
+        scheduled_for: getScheduleDate(index),
+        attempts: 0,
         created_at: new Date().toISOString(),
-      });
-    } catch {
-      // Se a tabela de logs não existir, o envio continua funcionando.
+        updated_at: new Date().toISOString(),
+      })
+    );
+
+    const chunkSize = 500;
+
+    for (
+      let index = 0;
+      index < queueRows.length;
+      index += chunkSize
+    ) {
+      const chunk = queueRows.slice(
+        index,
+        index + chunkSize
+      );
+
+      const { error: insertError } =
+        await supabase
+          .from(
+            "crm_whatsapp_campaign_messages"
+          )
+          .insert(chunk);
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
     }
 
     return NextResponse.json({
       ok: true,
-      sent,
-      failed,
-      skipped,
+      queued: true,
+      campaignId: campaign.id,
       totalPatients: allPatients.length,
       totalWithPhone: withPhone.length,
       totalWithoutPhone: withoutPhone,
-      results: results.slice(0, 50),
+      batchSize: DEFAULT_BATCH_SIZE,
+      intervalMinutes:
+        DEFAULT_INTERVAL_MINUTES,
     });
   } catch (error: any) {
     return NextResponse.json(
       {
-        error: error?.message || "Erro inesperado ao enviar comunicado.",
+        error:
+          error?.message ||
+          "Erro ao criar campanha.",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
