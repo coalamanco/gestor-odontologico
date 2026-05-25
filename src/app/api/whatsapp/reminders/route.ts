@@ -62,7 +62,7 @@ async function sendZapiMessage(phone: string, message: string) {
     throw new Error(
       typeof result === "string"
         ? result
-        : result?.error || "Erro ao enviar WhatsApp."
+        : result?.error || result?.message || "Erro ao enviar WhatsApp."
     );
   }
 
@@ -134,14 +134,15 @@ export async function GET() {
     const today = formatDateKey(now);
 
     /*
-      REGRA DEFINITIVA DO CRON:
+      REGRA DO CRON DE LEMBRETES:
 
-      - Este endpoint é somente para lembretes automáticos antes da consulta.
-      - Consulta marcada para hoje NÃO deve receber lembrete de 24h.
-      - O lembrete só é enviado quando a consulta está dentro da janela correta
-        do reminder_before_hours, com pequena tolerância para o cron não precisar
-        rodar exatamente no minuto perfeito.
-      - Isso evita o bug de agendar hoje e o paciente receber mensagem indevida.
+      - Este endpoint envia lembretes automáticos antes da consulta.
+      - Consulta marcada para hoje NÃO recebe lembrete de 24h.
+      - O lembrete é enviado quando faltar no máximo reminder_before_hours.
+      - A janela agora é elástica: entre 24h e 2h antes da consulta.
+      - Isso evita perder lembretes se o WhatsApp/Z-API ficar bloqueado,
+        se o cron falhar temporariamente ou se a Vercel atrasar a execução.
+      - O campo reminder_sent_at continua impedindo envio duplicado.
     */
 
     const maxReminderHours = 72;
@@ -205,14 +206,21 @@ export async function GET() {
 
       const minutesUntilAppointment = diffInMinutes(now, appointmentDateTime);
       const reminderWindowMinutes = reminderBeforeHours * 60;
-      const cronToleranceMinutes = 20;
+
+      /*
+        Janela mínima de segurança:
+        não enviar lembrete se faltar menos de 2 horas,
+        para evitar mensagem em cima da hora ou depois de o paciente já estar vindo.
+      */
+      const minimumReminderMinutes = 120;
 
       console.log("==========");
       console.log("Paciente:", appointment.patient_name);
       console.log("Agora Brasil:", now.toISOString());
       console.log("Consulta Brasil:", appointmentDateTime.toISOString());
       console.log("Minutos até consulta:", minutesUntilAppointment);
-      console.log("Janela do lembrete:", reminderWindowMinutes);
+      console.log("Janela máxima do lembrete:", reminderWindowMinutes);
+      console.log("Janela mínima do lembrete:", minimumReminderMinutes);
 
       if (appointment.date === today) {
         skipped.push({
@@ -246,14 +254,14 @@ export async function GET() {
         continue;
       }
 
-      if (minutesUntilAppointment < reminderWindowMinutes - cronToleranceMinutes) {
+      if (minutesUntilAppointment < minimumReminderMinutes) {
         skipped.push({
           id: appointment.id,
           patient: appointment.patient_name,
           date: appointment.date,
-          reason: "Janela do lembrete já passou. Evitando envio atrasado/indevido.",
+          reason: "Faltam menos de 2 horas para a consulta.",
           minutesUntilAppointment,
-          reminderWindowMinutes,
+          minimumReminderMinutes,
         });
         continue;
       }
@@ -301,6 +309,9 @@ export async function GET() {
         failed.push({
           id: appointment.id,
           patient: patient?.name,
+          phone,
+          date: appointment.date,
+          start_time: appointment.start_time,
           error: error?.message || "Erro desconhecido.",
         });
       }
