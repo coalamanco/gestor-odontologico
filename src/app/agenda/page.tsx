@@ -2024,7 +2024,7 @@ export default function AgendaPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8]">
-      <div className="hidden border-b border-[#d9eeee] bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(35,157,154,0.06)] backdrop-blur-md md:block">
+      <div className="relative z-[200] hidden overflow-visible border-b border-[#d9eeee] bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(35,157,154,0.06)] backdrop-blur-md md:block">
         <div className="grid min-h-[42px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
 
@@ -2063,7 +2063,7 @@ export default function AgendaPage() {
               </select>
             </div>
 
-            <div className="relative hidden md:block">
+            <div className="relative z-[300] hidden md:block">
               <button
                 type="button"
                 onClick={() => {
@@ -2077,7 +2077,7 @@ export default function AgendaPage() {
               </button>
 
               {showMiniCalendar && (
-                <div className="absolute left-0 top-10 z-[80] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                <div className="absolute left-0 top-10 z-[9999] w-[292px] rounded-3xl border border-[#d9eeee] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <button
                       type="button"
@@ -2269,7 +2269,7 @@ export default function AgendaPage() {
       </div>
 
       {showMobileAgendaSheet && (
-        <div className="fixed inset-0 z-[9999] bg-slate-900/35 md:hidden" onClick={() => setShowMobileAgendaSheet(false)}>
+        <div className="fixed inset-0 z-[90] bg-slate-900/35 md:hidden" onClick={() => setShowMobileAgendaSheet(false)}>
           <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] border border-[#d7e7e7] bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-200" />
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -2342,7 +2342,7 @@ export default function AgendaPage() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0 p-1.5 md:p-2.5">
+      <div className="relative z-0 flex-1 flex flex-col min-h-0 p-1.5 md:p-2.5">
         <div
           className="bg-white rounded-[16px] border border-[#d1e5e5] shadow-sm overflow-hidden flex flex-col min-h-0"
           onTouchStart={handleAgendaTouchStart}
@@ -2644,7 +2644,7 @@ export default function AgendaPage() {
       </div>
 
       {selectedBlockDetails && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
           <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className="p-5 text-white"
@@ -2703,7 +2703,7 @@ export default function AgendaPage() {
       )}
 
       {selectedAppointmentDetails && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-40">
           <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
             <div
               className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
@@ -2894,7 +2894,7 @@ export default function AgendaPage() {
       )}
 
       {showBlockModal && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-slate-800">
@@ -3075,7 +3075,7 @@ export default function AgendaPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-6 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-[#d4e8e8] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
             <div className="flex items-center justify-between border-b border-[#e0eeee] bg-gradient-to-r from-white to-[#f3fbfb] px-5 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-slate-800">
