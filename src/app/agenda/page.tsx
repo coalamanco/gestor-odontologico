@@ -696,6 +696,26 @@ export default function AgendaPage() {
     });
   }, [weekBaseDate, isMobileAgenda, mobileView]);
 
+  const currentVisibleHolidays = useMemo(() => {
+    return days
+      .map((day) => {
+        const holiday = getHolidayInfo(day.date);
+
+        if (!holiday) return null;
+
+        return {
+          ...day,
+          holiday,
+        };
+      })
+      .filter(Boolean) as Array<{
+        date: string;
+        label: string;
+        num: string;
+        holiday: HolidayInfo;
+      }>;
+  }, [days]);
+
   const miniCalendarDays = useMemo(() => {
     const year = miniCalendarDate.getFullYear();
     const month = miniCalendarDate.getMonth();
@@ -2348,6 +2368,27 @@ export default function AgendaPage() {
           onTouchStart={handleAgendaTouchStart}
           onTouchEnd={handleAgendaTouchEnd}
         >
+          {currentVisibleHolidays.length > 0 && (
+            <div className="border-b border-amber-200/70 bg-amber-50/90 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-800 ring-1 ring-amber-200">
+                  Feriados da agenda
+                </span>
+
+                {currentVisibleHolidays.map((item) => (
+                  <span
+                    key={item.date}
+                    title={`${formatDateBr(item.date)} • ${item.holiday.name}`}
+                    className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-200"
+                  >
+                    {formatDateBr(item.date).slice(0, 5)} • {item.holiday.name}
+                    {item.holiday.scope === "municipal" ? " • Araranguá" : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div ref={agendaScrollRef} className="flex-1 overflow-y-auto min-h-0">
             <div
               className="grid border-b border-[#d7e7e7] bg-white/95 backdrop-blur-md text-xs font-bold sticky top-0 z-30 shadow-sm"
@@ -2377,8 +2418,8 @@ export default function AgendaPage() {
                     </div>
 
                     {holiday && (
-                      <div className="mx-auto mt-1 max-w-[150px] truncate rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
-                        Feriado • {holiday.scope === "municipal" ? "Araranguá" : "Brasil"}
+                      <div className="mx-auto mt-1 max-w-[170px] truncate rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+                        {holiday.scope === "municipal" ? "Araranguá" : "Brasil"} • {holiday.name}
                       </div>
                     )}
 
@@ -2441,6 +2482,12 @@ export default function AgendaPage() {
                       handleDropOnCell(d.date, h);
                     }}
                   >
+                    {getHolidayInfo(d.date) && h === `${pad(clinicSettings.start_hour)}:00` && (
+                      <div className="pointer-events-none absolute left-1 right-1 top-1 z-[1] rounded-lg border border-amber-200 bg-amber-100/80 px-2 py-1 text-center text-[8px] font-bold uppercase tracking-wide text-amber-800 shadow-sm md:text-[9px]">
+                        Feriado • {getHolidayInfo(d.date)?.name}
+                      </div>
+                    )}
+
                     {getScheduleBlocksForSlot(d.date, h).map((block) => {
                       const blockProfessional = getProfessionalById(block.professional_id);
                       const blockColor = block.color || getBlockColor(block.block_type);
