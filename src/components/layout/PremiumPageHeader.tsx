@@ -19,7 +19,7 @@ export default function PremiumPageHeader({
   actions,
 }: PremiumPageHeaderProps) {
   return (
-    <section className="relative z-[70] overflow-hidden rounded-[30px] border border-[#bfe9e8] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#9be4e1] px-5 shadow-[0_14px_34px_rgba(35,157,154,0.14)] md:px-7">
+    <section className="premium-header relative z-[70] overflow-hidden px-5 md:px-7">
       <div className="pointer-events-none absolute -right-14 -top-24 h-52 w-52 rounded-full bg-white/20" />
       <div className="pointer-events-none absolute -bottom-28 left-12 h-48 w-48 rounded-full bg-white/10" />
 
