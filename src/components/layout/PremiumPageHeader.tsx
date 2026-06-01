@@ -19,31 +19,31 @@ export default function PremiumPageHeader({
   actions,
 }: PremiumPageHeaderProps) {
   return (
-    <section className="relative z-[70] overflow-visible rounded-[24px] border border-[#bfe9e8] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#9be4e1] px-4 shadow-[0_10px_28px_rgba(35,157,154,0.12)] md:px-6">
-      <div className="pointer-events-none absolute -right-16 -top-24 h-44 w-44 rounded-full bg-white/18" />
-      <div className="pointer-events-none absolute -bottom-24 left-10 h-40 w-40 rounded-full bg-white/10" />
+    <section className="relative z-[70] overflow-hidden rounded-[30px] border border-[#bfe9e8] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#9be4e1] px-5 shadow-[0_14px_34px_rgba(35,157,154,0.14)] md:px-7">
+      <div className="pointer-events-none absolute -right-14 -top-24 h-52 w-52 rounded-full bg-white/20" />
+      <div className="pointer-events-none absolute -bottom-28 left-12 h-48 w-48 rounded-full bg-white/10" />
 
-      <div className="relative z-10 flex min-h-[58px] flex-col justify-center gap-2 py-2 md:min-h-[58px] md:flex-row md:items-center md:justify-between md:py-0">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="relative z-10 flex min-h-[76px] flex-col justify-center gap-3 py-3 md:flex-row md:items-center md:justify-between md:py-0">
+        <div className="flex min-w-0 items-center gap-4">
           {Icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/25 bg-white/18 text-white shadow-sm backdrop-blur">
-              <Icon size={20} />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[22px] border border-white/25 bg-white/18 text-white shadow-sm backdrop-blur">
+              <Icon size={24} />
             </div>
           )}
 
           <div className="min-w-0">
             {eyebrow && (
-              <div className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-cyan-50/95">
+              <div className="truncate text-[11px] font-black uppercase tracking-[0.18em] text-cyan-50/95">
                 {eyebrow}
               </div>
             )}
 
-            <h1 className="truncate text-[14px] font-black uppercase tracking-[0.12em] text-white md:text-[15px]">
+            <h1 className="truncate text-[20px] font-black leading-tight text-white md:text-[23px]">
               {title}
             </h1>
 
             {subtitle && (
-              <p className="mt-0.5 max-w-2xl truncate text-[10px] font-semibold text-cyan-50/90">
+              <p className="mt-1 max-w-4xl truncate text-[12px] font-semibold text-cyan-50/90 md:text-[13px]">
                 {subtitle}
               </p>
             )}
@@ -51,7 +51,7 @@ export default function PremiumPageHeader({
         </div>
 
         {actions && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
+          <div className="flex shrink-0 flex-wrap items-center gap-2.5 md:justify-end">
             {actions}
           </div>
         )}
