@@ -196,7 +196,7 @@ export default function PacientesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 md:p-6">
-        <div className="mx-auto max-w-6xl space-y-4">
+        <div className="mx-auto w-full max-w-[1800px] space-y-4">
           <div className="overflow-hidden rounded-[30px] border border-[#d9eeee] bg-white/95 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
             <div className="h-32 animate-pulse bg-gradient-to-r from-[#effafa] via-white to-[#f4fbfb]" />
             <div className="space-y-4 p-6">
@@ -215,7 +215,7 @@ export default function PacientesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-4">
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className="mx-auto w-full max-w-[1800px] space-y-4">
         <PremiumPageHeader
           title="Pacientes"
           eyebrow="Central de relacionamento"
