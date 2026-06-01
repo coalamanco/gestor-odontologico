@@ -1390,6 +1390,22 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     null,
   );
 
+  const [showEditTreatmentModal, setShowEditTreatmentModal] = useState(false);
+  const [selectedTreatmentForEdit, setSelectedTreatmentForEdit] =
+    useState<PatientTreatment | null>(null);
+  const [submittingTreatmentEdit, setSubmittingTreatmentEdit] = useState(false);
+  const [deletingTreatmentId, setDeletingTreatmentId] = useState<string | null>(null);
+  const [treatmentEditForm, setTreatmentEditForm] = useState({
+    procedure_name: "",
+    treatment_name: "",
+    tooth: "",
+    face: "",
+    quantity: "1",
+    unit_price: "0",
+    total: "0",
+    status: "pendente",
+  });
+
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [submittingPatientEdit, setSubmittingPatientEdit] = useState(false);
   const [patientForm, setPatientForm] = useState({
@@ -1848,6 +1864,231 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
     setFinalizeDate(new Date().toISOString().slice(0, 10));
     setFinalizeEvolution("");
     setFinalizeShouldReceive(true);
+  };
+
+  const openEditTreatmentModal = (treatment: PatientTreatment) => {
+    const unitPrice = parseMoney(treatment.unit_price);
+    const quantity = Number(treatment.quantity || 1);
+    const totalValue = parseMoney(treatment.total) || unitPrice * quantity;
+
+    setSelectedTreatmentForEdit(treatment);
+    setTreatmentEditForm({
+      procedure_name:
+        treatment.procedure_name || treatment.treatment_name || treatment.title || "",
+      treatment_name: treatment.treatment_name || treatment.procedure_name || "",
+      tooth: treatment.tooth || "",
+      face: treatment.face || "",
+      quantity: String(treatment.quantity || 1),
+      unit_price: String(unitPrice.toFixed(2)),
+      total: String(totalValue.toFixed(2)),
+      status: treatment.status || "pendente",
+    });
+    setShowEditTreatmentModal(true);
+  };
+
+  const closeEditTreatmentModal = () => {
+    if (submittingTreatmentEdit) return;
+
+    setShowEditTreatmentModal(false);
+    setSelectedTreatmentForEdit(null);
+    setTreatmentEditForm({
+      procedure_name: "",
+      treatment_name: "",
+      tooth: "",
+      face: "",
+      quantity: "1",
+      unit_price: "0",
+      total: "0",
+      status: "pendente",
+    });
+  };
+
+  const updateTreatmentEditForm = (field: string, value: string) => {
+    setTreatmentEditForm((current) => {
+      const next = { ...current, [field]: value };
+
+      if (field === "unit_price" || field === "quantity") {
+        const unitPrice = parseMoney(field === "unit_price" ? value : next.unit_price);
+        const quantity = Number(field === "quantity" ? value : next.quantity || 1);
+        next.total = String(Math.max(0, unitPrice * Math.max(1, quantity || 1)).toFixed(2));
+      }
+
+      return next;
+    });
+  };
+
+  const saveTreatmentEdit = async () => {
+    if (!selectedTreatmentForEdit) return;
+
+    const procedureName = treatmentEditForm.procedure_name.trim();
+
+    if (!procedureName) {
+      alert("Informe o nome do procedimento.");
+      return;
+    }
+
+    const quantity = Math.max(1, Number(treatmentEditForm.quantity || 1));
+    const unitPrice = Math.max(0, parseMoney(treatmentEditForm.unit_price));
+    const totalValue = Math.max(0, parseMoney(treatmentEditForm.total) || unitPrice * quantity);
+    const nextStatus = treatmentEditForm.status || "pendente";
+
+    try {
+      setSubmittingTreatmentEdit(true);
+
+      const completedAt =
+        nextStatus === "finalizado"
+          ? selectedTreatmentForEdit.completed_at || new Date().toISOString()
+          : null;
+
+      const { error } = await supabase
+        .from("patient_treatments")
+        .update({
+          title: procedureName,
+          procedure_name: procedureName,
+          treatment_name: treatmentEditForm.treatment_name.trim() || procedureName,
+          tooth: treatmentEditForm.tooth.trim() || null,
+          face: treatmentEditForm.face.trim() || null,
+          quantity,
+          unit_price: unitPrice,
+          total: totalValue,
+          status: nextStatus,
+          completed_at: completedAt,
+        })
+        .eq("id", selectedTreatmentForEdit.id)
+        .eq("patient_id", params.id);
+
+      if (error) throw error;
+
+      alert("Tratamento atualizado com sucesso.");
+      closeEditTreatmentModal();
+      setActiveTab("tratamentos");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao atualizar tratamento: " + error.message);
+    } finally {
+      setSubmittingTreatmentEdit(false);
+    }
+  };
+
+  const deleteTreatment = async (treatment: PatientTreatment) => {
+    const treatmentName =
+      treatment.procedure_name ||
+      treatment.treatment_name ||
+      treatment.title ||
+      "Tratamento";
+
+    const confirmed = window.confirm(
+      `Deseja realmente excluir este tratamento?\n\n${treatmentName}\n\n` +
+        "Essa ação remove o tratamento do prontuário e também remove evoluções vinculadas a ele.",
+    );
+
+    if (!confirmed) return;
+
+    const sameBudgetTreatments = treatment.budget_id
+      ? patientTreatments.filter((item) => item.budget_id === treatment.budget_id)
+      : [];
+
+    const shouldUndoBudgetApproval =
+      Boolean(treatment.budget_id) &&
+      sameBudgetTreatments.length <= 1 &&
+      window.confirm(
+        "Este parece ser o último tratamento ligado ao orçamento aprovado.\n\nDeseja também desfazer a aprovação desse orçamento e remover parcelas financeiras vinculadas a ele?",
+      );
+
+    try {
+      setDeletingTreatmentId(treatment.id);
+
+      const financialRecordIds = new Set<string>();
+
+      const { data: linkedFinancial, error: linkedFinancialError } = await supabase
+        .from("financial_records")
+        .select("id")
+        .eq("patient_id", params.id)
+        .eq("patient_treatment_id", treatment.id);
+
+      if (linkedFinancialError) throw linkedFinancialError;
+
+      (linkedFinancial || []).forEach((record: any) => {
+        if (record.id) financialRecordIds.add(record.id);
+      });
+
+      if (shouldUndoBudgetApproval && treatment.budget_id) {
+        const { data: budgetFinancial, error: budgetFinancialError } = await supabase
+          .from("financial_records")
+          .select("id")
+          .eq("patient_id", params.id)
+          .eq("budget_id", treatment.budget_id);
+
+        if (budgetFinancialError) throw budgetFinancialError;
+
+        (budgetFinancial || []).forEach((record: any) => {
+          if (record.id) financialRecordIds.add(record.id);
+        });
+      }
+
+      const idsToDelete = Array.from(financialRecordIds);
+
+      if (idsToDelete.length > 0) {
+        const { error: paymentDeleteError } = await supabase
+          .from("payment_transactions")
+          .delete()
+          .in("financial_record_id", idsToDelete);
+
+        if (paymentDeleteError) throw paymentDeleteError;
+
+        const { error: financialDeleteError } = await supabase
+          .from("financial_records")
+          .delete()
+          .in("id", idsToDelete);
+
+        if (financialDeleteError) throw financialDeleteError;
+      }
+
+      const { error: notesDeleteError } = await supabase
+        .from("treatment_notes")
+        .delete()
+        .eq("patient_treatment_id", treatment.id);
+
+      if (notesDeleteError) throw notesDeleteError;
+
+      const { error: treatmentDeleteError } = await supabase
+        .from("patient_treatments")
+        .delete()
+        .eq("id", treatment.id)
+        .eq("patient_id", params.id);
+
+      if (treatmentDeleteError) throw treatmentDeleteError;
+
+      if (shouldUndoBudgetApproval && treatment.budget_id) {
+        const { error: budgetUpdateError } = await supabase
+          .from("budgets")
+          .update({
+            status: "pendente",
+            approved_at: null,
+          })
+          .eq("id", treatment.budget_id)
+          .eq("patient_id", params.id);
+
+        if (budgetUpdateError) throw budgetUpdateError;
+      }
+
+      if (detailRecord && idsToDelete.includes(detailRecord.id)) {
+        setDetailRecord(null);
+      }
+
+      alert(
+        shouldUndoBudgetApproval
+          ? "Tratamento excluído e aprovação do orçamento desfeita com sucesso."
+          : "Tratamento excluído com sucesso.",
+      );
+
+      setActiveTab("tratamentos");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao excluir tratamento: " + error.message);
+    } finally {
+      setDeletingTreatmentId(null);
+    }
   };
 
   const openEvolutionModal = (treatment: PatientTreatment) => {
@@ -5031,6 +5272,23 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                         <div className="flex shrink-0 flex-row flex-wrap gap-2 lg:justify-end">
                           <button
                             type="button"
+                            onClick={() => openEditTreatmentModal(treatment)}
+                            className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-[#f7ffff]"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteTreatment(treatment)}
+                            disabled={deletingTreatmentId === treatment.id}
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                          >
+                            {deletingTreatmentId === treatment.id ? "Excluindo..." : "Excluir"}
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => openEvolutionModal(treatment)}
                             className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#239d9a] hover:bg-[#f7ffff]"
                           >
@@ -7342,6 +7600,172 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 disabled={submittingPrescription}
               >
                 {submittingPrescription ? "Salvando..." : "Salvar e imprimir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditTreatmentModal && selectedTreatmentForEdit && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-[#d8eeee]">
+            <div className="p-5 border-b flex flex-col gap-1">
+              <h3 className="text-xl font-black text-slate-800">
+                Editar tratamento
+              </h3>
+              <p className="text-sm text-slate-500">
+                Use esta tela para corrigir procedimento, dente, face, valor ou status lançado por engano.
+              </p>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Procedimento
+                  </label>
+                  <input
+                    value={treatmentEditForm.procedure_name}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("procedure_name", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    placeholder="Nome do procedimento"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Plano / tratamento
+                  </label>
+                  <input
+                    value={treatmentEditForm.treatment_name}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("treatment_name", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    placeholder="Descrição do plano"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Dente
+                  </label>
+                  <input
+                    value={treatmentEditForm.tooth}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("tooth", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    placeholder="Ex.: 11"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Face
+                  </label>
+                  <input
+                    value={treatmentEditForm.face}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("face", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                    placeholder="Ex.: O, M, D"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Quantidade
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={treatmentEditForm.quantity}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("quantity", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Valor unitário
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={treatmentEditForm.unit_price}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("unit_price", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-500 text-sm">
+                    Total
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={treatmentEditForm.total}
+                    onChange={(e) =>
+                      updateTreatmentEditForm("total", e.target.value)
+                    }
+                    className="w-full border rounded-xl p-3 text-base text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-1 text-slate-500 text-sm">
+                  Status
+                </label>
+                <select
+                  value={treatmentEditForm.status}
+                  onChange={(e) =>
+                    updateTreatmentEditForm("status", e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 text-base text-slate-800"
+                >
+                  <option value="pendente">Pendente</option>
+                  <option value="em_atendimento">Em atendimento</option>
+                  <option value="finalizado">Finalizado</option>
+                </select>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Se o erro foi a aprovação inteira de um orçamento, use o botão <strong>Excluir</strong> no tratamento.
+                Quando ele for o último tratamento daquele orçamento, o sistema perguntará se você quer desfazer a aprovação e limpar o financeiro vinculado.
+              </div>
+            </div>
+
+            <div className="p-5 border-t flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeEditTreatmentModal}
+                className="px-4 py-2 border rounded-xl text-sm"
+                disabled={submittingTreatmentEdit}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={saveTreatmentEdit}
+                className="px-4 py-2 bg-[#239d9a] text-white rounded-xl text-sm font-black disabled:opacity-60"
+                disabled={submittingTreatmentEdit}
+              >
+                {submittingTreatmentEdit ? "Salvando..." : "Salvar tratamento"}
               </button>
             </div>
           </div>
