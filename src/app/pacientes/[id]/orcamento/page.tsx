@@ -17,6 +17,7 @@ type Budget = {
   installments?: number | null;
   entry_value?: number | string | null;
   entry_status?: string | null;
+  first_installment_date?: string | null;
   receipt_type?: string | null;
   notes?: string | null;
   approved_at?: string | null;
@@ -492,6 +493,9 @@ export default function OrcamentoPage({
   const [installments, setInstallments] = useState("1");
   const [entryValue, setEntryValue] = useState("0");
   const [entryStatus, setEntryStatus] = useState("pago");
+  const [firstInstallmentDate, setFirstInstallmentDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
   const [receiptType, setReceiptType] = useState("nenhum");
   const [notes, setNotes] = useState("");
   const [discountType, setDiscountType] = useState("valor");
@@ -501,6 +505,21 @@ export default function OrcamentoPage({
     if (value === null || value === undefined || value === "") return 0;
     if (typeof value === "number") return value;
     return Number(String(value).replace(",", ".")) || 0;
+  };
+
+  const getTodayLocalDate = () => {
+    const now = new Date();
+    now.setHours(12, 0, 0, 0);
+    return now.toISOString().slice(0, 10);
+  };
+
+  const createLocalDateFromInput = (value?: string | null) => {
+    const fallback = getTodayLocalDate();
+    const safeValue = value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
+    const [year, month, day] = safeValue.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setHours(12, 0, 0, 0);
+    return date;
   };
 
   const formatCurrency = (value: number) => {
@@ -524,6 +543,7 @@ export default function OrcamentoPage({
     setInstallments("1");
     setEntryValue("0");
     setEntryStatus("pago");
+    setFirstInstallmentDate(getTodayLocalDate());
     setReceiptType("nenhum");
     setNotes("");
     setDiscountType("valor");
@@ -557,9 +577,11 @@ export default function OrcamentoPage({
     return values;
   };
 
-  const getMonthlyInstallmentDate = (index: number) => {
-    const baseDate = new Date();
-    baseDate.setHours(12, 0, 0, 0);
+  const getMonthlyInstallmentDate = (
+    index: number,
+    startDate?: string | null
+  ) => {
+    const baseDate = createLocalDateFromInput(startDate);
     baseDate.setMonth(baseDate.getMonth() + index);
     return baseDate;
   };
@@ -568,6 +590,7 @@ export default function OrcamentoPage({
     setInstallments(String(budget.installments || 1));
     setEntryValue(String(budget.entry_value ?? "0"));
     setEntryStatus(budget.entry_status || "pago");
+    setFirstInstallmentDate(budget.first_installment_date || getTodayLocalDate());
     setReceiptType(budget.receipt_type || "nenhum");
     setNotes(budget.notes || "");
     setDiscountType(budget.discount_type || "valor");
@@ -784,6 +807,7 @@ export default function OrcamentoPage({
             installments: Number(installments || 1),
             entry_value: Math.max(0, Math.min(parseMoney(entryValue), total)),
             entry_status: entryStatus,
+            first_installment_date: firstInstallmentDate || getTodayLocalDate(),
             receipt_type: receiptType,
             notes: notes || null,
           })
@@ -804,6 +828,7 @@ export default function OrcamentoPage({
             installments: Number(installments || 1),
             entry_value: Math.max(0, Math.min(parseMoney(entryValue), total)),
             entry_status: entryStatus,
+            first_installment_date: firstInstallmentDate || getTodayLocalDate(),
             receipt_type: receiptType,
             notes: notes || null,
           })
@@ -961,7 +986,7 @@ export default function OrcamentoPage({
     }
 
     installmentValues.forEach((installmentAmount, index) => {
-      const installmentDate = getMonthlyInstallmentDate(entryValue > 0 ? index + 1 : index);
+      const installmentDate = getMonthlyInstallmentDate(index, budget.first_installment_date);
 
       financialRecords.push({
         patient_id: budget.patient_id,
@@ -1037,7 +1062,8 @@ export default function OrcamentoPage({
           : installmentValues
               .map((value, index) => {
                 const date = getMonthlyInstallmentDate(
-                  entrada > 0 ? index + 1 : index
+                  index,
+                  budget.first_installment_date
                 ).toLocaleDateString("pt-BR");
                 return `Parcela ${index + 1}: ${formatCurrency(value)} - ${date}`;
               })
@@ -1054,6 +1080,7 @@ export default function OrcamentoPage({
         `• Total: ${formatCurrency(totalValue)}\n` +
         entradaTexto +
         `• Saldo a parcelar: ${formatCurrency(restante)}\n` +
+        `• Primeira parcela: ${getMonthlyInstallmentDate(0, budget.first_installment_date).toLocaleDateString("pt-BR")}\n` +
         `• ${parcelas} parcela(s) no financeiro\n\n` +
         `${valorParcelaTexto}\n\n` +
         `Deseja continuar com a aprovação?`;
@@ -1380,7 +1407,7 @@ export default function OrcamentoPage({
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-2.5 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-8 gap-2.5 mt-3">
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">
                 Parcelas do saldo
@@ -1390,6 +1417,18 @@ export default function OrcamentoPage({
                 min="1"
                 value={installments}
                 onChange={(e) => setInstallments(e.target.value)}
+                className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">
+                1ª parcela
+              </label>
+              <input
+                type="date"
+                value={firstInstallmentDate}
+                onChange={(e) => setFirstInstallmentDate(e.target.value)}
                 className="w-full border border-[#d9eeee] rounded-xl px-3 py-2.5 text-[13px] bg-[#fbffff]"
               />
             </div>
@@ -1572,6 +1611,11 @@ export default function OrcamentoPage({
                         </span>
                         <span>Entrada: {formatCurrency(parseMoney(budget.entry_value))}</span>
                         <span>{budget.installments || 1} parcela(s)</span>
+                        {budget.first_installment_date && (
+                          <span>
+                            1ª parcela: {getMonthlyInstallmentDate(0, budget.first_installment_date).toLocaleDateString("pt-BR")}
+                          </span>
+                        )}
                       </div>
                     </div>
 
