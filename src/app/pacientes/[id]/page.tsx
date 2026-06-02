@@ -4703,86 +4703,80 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
   }
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-1.5 pb-28 sm:p-3 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-2.5 pb-28 md:space-y-4 md:pb-24">
-        <div className="rounded-[1.15rem] border border-[#d8eeee] bg-white/95 p-3 shadow-sm md:p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e9f7f7] text-sm font-black text-[#239d9a] ring-1 ring-[#d8eeee] md:h-12 md:w-12 md:text-base">
-                {patient.name?.charAt(0)?.toUpperCase() || "P"}
+    <div className="h-screen w-full overflow-y-auto bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-28 sm:p-4 md:p-5">
+      <div className="w-full max-w-none space-y-3 pb-28 md:space-y-4 md:pb-24">
+        <div className="flex flex-col gap-3 rounded-3xl border border-[#d8eeee] bg-white/95 p-3 shadow-[0_8px_24px_rgba(35,157,154,0.06)] xl:flex-row xl:items-center xl:justify-between md:p-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e8f7f6] text-base font-black text-[#239d9a] ring-1 ring-[#c9eeee] md:h-12 md:w-12 md:text-lg">
+              {patient.name?.charAt(0)?.toUpperCase() || "P"}
+            </div>
+
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-black leading-tight text-slate-900 md:text-xl xl:text-2xl">
+                {patient.name}
+              </h1>
+
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500 md:text-xs">
+                {patient.phone && <span>{patient.phone}</span>}
+                {patient.cpf && <span>CPF: {patient.cpf}</span>}
+                <span>{patient.plan || "Particular"}</span>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-col gap-1">
-                  <h1 className="max-w-full truncate text-base font-black leading-tight tracking-[-0.02em] text-slate-900 sm:text-lg md:text-xl">
-                    {patient.name}
-                  </h1>
-
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-medium text-slate-500 md:text-xs">
-                    {patient.phone && <span>{patient.phone}</span>}
-                    {patient.cpf && <span>CPF: {patient.cpf}</span>}
-                    <span>{patient.plan || "Particular"}</span>
-                  </div>
+              {(patient.allergies ||
+                patient.health_alert ||
+                patient.medical_alert) && (
+                <div className="mt-2 inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 md:px-3">
+                  Alerta clínico:{" "}
+                  {patient.allergies ||
+                    patient.health_alert ||
+                    patient.medical_alert}
                 </div>
-
-                {(patient.allergies ||
-                  patient.health_alert ||
-                  patient.medical_alert) && (
-                  <div className="mt-2 inline-flex max-w-full items-center rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 ring-1 ring-red-100">
-                    <span className="truncate">
-                      Alerta clínico:{" "}
-                      {patient.allergies ||
-                        patient.health_alert ||
-                        patient.medical_alert}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start lg:shrink-0 lg:justify-end">
-              <button
-                type="button"
-                onClick={openEditPatientModal}
-                className="inline-flex h-8 items-center justify-center rounded-xl bg-slate-100 px-3 text-center text-[11px] font-bold text-slate-700 transition hover:bg-slate-200"
-              >
-                Editar
-              </button>
-
-              {phoneDigits ? (
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-8 items-center justify-center rounded-xl bg-[#1fb36e] px-3 text-center text-[11px] font-bold text-white transition hover:bg-[#1a9b61]"
-                >
-                  WhatsApp
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="inline-flex h-8 items-center justify-center rounded-xl bg-slate-200 px-3 text-center text-[11px] font-bold text-slate-500"
-                >
-                  WhatsApp
-                </button>
               )}
+            </div>
+          </div>
 
+          <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:justify-end">
+            <button
+              type="button"
+              onClick={openEditPatientModal}
+              className="h-8 flex-1 whitespace-nowrap rounded-xl bg-slate-100 px-3 text-center text-xs font-bold text-slate-700 hover:bg-slate-200 sm:flex-none sm:px-4"
+            >
+              Editar
+            </button>
+
+            {phoneDigits ? (
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-8 flex-1 items-center justify-center whitespace-nowrap rounded-xl bg-[#1fb36e] px-3 text-center text-xs font-bold text-white sm:flex-none sm:px-4"
+              >
+                WhatsApp
+              </a>
+            ) : (
               <button
                 type="button"
-                onClick={openPrescriptionModal}
-                className="inline-flex h-8 items-center justify-center rounded-xl border border-[#d9eeee] bg-white px-3 text-center text-[11px] font-black text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+                disabled
+                className="h-8 flex-1 whitespace-nowrap rounded-xl bg-slate-200 px-3 text-center text-xs font-bold text-slate-500 sm:flex-none sm:px-4"
               >
-                Novo documento
+                WhatsApp
               </button>
+            )}
 
-              <Link
-                href={`/pacientes/${params.id}/orcamento`}
-                className="inline-flex h-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3 text-center text-[11px] font-black text-white shadow-sm transition hover:brightness-105"
-              >
-                Novo orçamento
-              </Link>
-            </div>
+            <button
+              type="button"
+              onClick={openPrescriptionModal}
+              className="h-8 flex-1 whitespace-nowrap rounded-xl border border-[#d9eeee] bg-white px-3 text-center text-xs font-black text-[#239d9a] shadow-sm hover:bg-[#fbffff] sm:flex-none sm:px-4"
+            >
+              Novo documento
+            </button>
+
+            <Link
+              href={`/pacientes/${params.id}/orcamento`}
+              className="inline-flex h-8 flex-1 items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3 text-center text-xs font-black text-white shadow-sm sm:flex-none sm:px-4"
+            >
+              Novo orçamento
+            </Link>
           </div>
         </div>
 
@@ -6320,7 +6314,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                   Orçamento
                 </div>
                 <div className="mt-2 text-base font-bold text-slate-800">
-                  Abrir orçamento
+                  Novo orçamento
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
                   Acesse a área de orçamento para gerar ou revisar propostas.
