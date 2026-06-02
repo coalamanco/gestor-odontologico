@@ -2,10 +2,20 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import { Search, Plus, Users, RefreshCw, AlertTriangle, Download } from "lucide-react";
-import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 import * as XLSX from "xlsx";
+import {
+  AlertTriangle,
+  Download,
+  Plus,
+  RefreshCw,
+  Search,
+  Users,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
+import PremiumKPI from "@/components/ui/PremiumKPI";
+import PremiumSection from "@/components/ui/PremiumSection";
+import { Button } from "@/components/ui/button";
 
 type Patient = {
   id: string;
@@ -33,7 +43,7 @@ export default function PacientesPage() {
       if (!userData?.user) {
         setPatients([]);
         setErrorMessage(
-          "Você não está logado. Faça login novamente para carregar os pacientes."
+          "Você não está logado. Faça login novamente para carregar os pacientes.",
         );
         return;
       }
@@ -53,14 +63,14 @@ export default function PacientesPage() {
 
       if ((data || []).length === 0 && Number(count || 0) > 0) {
         setErrorMessage(
-          `O Supabase informou ${count} paciente(s), mas a tela não recebeu a lista. Verifique permissões/RLS da tabela patients.`
+          `O Supabase informou ${count} paciente(s), mas a tela não recebeu a lista. Verifique permissões/RLS da tabela patients.`,
         );
       }
     } catch (error: any) {
       console.error("Erro ao carregar pacientes:", error);
       setPatients([]);
       setErrorMessage(
-        error?.message || "Erro inesperado ao carregar pacientes."
+        error?.message || "Erro inesperado ao carregar pacientes.",
       );
     } finally {
       setLoading(false);
@@ -82,14 +92,9 @@ export default function PacientesPage() {
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
-
       const workbook = XLSX.utils.book_new();
 
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Pacientes"
-      );
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
 
       const excelBuffer = XLSX.write(workbook, {
         bookType: "xlsx",
@@ -104,9 +109,7 @@ export default function PacientesPage() {
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = `pacientes-${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
+      link.download = `pacientes-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       document.body.appendChild(link);
       link.click();
@@ -146,7 +149,7 @@ export default function PacientesPage() {
   const getPatientInitials = (name?: string | null) => {
     const parts = String(name || "Paciente")
       .trim()
-      .split(/\s+/)
+      .split(/\\s+/)
       .filter(Boolean);
 
     if (parts.length === 0) return "P";
@@ -168,14 +171,14 @@ export default function PacientesPage() {
   const formatPhone = (value?: string | null) => {
     if (!value) return "Telefone não informado";
 
-    const digits = String(value).replace(/\D/g, "");
+    const digits = String(value).replace(/\\D/g, "");
 
     if (digits.length === 11) {
-      return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+      return digits.replace(/^(\\d{2})(\\d{5})(\\d{4})$/, "($1) $2-$3");
     }
 
     if (digits.length === 10) {
-      return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+      return digits.replace(/^(\\d{2})(\\d{4})(\\d{4})$/, "($1) $2-$3");
     }
 
     return String(value);
@@ -184,10 +187,10 @@ export default function PacientesPage() {
   const formatCpf = (value?: string | null) => {
     if (!value) return "CPF não informado";
 
-    const digits = String(value).replace(/\D/g, "");
+    const digits = String(value).replace(/\\D/g, "");
 
     if (digits.length === 11) {
-      return digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+      return digits.replace(/^(\\d{3})(\\d{3})(\\d{3})(\\d{2})$/, "$1.$2.$3-$4");
     }
 
     return String(value);
@@ -195,13 +198,15 @@ export default function PacientesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 md:p-6">
-        <div className="mx-auto w-full max-w-[1800px] space-y-4">
-          <div className="overflow-hidden rounded-[30px] border border-[#d9eeee] bg-white/95 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-            <div className="h-32 animate-pulse bg-gradient-to-r from-[#effafa] via-white to-[#f4fbfb]" />
+      <div className="premium-page premium-page-padding">
+        <div className="premium-container space-y-4">
+          <div className="premium-card-lg overflow-hidden">
+            <div className="h-32 animate-pulse bg-gradient-to-r from-[var(--clinic-primary-soft)] via-white to-[var(--clinic-surface-soft)]" />
+
             <div className="space-y-4 p-6">
               <div className="h-5 w-48 animate-pulse rounded-full bg-slate-100" />
               <div className="h-12 w-full animate-pulse rounded-2xl bg-slate-100" />
+
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
                 <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
@@ -214,8 +219,8 @@ export default function PacientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 pb-24 md:p-4">
-      <div className="mx-auto w-full max-w-[1800px] space-y-4">
+    <div className="premium-page premium-page-padding">
+      <div className="premium-container space-y-4">
         <PremiumPageHeader
           title="Pacientes"
           eyebrow="Central de relacionamento"
@@ -223,41 +228,38 @@ export default function PacientesPage() {
           icon={Users}
           actions={
             <>
-              <button
-                type="button"
-                onClick={loadPatients}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 text-[12px] font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
-              >
+              <Button type="button" variant="header" size="header" onClick={loadPatients}>
                 <RefreshCw size={18} />
                 Atualizar
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="header"
+                size="header"
                 onClick={exportPatientsExcel}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 text-[12px] font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <Download size={18} />
                 Exportar Excel
-              </button>
+              </Button>
 
-              <Link
-                href="/pacientes/novo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white px-4 text-[12px] font-bold text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
-              >
-                <Plus size={18} />
-                Novo paciente
-              </Link>
+              <Button asChild variant="headerLight" size="header">
+                <Link href="/pacientes/novo">
+                  <Plus size={18} />
+                  Novo paciente
+                </Link>
+              </Button>
             </>
           }
         />
 
         {errorMessage && (
-          <div className="rounded-[24px] border border-[#d9eeee] bg-[#f7ffff] p-4 text-[#0f766e] shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
+          <div className="premium-card-soft p-4 text-[var(--clinic-primary-dark)]">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl bg-[#eefafa] p-2 text-[#239d9a]">
+              <div className="mt-0.5 rounded-xl bg-[var(--clinic-primary-soft)] p-2 text-[var(--clinic-primary)]">
                 <AlertTriangle size={18} />
               </div>
+
               <div>
                 <div className="font-semibold">Erro ao carregar pacientes</div>
                 <div className="mt-1 whitespace-pre-wrap text-sm">
@@ -269,147 +271,125 @@ export default function PacientesPage() {
         )}
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 px-4 py-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
-            <div className="flex items-center justify-between gap-3">
+          <PremiumKPI
+            title="Total carregado"
+            value={String(patients.length)}
+            subtitle={loadedAt ? `Atualizado em ${loadedAt}` : "Base de pacientes"}
+            icon={Users}
+          />
+
+          <PremiumKPI
+            title="Resultado da busca"
+            value={String(filtered.length)}
+            subtitle={
+              search.trim()
+                ? "paciente(s) encontrados no filtro"
+                : "sem filtro aplicado"
+            }
+            icon={Search}
+          />
+
+          <div className="premium-kpi relative min-h-[132px] overflow-hidden">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[var(--clinic-primary-soft)] opacity-70" />
+
+            <div className="relative flex h-full flex-col justify-between gap-4">
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                  Total carregado
-                </div>
-                <div className="mt-2 text-[28px] font-semibold text-slate-800">
-                  {patients.length}
-                </div>
+                <p className="premium-kpi-label">Atalho rápido</p>
+                <p className="mt-3 premium-kpi-value text-[var(--clinic-primary)]">
+                  Novo cadastro
+                </p>
+                <p className="mt-2 text-[12px] font-semibold text-[var(--clinic-muted)]">
+                  Criar paciente no sistema
+                </p>
               </div>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eefafa] text-[#239d9a]">
-                <Users size={22} />
-              </div>
-            </div>
-
-            {loadedAt && (
-              <div className="mt-2 text-[11px] font-medium text-slate-400">
-                Atualizado em {loadedAt}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 px-4 py-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-              Resultado da busca
-            </div>
-            <div className="mt-2 text-[28px] font-semibold text-slate-800">
-              {filtered.length}
-            </div>
-            <div className="mt-2 text-[11px] font-medium text-slate-400">
-              {search.trim() ? "paciente(s) encontrados no filtro" : "sem filtro aplicado"}
-            </div>
-          </div>
-
-          <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 px-4 py-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-              Atalho rápido
-            </div>
-            <div className="mt-3 flex flex-col gap-2">
-              <Link
-                href="/pacientes/novo"
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-[#239d9a] px-4 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
-              >
-                <Plus size={17} />
-                Cadastrar paciente
-              </Link>
+              <Button asChild size="sm" className="w-full">
+                <Link href="/pacientes/novo">
+                  <Plus size={16} />
+                  Cadastrar paciente
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="rounded-[26px] border border-[#d9eeee] bg-white/95 px-4 py-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)]">
+        <PremiumSection>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--clinic-muted-light)]" />
+
               <input
                 type="text"
                 placeholder="Buscar por nome, telefone, CPF ou e-mail..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-[#d9eeee] bg-[#fbffff] pl-12 pr-4 text-[13px] text-slate-700 outline-none transition focus:border-[#84d5d3] focus:bg-white focus:shadow-sm"
+                className="premium-input h-12 pl-12"
               />
             </div>
 
-            <button
-              type="button"
-              onClick={exportPatientsExcel}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-700 px-4 text-[13px] font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
+            <Button type="button" variant="outline" onClick={exportPatientsExcel}>
               <Download size={18} />
               Exportar Excel
-            </button>
+            </Button>
           </div>
-        </div>
+        </PremiumSection>
 
-        <div className="overflow-hidden rounded-[30px] border border-[#d9eeee] bg-white/95 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
-          <div className="border-b border-[#edf5f5] bg-[#fbffff] px-5 py-3.5 md:px-6">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eaf7f7] text-[#239d9a]">
-                  <Users size={20} />
-                </div>
-                <div>
-                  <h2 className="text-[16px] font-semibold text-slate-800">
-                    Lista de pacientes
-                  </h2>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                    clique para abrir o prontuário
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-semibold text-[#239d9a] ring-1 ring-[#d9eeee]">
-                {filtered.length} exibido(s)
-              </div>
-            </div>
-          </div>
-
+        <PremiumSection
+          title="Lista de pacientes"
+          subtitle="Clique para abrir o prontuário"
+          actions={
+            <span className="premium-badge premium-badge-primary">
+              {filtered.length} exibido(s)
+            </span>
+          }
+        >
           {filtered.length === 0 ? (
-            <div className="p-10 text-center text-sm text-slate-500">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-[#eefafa] text-[#239d9a]">
+            <div className="p-10 text-center text-sm text-[var(--clinic-muted)]">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-[var(--clinic-primary-soft)] text-[var(--clinic-primary)]">
                 <Search size={24} />
               </div>
+
               {patients.length === 0
-                ? "Nenhum paciente foi carregado na tela. Se o Supabase mostra 787 pacientes, o problema está na permissão/leitura da tabela patients."
+                ? "Nenhum paciente foi carregado na tela. Se o Supabase mostra pacientes, o problema pode estar na permissão/leitura da tabela patients."
                 : "Nenhum paciente encontrado para essa busca."}
             </div>
           ) : (
-            <div className="divide-y divide-[#edf7f7]">
+            <div className="-mx-6 -my-6 divide-y divide-[var(--clinic-border)]">
               {filtered.map((p) => (
                 <Link
                   key={p.id}
                   href={`/pacientes/${p.id}`}
-                  className="group block px-5 py-3.5 transition hover:bg-[#fbffff] md:px-6"
+                  className="group block px-5 py-3.5 transition hover:bg-[var(--clinic-surface-soft)] md:px-6"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#dff6f5] to-[#edfafa] text-base font-semibold text-[#239d9a] ring-1 ring-[#d9eeee] transition group-hover:scale-[1.03]">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--clinic-primary-soft)] to-[var(--clinic-primary-softer)] text-base font-semibold text-[var(--clinic-primary)] ring-1 ring-[var(--clinic-border)] transition group-hover:scale-[1.03]">
                         {getPatientInitials(p.name)}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="truncate text-[15px] font-semibold text-slate-800">
+                          <div className="truncate text-[15px] font-semibold text-[var(--clinic-text)]">
                             {p.name || "Paciente sem nome"}
                           </div>
 
                           {p.created_at && (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-[var(--clinic-muted)]">
                               desde {formatDate(p.created_at)}
                             </span>
                           )}
                         </div>
 
-                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-slate-500">
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-[var(--clinic-muted)]">
                           <span>{formatPhone(p.phone)}</span>
                           <span className="hidden text-slate-300 sm:inline">•</span>
                           <span>{formatCpf(p.cpf)}</span>
+
                           {p.email && (
                             <>
-                              <span className="hidden text-slate-300 sm:inline">•</span>
+                              <span className="hidden text-slate-300 sm:inline">
+                                •
+                              </span>
                               <span className="truncate">{p.email}</span>
                             </>
                           )}
@@ -418,7 +398,7 @@ export default function PacientesPage() {
                     </div>
 
                     <div className="flex items-center justify-between gap-3 md:justify-end">
-                      <div className="rounded-full bg-[#eefafa] px-2.5 py-0.5 text-[10px] font-semibold text-[#239d9a] transition group-hover:bg-[#239d9a] group-hover:text-white">
+                      <div className="rounded-full bg-[var(--clinic-primary-soft)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--clinic-primary)] transition group-hover:bg-[var(--clinic-primary)] group-hover:text-white">
                         Abrir prontuário →
                       </div>
                     </div>
@@ -427,7 +407,7 @@ export default function PacientesPage() {
               ))}
             </div>
           )}
-        </div>
+        </PremiumSection>
       </div>
     </div>
   );
