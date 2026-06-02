@@ -5177,32 +5177,32 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
         )}
 
         {activeTab === "tratamentos" && (
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.22fr)_minmax(520px,1fr)] gap-4">
-            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
-              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.22fr)_minmax(520px,1fr)] gap-3">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-3.5">
+              <div className="mb-2.5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-base font-black text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Tratamentos em andamento
                   </h2>
-                  <p className="text-xs text-slate-500 md:text-sm">
+                  <p className="text-xs font-normal text-slate-500">
                     Lista compacta dos procedimentos aprovados ainda não finalizados.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 text-[11px]">
-                  <span className="rounded-full bg-amber-50 px-2.5 py-1 font-bold text-amber-700 ring-1 ring-amber-100">
+                <div className="flex flex-wrap gap-1.5 text-[10px]">
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700 ring-1 ring-amber-100">
                     Pendentes: {treatmentSummary.pendentes}
                   </span>
-                  <span className="rounded-full bg-sky-50 px-2.5 py-1 font-bold text-sky-700 ring-1 ring-sky-100">
+                  <span className="rounded-full bg-sky-50 px-2.5 py-0.5 font-medium text-sky-700 ring-1 ring-sky-100">
                     Em atendimento: {treatmentSummary.emAtendimento}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {activeTreatments.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-center">
-                    <p className="text-sm font-bold text-slate-700">
+                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-3.5 text-center">
+                    <p className="text-sm font-semibold text-slate-700">
                       Nenhum tratamento em andamento.
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
@@ -5232,7 +5232,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                   return (
                     <div
                       key={treatment.id}
-                      className={`rounded-2xl border px-3 py-3 transition hover:border-[#bde8e7] md:px-4 ${
+                      className={`rounded-2xl border px-3 py-2.5 transition hover:border-[#bde8e7] md:px-3.5 ${
                         treatment.status === "finalizado"
                           ? "border-slate-200 bg-slate-50 opacity-80"
                           : "border-[#d9eeee] bg-white shadow-sm"
@@ -5241,12 +5241,12 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-[13px] font-extrabold leading-snug text-slate-800 md:text-sm">
+                            <h3 className="text-[13px] font-semibold leading-snug text-slate-800 md:text-sm">
                               {treatmentName}
                             </h3>
 
                             <span
-                              className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${treatmentStatusColor(
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.10em] ${treatmentStatusColor(
                                 treatment.status,
                               )}`}
                             >
@@ -5258,26 +5258,26 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             treatment.procedure_name &&
                             treatment.treatment_name !==
                               treatment.procedure_name && (
-                              <p className="mt-1 text-xs font-semibold text-slate-500">
+                              <p className="mt-1 text-xs font-normal text-slate-500">
                                 Plano: {treatment.treatment_name}
                               </p>
                             )}
 
-                          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-600">
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-normal text-slate-600">
                             {treatment.tooth && (
-                              <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 font-bold text-cyan-700">
+                              <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 font-medium text-cyan-700">
                                 Dente {treatment.tooth}
                               </span>
                             )}
 
                             {treatment.face && (
-                              <span className="rounded-full bg-teal-50 px-2.5 py-0.5 font-bold text-teal-700">
+                              <span className="rounded-full bg-teal-50 px-2.5 py-0.5 font-medium text-teal-700">
                                 Face {treatment.face}
                               </span>
                             )}
 
                             <span>Qtd. {treatment.quantity || 1}</span>
-                            <span className="font-bold text-slate-700">
+                            <span className="font-semibold text-slate-700">
                               {formatCurrency(parseMoney(treatment.total))}
                             </span>
                             <span>Criado em {createdAtLabel}</span>
@@ -5291,7 +5291,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                           <button
                             type="button"
                             onClick={() => openEditTreatmentModal(treatment)}
-                            className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-[#f7ffff]"
+                            className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-[#f7ffff]"
                           >
                             Editar
                           </button>
@@ -5300,7 +5300,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             type="button"
                             onClick={() => deleteTreatment(treatment)}
                             disabled={deletingTreatmentId === treatment.id}
-                            className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-60"
                           >
                             {deletingTreatmentId === treatment.id ? "Excluindo..." : "Excluir"}
                           </button>
@@ -5308,7 +5308,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                           <button
                             type="button"
                             onClick={() => openEvolutionModal(treatment)}
-                            className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#239d9a] hover:bg-[#f7ffff]"
+                            className="rounded-xl border border-[#d9eeee] bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#239d9a] hover:bg-[#f7ffff]"
                           >
                             Evolução
                           </button>
@@ -5317,7 +5317,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             <button
                               type="button"
                               onClick={() => openFinalizeModal(treatment)}
-                              className="rounded-xl bg-[#239d9a] px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm hover:brightness-95"
+                              className="rounded-xl bg-[#239d9a] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:brightness-95"
                             >
                               Finalizar
                             </button>
@@ -5332,18 +5332,18 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                           </p>
                         ) : (
                           <div className="space-y-2">
-                            <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                               Evoluções registradas
                             </div>
 
                             {notesForTreatment.map((note) => (
                               <div
                                 key={note.id}
-                                className="rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-3"
+                                className="rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-2.5"
                               >
                                 <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
                                   {note.title && (
-                                    <span className="font-black text-slate-800">
+                                    <span className="font-semibold text-slate-800">
                                       {note.title}
                                     </span>
                                   )}
@@ -5357,7 +5357,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                                   </span>
                                 </div>
 
-                                <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+                                <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">
                                   {note.content}
                                 </div>
                               </div>
@@ -5371,13 +5371,13 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </div>
             </div>
 
-            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
-              <div className="mb-3 flex items-start justify-between gap-2">
+            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-3.5">
+              <div className="mb-2.5 flex items-start justify-between gap-2">
                 <div>
-                  <h2 className="text-base font-black text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-slate-800">
                     Evolução clínica
                   </h2>
-                  <p className="text-xs text-slate-500 md:text-sm">
+                  <p className="text-xs font-normal text-slate-500">
                     Linha do tempo resumida deste paciente.
                   </p>
                 </div>
@@ -5385,11 +5385,11 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
 
               <div className="max-h-[720px] overflow-y-auto pr-1.5">
                 {clinicalTimeline.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-5 text-center">
-                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#eefafa] text-sm font-black text-[#239d9a]">
+                  <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-center">
+                    <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#eefafa] text-sm font-semibold text-[#239d9a]">
                       +
                     </div>
-                    <p className="text-sm font-bold text-slate-700">
+                    <p className="text-sm font-semibold text-slate-700">
                       Nenhuma evolução registrada.
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
@@ -5404,7 +5404,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                     className="relative pb-4 last:pb-0"
                   >
                     <div className="sticky top-0 z-10 mb-2 bg-white/90 py-1 backdrop-blur">
-                      <span className="inline-flex rounded-full border border-[#d9eeee] bg-[#f7ffff] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a] shadow-sm">
+                      <span className="inline-flex rounded-full border border-[#d9eeee] bg-[#f7ffff] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] shadow-sm">
                         {group.dateLabel}
                       </span>
                     </div>
@@ -5465,19 +5465,19 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                         return (
                           <article
                             key={item.id}
-                            className="group relative rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3.5 shadow-sm transition hover:border-[#bde8e7] hover:bg-white"
+                            className="group relative rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3 shadow-sm transition hover:border-[#bde8e7] hover:bg-white"
                           >
                             <div className="absolute -left-[15px] top-4 h-3 w-3 rounded-full border-2 border-white bg-[#239d9a] shadow-sm ring-2 ring-[#c8eeee]" />
 
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="text-sm font-black leading-snug text-slate-800">
+                                  <h3 className="text-sm font-semibold leading-snug text-slate-800">
                                     {procedureLine}
                                   </h3>
 
                                   {isFinished && (
-                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
                                       Finalizado
                                     </span>
                                   )}
@@ -5486,13 +5486,13 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                                 {!isFinished &&
                                   item.title &&
                                   item.title !== procedureLine && (
-                                    <p className="mt-1 text-xs font-semibold text-[#239d9a]">
+                                    <p className="mt-1 text-xs font-normal text-[#239d9a]">
                                       {item.title}
                                     </p>
                                   )}
                               </div>
 
-                              <div className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-[#e8f5f5]">
+                              <div className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-[#e8f5f5]">
                                 {item.date
                                   ? new Date(item.date).toLocaleTimeString(
                                       "pt-BR",
@@ -5506,7 +5506,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             </div>
 
                             {descriptionLines.length > 0 && (
-                              <div className="mt-2 rounded-xl border border-[#edf7f7] bg-white/70 p-3 text-sm leading-relaxed text-slate-600">
+                              <div className="mt-2 rounded-xl border border-[#edf7f7] bg-white/70 p-2.5 text-[13px] leading-relaxed text-slate-600">
                                 {descriptionLines.map((line, index) => (
                                   <p key={`${item.id}-line-${index}`}>{line}</p>
                                 ))}
@@ -5514,7 +5514,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                             )}
 
                             {(professionalLine || dateLine) && (
-                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
+                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium text-slate-500">
                                 {professionalLine && (
                                   <span className="rounded-full bg-[#eefafa] px-2.5 py-1 text-[#239d9a]">
                                     {professionalLine.replace(
