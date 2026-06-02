@@ -678,4 +678,41 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+
+  /*
+    =========================================================
+    COMPLEMENTO PREMIUM - DASHBOARD EXECUTIVO
+    =========================================================
+    Classes usadas para padronizar os painéis internos do BI Executivo.
+  */
+
+  .premium-dashboard-panel {
+    border-radius: var(--premium-radius-md);
+    border: 1px solid var(--clinic-border);
+    background: color-mix(in srgb, var(--clinic-surface) 96%, transparent);
+    box-shadow: var(--premium-shadow-soft);
+  }
+
+  .premium-dashboard-card {
+    border-radius: var(--premium-radius-md);
+    border: 1px solid var(--clinic-border);
+    background: var(--clinic-surface);
+    box-shadow: var(--premium-shadow-soft);
+  }
+
+  .premium-dashboard-metric {
+    border-radius: var(--premium-radius-sm);
+    border: 1px solid var(--clinic-border);
+    background: var(--clinic-surface-soft);
+  }
+
+  .premium-dashboard-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--premium-radius-sm);
+    background: var(--clinic-primary-soft);
+    color: var(--clinic-primary);
+  }
+
 }

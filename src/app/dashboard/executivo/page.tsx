@@ -11,13 +11,14 @@ import {
   FileText,
   Megaphone,
   RefreshCw,
-  Sparkles,
   Target,
   TrendingUp,
   Trophy,
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
+import { Button } from "@/components/ui/button";
 import {
   calculatePatientCrmScore,
   normalizePatientSource,
@@ -257,22 +258,22 @@ function isFinancialRecordOverdue(record: FinancialRecord) {
 
 
 function getTrendClass(trend: string) {
-  if (trend === "Alta") return "bg-[#e8f7f6] text-[#0f766e]";
-  if (trend === "Atenção") return "bg-[#f2fcfc] text-[#0f766e]";
-  return "bg-[#f7ffff] text-[#0f766e]";
+  if (trend === "Alta") return "bg-[#e8f7f6] text-[var(--clinic-primary-dark)]";
+  if (trend === "Atenção") return "bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
+  return "bg-[var(--clinic-primary-softer)] text-[var(--clinic-primary-dark)]";
 }
 
 function getGoalChanceClass(chance: string) {
-  if (chance === "Alta") return "bg-[#e8f7f6] text-[#0f766e]";
-  if (chance === "Média") return "bg-[#f2fcfc] text-[#0f766e]";
-  return "bg-[#f7ffff] text-[#0f766e]";
+  if (chance === "Alta") return "bg-[#e8f7f6] text-[var(--clinic-primary-dark)]";
+  if (chance === "Média") return "bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
+  return "bg-[var(--clinic-primary-softer)] text-[var(--clinic-primary-dark)]";
 }
 
 function getAlertClass(severity: string) {
-  if (severity === "critico") return "border-[#bde8e7] bg-[#f2fcfc] text-[#0f766e]";
-  if (severity === "atencao") return "border-[#cdeeed] bg-[#f7ffff] text-[#0f766e]";
-  if (severity === "oportunidade") return "border-[#bde8e7] bg-[#eefafa] text-[#0f766e]";
-  return "border-[#bde8e7] bg-[#f2fcfc] text-[#0f766e]";
+  if (severity === "critico") return "border-[var(--clinic-border-strong)] bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
+  if (severity === "atencao") return "border-[var(--clinic-border)] bg-[var(--clinic-primary-softer)] text-[var(--clinic-primary-dark)]";
+  if (severity === "oportunidade") return "border-[var(--clinic-border-strong)] bg-[var(--clinic-primary-soft)] text-[var(--clinic-primary-dark)]";
+  return "border-[var(--clinic-border-strong)] bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
 }
 
 function getAlertLabel(severity: string) {
@@ -283,9 +284,9 @@ function getAlertLabel(severity: string) {
 }
 
 function getScoreClass(score: number) {
-  if (score >= 80) return "bg-[#e8f7f6] text-[#0f766e]";
-  if (score >= 50) return "bg-[#f7ffff] text-[#0f766e]";
-  return "bg-[#f2fcfc] text-[#0f766e]";
+  if (score >= 80) return "bg-[#e8f7f6] text-[var(--clinic-primary-dark)]";
+  if (score >= 50) return "bg-[var(--clinic-primary-softer)] text-[var(--clinic-primary-dark)]";
+  return "bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
 }
 
 function normalizeText(value: unknown) {
@@ -319,11 +320,11 @@ function normalizeProcedureName(value: unknown) {
 }
 
 function getProfitabilityClass(margin: number | null) {
-  if (margin === null) return "bg-slate-100 text-slate-600";
-  if (margin >= 50) return "bg-[#e8f7f6] text-[#0f766e]";
-  if (margin >= 35) return "bg-[#e8f7f6] text-[#0f766e]";
-  if (margin >= 20) return "bg-[#f7ffff] text-[#0f766e]";
-  return "bg-[#f2fcfc] text-[#0f766e]";
+  if (margin === null) return "bg-slate-100 text-[var(--clinic-text-soft)]";
+  if (margin >= 50) return "bg-[#e8f7f6] text-[var(--clinic-primary-dark)]";
+  if (margin >= 35) return "bg-[#e8f7f6] text-[var(--clinic-primary-dark)]";
+  if (margin >= 20) return "bg-[var(--clinic-primary-softer)] text-[var(--clinic-primary-dark)]";
+  return "bg-[#f2fcfc] text-[var(--clinic-primary-dark)]";
 }
 
 function getProfitabilityLabel(margin: number | null) {
@@ -1071,58 +1072,45 @@ export default function DashboardExecutivoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef7f7] p-3 md:p-3.5">
-      <div className="mb-4 overflow-hidden rounded-[26px] border border-[#cdeeed] bg-gradient-to-r from-[#239d9a] via-[#46c1bf] to-[#8edbd8] px-4 shadow-[0_8px_22px_rgba(35,157,154,0.08)] md:px-5">
-        <div className="flex h-[58px] items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[18px] bg-white/15 text-white ring-1 ring-white/25">
-              <Sparkles size={17} />
-            </div>
+    <div className="premium-page premium-page-padding">
+      <div className="premium-container space-y-4">
+        <PremiumPageHeader
+          title="Dashboard Executivo"
+          eyebrow="Inteligência da clínica"
+          subtitle="Metas, forecast, análise comercial, marketing, conversão e oportunidades da clínica."
+          icon={Brain}
+          actions={
+            <>
+              <Button asChild variant="headerLight" size="header">
+                <Link href="/configuracoes/metas">
+                  <Target size={17} />
+                  Metas
+                </Link>
+              </Button>
 
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.10em] text-white/95">
-                Dashboard Executivo
-              </p>
-            </div>
-          </div>
+              <Button asChild variant="header" size="header">
+                <Link href="/crm/campanhas">
+                  <Megaphone size={17} />
+                  Campanhas
+                </Link>
+              </Button>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link
-              href="/configuracoes/metas"
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/35 bg-white px-3 text-[12px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#eefafa]"
-            >
-              <Target size={17} />
-              <span className="hidden sm:inline">Metas</span>
-            </Link>
+              <Button type="button" variant="headerLight" size="header" onClick={loadData}>
+                <RefreshCw size={17} />
+                Atualizar
+              </Button>
+            </>
+          }
+        />
 
-            <Link
-              href="/crm/campanhas"
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/25 bg-[#239d9a] px-3 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#1f8f8c]"
-            >
-              <Megaphone size={17} />
-              <span className="hidden sm:inline">Campanhas</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={loadData}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[18px] border border-white/35 bg-white px-3 text-[12px] font-semibold text-[#239d9a] shadow-sm transition hover:bg-[#eefafa]"
-            >
-              <RefreshCw size={17} />
-              <span className="hidden sm:inline">Atualizar</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="sticky top-3 z-20 mb-4 flex flex-wrap gap-2 rounded-[24px] border border-[#d9eeee] bg-white/95 p-1.5 shadow-[0_6px_18px_rgba(35,157,154,0.05)] backdrop-blur">
+      <div className="sticky top-3 z-20 mb-4 flex flex-wrap gap-2 rounded-[24px] border border-[var(--clinic-border)] bg-white/95 p-1.5 shadow-[var(--premium-shadow-soft)] backdrop-blur">
         <button
           type="button"
           onClick={() => setActiveDashboardTab("geral")}
           className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "geral"
-              ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
+              ? "bg-[var(--clinic-primary)] text-white shadow-sm"
+              : "text-[var(--clinic-muted)] hover:bg-[var(--clinic-primary-soft)] hover:text-[var(--clinic-primary)]"
           }`}
         >
           Visão Geral
@@ -1133,8 +1121,8 @@ export default function DashboardExecutivoPage() {
           onClick={() => setActiveDashboardTab("analises")}
           className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "analises"
-              ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
+              ? "bg-[var(--clinic-primary)] text-white shadow-sm"
+              : "text-[var(--clinic-muted)] hover:bg-[var(--clinic-primary-soft)] hover:text-[var(--clinic-primary)]"
           }`}
         >
           Análises Executivas
@@ -1145,8 +1133,8 @@ export default function DashboardExecutivoPage() {
           onClick={() => setActiveDashboardTab("acessos")}
           className={`rounded-[18px] px-3.5 py-2.5 text-[12px] font-semibold transition ${
             activeDashboardTab === "acessos"
-              ? "bg-[#239d9a] text-white shadow-sm"
-              : "text-slate-500 hover:bg-[#eefafa] hover:text-[#239d9a]"
+              ? "bg-[var(--clinic-primary)] text-white shadow-sm"
+              : "text-[var(--clinic-muted)] hover:bg-[var(--clinic-primary-soft)] hover:text-[var(--clinic-primary)]"
           }`}
         >
           Acessos Rápidos
@@ -1154,7 +1142,7 @@ export default function DashboardExecutivoPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
           {activeDashboardTab === "geral"
             ? "Resumo executivo"
             : activeDashboardTab === "analises"
@@ -1162,13 +1150,13 @@ export default function DashboardExecutivoPage() {
               : "Atalhos principais"}
         </p>
 
-        <p className="hidden text-[11px] font-medium text-slate-400 md:block">
+        <p className="hidden text-[11px] font-medium text-[var(--clinic-muted-light)] md:block">
           Dados atualizados ao clicar em Atualizar
         </p>
       </div>
 
       {loading && (
-        <div className="mb-4 rounded-[18px] border border-cyan-100 bg-[#eefafa] px-4 py-3 text-[13px] font-semibold text-[#0f766e]">
+        <div className="mb-4 rounded-[18px] border border-cyan-100 bg-[var(--clinic-primary-soft)] px-4 py-3 text-[13px] font-semibold text-[var(--clinic-primary-dark)]">
           Atualizando informações executivas...
         </div>
       )}
@@ -1179,10 +1167,10 @@ export default function DashboardExecutivoPage() {
             <ExecutiveKPIs loading={loading} cards={executiveCards} />
           </div>
 
-          <div className="mb-4 rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] ring-1 ring-white/70">
+          <div className="mb-4 premium-dashboard-panel p-4 ring-1 ring-white/70">
             <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
                   Leitura executiva do mês
                 </p>
 
@@ -1203,13 +1191,13 @@ export default function DashboardExecutivoPage() {
                     Meta {goals.chanceToHitGoal}
                   </span>
 
-                  <span className="rounded-full bg-[#fbffff] px-3 py-1 text-[11px] font-medium text-slate-500">
-                    Gap: <strong className="text-slate-800">{formatCurrency(goals.gapToGoal)}</strong>
+                  <span className="rounded-full bg-[var(--clinic-surface-soft)] px-3 py-1 text-[11px] font-medium text-[var(--clinic-muted)]">
+                    Gap: <strong className="text-[var(--clinic-text)]">{formatCurrency(goals.gapToGoal)}</strong>
                   </span>
                 </div>
               </div>
 
-              <p className="max-w-3xl text-[12.5px] leading-6 text-slate-600">
+              <p className="max-w-3xl text-[12.5px] leading-6 text-[var(--clinic-text-soft)]">
                 {goals.executiveSummary}
               </p>
             </div>
@@ -1252,38 +1240,38 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] xl:col-span-2">
+            <div className="premium-dashboard-panel p-4 xl:col-span-2">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+                <div className="premium-dashboard-icon p-3">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[15px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                     Metas e Performance
                   </h2>
-                  <p className="text-[12px] text-slate-500">
+                  <p className="text-[12px] text-[var(--clinic-muted)]">
                     Meta, projeção e execução.
                   </p>
                 </div>
               </div>
 
               <div className="mb-4">
-                <div className="mb-2 flex items-center justify-between text-[13px] font-semibold text-slate-600">
+                <div className="mb-2 flex items-center justify-between text-[13px] font-semibold text-[var(--clinic-text-soft)]">
                   <span>Meta mensal</span>
                   <span>{goals.monthlyProgress}%</span>
                 </div>
 
                 <div className="h-4 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-[#239d9a]"
+                    className="h-full rounded-full bg-[var(--clinic-primary)]"
                     style={{
                       width: `${Math.min(100, goals.monthlyProgress)}%`,
                     }}
                   />
                 </div>
 
-                <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-medium text-slate-500">
+                <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-medium text-[var(--clinic-muted)]">
                   <span>
                     Confirmado: {formatCurrency(goals.confirmedRevenue)}
                   </span>
@@ -1295,81 +1283,81 @@ export default function DashboardExecutivoPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Progresso provável
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {goals.probableProgress}%
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Conversão comercial
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {goals.commercialConversion}%
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-[#e7f3f3] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Recuperação prevista
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {goals.recoveredPatientsProjection}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="premium-dashboard-panel p-4">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+                <div className="premium-dashboard-icon p-3">
                   <Trophy size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[15px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                     Destaques
                   </h2>
-                  <p className="text-[12px] text-slate-500">
+                  <p className="text-[12px] text-[var(--clinic-muted)]">
                     Destaques do período.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
                     Procedimento destaque
                   </p>
-                  <p className="mt-1 font-semibold text-slate-800">
+                  <p className="mt-1 font-semibold text-[var(--clinic-text)]">
                     {goals.topProcedure?.name || "Sem dados"}
                   </p>
-                  <p className="mt-1 text-[13px] font-semibold text-[#239d9a]">
+                  <p className="mt-1 text-[13px] font-semibold text-[var(--clinic-primary)]">
                     {formatCurrency(goals.topProcedure?.value || 0)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
                     Profissional destaque
                   </p>
-                  <p className="mt-1 font-semibold text-slate-800">
+                  <p className="mt-1 font-semibold text-[var(--clinic-text)]">
                     {goals.topProfessional?.name || "Sem dados"}
                   </p>
-                  <p className="mt-1 text-[13px] font-semibold text-[#239d9a]">
+                  <p className="mt-1 text-[13px] font-semibold text-[var(--clinic-primary)]">
                     {formatCurrency(goals.topProfessional?.value || 0)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
                     Ticket médio
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-[#239d9a]">
+                  <p className="mt-1 text-lg font-semibold text-[var(--clinic-primary)]">
                     {formatCurrency(goals.averageTicket || averageTicket)}
                   </p>
                 </div>
@@ -1378,55 +1366,55 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[520px_minmax(0,1fr)]">
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="premium-dashboard-panel p-4">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+                <div className="premium-dashboard-icon p-3">
                   <BarChart3 size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[15px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                     Pipeline Executivo
                   </h2>
-                  <p className="text-[12px] text-slate-500">
+                  <p className="text-[12px] text-[var(--clinic-muted)]">
                     Pipeline e oportunidades abertas.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Pipeline comercial
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {formatCurrency(forecast.commercialPipeline)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Orçamentos abertos
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {formatCurrency(openBudgetRevenue)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-[#d9eeee] bg-[#f7ffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Ticket médio aprovado
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {formatCurrency(averageTicket)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-[#e7f3f3] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Campanhas previstas
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-2 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {formatCurrency(forecast.campaignRevenueProjection)}
                   </p>
                 </div>
@@ -1452,17 +1440,17 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="premium-dashboard-panel p-4">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+                <div className="premium-dashboard-icon p-3">
                   <Users size={22} />
                 </div>
 
                 <div>
-                  <h2 className="text-[15px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                     Top Pacientes por Score
                   </h2>
-                  <p className="text-[12px] text-slate-500">
+                  <p className="text-[12px] text-[var(--clinic-muted)]">
                     Prioridade comercial.
                   </p>
                 </div>
@@ -1473,13 +1461,13 @@ export default function DashboardExecutivoPage() {
                   <Link
                     key={item.patient.id}
                     href={`/pacientes/${item.patient.id}`}
-                    className="grid grid-cols-1 gap-3 rounded-[18px] bg-[#fbffff] p-3.5 transition hover:bg-[#eefafa] md:grid-cols-[1fr_auto]"
+                    className="grid grid-cols-1 gap-3 premium-dashboard-metric p-3.5 transition hover:bg-[var(--clinic-primary-soft)] md:grid-cols-[1fr_auto]"
                   >
                     <div>
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-[var(--clinic-text)]">
                         {item.patient.name || "Paciente"}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--clinic-muted)]">
                         Origem: {item.source} • VIP: {item.vipLevel}
                       </p>
                     </div>
@@ -1493,7 +1481,7 @@ export default function DashboardExecutivoPage() {
                         {item.score}/100
                       </span>
 
-                      <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-semibold text-[#0f766e]">
+                      <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-semibold text-[var(--clinic-primary-dark)]">
                         {item.closingChance}%
                       </span>
                     </div>
@@ -1501,7 +1489,7 @@ export default function DashboardExecutivoPage() {
                 ))}
 
                 {scoredPatients.length === 0 && (
-                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-[var(--clinic-muted)]">
                     Ainda não há pacientes suficientes para análise.
                   </div>
                 )}
@@ -1517,49 +1505,49 @@ export default function DashboardExecutivoPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
+            <div className="premium-dashboard-panel p-4">
               <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-[15px] font-semibold text-slate-800">
+                  <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                     Rentabilidade dos procedimentos
                   </h2>
-                  <p className="mt-1 text-[12px] text-slate-500">
+                  <p className="mt-1 text-[12px] text-[var(--clinic-muted)]">
                     Margem estimada por procedimento.
                   </p>
                 </div>
 
                 <Link
                   href="/configuracoes/precificacao"
-                  className="inline-flex items-center justify-center rounded-[18px] border border-cyan-100 bg-[#eefafa] px-4 py-3 text-[11px] font-semibold text-[#239d9a] hover:bg-[#e8f7f6]"
+                  className="inline-flex items-center justify-center rounded-[18px] border border-cyan-100 bg-[var(--clinic-primary-soft)] px-4 py-3 text-[11px] font-semibold text-[var(--clinic-primary)] hover:bg-[var(--clinic-primary-soft)]"
                 >
                   Abrir precificação
                 </Link>
               </div>
 
               <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div className="rounded-[18px] bg-[#fbffff] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-slate-400">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-muted-light)]">
                     Procedimentos mapeados
                   </p>
-                  <p className="mt-1 text-[15px] font-semibold text-slate-800">
+                  <p className="mt-1 text-[15px] font-semibold text-[var(--clinic-text)]">
                     {profitabilitySummary.mapped}/{profitabilitySummary.total}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-[#eefafa] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Lucro estimado
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-1 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {formatCurrency(profitabilitySummary.profit)}
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-[#eefafa] p-3.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[#0f766e]">
+                <div className="premium-dashboard-metric p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.10em] text-[var(--clinic-primary-dark)]">
                     Margem média
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-[#0f766e]">
+                  <p className="mt-1 text-lg font-semibold text-[var(--clinic-primary-dark)]">
                     {profitabilitySummary.averageMargin}%
                   </p>
                 </div>
@@ -1571,14 +1559,14 @@ export default function DashboardExecutivoPage() {
                   .map((item, index) => (
                     <div
                       key={item.name}
-                      className="rounded-[18px] bg-[#fbffff] p-3.5"
+                      className="premium-dashboard-metric p-3.5"
                     >
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
-                          <p className="font-semibold text-slate-800">
+                          <p className="font-semibold text-[var(--clinic-text)]">
                             {index + 1}. {item.name}
                           </p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-[var(--clinic-muted)]">
                             {item.count} lançamento(s) • Receita:{" "}
                             {formatCurrency(item.revenue)}
                           </p>
@@ -1595,34 +1583,34 @@ export default function DashboardExecutivoPage() {
                       </div>
 
                       {item.hasPricing ? (
-                        <div className="mt-4 grid grid-cols-1 gap-3 text-[11px] font-medium text-slate-500 md:grid-cols-3">
-                          <div className="rounded-[18px] bg-white p-3">
-                            <p className="text-slate-400">Custo estimado</p>
-                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                        <div className="mt-4 grid grid-cols-1 gap-3 text-[11px] font-medium text-[var(--clinic-muted)] md:grid-cols-3">
+                          <div className="rounded-[18px] bg-white p-3 ring-1 ring-[var(--clinic-border)]">
+                            <p className="text-[var(--clinic-muted-light)]">Custo estimado</p>
+                            <p className="mt-1 text-sm font-semibold text-[var(--clinic-text)]">
                               {formatCurrency(
                                 item.estimatedCost + item.estimatedFees,
                               )}
                             </p>
                           </div>
 
-                          <div className="rounded-[18px] bg-white p-3">
-                            <p className="text-slate-400">Lucro estimado</p>
-                            <p className="mt-1 text-[13px] font-semibold text-[#0f766e]">
+                          <div className="rounded-[18px] bg-white p-3 ring-1 ring-[var(--clinic-border)]">
+                            <p className="text-[var(--clinic-muted-light)]">Lucro estimado</p>
+                            <p className="mt-1 text-[13px] font-semibold text-[var(--clinic-primary-dark)]">
                               {formatCurrency(item.estimatedProfit)}
                             </p>
                           </div>
 
-                          <div className="rounded-[18px] bg-white p-3">
-                            <p className="text-slate-400">
+                          <div className="rounded-[18px] bg-white p-3 ring-1 ring-[var(--clinic-border)]">
+                            <p className="text-[var(--clinic-muted-light)]">
                               Custo unitário base
                             </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                            <p className="mt-1 text-sm font-semibold text-[var(--clinic-text)]">
                               {formatCurrency(item.unitCost)}
                             </p>
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-4 rounded-[18px] border border-dashed border-[#d9eeee] bg-[#f7ffff] p-3 text-[11px] font-medium text-[#0f766e]">
+                        <div className="mt-4 rounded-[18px] border border-dashed border-[var(--clinic-border)] bg-[var(--clinic-primary-soft)] p-3 text-[11px] font-medium text-[var(--clinic-primary-dark)]">
                           Este procedimento ainda não possui precificação
                           cadastrada. Cadastre o custo para calcular margem
                           real.
@@ -1632,18 +1620,18 @@ export default function DashboardExecutivoPage() {
                   ))}
 
                 {procedureProfitabilityRanking.length === 0 && (
-                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-[var(--clinic-muted)]">
                     Ainda não há dados suficientes para calcular rentabilidade.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)]">
-              <h2 className="text-[15px] font-semibold text-slate-800">
+            <div className="premium-dashboard-panel p-4">
+              <h2 className="text-[15px] font-semibold text-[var(--clinic-text)]">
                 Ranking por profissional
               </h2>
-              <p className="mt-1 text-[12px] text-slate-500">
+              <p className="mt-1 text-[12px] text-[var(--clinic-muted)]">
                 Produção agrupada por profissional quando disponível.
               </p>
 
@@ -1651,25 +1639,25 @@ export default function DashboardExecutivoPage() {
                 {goals.professionalRanking.slice(0, 6).map((item, index) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between gap-3 rounded-[18px] bg-[#fbffff] p-3.5"
+                    className="flex items-center justify-between gap-3 premium-dashboard-metric p-3.5"
                   >
                     <div>
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-[var(--clinic-text)]">
                         {index + 1}. {item.name}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--clinic-muted)]">
                         {item.count} lançamento(s)
                       </p>
                     </div>
 
-                    <p className="font-semibold text-[#239d9a]">
+                    <p className="font-semibold text-[var(--clinic-primary)]">
                       {formatCurrency(item.value)}
                     </p>
                   </div>
                 ))}
 
                 {goals.professionalRanking.length === 0 && (
-                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-slate-500">
+                  <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center text-[12px] text-[var(--clinic-muted)]">
                     Ainda não há ranking por profissional.
                   </div>
                 )}
@@ -1684,13 +1672,13 @@ export default function DashboardExecutivoPage() {
           <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Link
               href="/crm"
-              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="premium-dashboard-panel p-4 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+              <div className="mb-4 inline-flex premium-dashboard-icon p-3">
                 <Activity size={22} />
               </div>
-              <h3 className="text-[15px] font-semibold text-slate-800">CRM</h3>
-              <p className="mt-1 text-[12px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-[var(--clinic-text)]">CRM</h3>
+              <p className="mt-1 text-[12px] text-[var(--clinic-muted)]">
                 Acessar relacionamento, aniversários, orçamentos e tratamentos
                 parados.
               </p>
@@ -1698,32 +1686,33 @@ export default function DashboardExecutivoPage() {
 
             <Link
               href="/crm/campanhas"
-              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="premium-dashboard-panel p-4 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa]/40 p-3 text-[#239d9a]">
+              <div className="mb-4 inline-flex premium-dashboard-icon p-3">
                 <Megaphone size={22} />
               </div>
-              <h3 className="text-[15px] font-semibold text-slate-800">Campanhas</h3>
-              <p className="mt-1 text-[12px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-[var(--clinic-text)]">Campanhas</h3>
+              <p className="mt-1 text-[12px] text-[var(--clinic-muted)]">
                 Acessar campanhas segmentadas por score e chance de fechamento.
               </p>
             </Link>
 
             <Link
               href="/financeiro"
-              className="rounded-[24px] border border-[#d9eeee] bg-white/95 p-3.5 shadow-[0_6px_18px_rgba(35,157,154,0.045)] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="premium-dashboard-panel p-4 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <div className="mb-4 inline-flex rounded-[18px] bg-[#eefafa] p-3 text-[#239d9a]">
+              <div className="mb-4 inline-flex premium-dashboard-icon p-3">
                 <DollarSign size={22} />
               </div>
-              <h3 className="text-[15px] font-semibold text-slate-800">Financeiro</h3>
-              <p className="mt-1 text-[12px] text-slate-500">
+              <h3 className="text-[15px] font-semibold text-[var(--clinic-text)]">Financeiro</h3>
+              <p className="mt-1 text-[12px] text-[var(--clinic-muted)]">
                 Abrir o financeiro operacional do consultório.
               </p>
             </Link>
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
