@@ -334,15 +334,15 @@ export default function FinanceiroPage() {
     const analysis = getFinancialRecordAnalysis(record);
 
     if (analysis.overdueBalance > 0) {
-      return "border-l-4 border-l-red-400 bg-red-50/45 hover:bg-white";
+      return "border-l-4 border-l-red-300 bg-red-50/25 hover:bg-white";
     }
 
     if (analysis.dueTodayBalance > 0) {
-      return "border-l-4 border-l-amber-400 bg-amber-50/40 hover:bg-white";
+      return "border-l-4 border-l-amber-300 bg-amber-50/25 hover:bg-white";
     }
 
     if (analysis.futureBalance > 0) {
-      return "border-l-4 border-l-cyan-300 bg-cyan-50/25 hover:bg-cyan-50/50";
+      return "border-l-4 border-l-cyan-200 bg-cyan-50/20 hover:bg-cyan-50/40";
     }
 
     if (analysis.visualStatus === "pago") {
@@ -350,7 +350,7 @@ export default function FinanceiroPage() {
     }
 
     if (hasReceipt(record.receipt_type)) {
-      return "border-l-4 border-l-purple-300 bg-purple-50/35 hover:bg-purple-50/70";
+      return "border-l-4 border-l-purple-200 bg-purple-50/25 hover:bg-purple-50/50";
     }
 
     return "border-l-4 border-l-transparent hover:bg-[#fbffff]";
@@ -1543,7 +1543,7 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto space-y-5 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-4 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="h-screen overflow-y-auto space-y-3 bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8] p-3 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PremiumPageHeader
         title="Financeiro"
         eyebrow="Gestão financeira"
@@ -1554,7 +1554,7 @@ export default function FinanceiroPage() {
             <button
               type="button"
               onClick={reloadAll}
-              className="inline-flex h-8 items-center justify-center rounded-xl border border-white/25 bg-white/15 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+              className="inline-flex h-7 items-center justify-center rounded-xl border border-white/25 bg-white/15 px-2.5 text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
             >
               Atualizar
             </button>
@@ -1562,7 +1562,7 @@ export default function FinanceiroPage() {
             <button
               type="button"
               onClick={generateFinancialPdfReport}
-              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
+              className="inline-flex h-7 items-center justify-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-2.5 text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
             >
               <FileText size={14} />
               PDF
@@ -1571,7 +1571,7 @@ export default function FinanceiroPage() {
             <button
               type="button"
               onClick={exportFinanceiroExcel}
-              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-white/35 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
+              className="inline-flex h-7 items-center justify-center gap-1.5 rounded-xl border border-white/35 bg-white px-2.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#239d9a] shadow-sm transition hover:bg-[#fbffff]"
             >
               <Download size={14} />
               Excel
@@ -1581,11 +1581,11 @@ export default function FinanceiroPage() {
       />
 
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)] overflow-visible">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white/95 p-3 shadow-[0_8px_24px_rgba(35,157,154,0.05)] overflow-visible">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-[13px] font-semibold text-slate-700">
                 Exibindo financeiro
               </span>
 
@@ -1593,11 +1593,11 @@ export default function FinanceiroPage() {
                 <button
                   type="button"
                   onClick={() => setPeriodoMenuOpen((prev) => !prev)}
-                  className="min-w-[250px] h-10 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-4 text-left text-sm font-medium text-slate-700 flex items-center justify-between hover:bg-white transition"
+                  className="min-w-[230px] h-9 rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 text-left text-[13px] font-medium text-slate-700 flex items-center justify-between hover:bg-white transition"
                 >
                   <span>{labelPeriodoSelecionado()}</span>
                   <ChevronDown
-                    size={18}
+                    size={16}
                     className={`text-[#239d9a] transition ${
                       periodoMenuOpen ? "rotate-180" : ""
                     }`}
@@ -1605,7 +1605,7 @@ export default function FinanceiroPage() {
                 </button>
 
                 {periodoMenuOpen && (
-                  <div className="absolute left-0 top-12 z-50 w-[280px] max-h-[310px] overflow-y-auto rounded-xl border border-[#d9eeee] bg-white shadow-xl">
+                  <div className="absolute left-0 top-11 z-50 w-[260px] max-h-[290px] overflow-y-auto rounded-xl border border-[#d9eeee] bg-white shadow-xl">
                     {periodoOptions.map((option) => (
                       <button
                         key={option.value}
@@ -1614,7 +1614,7 @@ export default function FinanceiroPage() {
                           applyPeriodo(option.value);
                           setPeriodoMenuOpen(false);
                         }}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] transition hover:bg-[#f2fcfc] ${
+                        className={`w-full px-3 py-2 text-left text-[12px] transition hover:bg-[#f2fcfc] ${
                           periodoFiltro === option.value
                             ? "bg-[#eefafa] text-[#239d9a] font-semibold"
                             : "text-slate-700"
@@ -1632,7 +1632,7 @@ export default function FinanceiroPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 xl:min-w-[460px]">
+            <div className="flex flex-col sm:flex-row gap-2 xl:min-w-[420px]">
               <Input
                 value={searchTerm}
                 onChange={(e) => {
@@ -1640,26 +1640,8 @@ export default function FinanceiroPage() {
                   if (smartFilter !== "todos") setSmartFilter("todos");
                 }}
                 placeholder="Busque por paciente, procedimento, status ou valor..."
-                className="h-10 rounded-xl border-[#d9eeee] bg-[#fbffff]"
+                className="h-9 rounded-xl border-[#d9eeee] bg-[#fbffff] text-[13px]"
               />
-
-              <Button
-                type="button"
-                onClick={generateFinancialPdfReport}
-                className="h-10 rounded-xl bg-slate-700 px-4 text-[13px] font-semibold text-white hover:bg-slate-800"
-              >
-                <FileText size={16} className="mr-2" />
-                Relatório PDF
-              </Button>
-
-              <Button
-                type="button"
-                onClick={exportFinanceiroExcel}
-                className="h-10 rounded-xl bg-[#239d9a] px-4 text-[13px] font-semibold text-white hover:bg-[#1f8f8c]"
-              >
-                <Download size={16} className="mr-2" />
-                Exportar Excel
-              </Button>
 
               {(searchTerm || smartFilter !== "todos") && (
                 <Button
@@ -1669,7 +1651,7 @@ export default function FinanceiroPage() {
                     setSearchTerm("");
                     setSmartFilter("todos");
                   }}
-                  className="h-10 rounded-xl border-[#d9eeee]"
+                  className="h-9 rounded-xl border-[#d9eeee] text-[12px]"
                 >
                   Limpar
                 </Button>
@@ -1678,7 +1660,7 @@ export default function FinanceiroPage() {
           </div>
 
           {smartFilter !== "todos" && (
-            <div className="rounded-2xl border border-[#bfe8e7] bg-[#f2fcfc] px-4 py-3 text-sm font-bold text-[#239d9a]">
+            <div className="rounded-xl border border-[#bfe8e7] bg-[#f2fcfc] px-3 py-2 text-[12px] font-bold text-[#239d9a]">
               Filtro inteligente ativo: {smartFilter === "atrasados" ? "débitos atrasados" : smartFilter === "cobranca" ? "cobranças prioritárias" : "recibos para emitir"}
             </div>
           )}
@@ -1693,7 +1675,7 @@ export default function FinanceiroPage() {
                   type="date"
                   value={dataInicio}
                   onChange={(e) => setDataInicio(e.target.value)}
-                  className="mt-1 h-10 rounded-xl border-[#d9eeee] bg-[#fbffff]"
+                  className="mt-1 h-9 rounded-xl border-[#d9eeee] bg-[#fbffff] text-[13px]"
                 />
               </div>
 
@@ -1705,7 +1687,7 @@ export default function FinanceiroPage() {
                   type="date"
                   value={dataFim}
                   onChange={(e) => setDataFim(e.target.value)}
-                  className="mt-1 h-10 rounded-xl border-[#d9eeee] bg-[#fbffff]"
+                  className="mt-1 h-9 rounded-xl border-[#d9eeee] bg-[#fbffff] text-[13px]"
                 />
               </div>
             </div>
@@ -1761,15 +1743,15 @@ export default function FinanceiroPage() {
         }}
       />
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white/95 p-4 shadow-[0_8px_24px_rgba(35,157,154,0.06)]">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white/95 p-3 shadow-[0_8px_24px_rgba(35,157,154,0.05)]">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600">
               <MessageCircle size={24} />
             </div>
 
             <div>
-              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
+              <h2 className="text-[16px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Cobrança inteligente
               </h2>
               <p className="mt-1 text-[13px] text-slate-500">
@@ -1794,7 +1776,7 @@ export default function FinanceiroPage() {
               href={buildChargeAllWhatsappHref()}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1fb36e] px-5 py-3 text-[13px] font-semibold text-white shadow-sm hover:bg-[#18975d]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1fb36e] px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-[#18975d]"
             >
               <MessageCircle size={18} />
               Gerar lista no WhatsApp
@@ -1803,7 +1785,7 @@ export default function FinanceiroPage() {
             <button
               type="button"
               disabled
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 py-3 text-[13px] font-semibold text-slate-400"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-[12px] font-semibold text-slate-400"
             >
               Nenhuma cobrança pendente
             </button>
@@ -1843,81 +1825,81 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <div className="rounded-3xl border border-[#d5eeee] bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#28aaa8]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+        <div className="rounded-2xl border border-[#d5eeee] bg-white/95 px-4 py-3 shadow-sm ring-1 ring-white/60">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#28aaa8]">
               <Wallet size={20} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Total lançado
               </p>
-              <p className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
+              <p className="text-[15px] font-semibold text-slate-800 tracking-[-0.01em]">
                 {formatCurrency(summary.totalLancado)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-emerald-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+        <div className="rounded-2xl border border-emerald-100 bg-white/95 px-4 py-3 shadow-sm ring-1 ring-white/60">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
               <TrendingUp size={20} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Recebido no período
               </p>
-              <p className="text-lg font-semibold text-emerald-600">
+              <p className="text-[15px] font-semibold text-emerald-600">
                 {formatCurrency(summary.totalRecebido)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-amber-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+        <div className="rounded-2xl border border-amber-100 bg-white/95 px-4 py-3 shadow-sm ring-1 ring-white/60">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600">
               <DollarSign size={20} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 A receber
               </p>
-              <p className="text-lg font-semibold text-amber-600">
+              <p className="text-[15px] font-semibold text-amber-600">
                 {formatCurrency(summary.totalAReceber)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-rose-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-rose-50 p-3 text-rose-700">
+        <div className="rounded-2xl border border-rose-100 bg-white/95 px-4 py-3 shadow-sm ring-1 ring-white/60">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-rose-50 p-2.5 text-rose-700">
               <Trash2 size={20} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Despesas pagas
               </p>
-              <p className="text-lg font-semibold text-rose-700">
+              <p className="text-[15px] font-semibold text-rose-700">
                 {formatCurrency(summary.despesasPagas)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-sky-100 bg-white/95 px-5 py-4 shadow-sm ring-1 ring-white/60">
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
+        <div className="rounded-2xl border border-sky-100 bg-white/95 px-4 py-3 shadow-sm ring-1 ring-white/60">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-sky-50 p-2.5 text-sky-700">
               <PlusCircle size={20} />
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Saldo real
               </p>
-              <p className="text-lg font-semibold text-sky-700">
+              <p className="text-[15px] font-semibold text-sky-700">
                 {formatCurrency(summary.saldo)}
               </p>
             </div>
@@ -1925,15 +1907,15 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm">
         <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
               <TrendingUp size={24} />
             </div>
 
             <div>
-              <h2 className="text-[18px] font-semibold text-slate-800 tracking-[-0.01em]">
+              <h2 className="text-[16px] font-semibold text-slate-800 tracking-[-0.01em]">
                 Previsão de caixa e DRE simplificado
               </h2>
               <p className="mt-1 text-[13px] text-slate-500">
@@ -1955,16 +1937,16 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="rounded-3xl border border-[#d9eeee] bg-white p-5">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+          <div className="rounded-2xl border border-[#d9eeee] bg-white p-3">
             <div className="mb-3 flex items-center gap-2 text-emerald-600">
               <CalendarDays size={18} />
-              <p className="text-[11px] font-semibold uppercase tracking-widest">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em]">
                 Próximos 30 dias
               </p>
             </div>
 
-            <p className="text-2xl font-semibold text-emerald-600">
+            <p className="text-xl font-semibold text-emerald-600">
               {formatCurrency(financialPrediction.net30)}
             </p>
 
@@ -1980,15 +1962,15 @@ export default function FinanceiroPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-cyan-100 bg-cyan-50 p-5">
+          <div className="rounded-3xl border border-cyan-100 bg-cyan-50 p-3">
             <div className="mb-3 flex items-center gap-2 text-cyan-700">
               <CalendarDays size={18} />
-              <p className="text-[11px] font-semibold uppercase tracking-widest">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em]">
                 Próximos 60 dias
               </p>
             </div>
 
-            <p className="text-2xl font-semibold text-cyan-700">
+            <p className="text-xl font-semibold text-cyan-700">
               {formatCurrency(financialPrediction.net60)}
             </p>
 
@@ -2004,15 +1986,15 @@ export default function FinanceiroPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
+          <div className="rounded-3xl border border-blue-100 bg-blue-50 p-3">
             <div className="mb-3 flex items-center gap-2 text-blue-700">
               <CalendarDays size={18} />
-              <p className="text-[11px] font-semibold uppercase tracking-widest">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em]">
                 Próximos 90 dias
               </p>
             </div>
 
-            <p className="text-2xl font-semibold text-blue-700">
+            <p className="text-xl font-semibold text-blue-700">
               {formatCurrency(financialPrediction.net90)}
             </p>
 
@@ -2029,31 +2011,31 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="rounded-2xl bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Receita do mês
             </p>
-            <p className="mt-2 text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
+            <p className="mt-2 text-[15px] font-semibold text-slate-800 tracking-[-0.01em]">
               {formatCurrency(financialPrediction.receivedThisMonth)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Despesas pagas
             </p>
-            <p className="mt-2 text-lg font-semibold text-rose-700">
+            <p className="mt-2 text-[15px] font-semibold text-rose-700">
               {formatCurrency(financialPrediction.paidExpensesThisMonth)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Lucro operacional
             </p>
             <p
-              className={`mt-2 text-lg font-semibold ${
+              className={`mt-2 text-[15px] font-semibold ${
                 financialPrediction.grossProfit >= 0
                   ? "text-emerald-600"
                   : "text-rose-700"
@@ -2063,12 +2045,12 @@ export default function FinanceiroPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Margem estimada
             </p>
             <p
-              className={`mt-2 text-lg font-semibold ${
+              className={`mt-2 text-[15px] font-semibold ${
                 financialPrediction.margin >= 20
                   ? "text-emerald-600"
                   : financialPrediction.margin >= 0
@@ -2081,7 +2063,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-4">
+        <div className="mt-4 rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-3">
           <div className="flex items-start gap-3">
             <Info size={18} className="mt-0.5 text-[#239d9a]" />
             <p className="text-sm leading-6 text-slate-600">
@@ -2092,10 +2074,10 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
+            <h2 className="text-[15px] font-semibold text-slate-800 tracking-[-0.01em]">
               Despesas da clínica
             </h2>
             <p className="text-[13px] text-slate-500">
@@ -2109,7 +2091,7 @@ export default function FinanceiroPage() {
         </div>
 
         {despesasFiltradas.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-5 text-[13px] text-slate-500">
+          <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-3 text-[13px] text-slate-500">
             Nenhuma despesa encontrada neste período.
           </div>
         ) : (
@@ -2148,10 +2130,10 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
+            <h2 className="text-[15px] font-semibold text-slate-800 tracking-[-0.01em]">
               Dashboard inteligente
             </h2>
             <p className="text-[13px] text-slate-500">
@@ -2165,64 +2147,64 @@ export default function FinanceiroPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
-          <div className="rounded-2xl border border-[#d9eeee] bg-white/50 p-4">
+          <div className="rounded-2xl border border-[#d9eeee] bg-white/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
               Hoje
             </p>
-            <p className="mt-2 text-lg font-semibold text-emerald-600">
+            <p className="mt-2 text-[15px] font-semibold text-emerald-600">
               {formatCurrency(intelligentSummary.recebidoHoje)}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
+          <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700">
               Este mês
             </p>
-            <p className="mt-2 text-lg font-semibold text-sky-700">
+            <p className="mt-2 text-[15px] font-semibold text-sky-700">
               {formatCurrency(intelligentSummary.recebidoMes)}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
+          <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
               Em aberto
             </p>
-            <p className="mt-2 text-lg font-semibold text-amber-600">
+            <p className="mt-2 text-[15px] font-semibold text-amber-600">
               {formatCurrency(intelligentSummary.totalEmAberto)}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700">
               Inadimplência
             </p>
-            <p className="mt-2 text-lg font-semibold text-rose-700">
+            <p className="mt-2 text-[15px] font-semibold text-rose-700">
               {intelligentSummary.taxaInadimplencia.toFixed(1)}%
             </p>
           </div>
 
-          <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
+          <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
               Ticket médio
             </p>
-            <p className="mt-2 text-lg font-semibold text-purple-600">
+            <p className="mt-2 text-[15px] font-semibold text-purple-600">
               {formatCurrency(intelligentSummary.ticketMedio)}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
               Recibos
             </p>
-            <p className="mt-2 text-lg font-semibold text-cyan-700">
+            <p className="mt-2 text-[15px] font-semibold text-cyan-700">
               {intelligentSummary.recibosPendentes}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm xl:col-span-1">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-slate-800">
               Formas de pagamento
@@ -2261,7 +2243,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm xl:col-span-1">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-slate-800">
               Maiores saldos vencidos
@@ -2300,7 +2282,7 @@ export default function FinanceiroPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
+        <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm xl:col-span-1">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-slate-800">
               Controle de recibos
@@ -2311,20 +2293,20 @@ export default function FinanceiroPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
+            <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
                 Simples
               </p>
-              <p className="mt-2 text-lg font-semibold text-cyan-700">
+              <p className="mt-2 text-[15px] font-semibold text-cyan-700">
                 {receiptSummary.simples}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
+            <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
                 IR
               </p>
-              <p className="mt-2 text-lg font-semibold text-purple-600">
+              <p className="mt-2 text-[15px] font-semibold text-purple-600">
                 {receiptSummary.impostoRenda}
               </p>
             </div>
@@ -2336,10 +2318,10 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#d9eeee] bg-white p-3 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
+            <h2 className="text-[15px] font-semibold text-slate-800 tracking-[-0.01em]">
               Pacientes para cobrar
             </h2>
             <p className="text-[13px] text-slate-500">
@@ -2348,7 +2330,7 @@ export default function FinanceiroPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-xl bg-red-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-red-600 border border-red-100">
+            <span className="rounded-xl bg-red-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-600 border border-red-100">
               {patientsToCharge.filter((item) => item.visualStatus === "em_atraso").length} em atraso
             </span>
 
@@ -2357,7 +2339,7 @@ export default function FinanceiroPage() {
                 href={buildChargeAllWhatsappHref()}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-xl bg-[#1fb36e] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-white shadow-sm hover:bg-[#199c5f]"
+                className="rounded-xl bg-[#1fb36e] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-sm hover:bg-[#199c5f]"
               >
                 Cobrar todos
               </a>
@@ -2375,7 +2357,7 @@ export default function FinanceiroPage() {
           {patientsToCharge.map((item) => (
             <div
               key={item.record.id}
-              className={`rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
+              className={`rounded-2xl border p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
                 item.visualStatus === "em_atraso"
                   ? "border-red-100 bg-white/60"
                   : "border-[#d9eeee] bg-[#fbffff]"
@@ -2425,7 +2407,7 @@ export default function FinanceiroPage() {
       </div>
 
       <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
-        <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-5 px-6">
+        <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-3 px-5">
           <div>
             <CardTitle className="text-base font-semibold tracking-tight text-[#239d9a]">
               Saldo devedor por paciente
@@ -2439,26 +2421,26 @@ export default function FinanceiroPage() {
         <CardContent className="p-0 max-h-[280px] overflow-y-auto">
           <Table>
             <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
-              <TableRow className="h-10 border-none hover:bg-transparent">
-                <TableHead className="px-6 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Paciente</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Total</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Já pagou</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Vencido</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">A vencer</TableHead>
-                <TableHead className="px-6 text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Falta pagar</TableHead>
+              <TableRow className="h-8 border-none hover:bg-transparent">
+                <TableHead className="px-4 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Paciente</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Total</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Já pagou</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Vencido</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">A vencer</TableHead>
+                <TableHead className="px-4 text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Falta pagar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {saldosPorPaciente.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm font-bold text-slate-400">
+                  <TableCell colSpan={6} className="py-6 text-center text-[13px] font-bold text-slate-400">
                     Nenhum saldo encontrado
                   </TableCell>
                 </TableRow>
               ) : (
                 saldosPorPaciente.map((r) => (
                   <TableRow key={r.patient_id} className="h-10 border-[#edf7f7] hover:bg-[#fbffff]">
-                    <TableCell className="px-6 py-2 text-sm font-semibold text-slate-800">
+                    <TableCell className="px-4 py-1.5 text-sm font-semibold text-slate-800">
                       {r.name || r.patient_id}
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-slate-700">
@@ -2473,7 +2455,7 @@ export default function FinanceiroPage() {
                     <TableCell className="text-sm font-semibold text-cyan-700">
                       {formatCurrency(r.futureBalance + r.dueTodayBalance)}
                     </TableCell>
-                    <TableCell className="px-6 text-right text-sm font-semibold text-[#1da3a0]">
+                    <TableCell className="px-4 text-right text-sm font-semibold text-[#1da3a0]">
                       {formatCurrency(r.balance)}
                     </TableCell>
                   </TableRow>
@@ -2484,14 +2466,14 @@ export default function FinanceiroPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
-          <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
+          <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-3 px-5">
             <CardTitle className="flex items-center gap-3 text-[#239d9a]">
               <div className="rounded-2xl bg-gradient-to-br from-[#dff4f4] to-[#c9eded] p-2.5">
                 <PlusCircle className="h-5 w-5" />
               </div>
-              <span className="text-lg font-semibold tracking-tight">Lançamento</span>
+              <span className="text-[15px] font-semibold tracking-tight">Lançamento</span>
             </CardTitle>
             <CardDescription className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Novo débito financeiro
@@ -2532,7 +2514,7 @@ export default function FinanceiroPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Valor
@@ -2572,9 +2554,9 @@ export default function FinanceiroPage() {
         </Card>
 
         <Card ref={resultadosRef} className="lg:col-span-2 overflow-hidden border border-[#d9eeee] shadow-sm ring-1 ring-white/60 scroll-mt-6">
-          <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-6 px-6">
+          <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-3 px-5">
             <div>
-              <CardTitle className="text-lg font-semibold tracking-tight text-[#239d9a]">
+              <CardTitle className="text-[15px] font-semibold tracking-tight text-[#239d9a]">
                 Histórico financeiro
               </CardTitle>
               <CardDescription className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -2586,26 +2568,26 @@ export default function FinanceiroPage() {
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-gradient-to-r from-[#f7ffff] to-[#eefafa]">
-                <TableRow className="h-10 border-none hover:bg-transparent">
-                  <TableHead className="px-6 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Data</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Paciente</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Lançamento</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Pagamento</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Status</TableHead>
-                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Valor</TableHead>
-                  <TableHead className="px-6 text-right text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ações</TableHead>
+                <TableRow className="h-8 border-none hover:bg-transparent">
+                  <TableHead className="px-4 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Data</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Paciente</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Lançamento</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Pagamento</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Status</TableHead>
+                  <TableHead className="text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Valor</TableHead>
+                  <TableHead className="px-4 text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Ações</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {registrosFiltrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-16 text-center">
-                      <div className="flex flex-col items-center gap-4 text-slate-300">
-                        <div className="rounded-full bg-[#f3fbfb] p-5">
+                    <TableCell colSpan={7} className="py-10 text-center">
+                      <div className="flex flex-col items-center gap-3 text-slate-300">
+                        <div className="rounded-full bg-[#f3fbfb] p-3">
                           <DollarSign className="h-10 w-10 opacity-20" />
                         </div>
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                           Nenhum lançamento encontrado no período
                         </p>
                       </div>
@@ -2622,7 +2604,7 @@ export default function FinanceiroPage() {
                         key={t.id}
                         className={`group h-12 border-[#edf7f7] transition-all ${rowStatusAccentClass(t)}`}
                       >
-                        <TableCell className="px-6 py-2 text-sm font-medium text-slate-700">
+                        <TableCell className="px-4 py-1.5 text-sm font-medium text-slate-700">
                           <div className="font-bold text-slate-700">
                             {getFinancialDueDate(t) ? new Date(`${String(getFinancialDueDate(t)).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "-"}
                           </div>
@@ -2704,7 +2686,7 @@ export default function FinanceiroPage() {
                           )}
                         </TableCell>
 
-                        <TableCell className="px-6 text-right">
+                        <TableCell className="px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {balance > 0 && (
                               <Button
@@ -2739,7 +2721,7 @@ export default function FinanceiroPage() {
       </div>
 
       {detailRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm">
           <Card className="w-full max-w-xl overflow-hidden border border-[#d9eeee] shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc]">
               <div>
@@ -2759,7 +2741,7 @@ export default function FinanceiroPage() {
             </CardHeader>
 
             <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4 text-sm">
+              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-3 text-sm">
                 <div>
                   <span className="font-semibold text-slate-700">Descrição:</span>{" "}
                   <span className="text-slate-600">{detailRecord.description || "-"}</span>
@@ -2846,7 +2828,7 @@ export default function FinanceiroPage() {
       )}
 
       {isReceberOpen && receberTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm animate-in fade-in duration-300">
           <Card className="w-full max-w-lg overflow-hidden border border-[#d9eeee] shadow-xl animate-in zoom-in-95 duration-300">
             <CardHeader className="flex flex-row items-center justify-between border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc]">
               <div>
@@ -2866,7 +2848,7 @@ export default function FinanceiroPage() {
             </CardHeader>
 
             <CardContent className="space-y-5 pt-6">
-              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4">
+              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Lançamento
                 </p>
@@ -2973,7 +2955,7 @@ export default function FinanceiroPage() {
       )}
 
       {isEditPaymentOpen && editingPayment && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm animate-in fade-in duration-300">
           <Card className="w-full max-w-lg overflow-hidden border border-[#d9eeee] shadow-xl animate-in zoom-in-95 duration-300">
             <CardHeader className="flex flex-row items-center justify-between border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc]">
               <div>
@@ -2994,7 +2976,7 @@ export default function FinanceiroPage() {
             </CardHeader>
 
             <CardContent className="space-y-5 pt-6">
-              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4">
+              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Pagamento selecionado
                 </p>
