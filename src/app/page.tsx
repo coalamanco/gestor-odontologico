@@ -1060,8 +1060,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="page-shell">
-        <div className="space-y-4">
+      <div className="w-full space-y-4">
         <DashboardHeader
           period={period}
           setPeriod={setPeriod}
@@ -1392,7 +1391,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
-        </div>
       </div>
     </DashboardLayout>
   );
