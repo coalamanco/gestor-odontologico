@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Brain, Megaphone, Target, TrendingUp, Users } from "lucide-react";
 
 type SourceStats = {
@@ -48,7 +49,7 @@ export default function ExecutiveConversionCenter({
   const bestSource = safeSources[0];
 
   const bestConversionSource = [...safeSources].sort(
-    (a, b) => b.conversion - a.conversion
+    (a, b) => b.conversion - a.conversion,
   )[0];
 
   const outsidePatients = safeSources
@@ -68,34 +69,30 @@ export default function ExecutiveConversionCenter({
   const originCoverage =
     totalPatients > 0
       ? Math.round(
-          ((totalPatients - sourceWithoutOriginCount) / totalPatients) * 100
+          ((totalPatients - sourceWithoutOriginCount) / totalPatients) * 100,
         )
       : 0;
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+    <section className="premium-card-lg p-5 md:p-6">
       <div className="mb-6 flex items-start gap-3">
-        <div className="rounded-2xl bg-purple-50 p-3 text-purple-600">
+        <div className="rounded-2xl bg-[var(--clinic-primary-soft)] p-3 text-[var(--clinic-primary)]">
           <Brain size={22} />
         </div>
 
         <div>
-          <h2 className="text-2xl font-black text-slate-800">
+          <h2 className="text-2xl font-black tracking-tight text-[var(--clinic-text)]">
             Central Executiva de Conversão
           </h2>
 
-          <p className="mt-1 text-sm leading-6 text-slate-500">
+          <p className="mt-1 text-sm leading-6 text-[var(--clinic-muted)]">
             Visão consolidada de CRM, comercial e marketing da clínica.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <SectionCard
-          icon={<Users size={18} />}
-          title="CRM Executivo"
-          tone="bg-cyan-50 text-cyan-700"
-        >
+        <SectionCard icon={<Users size={18} />} title="CRM Executivo">
           <MetricLine label="Pacientes quentes" value={hotPatients} />
           <MetricLine label="Pacientes frios" value={coldPatients} />
           <MetricLine label="Risco abandono" value={riskPatients} />
@@ -103,45 +100,29 @@ export default function ExecutiveConversionCenter({
           <MetricLine label="Score médio" value={`${averageScore}/100`} />
         </SectionCard>
 
-        <SectionCard
-          icon={<Target size={18} />}
-          title="Comercial"
-          tone="bg-emerald-50 text-emerald-700"
-        >
+        <SectionCard icon={<Target size={18} />} title="Comercial">
           <MetricLine label="Orçamentos abertos" value={openBudgetsCount} />
           <MetricLine
             label="Valor oportunidade"
             value={formatCurrency(openBudgetRevenue)}
           />
-          <MetricLine
-            label="Ticket médio"
-            value={formatCurrency(averageTicket)}
-          />
-          <MetricLine
-            label="Conversão"
-            value={`${conversionProjection}%`}
-          />
+          <MetricLine label="Ticket médio" value={formatCurrency(averageTicket)} />
+          <MetricLine label="Conversão" value={`${conversionProjection}%`} />
           <MetricLine
             label="Campanhas"
             value={formatCurrency(campaignRevenueProjection)}
           />
         </SectionCard>
 
-        <SectionCard
-          icon={<Megaphone size={18} />}
-          title="Marketing"
-          tone="bg-amber-50 text-amber-700"
-        >
+        <SectionCard icon={<Megaphone size={18} />} title="Marketing">
           <MetricLine
             label="Maior faturamento"
             value={bestSource?.source || "Sem dados"}
           />
-
           <MetricLine
             label="Receita origem"
             value={formatCurrency(bestSource?.confirmedRevenue || 0)}
           />
-
           <MetricLine
             label="Melhor conversão"
             value={
@@ -150,71 +131,57 @@ export default function ExecutiveConversionCenter({
                 : "Sem dados"
             }
           />
-
           <MetricLine
             label="Canal eficiente"
             value={bestConversionSource?.source || "Sem dados"}
           />
-
-          <MetricLine
-            label="Pacientes região"
-            value={outsidePatients}
-          />
-
-          <MetricLine
-            label="Origem preenchida"
-            value={`${originCoverage}%`}
-          />
+          <MetricLine label="Pacientes região" value={outsidePatients} />
+          <MetricLine label="Origem preenchida" value={`${originCoverage}%`} />
         </SectionCard>
       </div>
 
-      <div className="mt-5 rounded-3xl border border-cyan-100 bg-cyan-50 p-4">
+      <div className="mt-5 rounded-3xl border border-[var(--clinic-border)] bg-[var(--clinic-primary-soft)] p-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-sm font-black text-cyan-800">
+            <p className="text-sm font-black text-[var(--clinic-primary-dark)]">
               Recomendação executiva
             </p>
 
-            <p className="mt-1 text-sm leading-6 text-cyan-700">
+            <p className="mt-1 text-sm leading-6 text-[var(--clinic-primary-dark)]">
               Priorize pacientes quentes, orçamentos em aberto e campanhas com melhor conversão.
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-black text-cyan-700">
+          <div className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-black text-[var(--clinic-primary)] shadow-sm">
             <div className="flex items-center justify-center gap-2">
               <TrendingUp size={18} />
               {originCoverage}%
             </div>
 
-            <p className="mt-1 text-xs font-bold text-slate-500">
+            <p className="mt-1 text-xs font-bold text-[var(--clinic-muted)]">
               dos pacientes com origem definida
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 function SectionCard({
   icon,
   title,
-  tone,
   children,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
-  tone: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <div className={`rounded-3xl p-4 ${tone}`}>
-      <div className="mb-4 flex items-center gap-2">
+    <div className="premium-card-soft p-4">
+      <div className="mb-4 flex items-center gap-2 text-[var(--clinic-primary)]">
         {icon}
-
-        <p className="text-xs font-black uppercase tracking-widest">
-          {title}
-        </p>
+        <p className="text-xs font-black uppercase tracking-widest">{title}</p>
       </div>
 
       <div className="space-y-2">{children}</div>
@@ -230,12 +197,12 @@ function MetricLine({
   value: string | number;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/80 px-3 py-3">
-      <span className="text-sm font-bold text-slate-600">
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-3 ring-1 ring-[var(--clinic-border)]">
+      <span className="text-sm font-bold text-[var(--clinic-muted)]">
         {label}
       </span>
 
-      <span className="text-sm font-black text-slate-800 text-right">
+      <span className="text-right text-sm font-black text-[var(--clinic-text)]">
         {value}
       </span>
     </div>

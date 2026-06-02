@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Brain, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type SmartGoalPoint = {
   key: string;
@@ -31,6 +32,12 @@ function formatCurrency(value: number) {
   });
 }
 
+function getRiskClass(riskLevel: string) {
+  if (riskLevel === "Alto") return "text-rose-600";
+  if (riskLevel === "Médio") return "text-amber-600";
+  return "text-emerald-600";
+}
+
 export default function ExecutiveForecast({
   suggestedMonthlyGoal,
   suggestedAnnualGoal,
@@ -46,149 +53,148 @@ export default function ExecutiveForecast({
   monthlyGoal,
 }: ExecutiveForecastProps) {
   return (
-    <div className="mb-6 rounded-3xl border border-cyan-100 bg-gradient-to-br from-white to-cyan-50 p-5 shadow-sm">
+    <section className="premium-card-lg mb-6 p-5 md:p-6">
       <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-700 shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[var(--clinic-primary-soft)] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[var(--clinic-primary-dark)] ring-1 ring-[var(--clinic-border)]">
             <Brain size={14} />
             Meta Inteligente Automática
           </div>
 
-          <h2 className="mt-3 text-xl font-black text-slate-800">
+          <h2 className="mt-3 text-xl font-black tracking-tight text-[var(--clinic-text)]">
             Sugestão preditiva da clínica
           </h2>
 
-          <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
+          <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--clinic-muted)]">
             {executiveRecommendation}
           </p>
         </div>
 
-        <Link
-          href="/configuracoes/metas"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#239d9a] px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-[#1f8f8c]"
-        >
-          <Target size={17} />
-          Aplicar nas metas
-        </Link>
+        <Button asChild>
+          <Link href="/configuracoes/metas">
+            <Target size={17} />
+            Aplicar nas metas
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Meta mensal sugerida
-          </p>
-          <p className="mt-2 text-2xl font-black text-[#239d9a]">
-            {formatCurrency(suggestedMonthlyGoal)}
-          </p>
-        </div>
+        <MetricCard
+          label="Meta mensal sugerida"
+          value={formatCurrency(suggestedMonthlyGoal)}
+          valueClassName="text-[var(--clinic-primary)]"
+        />
 
-        <div className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Meta anual sugerida
-          </p>
-          <p className="mt-2 text-2xl font-black text-emerald-600">
-            {formatCurrency(suggestedAnnualGoal)}
-          </p>
-        </div>
+        <MetricCard
+          label="Meta anual sugerida"
+          value={formatCurrency(suggestedAnnualGoal)}
+          valueClassName="text-emerald-600"
+        />
 
-        <div className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Tendência
-          </p>
-          <p className="mt-2 text-2xl font-black text-slate-800">
-            {trend}
-          </p>
-          <p className="mt-1 text-xs font-bold text-slate-400">
-            {growthRate}% vs. mês anterior
-          </p>
-        </div>
+        <MetricCard
+          label="Tendência"
+          value={trend}
+          description={`${growthRate}% vs. mês anterior`}
+        />
 
-        <div className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Confiança da IA
-          </p>
-          <p className="mt-2 text-2xl font-black text-blue-600">
-            {confidence}
-          </p>
-        </div>
+        <MetricCard
+          label="Confiança da IA"
+          value={confidence}
+          valueClassName="text-blue-600"
+        />
 
-        <div className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Risco
-          </p>
-          <p
-            className={`mt-2 text-2xl font-black ${
-              riskLevel === "Alto"
-                ? "text-rose-600"
-                : riskLevel === "Médio"
-                  ? "text-amber-600"
-                  : "text-emerald-600"
-            }`}
-          >
-            {riskLevel}
-          </p>
-        </div>
+        <MetricCard
+          label="Risco"
+          value={riskLevel}
+          valueClassName={getRiskClass(riskLevel)}
+        />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="rounded-3xl border border-white bg-white/80 p-5">
+        <div className="premium-card-soft p-5">
           <p className="text-xs font-black uppercase tracking-widest text-amber-600">
             Atenção executiva
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-[var(--clinic-muted)]">
             {riskMessage}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white/80 p-5">
+        <div className="premium-card-soft p-5">
           <p className="text-xs font-black uppercase tracking-widest text-emerald-600">
             Oportunidade comercial
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-[var(--clinic-muted)]">
             {opportunityMessage}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 rounded-3xl bg-white/80 p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+      <div className="premium-card-soft mt-4 p-5">
+        <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs font-black uppercase tracking-widest text-[var(--clinic-muted)]">
             Histórico usado na previsão
           </p>
-          <p className="text-xs font-bold text-slate-400">
+          <p className="text-xs font-bold text-[var(--clinic-muted)]">
             Média 3 meses: {formatCurrency(lastThreeMonthsAverage)}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {monthlySeries.map((point) => (
-            <div
-              key={point.key}
-              className="rounded-2xl bg-slate-50 p-3"
-            >
-              <p className="text-xs font-black uppercase text-slate-400">
-                {point.label}
-              </p>
-              <p className="mt-1 text-sm font-black text-slate-700">
-                {formatCurrency(point.revenue)}
-              </p>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-[#239d9a]"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      monthlyGoal > 0
-                        ? Math.round((point.revenue / monthlyGoal) * 100)
-                        : 0
-                    )}%`,
-                  }}
-                />
+          {monthlySeries.map((point) => {
+            const progress = Math.min(
+              100,
+              monthlyGoal > 0
+                ? Math.round((point.revenue / monthlyGoal) * 100)
+                : 0,
+            );
+
+            return (
+              <div key={point.key} className="rounded-2xl bg-white p-3 ring-1 ring-[var(--clinic-border)]">
+                <p className="text-xs font-black uppercase text-[var(--clinic-muted)]">
+                  {point.label}
+                </p>
+                <p className="mt-1 text-sm font-black text-[var(--clinic-text)]">
+                  {formatCurrency(point.revenue)}
+                </p>
+
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--clinic-border)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--clinic-primary)]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+    </section>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  description,
+  valueClassName = "text-[var(--clinic-text)]",
+}: {
+  label: string;
+  value: string;
+  description?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="premium-kpi min-h-[116px]">
+      <p className="premium-kpi-label">{label}</p>
+      <p className={`mt-2 text-2xl font-black tracking-tight ${valueClassName}`}>
+        {value}
+      </p>
+      {description && (
+        <p className="mt-1 text-xs font-bold text-[var(--clinic-muted)]">
+          {description}
+        </p>
+      )}
     </div>
   );
 }
