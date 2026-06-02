@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertCircle, BarChart3 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 
 type DashboardAlertsProps = {
   isAdminUser: boolean;
@@ -19,63 +18,65 @@ export default function DashboardAlerts({
   if (!isAdminUser) return null;
 
   return (
-    <>
+    <div className="space-y-5">
       {vencidoEmAberto > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-amber-100 p-2.5 text-amber-700">
-              <AlertCircle size={18} />
-            </div>
-
-            <div>
-              <div className="font-bold text-amber-800">
-                Atenção: existem parcelas vencidas em aberto
+        <section className="rounded-[24px] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="rounded-[18px] bg-amber-100 p-3 text-amber-700">
+                <AlertCircle size={22} />
               </div>
 
-              <div className="text-xs text-amber-700">
-                {parcelasVencidas} parcela(s) vencida(s) • Total vencido:{" "}
-                {formatCurrency(vencidoEmAberto)}
+              <div>
+                <h3 className="text-[18px] font-black text-amber-900">
+                  Atenção: existem parcelas vencidas em aberto
+                </h3>
+
+                <p className="mt-1 text-sm font-semibold text-amber-700">
+                  {parcelasVencidas} parcela(s) vencida(s) • Total vencido:{" "}
+                  {formatCurrency(vencidoEmAberto)}
+                </p>
               </div>
             </div>
+
+            <a
+              href="/financeiro"
+              className="rounded-[18px] bg-amber-600 px-5 py-3 text-sm font-black text-white transition hover:bg-amber-700"
+            >
+              Abrir financeiro
+            </a>
           </div>
-
-          <a
-            href="/financeiro"
-            className="rounded-lg bg-amber-600 px-3 py-2 text-center text-xs font-bold text-white hover:bg-amber-700"
-          >
-            Abrir financeiro
-          </a>
-        </div>
+        </section>
       )}
 
-      <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-        <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-[#eefafa] p-3 text-[#239d9a]">
-              <BarChart3 size={20} />
+      <section className="premium-card-lg overflow-hidden">
+        <div className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="premium-dashboard-icon h-14 w-14 rounded-[18px]">
+              <BarChart3 size={24} />
             </div>
 
             <div>
-              <div className="text-sm font-black text-slate-800">
+              <h3 className="text-[22px] font-black text-[var(--clinic-text)]">
                 Dashboard principal focado na operação
-              </div>
+              </h3>
 
-              <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--clinic-muted)]">
                 Use esta tela para acompanhar o dia a dia. Para análise profunda,
-                metas, forecast, marketing e BI completo, acesse o Dashboard
+                metas, forecast, marketing e BI completo, utilize o Dashboard
                 Executivo.
-              </div>
+              </p>
             </div>
           </div>
 
           <a
             href="/dashboard/executivo"
-            className="inline-flex items-center justify-center rounded-xl bg-[#239d9a] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#1f8d8a]"
+            className="inline-flex items-center justify-center rounded-[18px] bg-[var(--clinic-primary)] px-5 py-3 text-sm font-black text-white shadow-lg transition hover:opacity-90"
           >
             Abrir BI Executivo
           </a>
-        </CardContent>
-      </Card>
-    </>
+        </div>
+      </section>
+    </div>
   );
 }

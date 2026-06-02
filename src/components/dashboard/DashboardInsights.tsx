@@ -1,13 +1,6 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Zap } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 type DashboardInsight = {
   id: string;
@@ -24,7 +17,7 @@ type DashboardInsightsProps = {
 
 function getInsightClasses(level: DashboardInsight["level"]) {
   if (level === "danger") {
-    return "border-red-100 bg-red-50 text-red-700";
+    return "border-rose-100 bg-rose-50 text-rose-700";
   }
 
   if (level === "warning") {
@@ -42,55 +35,53 @@ export default function DashboardInsights({
   insights,
 }: DashboardInsightsProps) {
   return (
-    <Card className="rounded-2xl border border-[#d9eeee] bg-white shadow-sm overflow-hidden">
-      <CardHeader className="px-5 pt-5 pb-3">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-lg font-bold text-slate-800">
-              Indicadores inteligentes
-            </CardTitle>
+    <section className="premium-card-lg overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[var(--clinic-border)] px-6 py-5">
+        <div>
+          <h2 className="text-[24px] font-black tracking-[-0.03em] text-[var(--clinic-text)]">
+            Indicadores inteligentes
+          </h2>
 
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
-              Alertas automáticos para decisões rápidas
-            </CardDescription>
-          </div>
-
-          <div className="rounded-xl bg-[#eefafa] p-2.5 text-[#239d9a]">
-            <Zap size={18} />
-          </div>
+          <p className="mt-1 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--clinic-muted)]">
+            Alertas automáticos para decisões rápidas
+          </p>
         </div>
-      </CardHeader>
 
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
+        <div className="premium-dashboard-icon h-12 w-12 rounded-[18px]">
+          <Zap size={22} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 xl:grid-cols-4">
         {insights.map((item) => {
           const classes = getInsightClasses(item.level);
 
           return (
             <div
               key={item.id}
-              className={`rounded-xl border p-3 ${classes}`}
+              className={`rounded-[22px] border p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${classes}`}
             >
               <div className="flex items-start gap-3">
-                <div className="mt-0.5">
+                <div className="mt-1">
                   {item.level === "success" ? (
                     <CheckCircle2 size={18} />
                   ) : (
-                    <AlertTriangle size={16} />
+                    <AlertTriangle size={18} />
                   )}
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-sm font-black leading-tight">
+                  <h3 className="text-sm font-black leading-tight">
                     {item.title}
-                  </div>
+                  </h3>
 
-                  <div className="mt-1 text-xs font-medium opacity-90">
+                  <p className="mt-2 text-xs font-medium leading-5 opacity-90">
                     {item.description}
-                  </div>
+                  </p>
 
                   <a
                     href={item.href}
-                    className="mt-2 inline-flex rounded-lg bg-white/70 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest hover:bg-white"
+                    className="mt-3 inline-flex rounded-xl bg-white/80 px-3 py-2 text-[10px] font-black uppercase tracking-widest shadow-sm transition hover:bg-white"
                   >
                     {item.action}
                   </a>
@@ -99,7 +90,7 @@ export default function DashboardInsights({
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
