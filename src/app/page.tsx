@@ -69,6 +69,17 @@ type FinancialRecord = {
   type?: string | null;
 };
 
+type PaymentTransaction = {
+  id: string;
+  financial_record_id: string;
+  patient_id?: string | null;
+  amount?: number | string | null;
+  payment_method?: string | null;
+  receipt_type?: string | null;
+  received_at?: string | null;
+  created_at?: string | null;
+};
+
 type Appointment = {
   id: string;
   patient_id?: string | null;
@@ -379,6 +390,7 @@ const statusColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -396,6 +408,7 @@ export default function Dashboard() {
 
         const [
           { data: financial },
+          { data: paymentsData },
           { data: expensesData },
           { data: appointmentsData },
           { data: patientsData },
@@ -403,6 +416,11 @@ export default function Dashboard() {
             supabaseNoSchemaCache
               .from("financial_records")
               .select("*")
+              .order("created_at", { ascending: false }),
+            supabaseNoSchemaCache
+              .from("payment_transactions")
+              .select("*")
+              .order("received_at", { ascending: false })
               .order("created_at", { ascending: false }),
             supabaseNoSchemaCache
               .from("expenses")
@@ -420,6 +438,7 @@ export default function Dashboard() {
           ]);
 
         setFinancialRecords((financial || []) as FinancialRecord[]);
+        setPaymentTransactions((paymentsData || []) as PaymentTransaction[]);
         setExpenses((expensesData || []) as Expense[]);
         setAppointments((appointmentsData || []) as Appointment[]);
         setPatients((patientsData || []) as Patient[]);
@@ -444,11 +463,11 @@ export default function Dashboard() {
   const periodLabel = getPeriodLabel(period);
   const periodDescription = getPeriodDescription(period);
 
-  const financialRecordsInPeriod = useMemo(() => {
-    return financialRecords.filter((record) =>
-      isWithinRange(record.paid_at || record.created_at, periodRange)
+  const paymentTransactionsInPeriod = useMemo(() => {
+    return paymentTransactions.filter((payment) =>
+      isWithinRange(payment.received_at || payment.created_at, periodRange)
     );
-  }, [financialRecords, periodRange]);
+  }, [paymentTransactions, periodRange]);
 
   const openFinancialRecordsDueInPeriod = useMemo(() => {
     return financialRecords.filter((record) => {
@@ -475,9 +494,8 @@ export default function Dashboard() {
   const stats: DashboardStats = useMemo(() => {
     const todayKey = toDateKey(new Date());
 
-    const recebidoPeriodo = financialRecordsInPeriod.reduce((acc, record) => {
-      const paid = parseMoney(record.paid_amount);
-      return paid > 0 ? acc + paid : acc;
+    const recebidoPeriodo = paymentTransactionsInPeriod.reduce((acc, payment) => {
+      return acc + parseMoney(payment.amount);
     }, 0);
 
     const despesasPeriodo = expensesInPeriod.reduce((acc, expense) => {
@@ -539,12 +557,9 @@ export default function Dashboard() {
         : 0;
 
     const pacientesComPagamentoNoPeriodo = new Set(
-      financialRecordsInPeriod
-        .filter((record) => {
-          const paid = parseMoney(record.paid_amount);
-          return paid > 0 && record.patient_id;
-        })
-        .map((record) => String(record.patient_id))
+      paymentTransactionsInPeriod
+        .filter((payment) => parseMoney(payment.amount) > 0 && payment.patient_id)
+        .map((payment) => String(payment.patient_id))
     );
 
     const ticketMedio =
@@ -573,7 +588,7 @@ export default function Dashboard() {
     };
   }, [
     financialRecords,
-    financialRecordsInPeriod,
+    paymentTransactionsInPeriod,
     expensesInPeriod,
     appointments,
     appointmentsInPeriod,
@@ -593,10 +608,11 @@ export default function Dashboard() {
       date.setDate(sunday.getDate() + index);
       const key = toDateKey(date);
 
-      const amount = financialRecords.reduce((acc, record) => {
-        const paid = parseMoney(record.paid_amount);
-        const paidAt = record.paid_at || record.created_at;
-        if (paid > 0 && paidAt?.slice(0, 10) === key) return acc + paid;
+      const amount = paymentTransactions.reduce((acc, payment) => {
+        const receivedAt = payment.received_at || payment.created_at;
+        if (receivedAt?.slice(0, 10) === key) {
+          return acc + parseMoney(payment.amount);
+        }
         return acc;
       }, 0);
 
@@ -605,7 +621,7 @@ export default function Dashboard() {
         amount,
       };
     });
-  }, [financialRecords]);
+  }, [paymentTransactions]);
 
   const monthlyRevenue = useMemo(() => {
     const base = new Date();
@@ -614,18 +630,16 @@ export default function Dashboard() {
       const date = new Date(base.getFullYear(), base.getMonth() - index, 1);
       const month = date.toLocaleDateString("pt-BR", { month: "short" });
 
-      const amount = financialRecords.reduce((acc, record) => {
-        const paid = parseMoney(record.paid_amount);
-        const paidAt = record.paid_at || record.created_at;
-        if (!paidAt) return acc;
+      const amount = paymentTransactions.reduce((acc, payment) => {
+        const receivedAt = payment.received_at || payment.created_at;
+        if (!receivedAt) return acc;
 
-        const paidDate = new Date(paidAt);
+        const receivedDate = new Date(receivedAt);
         if (
-          paid > 0 &&
-          paidDate.getFullYear() === date.getFullYear() &&
-          paidDate.getMonth() === date.getMonth()
+          receivedDate.getFullYear() === date.getFullYear() &&
+          receivedDate.getMonth() === date.getMonth()
         ) {
-          return acc + paid;
+          return acc + parseMoney(payment.amount);
         }
 
         return acc;
@@ -636,24 +650,24 @@ export default function Dashboard() {
         amount,
       };
     });
-  }, [financialRecords]);
+  }, [paymentTransactions]);
 
   const paymentMethods = useMemo(() => {
     const grouped: Record<string, number> = {};
 
-    financialRecordsInPeriod.forEach((record) => {
-      const paid = parseMoney(record.paid_amount);
-      if (paid <= 0) return;
+    paymentTransactionsInPeriod.forEach((payment) => {
+      const amount = parseMoney(payment.amount);
+      if (amount <= 0) return;
 
-      const label = paymentMethodLabel(record.payment_method);
-      grouped[label] = (grouped[label] || 0) + paid;
+      const label = paymentMethodLabel(payment.payment_method);
+      grouped[label] = (grouped[label] || 0) + amount;
     });
 
     return Object.entries(grouped)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
-  }, [financialRecordsInPeriod]);
+  }, [paymentTransactionsInPeriod]);
 
   const todayAppointments = useMemo(() => {
     const todayKey = toDateKey(new Date());
@@ -691,6 +705,10 @@ export default function Dashboard() {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 6);
   }, [financialRecords, patients]);
+
+  const recordById = useMemo(() => {
+    return new Map(financialRecords.map((record) => [String(record.id), record]));
+  }, [financialRecords]);
 
   const intelligentInsights = useMemo(() => {
     const now = new Date();
@@ -789,19 +807,19 @@ export default function Dashboard() {
   const productionByProcedure = useMemo(() => {
     const grouped: Record<string, { name: string; amount: number; count: number }> = {};
 
-    financialRecords.forEach((record) => {
-      const date = record.paid_at || record.created_at;
-      if (!isWithinRange(date, periodRange)) return;
+    paymentTransactionsInPeriod.forEach((payment) => {
+      const record = recordById.get(String(payment.financial_record_id));
 
       const label = normalizeLabel(
-        record.procedure_name ||
-          record.treatment_name ||
-          record.category ||
-          record.description ||
+        record?.procedure_name ||
+          record?.treatment_name ||
+          record?.category ||
+          record?.description ||
           "Procedimento não informado"
       );
 
-      const amount = parseMoney(record.paid_amount) || parseMoney(record.amount);
+      const amount = parseMoney(payment.amount);
+      if (amount <= 0) return;
 
       if (!grouped[label]) {
         grouped[label] = { name: label, amount: 0, count: 0 };
@@ -814,7 +832,7 @@ export default function Dashboard() {
     return Object.values(grouped)
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 6);
-  }, [financialRecords, periodRange]);
+  }, [paymentTransactionsInPeriod, recordById]);
 
   const appointmentsByWeekday = useMemo(() => {
     const grouped = weekLabels.map((name) => ({ name, total: 0 }));
@@ -843,11 +861,10 @@ export default function Dashboard() {
   }, [appointmentsInPeriod]);
 
   const executiveComparison = useMemo(() => {
-    const receivedPreviousPeriod = financialRecords.reduce((acc, record) => {
-      const paid = parseMoney(record.paid_amount);
-      const paidAt = record.paid_at || record.created_at;
-      if (paid <= 0 || !isWithinRange(paidAt, previousPeriodRange)) return acc;
-      return acc + paid;
+    const receivedPreviousPeriod = paymentTransactions.reduce((acc, payment) => {
+      const receivedAt = payment.received_at || payment.created_at;
+      if (!isWithinRange(receivedAt, previousPeriodRange)) return acc;
+      return acc + parseMoney(payment.amount);
     }, 0);
 
     const newPatientsPreviousPeriod = patients.filter((patient) =>
@@ -866,7 +883,7 @@ export default function Dashboard() {
       noShowsChange: calculatePercentChange(stats.faltasMes, noShowsPreviousPeriod),
     };
   }, [
-    financialRecords,
+    paymentTransactions,
     patients,
     appointments,
     previousPeriodRange,
