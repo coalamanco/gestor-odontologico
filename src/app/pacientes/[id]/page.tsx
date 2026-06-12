@@ -5,10 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { createClinicalFollowupsForProtocol } from "@/lib/clinicalCRM";
-import {
-  calculatePatientCrmScore,
-  normalizePatientSource,
-} from "@/lib/crmScore";
 
 type ReceiptType = "nenhum" | "simples" | "imposto_renda";
 type PaymentMethod =
@@ -783,6 +779,28 @@ type ClinicalFollowup = {
   created_at?: string | null;
 };
 
+type PatientSessionChecklist = {
+  id: string;
+  patient_id: string;
+  title?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  completed_at?: string | null;
+};
+
+type PatientSessionChecklistItem = {
+  id: string;
+  checklist_id: string;
+  patient_id: string;
+  patient_treatment_id?: string | null;
+  task: string;
+  priority?: string | null;
+  completed?: boolean | null;
+  created_at?: string | null;
+  completed_at?: string | null;
+};
+
 const TABS: { id: TabId; label: string }[] = [
   { id: "sobre", label: "Sobre" },
   { id: "tratamentos", label: "Tratamentos" },
@@ -1293,6 +1311,12 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [patientFiles, setPatientFiles] = useState<PatientFile[]>([]);
   const [clinicalFollowups, setClinicalFollowups] = useState<ClinicalFollowup[]>([]);
   const [updatingClinicalFollowup, setUpdatingClinicalFollowup] = useState<string | null>(null);
+  const [sessionChecklist, setSessionChecklist] = useState<PatientSessionChecklist | null>(null);
+  const [sessionChecklistItems, setSessionChecklistItems] = useState<PatientSessionChecklistItem[]>([]);
+  const [newChecklistTask, setNewChecklistTask] = useState("");
+  const [newChecklistPriority, setNewChecklistPriority] = useState<"alta" | "media" | "baixa">("media");
+  const [submittingChecklistTask, setSubmittingChecklistTask] = useState(false);
+  const [updatingChecklistItemId, setUpdatingChecklistItemId] = useState<string | null>(null);
   const [uploadingPatientFile, setUploadingPatientFile] = useState(false);
   const [selectedPatientFile, setSelectedPatientFile] =
     useState<PatientFile | null>(null);
@@ -1637,6 +1661,31 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
       if (clinicalFollowupsError) throw clinicalFollowupsError;
 
+      const { data: checklistData, error: checklistError } = await supabase
+        .from("patient_session_checklists")
+        .select("*")
+        .eq("patient_id", params.id)
+        .eq("status", "ativo")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (checklistError) throw checklistError;
+
+      const activeChecklist = (checklistData?.[0] || null) as PatientSessionChecklist | null;
+      let checklistItems: PatientSessionChecklistItem[] = [];
+
+      if (activeChecklist?.id) {
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("patient_session_checklist_items")
+          .select("*")
+          .eq("checklist_id", activeChecklist.id)
+          .order("completed", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (itemsError) throw itemsError;
+        checklistItems = (itemsData || []) as PatientSessionChecklistItem[];
+      }
+
       const { data: auditData, error: auditError } = await supabase
         .from("audit_logs")
         .select(
@@ -1687,6 +1736,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       setClinicalNotes((cn || []) as ClinicalNote[]);
       setPatientFiles((pf || []) as PatientFile[]);
       setClinicalFollowups((cf || []) as ClinicalFollowup[]);
+      setSessionChecklist(activeChecklist);
+      setSessionChecklistItems(checklistItems);
       setAuditLogs(patientAuditLogs);
     } catch (error: any) {
       alert("Erro ao carregar prontuário: " + error.message);
@@ -4055,6 +4106,10 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
 
   const recentAppointments = appointments.slice(0, 5);
   const latestClinicalNote = clinicalNotes.length > 0 ? clinicalNotes[0] : null;
+  const pendingChecklistItems = sessionChecklistItems.filter((item) => !item.completed);
+  const nextAppointment = [...appointments]
+    .filter((appointment) => appointment.date && new Date(`${appointment.date}T12:00:00`) >= new Date(new Date().toDateString()))
+    .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")))[0] || null;
 
   const prescriptionNotes = useMemo(() => {
     return clinicalNotes
@@ -4140,6 +4195,124 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
       alert("Erro ao concluir acompanhamento: " + error.message);
     } finally {
       setUpdatingClinicalFollowup(null);
+    }
+  };
+
+  const checklistPriorityLabel = (priority?: string | null) => {
+    if (priority === "alta") return "Alta";
+    if (priority === "baixa") return "Baixa";
+    return "Média";
+  };
+
+  const checklistPriorityClass = (priority?: string | null) => {
+    if (priority === "alta") return "bg-rose-50 text-rose-700 border-rose-100";
+    if (priority === "baixa") return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    return "bg-amber-50 text-amber-700 border-amber-100";
+  };
+
+  const getOrCreateActiveChecklist = async () => {
+    if (sessionChecklist?.id) return sessionChecklist;
+
+    const { data, error } = await supabase
+      .from("patient_session_checklists")
+      .insert({
+        patient_id: params.id,
+        title: "Próxima sessão",
+        status: "ativo",
+      })
+      .select("*")
+      .single();
+
+    if (error) throw error;
+
+    const checklist = data as PatientSessionChecklist;
+    setSessionChecklist(checklist);
+    return checklist;
+  };
+
+  const addChecklistItem = async () => {
+    const task = newChecklistTask.trim();
+
+    if (!task) {
+      alert("Digite a tarefa da próxima sessão.");
+      return;
+    }
+
+    try {
+      setSubmittingChecklistTask(true);
+
+      const checklist = await getOrCreateActiveChecklist();
+
+      const { error } = await supabase
+        .from("patient_session_checklist_items")
+        .insert({
+          checklist_id: checklist.id,
+          patient_id: params.id,
+          task,
+          priority: newChecklistPriority,
+          completed: false,
+        });
+
+      if (error) throw error;
+
+      setNewChecklistTask("");
+      setNewChecklistPriority("media");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao adicionar tarefa: " + error.message);
+    } finally {
+      setSubmittingChecklistTask(false);
+    }
+  };
+
+  const toggleChecklistItem = async (item: PatientSessionChecklistItem) => {
+    try {
+      setUpdatingChecklistItemId(item.id);
+
+      const nextCompleted = !item.completed;
+
+      const { error } = await supabase
+        .from("patient_session_checklist_items")
+        .update({
+          completed: nextCompleted,
+          completed_at: nextCompleted ? new Date().toISOString() : null,
+        })
+        .eq("id", item.id)
+        .eq("patient_id", params.id);
+
+      if (error) throw error;
+
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao atualizar tarefa: " + error.message);
+    } finally {
+      setUpdatingChecklistItemId(null);
+    }
+  };
+
+  const deleteChecklistItem = async (item: PatientSessionChecklistItem) => {
+    const confirmed = window.confirm(
+      `Deseja excluir esta tarefa da próxima sessão?\n\n${item.task}`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingChecklistItemId(item.id);
+
+      const { error } = await supabase
+        .from("patient_session_checklist_items")
+        .delete()
+        .eq("id", item.id)
+        .eq("patient_id", params.id);
+
+      if (error) throw error;
+
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao excluir tarefa: " + error.message);
+    } finally {
+      setUpdatingChecklistItemId(null);
     }
   };
 
@@ -4405,93 +4578,6 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
     const pago = parseMoney(record.paid_amount);
     return acc + Math.max(0, total - pago);
   }, 0);
-
-  const smartInsights = useMemo(() => {
-    const result = calculatePatientCrmScore({
-      patient: {
-        id: patient?.id,
-        name: patient?.name,
-        patient_source:
-          patient?.patient_source || patient?.source || patient?.origin || null,
-        created_at: patient?.created_at,
-      },
-
-      appointments: appointments.map((appointment) => ({
-        id: appointment.id,
-        patient_id: appointment.patient_id,
-        date: appointment.date,
-        start_time: appointment.start_time,
-        status: appointment.status,
-        created_at: appointment.created_at,
-      })),
-
-      budgets: budgets.map((budget) => ({
-        id: budget.id,
-        patient_id: budget.patient_id,
-        status: budget.status,
-        total: budget.total,
-        created_at: budget.created_at,
-        approved_at: budget.approved_at,
-      })),
-
-      financialRecords: financialRecords.map((record) => ({
-        id: record.id,
-        patient_id: record.patient_id,
-        amount: record.amount,
-        paid_amount: record.paid_amount,
-        status: record.status,
-        created_at: record.created_at,
-        paid_at: record.paid_at,
-      })),
-
-      treatments: patientTreatments.map((treatment) => ({
-        id: treatment.id,
-        patient_id: treatment.patient_id,
-        status: treatment.status,
-        total: treatment.total,
-        unit_price: treatment.unit_price,
-        created_at: treatment.created_at,
-        completed_at: treatment.completed_at,
-      })),
-
-      clinicalNotes: clinicalNotes.map((note) => ({
-        id: note.id,
-        patient_id: note.patient_id,
-        title: note.title,
-        content: note.content,
-        created_at: note.created_at,
-      })),
-    });
-
-    return {
-      patientName: patient?.name || "Paciente",
-
-      source: normalizePatientSource(
-        patient?.patient_source || patient?.source || patient?.origin || null,
-      ),
-
-      vipLevel: result.vipLevel,
-
-      closingChance: result.closingChance,
-
-      abandonmentRisk: result.abandonmentRisk,
-
-      financialPotential: result.financialPotential,
-
-      lastCRMContact: result.lastCRMContact,
-
-      commercialScore: result.score,
-
-      bestApproach: result.bestApproach,
-    };
-  }, [
-    patient,
-    appointments,
-    budgets,
-    financialRecords,
-    patientTreatments,
-    clinicalNotes,
-  ]);
 
   const phoneDigits = normalizePhone(patient?.phone);
   const whatsappHref = phoneDigits
@@ -5010,101 +5096,175 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-base font-black text-slate-900">
-                      Inteligência comercial
+                      📌 Checklist da Próxima Sessão
                     </h2>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      Resumo automático sem repetir os dados do cabeçalho.
+                      Pendências clínicas para a próxima consulta, sem misturar com a evolução do dia.
                     </p>
                   </div>
 
                   <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
-                    IA
+                    {pendingChecklistItems.length} pendente(s)
+                  </span>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {sessionChecklistItems.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[#d8eeee] bg-[#fbffff] p-4 text-sm text-slate-500">
+                      Nenhuma tarefa cadastrada para a próxima sessão.
+                    </div>
+                  ) : (
+                    sessionChecklistItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`flex items-start gap-3 rounded-2xl border p-3 ${
+                          item.completed
+                            ? "border-slate-100 bg-slate-50 text-slate-400"
+                            : "border-[#d8eeee] bg-[#fbffff] text-slate-800"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleChecklistItem(item)}
+                          disabled={updatingChecklistItemId === item.id}
+                          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm font-black ${
+                            item.completed
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-[#9ddfdd] bg-white text-[#239d9a]"
+                          }`}
+                        >
+                          {item.completed ? "✓" : ""}
+                        </button>
+
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className={`whitespace-pre-wrap text-sm font-semibold leading-5 ${
+                              item.completed ? "line-through" : ""
+                            }`}
+                          >
+                            {item.task}
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${checklistPriorityClass(
+                                item.priority,
+                              )}`}
+                            >
+                              {checklistPriorityLabel(item.priority)}
+                            </span>
+
+                            {item.completed_at && (
+                              <span className="text-[11px] font-medium text-slate-400">
+                                Concluída em {new Date(item.completed_at).toLocaleDateString("pt-BR")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteChecklistItem(item)}
+                          disabled={updatingChecklistItemId === item.id}
+                          className="rounded-xl border border-rose-100 bg-white px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-[#d8eeee] bg-[#f8ffff] p-3">
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400">
+                    Nova tarefa
+                  </label>
+
+                  <textarea
+                    value={newChecklistTask}
+                    onChange={(e) => setNewChecklistTask(e.target.value)}
+                    placeholder="Ex.: conferir adaptação do provisório, fotografar para laboratório, solicitar RX..."
+                    className="mt-2 min-h-[82px] w-full rounded-2xl border border-[#d8eeee] bg-white p-3 text-sm outline-none focus:border-[#84d5d3]"
+                  />
+
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <select
+                      value={newChecklistPriority}
+                      onChange={(e) =>
+                        setNewChecklistPriority(e.target.value as "alta" | "media" | "baixa")
+                      }
+                      className="rounded-2xl border border-[#d8eeee] bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none"
+                    >
+                      <option value="alta">Prioridade alta</option>
+                      <option value="media">Prioridade média</option>
+                      <option value="baixa">Prioridade baixa</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={addChecklistItem}
+                      disabled={submittingChecklistTask}
+                      className="rounded-2xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-4 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                    >
+                      {submittingChecklistTask ? "Salvando..." : "+ Adicionar tarefa"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">
+                      Resumo clínico
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Visão rápida para o atendimento.
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-[#e8f7f6] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#239d9a]">
+                    Clínico
                   </span>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Fechamento
+                      Tratamentos ativos
                     </div>
                     <div className="mt-1 text-lg font-black text-slate-900">
-                      {smartInsights.closingChance}%
+                      {activeTreatments.length}
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Risco
+                      Finalizados
+                    </div>
+                    <div className="mt-1 text-lg font-black text-slate-900">
+                      {treatmentSummary.finalizados}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Saldo em aberto
                     </div>
                     <div className="mt-1 text-sm font-black text-slate-900">
-                      {smartInsights.abandonmentRisk}
+                      {formatCurrency(totalAbertoPaciente)}
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      VIP
+                      Próximo retorno
                     </div>
                     <div className="mt-1 text-sm font-black text-slate-900">
-                      {smartInsights.vipLevel}
+                      {nextAppointment?.date
+                        ? new Date(`${nextAppointment.date}T12:00:00`).toLocaleDateString("pt-BR")
+                        : "Sem retorno"}
                     </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Origem
-                    </div>
-                    <div className="mt-1 truncate text-sm font-black text-slate-900">
-                      {smartInsights.source}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        Score comercial
-                      </div>
-
-                      <div className="mt-2 flex items-end gap-2">
-                        <span className="text-4xl font-black text-[#239d9a]">
-                          {smartInsights.commercialScore}
-                        </span>
-
-                        <span className="pb-1 text-sm font-bold text-slate-400">
-                          /100
-                        </span>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`rounded-2xl px-4 py-2 text-sm font-black ${
-                        smartInsights.commercialScore >= 80
-                          ? "bg-emerald-100 text-emerald-700"
-                          : smartInsights.commercialScore >= 50
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-rose-100 text-rose-700"
-                      }`}
-                    >
-                      {smartInsights.commercialScore >= 80
-                        ? "Paciente quente"
-                        : smartInsights.commercialScore >= 50
-                          ? "Potencial moderado"
-                          : "Risco comercial"}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-[#d8eeee] bg-[#f8ffff] p-4">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Melhor abordagem
-                    </div>
-
-                    <p className="mt-2 text-sm leading-6 text-slate-700">
-                      {smartInsights.bestApproach}
-                    </p>
                   </div>
                 </div>
               </div>
