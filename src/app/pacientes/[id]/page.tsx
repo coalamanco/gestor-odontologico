@@ -686,6 +686,7 @@ const MEDICATION_LIBRARY: MedicationTemplate[] = [
 
 type TabId =
   | "sobre"
+  | "anamnese"
   | "tratamentos"
   | "agendamentos"
   | "orcamentos"
@@ -694,6 +695,37 @@ type TabId =
   | "linha_tempo"
   | "imagens_rx"
   | "documentos";
+
+
+type AnamnesisTemplate = {
+  id: string;
+  question?: string | null;
+  title?: string | null;
+  label?: string | null;
+  type?: string | null;
+  question_type?: string | null;
+  answer_type?: string | null;
+  input_type?: string | null;
+  options?: string[] | string | null;
+  category?: string | null;
+  is_active?: boolean | null;
+  active?: boolean | null;
+  created_at?: string | null;
+};
+
+type PatientAnamnesisAnswer = {
+  id: string;
+  patient_id: string;
+  template_id?: string | null;
+  question: string;
+  answer?: string | null;
+  answer_type?: string | null;
+  category?: string | null;
+  is_alert?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  created_by?: string | null;
+};
 
 type FinancialRecord = {
   id: string;
@@ -803,6 +835,7 @@ type PatientSessionChecklistItem = {
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "sobre", label: "Sobre" },
+  { id: "anamnese", label: "Anamnese" },
   { id: "tratamentos", label: "Tratamentos" },
   { id: "agendamentos", label: "Agendamentos" },
   { id: "orcamentos", label: "Orçamentos" },
@@ -1321,6 +1354,10 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [selectedPatientFile, setSelectedPatientFile] =
     useState<PatientFile | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [anamnesisTemplates, setAnamnesisTemplates] = useState<AnamnesisTemplate[]>([]);
+  const [patientAnamnesisAnswers, setPatientAnamnesisAnswers] = useState<PatientAnamnesisAnswer[]>([]);
+  const [anamnesisForm, setAnamnesisForm] = useState<Record<string, string>>({});
+  const [savingAnamnesis, setSavingAnamnesis] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [showCompletedTreatments, setShowCompletedTreatments] = useState(true);
@@ -1568,6 +1605,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         return "Item do orçamento";
       case "clinical_notes":
         return "Prontuário";
+      case "patient_anamnesis_answers":
+        return "Anamnese";
       case "patient_treatments":
         return "Tratamento";
       default:
@@ -1643,6 +1682,21 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         .order("created_at", { ascending: false });
 
       if (clinicalNotesError) throw clinicalNotesError;
+
+      const { data: anamnesisTemplateData, error: anamnesisTemplateError } = await supabase
+        .from("anamnesis_templates")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (anamnesisTemplateError) throw anamnesisTemplateError;
+
+      const { data: anamnesisAnswerData, error: anamnesisAnswerError } = await supabase
+        .from("patient_anamnesis_answers")
+        .select("*")
+        .eq("patient_id", params.id)
+        .order("created_at", { ascending: true });
+
+      if (anamnesisAnswerError) throw anamnesisAnswerError;
 
       const { data: pf, error: patientFilesError } = await supabase
         .from("patient_files")
@@ -1734,6 +1788,21 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       setFinancialRecords((f || []) as FinancialRecord[]);
       setPaymentTransactions(txs);
       setClinicalNotes((cn || []) as ClinicalNote[]);
+
+      const loadedTemplates = (anamnesisTemplateData || []) as AnamnesisTemplate[];
+      const loadedAnswers = (anamnesisAnswerData || []) as PatientAnamnesisAnswer[];
+      const nextAnamnesisForm: Record<string, string> = {};
+
+      loadedAnswers.forEach((answer) => {
+        if (answer.template_id) {
+          nextAnamnesisForm[answer.template_id] = answer.answer || "";
+        }
+      });
+
+      setAnamnesisTemplates(loadedTemplates);
+      setPatientAnamnesisAnswers(loadedAnswers);
+      setAnamnesisForm(nextAnamnesisForm);
+
       setPatientFiles((pf || []) as PatientFile[]);
       setClinicalFollowups((cf || []) as ClinicalFollowup[]);
       setSessionChecklist(activeChecklist);
@@ -1756,6 +1825,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
 
       const validTabs: TabId[] = [
         "sobre",
+        "anamnese",
         "tratamentos",
         "agendamentos",
         "orcamentos",
@@ -1774,6 +1844,167 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       // localStorage pode estar indisponível em alguns ambientes
     }
   }, []);
+
+  const getAnamnesisTemplateQuestion = (template: AnamnesisTemplate) => {
+    return (
+      template.question ||
+      template.title ||
+      template.label ||
+      "Pergunta sem descrição"
+    );
+  };
+
+  const getAnamnesisTemplateType = (template: AnamnesisTemplate) => {
+    return (
+      template.answer_type ||
+      template.question_type ||
+      template.input_type ||
+      template.type ||
+      "texto"
+    );
+  };
+
+  const getAnamnesisTemplateOptions = (template: AnamnesisTemplate) => {
+    if (Array.isArray(template.options)) {
+      return template.options.filter(Boolean);
+    }
+
+    if (typeof template.options === "string") {
+      return template.options
+        .split(/[;,|\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
+  const isTemplateActive = (template: AnamnesisTemplate) => {
+    if (template.is_active === false) return false;
+    if (template.active === false) return false;
+    return true;
+  };
+
+  const updateAnamnesisAnswer = (templateId: string, value: string) => {
+    setAnamnesisForm((current) => ({
+      ...current,
+      [templateId]: value,
+    }));
+  };
+
+  const shouldMarkAnamnesisAlert = (question: string, answer: string) => {
+    const normalizedQuestion = question
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    const normalizedAnswer = answer
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+
+    if (!normalizedAnswer || normalizedAnswer === "nao" || normalizedAnswer === "não") {
+      return false;
+    }
+
+    const alertTerms = [
+      "alerg",
+      "diabet",
+      "hipertens",
+      "pressao alta",
+      "cardi",
+      "anticoagul",
+      "marevan",
+      "aas",
+      "gesta",
+      "gravidez",
+      "hemorrag",
+      "hepat",
+      "hiv",
+      "rin",
+      "renal",
+      "convuls",
+      "epilep",
+      "asma",
+      "medicamento",
+    ];
+
+    return alertTerms.some((term) => normalizedQuestion.includes(term));
+  };
+
+  const savePatientAnamnesis = async () => {
+    if (anamnesisTemplates.length === 0) {
+      alert("Nenhum modelo de anamnese encontrado nas configurações.");
+      return;
+    }
+
+    try {
+      setSavingAnamnesis(true);
+
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || null;
+
+      const activeTemplates = anamnesisTemplates.filter(isTemplateActive);
+
+      const answersToInsert = activeTemplates.map((template) => {
+        const question = getAnamnesisTemplateQuestion(template);
+        const answer = anamnesisForm[template.id] || "";
+        const answerType = getAnamnesisTemplateType(template);
+        const category = template.category || "Geral";
+
+        return {
+          patient_id: params.id,
+          template_id: template.id,
+          question,
+          answer,
+          answer_type: answerType,
+          category,
+          is_alert: shouldMarkAnamnesisAlert(question, answer),
+          created_by: userId,
+        };
+      });
+
+      const { error: deleteError } = await supabase
+        .from("patient_anamnesis_answers")
+        .delete()
+        .eq("patient_id", params.id);
+
+      if (deleteError) throw deleteError;
+
+      if (answersToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from("patient_anamnesis_answers")
+          .insert(answersToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      alert("Anamnese salva no prontuário do paciente.");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao salvar anamnese: " + (error?.message || "erro inesperado"));
+    } finally {
+      setSavingAnamnesis(false);
+    }
+  };
+
+  const anamnesisAlertAnswers = patientAnamnesisAnswers.filter(
+    (answer) => answer.is_alert && String(answer.answer || "").trim(),
+  );
+
+  const groupedAnamnesisTemplates = anamnesisTemplates
+    .filter(isTemplateActive)
+    .reduce<Record<string, AnamnesisTemplate[]>>((groups, template) => {
+      const category = template.category || "Geral";
+
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+
+      groups[category].push(template);
+      return groups;
+    }, {});
 
   const openEditPatientModal = () => {
     setPatientForm({
@@ -5333,6 +5564,204 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+
+        {activeTab === "anamnese" && (
+          <div className="space-y-4">
+            <div className="rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:p-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-base font-black text-slate-800">
+                    Anamnese do paciente
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Responda as perguntas criadas em Configurações e salve diretamente no prontuário.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={savePatientAnamnesis}
+                  disabled={savingAnamnesis}
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                >
+                  {savingAnamnesis ? "Salvando..." : "Salvar anamnese"}
+                </button>
+              </div>
+            </div>
+
+            {anamnesisAlertAnswers.length > 0 && (
+              <div className="rounded-[1.15rem] border border-amber-200 bg-amber-50 p-3 shadow-sm md:p-5">
+                <div className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
+                  Alertas clínicos
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {anamnesisAlertAnswers.map((answer) => (
+                    <div
+                      key={answer.id}
+                      className="rounded-2xl border border-amber-200 bg-white/80 p-3"
+                    >
+                      <div className="text-sm font-black text-slate-800">
+                        {answer.question}
+                      </div>
+                      <div className="mt-1 text-sm text-amber-800">
+                        {answer.answer}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {anamnesisTemplates.filter(isTemplateActive).length === 0 && (
+              <div className="rounded-[1.15rem] border border-dashed border-[#d8eeee] bg-white p-8 text-center shadow-sm">
+                <h3 className="text-base font-black text-slate-800">
+                  Nenhuma pergunta de anamnese ativa
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Cadastre ou ative as perguntas em Configurações &gt; Anamnese.
+                </p>
+              </div>
+            )}
+
+            {Object.entries(groupedAnamnesisTemplates).map(([category, templates]) => (
+              <div
+                key={category}
+                className="rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:p-5"
+              >
+                <div className="mb-4">
+                  <h3 className="text-sm font-black uppercase tracking-[0.16em] text-[#239d9a]">
+                    {category}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {templates.length} pergunta{templates.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {templates.map((template) => {
+                    const question = getAnamnesisTemplateQuestion(template);
+                    const type = getAnamnesisTemplateType(template).toLowerCase();
+                    const options = getAnamnesisTemplateOptions(template);
+                    const value = anamnesisForm[template.id] || "";
+
+                    const isYesNo =
+                      type.includes("sim") ||
+                      type.includes("não") ||
+                      type.includes("nao") ||
+                      type.includes("boolean");
+
+                    const isLongText =
+                      type.includes("longo") ||
+                      type.includes("textarea") ||
+                      type.includes("observ");
+
+                    const isMultiple =
+                      type.includes("multipla") ||
+                      type.includes("múltipla") ||
+                      type.includes("select") ||
+                      type.includes("opcao") ||
+                      type.includes("opção");
+
+                    return (
+                      <div
+                        key={template.id}
+                        className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3"
+                      >
+                        <label className="block text-sm font-bold text-slate-700">
+                          {question}
+                        </label>
+
+                        {isYesNo && (
+                          <select
+                            value={value}
+                            onChange={(event) =>
+                              updateAnamnesisAnswer(template.id, event.target.value)
+                            }
+                            className="mt-2 w-full rounded-2xl border border-[#d8eeee] bg-white p-3 text-sm outline-none focus:border-[#84d5d3]"
+                          >
+                            <option value="">Não respondido</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                          </select>
+                        )}
+
+                        {!isYesNo && isLongText && (
+                          <textarea
+                            value={value}
+                            onChange={(event) =>
+                              updateAnamnesisAnswer(template.id, event.target.value)
+                            }
+                            placeholder="Digite a resposta"
+                            className="mt-2 min-h-[96px] w-full rounded-2xl border border-[#d8eeee] bg-white p-3 text-sm outline-none focus:border-[#84d5d3]"
+                          />
+                        )}
+
+                        {!isYesNo && !isLongText && isMultiple && options.length > 0 && (
+                          <select
+                            value={value}
+                            onChange={(event) =>
+                              updateAnamnesisAnswer(template.id, event.target.value)
+                            }
+                            className="mt-2 w-full rounded-2xl border border-[#d8eeee] bg-white p-3 text-sm outline-none focus:border-[#84d5d3]"
+                          >
+                            <option value="">Selecione</option>
+                            {options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
+                        {!isYesNo && !isLongText && (!isMultiple || options.length === 0) && (
+                          <input
+                            value={value}
+                            onChange={(event) =>
+                              updateAnamnesisAnswer(template.id, event.target.value)
+                            }
+                            placeholder="Digite a resposta"
+                            className="mt-2 w-full rounded-2xl border border-[#d8eeee] bg-white p-3 text-sm outline-none focus:border-[#84d5d3]"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {patientAnamnesisAnswers.length > 0 && (
+              <div className="rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:p-5">
+                <h3 className="text-base font-black text-slate-800">
+                  Última anamnese salva
+                </h3>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {patientAnamnesisAnswers
+                    .filter((answer) => String(answer.answer || "").trim())
+                    .map((answer) => (
+                      <div
+                        key={answer.id}
+                        className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3"
+                      >
+                        <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">
+                          {answer.category || "Geral"}
+                        </div>
+                        <div className="mt-1 text-sm font-bold text-slate-800">
+                          {answer.question}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-600">
+                          {answer.answer}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
