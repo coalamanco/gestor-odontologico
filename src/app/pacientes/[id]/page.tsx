@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -727,6 +727,17 @@ type PatientAnamnesisAnswer = {
   created_by?: string | null;
 };
 
+type PatientAnamnesisSignature = {
+  id: string;
+  patient_id: string;
+  signature_image: string;
+  signed_by?: string | null;
+  signed_document_type?: string | null;
+  signed_at?: string | null;
+  created_by?: string | null;
+  created_at?: string | null;
+};
+
 type FinancialRecord = {
   id: string;
   patient_id: string;
@@ -1358,6 +1369,11 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [patientAnamnesisAnswers, setPatientAnamnesisAnswers] = useState<PatientAnamnesisAnswer[]>([]);
   const [anamnesisForm, setAnamnesisForm] = useState<Record<string, string>>({});
   const [savingAnamnesis, setSavingAnamnesis] = useState(false);
+  const [patientAnamnesisSignatures, setPatientAnamnesisSignatures] = useState<PatientAnamnesisSignature[]>([]);
+  const [signedBy, setSignedBy] = useState("");
+  const [savingAnamnesisSignature, setSavingAnamnesisSignature] = useState(false);
+  const [isDrawingSignature, setIsDrawingSignature] = useState(false);
+  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [showCompletedTreatments, setShowCompletedTreatments] = useState(true);
@@ -1607,6 +1623,8 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         return "Prontuário";
       case "patient_anamnesis_answers":
         return "Anamnese";
+      case "patient_anamnesis_signatures":
+        return "Assinatura da anamnese";
       case "patient_treatments":
         return "Tratamento";
       default:
@@ -1697,6 +1715,15 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         .order("created_at", { ascending: true });
 
       if (anamnesisAnswerError) throw anamnesisAnswerError;
+
+      const { data: anamnesisSignatureData, error: anamnesisSignatureError } = await supabase
+        .from("patient_anamnesis_signatures")
+        .select("*")
+        .eq("patient_id", params.id)
+        .order("signed_at", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (anamnesisSignatureError) throw anamnesisSignatureError;
 
       const { data: pf, error: patientFilesError } = await supabase
         .from("patient_files")
@@ -1802,6 +1829,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       setAnamnesisTemplates(loadedTemplates);
       setPatientAnamnesisAnswers(loadedAnswers);
       setAnamnesisForm(nextAnamnesisForm);
+      setPatientAnamnesisSignatures((anamnesisSignatureData || []) as PatientAnamnesisSignature[]);
 
       setPatientFiles((pf || []) as PatientFile[]);
       setClinicalFollowups((cf || []) as ClinicalFollowup[]);
@@ -1986,6 +2014,139 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
       alert("Erro ao salvar anamnese: " + (error?.message || "erro inesperado"));
     } finally {
       setSavingAnamnesis(false);
+    }
+  };
+
+  const latestAnamnesisSignature = patientAnamnesisSignatures[0] || null;
+
+  const getSignatureCanvasContext = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return null;
+
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+
+    context.lineWidth = 2.2;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.strokeStyle = "#0f172a";
+
+    return context;
+  };
+
+  const getSignaturePoint = (
+    event:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const source =
+      "touches" in event
+        ? event.touches[0] || event.changedTouches[0]
+        : event;
+
+    return {
+      x: source.clientX - rect.left,
+      y: source.clientY - rect.top,
+    };
+  };
+
+  const startSignatureDrawing = (
+    event:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    event.preventDefault();
+    const context = getSignatureCanvasContext();
+    if (!context) return;
+
+    const point = getSignaturePoint(event);
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+    setIsDrawingSignature(true);
+  };
+
+  const drawSignature = (
+    event:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    if (!isDrawingSignature) return;
+
+    event.preventDefault();
+    const context = getSignatureCanvasContext();
+    if (!context) return;
+
+    const point = getSignaturePoint(event);
+    context.lineTo(point.x, point.y);
+    context.stroke();
+  };
+
+  const stopSignatureDrawing = () => {
+    setIsDrawingSignature(false);
+  };
+
+  const clearAnamnesisSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    const context = getSignatureCanvasContext();
+
+    if (!canvas || !context) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const saveAnamnesisSignature = async () => {
+    const canvas = signatureCanvasRef.current;
+
+    if (!canvas) {
+      alert("Campo de assinatura não encontrado.");
+      return;
+    }
+
+    if (!signedBy.trim()) {
+      alert("Informe o nome de quem está assinando.");
+      return;
+    }
+
+    try {
+      setSavingAnamnesisSignature(true);
+
+      const signatureImage = canvas.toDataURL("image/png");
+
+      if (!signatureImage || signatureImage.length < 5000) {
+        alert("Peça para o paciente assinar no campo antes de salvar.");
+        return;
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || null;
+
+      const { error } = await supabase
+        .from("patient_anamnesis_signatures")
+        .insert({
+          patient_id: params.id,
+          signature_image: signatureImage,
+          signed_by: signedBy.trim(),
+          signed_document_type: "anamnese",
+          created_by: userId,
+        });
+
+      if (error) throw error;
+
+      alert("Assinatura da anamnese salva com sucesso.");
+      clearAnamnesisSignature();
+      setSignedBy("");
+      await loadData();
+    } catch (error: any) {
+      alert(
+        "Erro ao salvar assinatura da anamnese: " +
+          (error?.message || "erro inesperado"),
+      );
+    } finally {
+      setSavingAnamnesisSignature(false);
     }
   };
 
@@ -5762,6 +5923,107 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                 </div>
               </div>
             )}
+
+            <div className="rounded-[1.15rem] border border-[#d8eeee] bg-white p-3 shadow-sm md:p-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-800">
+                    Assinatura digital da anamnese
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Colete a assinatura do paciente ou responsável após revisar as respostas salvas.
+                  </p>
+                </div>
+
+                {latestAnamnesisSignature && (
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                    <div className="font-black">Anamnese assinada</div>
+                    <div>
+                      {latestAnamnesisSignature.signed_at
+                        ? new Date(latestAnamnesisSignature.signed_at).toLocaleString("pt-BR")
+                        : "Data não registrada"}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {latestAnamnesisSignature && (
+                <div className="mt-4 rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_260px] md:items-center">
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">
+                        Última assinatura
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-slate-800">
+                        {latestAnamnesisSignature.signed_by || "Assinante não informado"}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Documento: {latestAnamnesisSignature.signed_document_type || "anamnese"}
+                      </div>
+                    </div>
+
+                    <img
+                      src={latestAnamnesisSignature.signature_image}
+                      alt="Assinatura da anamnese"
+                      className="h-24 w-full rounded-xl border border-[#d8eeee] bg-white object-contain p-2"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700">
+                    Nome de quem assina
+                  </label>
+                  <input
+                    value={signedBy}
+                    onChange={(event) => setSignedBy(event.target.value)}
+                    placeholder="Paciente ou responsável"
+                    className="mt-2 w-full rounded-2xl border border-[#d8eeee] bg-[#fbffff] p-3 text-sm outline-none focus:border-[#84d5d3]"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-[#e3f2f2] bg-[#fbffff] p-3 text-xs text-slate-500">
+                  Ao salvar, será registrada uma imagem da assinatura vinculada ao prontuário deste paciente.
+                </div>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-2xl border border-[#d8eeee] bg-white">
+                <canvas
+                  ref={signatureCanvasRef}
+                  width={900}
+                  height={220}
+                  onMouseDown={startSignatureDrawing}
+                  onMouseMove={drawSignature}
+                  onMouseUp={stopSignatureDrawing}
+                  onMouseLeave={stopSignatureDrawing}
+                  onTouchStart={startSignatureDrawing}
+                  onTouchMove={drawSignature}
+                  onTouchEnd={stopSignatureDrawing}
+                  className="h-[180px] w-full cursor-crosshair touch-none bg-white"
+                />
+              </div>
+
+              <div className="mt-3 flex flex-col gap-2 md:flex-row md:justify-end">
+                <button
+                  type="button"
+                  onClick={clearAnamnesisSignature}
+                  className="rounded-xl border border-[#d8eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
+                >
+                  Limpar assinatura
+                </button>
+
+                <button
+                  type="button"
+                  onClick={saveAnamnesisSignature}
+                  disabled={savingAnamnesisSignature}
+                  className="rounded-xl bg-[#239d9a] px-4 py-2 text-sm font-black text-white shadow-sm disabled:opacity-60"
+                >
+                  {savingAnamnesisSignature ? "Salvando..." : "Salvar assinatura"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
