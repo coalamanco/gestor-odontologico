@@ -5329,6 +5329,57 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
 
         {activeTab === "sobre" && (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:gap-4">
+            {anamnesisAlertAnswers.length > 0 && (
+              <div className="xl:col-span-2 rounded-[1.15rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-3 shadow-sm md:p-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-amber-100 text-base">
+                        ⚠️
+                      </span>
+                      <div>
+                        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
+                          Alertas clínicos
+                        </h2>
+                        <p className="mt-1 text-sm text-amber-800">
+                          Informações importantes registradas na anamnese deste paciente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("anamnese")}
+                    className="rounded-xl border border-amber-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-700 shadow-sm hover:bg-amber-100"
+                  >
+                    Ver anamnese
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {anamnesisAlertAnswers.slice(0, 6).map((answer) => (
+                    <div
+                      key={answer.id}
+                      className="rounded-2xl border border-amber-200 bg-white/90 p-3 shadow-sm"
+                    >
+                      <div className="text-sm font-black text-slate-800">
+                        {answer.question}
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-amber-800">
+                        {answer.answer}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {anamnesisAlertAnswers.length > 6 && (
+                  <p className="mt-3 text-xs font-semibold text-amber-700">
+                    Existem mais alertas registrados. Acesse a aba Anamnese para visualizar todos.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-2.5 shadow-sm md:p-5">
               <h2 className="text-base font-bold text-slate-800 mb-4">
                 Dados pessoais
