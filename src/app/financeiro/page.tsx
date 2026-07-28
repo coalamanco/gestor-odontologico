@@ -12,6 +12,7 @@ import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import FinancialIntelligentDashboard from "@/components/financeiro/FinancialIntelligentDashboard";
 import FinancialOverviewCards from "@/components/financeiro/FinancialOverviewCards";
 import PatientsToChargeCard from "@/components/financeiro/PatientsToChargeCard";
+import ReceivePaymentModal from "@/components/financeiro/ReceivePaymentModal";
 import { useFinancialPaymentActions } from "@/hooks/financeiro/useFinancialPaymentActions";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
@@ -2245,132 +2246,23 @@ export default function FinanceiroPage() {
         </div>
       )}
 
-      {isReceberOpen && receberTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-full max-w-lg overflow-hidden border border-[#d9eeee] shadow-xl animate-in zoom-in-95 duration-300">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc]">
-              <div>
-                <CardTitle className="text-[#239d9a]">Registrar pagamento</CardTitle>
-                <CardDescription>Defina valor, forma de pagamento e recibo.</CardDescription>
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsReceberOpen(false)}
-                className="rounded-full hover:bg-[#eefafa]"
-              >
-                <X size={20} />
-              </Button>
-            </CardHeader>
-
-            <CardContent className="space-y-5 pt-6">
-              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Lançamento
-                </p>
-                <p className="font-semibold text-slate-800">
-                  {receberTarget.installments && receberTarget.installments > 1
-                    ? `Parcela ${receberTarget.installment_number || 1}/${receberTarget.installments}`
-                    : "Débito"}
-                </p>
-                <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Valor total
-                </p>
-                <p className="text-xl font-semibold text-emerald-600">
-                  {formatCurrency(receberTarget.amount)}
-                </p>
-                <p className="text-sm font-medium text-slate-500">
-                  Já pago: {formatCurrency(receberTarget.paid_amount)} • Saldo:{" "}
-                  {formatCurrency(
-                    parseMoney(receberTarget.amount) - parseMoney(receberTarget.paid_amount)
-                  )}
-                </p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Valor recebido agora
-                </label>
-                <Input
-                  value={receberValor}
-                  onChange={(e) => setReceberValor(e.target.value)}
-                  className="rounded-xl border-[#d9eeee] bg-[#fbffff]"
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Forma de pagamento
-                </label>
-                <select
-                  className="flex h-10 w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-[#b6e3e2]"
-                  value={receberFormaPagamento}
-                  onChange={(e) => setReceberFormaPagamento(e.target.value)}
-                >
-                  <option value="Pix">Pix</option>
-                  <option value="Cartão crédito">Cartão crédito</option>
-                  <option value="Cartão débito">Cartão débito</option>
-                  <option value="Dinheiro">Dinheiro</option>
-                  <option value="Boleto">Boleto</option>
-                  <option value="Transferência">Transferência</option>
-                  <option value="Cheque">Cheque</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Tipo de recibo
-                </label>
-                <select
-                  className="flex h-10 w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-[#b6e3e2]"
-                  value={receberRecibo}
-                  onChange={(e) => setReceberRecibo(e.target.value)}
-                >
-                  <option value="nenhum">Sem recibo</option>
-                  <option value="simples">Recibo simples</option>
-                  <option value="imposto_renda">Recibo IR</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Observação
-                </label>
-                <Input
-                  value={receberObservacao}
-                  onChange={(e) => setReceberObservacao(e.target.value)}
-                  className="rounded-xl border-[#d9eeee] bg-[#fbffff]"
-                  placeholder="Observação do pagamento"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl border-[#d9eeee] font-semibold text-slate-700"
-                  onClick={() => setIsReceberOpen(false)}
-                  disabled={receberSaving}
-                >
-                  Voltar
-                </Button>
-
-                <Button
-                  type="button"
-                  className="h-10 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#77d0cf] font-semibold text-white hover:from-[#18a6a2] hover:to-[#67c8c7]"
-                  onClick={handleReceberConfirmar}
-                  disabled={receberSaving}
-                >
-                  {receberSaving ? "Salvando..." : "Confirmar"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <ReceivePaymentModal
+        open={isReceberOpen}
+        target={receberTarget}
+        value={receberValor}
+        onValueChange={setReceberValor}
+        paymentMethod={receberFormaPagamento}
+        onPaymentMethodChange={setReceberFormaPagamento}
+        receiptType={receberRecibo}
+        onReceiptTypeChange={setReceberRecibo}
+        note={receberObservacao}
+        onNoteChange={setReceberObservacao}
+        saving={receberSaving}
+        onClose={() => setIsReceberOpen(false)}
+        onConfirm={handleReceberConfirmar}
+        parseMoney={parseMoney}
+        formatCurrency={formatCurrency}
+      />
 
       {isEditPaymentOpen && editingPayment && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
