@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryCards";
 import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
+import FinancialIntelligentDashboard from "@/components/financeiro/FinancialIntelligentDashboard";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   loadFinancialPageData,
@@ -1981,78 +1982,14 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-          <div>
-            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
-              Dashboard inteligente
-            </h2>
-            <p className="text-[13px] text-slate-500">
-              Indicadores rápidos para acompanhar a saúde financeira da clínica.
-            </p>
-          </div>
-
-          <div className="text-xs font-semibold text-[#239d9a] bg-[#eefafa] px-3 py-2 rounded-xl">
-            Atualizado em tempo real
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
-          <div className="rounded-2xl border border-[#d9eeee] bg-white/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
-              Hoje
-            </p>
-            <p className="mt-2 text-lg font-semibold text-emerald-600">
-              {formatCurrency(intelligentSummary.recebidoHoje)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Este mês
-            </p>
-            <p className="mt-2 text-lg font-semibold text-sky-700">
-              {formatCurrency(intelligentSummary.recebidoMes)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">
-              Em aberto
-            </p>
-            <p className="mt-2 text-lg font-semibold text-amber-600">
-              {formatCurrency(intelligentSummary.totalEmAberto)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700">
-              Inadimplência
-            </p>
-            <p className="mt-2 text-lg font-semibold text-rose-700">
-              {intelligentSummary.taxaInadimplencia.toFixed(1)}%
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
-              Ticket médio
-            </p>
-            <p className="mt-2 text-lg font-semibold text-purple-600">
-              {formatCurrency(intelligentSummary.ticketMedio)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-              Recibos
-            </p>
-            <p className="mt-2 text-lg font-semibold text-cyan-700">
-              {intelligentSummary.recibosPendentes}
-            </p>
-          </div>
-        </div>
-      </div>
+      <FinancialIntelligentDashboard
+        recebidoHoje={formatCurrency(intelligentSummary.recebidoHoje)}
+        recebidoMes={formatCurrency(intelligentSummary.recebidoMes)}
+        totalEmAberto={formatCurrency(intelligentSummary.totalEmAberto)}
+        taxaInadimplencia={`${intelligentSummary.taxaInadimplencia.toFixed(1)}%`}
+        ticketMedio={formatCurrency(intelligentSummary.ticketMedio)}
+        recibosPendentes={intelligentSummary.recibosPendentes}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
