@@ -11,6 +11,7 @@ import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryC
 import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import FinancialIntelligentDashboard from "@/components/financeiro/FinancialIntelligentDashboard";
 import FinancialOverviewCards from "@/components/financeiro/FinancialOverviewCards";
+import PatientsToChargeCard from "@/components/financeiro/PatientsToChargeCard";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   loadFinancialPageData,
@@ -1998,93 +1999,12 @@ export default function FinanceiroPage() {
         receiptSummary={receiptSummary}
       />
 
-      <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-          <div>
-            <h2 className="text-[17px] font-semibold text-slate-800 tracking-[-0.01em]">
-              Pacientes para cobrar
-            </h2>
-            <p className="text-[13px] text-slate-500">
-              Lista automática baseada apenas em parcelas vencidas com saldo pendente. Parcelas futuras não entram aqui.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-xl bg-red-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-red-600 border border-red-100">
-              {patientsToCharge.filter((item) => item.visualStatus === "em_atraso").length} em atraso
-            </span>
-
-            {patientsToCharge.length > 0 && (
-              <a
-                href={buildChargeAllWhatsappHref()}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-[#1fb36e] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-white shadow-sm hover:bg-[#199c5f]"
-              >
-                Cobrar todos
-              </a>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-          {patientsToCharge.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-[#d9eeee] bg-[#fbffff] p-6 text-center text-sm text-slate-400 xl:col-span-2">
-              Nenhum paciente com parcela vencida em aberto.
-            </div>
-          )}
-
-          {patientsToCharge.map((item) => (
-            <div
-              key={item.record.id}
-              className={`rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
-                item.visualStatus === "em_atraso"
-                  ? "border-red-100 bg-white/60"
-                  : "border-[#d9eeee] bg-[#fbffff]"
-              }`}
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-[13px] font-semibold text-slate-800 truncate">
-                    {item.patientName}
-                  </h3>
-
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusBadgeClass(
-                      item.visualStatus
-                    )}`}
-                  >
-                    {item.visualStatus === "em_atraso" ? "Em atraso" : "Pendente"}
-                  </span>
-                </div>
-
-                <p className="mt-1 text-[11px] text-slate-500 truncate">
-                  {item.record.description || "Débito financeiro"}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Vencido há {item.daysOpen} dia(s)
-                </p>
-              </div>
-
-              <div className="flex flex-col md:items-end gap-2">
-                <div className="text-base font-semibold text-[#239d9a]">
-                  {formatCurrency(item.overdueBalance)}
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-8 rounded-lg border-[#bfe8e7] px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] hover:bg-[#f2fcfc]"
-                  onClick={() => openReceberModal(item.record)}
-                >
-                  Receber
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <PatientsToChargeCard
+        patients={patientsToCharge}
+        chargeAllWhatsappHref={buildChargeAllWhatsappHref()}
+        formatCurrency={formatCurrency}
+        onReceive={openReceberModal}
+      />
 
       <Card className="overflow-hidden border border-[#d9eeee] shadow-sm">
         <CardHeader className="border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc] py-5 px-6">

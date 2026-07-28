@@ -1,0 +1,20 @@
+CORREÇÃO FINANCEIRA — ETAPA 5
+
+Arquivos incluídos:
+- src/app/financeiro/page.tsx
+- src/components/financeiro/FinancialOverviewCards.tsx
+
+O que foi feito:
+- Extração dos três cards: Formas de pagamento, Maiores saldos vencidos e Controle de recibos.
+- Nenhuma consulta, cálculo financeiro, botão ou regra de negócio foi alterada.
+- O page.tsx foi reduzido de 2.880 para 2.772 linhas.
+
+Instalação:
+1. Pare o servidor com Ctrl+C.
+2. Copie a pasta src deste pacote sobre a pasta src do projeto.
+3. Execute npm run build.
+4. Execute npm run dev e confira os três cards.
+
+Commit sugerido:
+git add .
+git commit -m "Extrai cards de visão geral do financeiro"
