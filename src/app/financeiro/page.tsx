@@ -17,6 +17,7 @@ import {
   getFinancialRecordDueDate,
   getFinancialRecordVisualStatus,
   isFinancialRecordOverdue as isFinancialOverdueByEngine,
+  reconcileFinancialRecordsWithTransactions,
 } from "@/lib/financialEngine";
 import {
   DollarSign,
@@ -900,11 +901,11 @@ export default function FinanceiroPage() {
     }
 
     const lista = (data || []) as FinancialRecord[];
-    setRegistros(lista);
 
     const ids = lista.map((r) => r.id).filter(Boolean);
 
     if (ids.length === 0) {
+      setRegistros(lista);
       setPagamentos([]);
       return;
     }
@@ -921,7 +922,9 @@ export default function FinanceiroPage() {
       return;
     }
 
-    setPagamentos((pagamentosData || []) as PaymentTransaction[]);
+    const paymentList = (pagamentosData || []) as PaymentTransaction[];
+    setPagamentos(paymentList);
+    setRegistros(reconcileFinancialRecordsWithTransactions(lista, paymentList));
   }
 
   async function fetchExpenses() {
@@ -940,14 +943,22 @@ export default function FinanceiroPage() {
   }
 
   async function fetchSaldosPorPaciente() {
-    const [patientsRes, recordsRes] = await Promise.all([
-      supabaseNoSchemaCache.from("patients").select("id, name").order("name", { ascending: true }),
+    const [patientsRes, recordsRes, paymentsRes] = await Promise.all([
+      supabaseNoSchemaCache
+        .from("patients")
+        .select("id, name")
+        .order("name", { ascending: true }),
       supabaseNoSchemaCache
         .from("financial_records")
-        .select("patient_id, amount, paid_amount, status, due_date, created_at, paid_at, installment_number, installments"),
+        .select(
+          "id, patient_id, amount, paid_amount, status, due_date, created_at, paid_at, installment_number, installments, description",
+        ),
+      supabaseNoSchemaCache
+        .from("payment_transactions")
+        .select("financial_record_id, amount, received_at, created_at"),
     ]);
 
-    if (patientsRes.error || recordsRes.error) {
+    if (patientsRes.error || recordsRes.error || paymentsRes.error) {
       setSaldosPorPaciente([]);
       return;
     }
@@ -969,8 +980,12 @@ export default function FinanceiroPage() {
       }
     > = {};
 
-    for (const r of recordsRes.data ?? []) {
-      const record = r as any;
+    const reconciledRecords = reconcileFinancialRecordsWithTransactions(
+      (recordsRes.data || []) as FinancialRecord[],
+      (paymentsRes.data || []) as PaymentTransaction[],
+    );
+
+    for (const record of reconciledRecords) {
       const patientId = String(record.patient_id ?? "");
       if (!patientId) continue;
 
@@ -1006,7 +1021,12 @@ export default function FinanceiroPage() {
       futureBalance: Number(values.futureBalance.toFixed(2)),
     }));
 
-    rows.sort((a, b) => b.overdueBalance - a.overdueBalance || b.balance - a.balance || a.name.localeCompare(b.name, "pt-BR"));
+    rows.sort(
+      (a, b) =>
+        b.overdueBalance - a.overdueBalance ||
+        b.balance - a.balance ||
+        a.name.localeCompare(b.name, "pt-BR"),
+    );
     setSaldosPorPaciente(rows);
   }
 

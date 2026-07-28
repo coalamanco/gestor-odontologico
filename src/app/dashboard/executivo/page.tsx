@@ -38,6 +38,8 @@ import ExecutiveMarketingCenter from "@/components/dashboard/ExecutiveMarketingC
 import {
   getFinancialRecordOverdueBalance,
   isFinancialRecordOverdue as isFinancialOverdueByEngine,
+  reconcileFinancialRecordsWithTransactions,
+  type FinancialPaymentTransaction,
 } from "@/lib/financialEngine";
 
 type Patient = {
@@ -370,6 +372,7 @@ export default function DashboardExecutivoPage() {
         { data: appointmentsData, error: appointmentsError },
         { data: budgetsData, error: budgetsError },
         { data: financialData, error: financialError },
+        { data: paymentTransactionsData, error: paymentTransactionsError },
         { data: treatmentsData, error: treatmentsError },
         { data: notesData, error: notesError },
       ] = await Promise.all([
@@ -390,6 +393,10 @@ export default function DashboardExecutivoPage() {
           .select("*")
           .order("created_at", { ascending: false }),
         supabase
+          .from("payment_transactions")
+          .select("id, financial_record_id, amount, received_at, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
           .from("patient_treatments")
           .select("*")
           .order("created_at", { ascending: false }),
@@ -403,13 +410,20 @@ export default function DashboardExecutivoPage() {
       if (appointmentsError) throw appointmentsError;
       if (budgetsError) throw budgetsError;
       if (financialError) throw financialError;
+      if (paymentTransactionsError) throw paymentTransactionsError;
       if (treatmentsError) throw treatmentsError;
       if (notesError) throw notesError;
 
       setPatients((patientsData || []) as Patient[]);
       setAppointments((appointmentsData || []) as Appointment[]);
       setBudgets((budgetsData || []) as Budget[]);
-      setFinancialRecords((financialData || []) as FinancialRecord[]);
+      const reconciledFinancialRecords =
+        reconcileFinancialRecordsWithTransactions(
+          (financialData || []) as FinancialRecord[],
+          (paymentTransactionsData || []) as FinancialPaymentTransaction[],
+        );
+
+      setFinancialRecords(reconciledFinancialRecords);
       setTreatments((treatmentsData || []) as Treatment[]);
       setClinicalNotes((notesData || []) as ClinicalNote[]);
 

@@ -11,7 +11,80 @@ export type FinancialEngineRecord = {
     description?: string | null;
   };
   
-  export type FinancialVisualStatus =
+  
+
+export type FinancialPaymentTransaction = {
+  id?: string | null;
+  financial_record_id?: string | null;
+  amount?: number | string | null;
+  received_at?: string | null;
+  created_at?: string | null;
+};
+
+/**
+ * Soma os pagamentos efetivamente gravados em payment_transactions.
+ * Essa tabela é a fonte principal do valor pago.
+ */
+export function getPaidAmountFromTransactions(
+  financialRecordId: string | null | undefined,
+  transactions: FinancialPaymentTransaction[],
+) {
+  if (!financialRecordId) return 0;
+
+  return Number(
+    transactions
+      .filter(
+        (transaction) =>
+          String(transaction.financial_record_id || "") ===
+          String(financialRecordId),
+      )
+      .reduce(
+        (total, transaction) =>
+          total + Math.max(0, parseFinancialMoney(transaction.amount)),
+        0,
+      )
+      .toFixed(2),
+  );
+}
+
+/**
+ * Reconcilia financial_records com payment_transactions.
+ * Quando existem transações, elas substituem paid_amount como fonte do valor pago.
+ * Sem transações, paid_amount é preservado para lançamentos antigos.
+ */
+export function reconcileFinancialRecordsWithTransactions<
+  T extends FinancialEngineRecord,
+>(records: T[], transactions: FinancialPaymentTransaction[]): T[] {
+  const totalsByRecord = new Map<string, number>();
+
+  for (const transaction of transactions) {
+    const recordId = String(transaction.financial_record_id || "");
+    if (!recordId) continue;
+
+    const nextTotal =
+      (totalsByRecord.get(recordId) || 0) +
+      Math.max(0, parseFinancialMoney(transaction.amount));
+
+    totalsByRecord.set(recordId, Number(nextTotal.toFixed(2)));
+  }
+
+  return records.map((record) => {
+    const recordId = String(record.id || "");
+    if (!recordId || !totalsByRecord.has(recordId)) return record;
+
+    const total = getFinancialRecordTotal(record);
+    const paid = Math.min(total, totalsByRecord.get(recordId) || 0);
+    const balance = Math.max(0, Number((total - paid).toFixed(2)));
+
+    return {
+      ...record,
+      paid_amount: paid,
+      status: balance <= 0.009 ? "pago" : paid > 0 ? "parcial" : "pendente",
+    };
+  });
+}
+
+export type FinancialVisualStatus =
     | "pago"
     | "parcial"
     | "pendente"

@@ -23,6 +23,10 @@ import {
 } from "lucide-react";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import { getUserRole } from "@/lib/getUserRole";
+import {
+  reconcileFinancialRecordsWithTransactions,
+  type FinancialPaymentTransaction,
+} from "@/lib/financialEngine";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -396,6 +400,7 @@ export default function Dashboard() {
 
         const [
           { data: financial },
+          { data: paymentTransactions },
           { data: expensesData },
           { data: appointmentsData },
           { data: patientsData },
@@ -403,6 +408,10 @@ export default function Dashboard() {
             supabaseNoSchemaCache
               .from("financial_records")
               .select("*")
+              .order("created_at", { ascending: false }),
+            supabaseNoSchemaCache
+              .from("payment_transactions")
+              .select("id, financial_record_id, amount, received_at, created_at")
               .order("created_at", { ascending: false }),
             supabaseNoSchemaCache
               .from("expenses")
@@ -419,7 +428,13 @@ export default function Dashboard() {
               .order("created_at", { ascending: false }),
           ]);
 
-        setFinancialRecords((financial || []) as FinancialRecord[]);
+        const reconciledFinancialRecords =
+          reconcileFinancialRecordsWithTransactions(
+            (financial || []) as FinancialRecord[],
+            (paymentTransactions || []) as FinancialPaymentTransaction[],
+          );
+
+        setFinancialRecords(reconciledFinancialRecords);
         setExpenses((expensesData || []) as Expense[]);
         setAppointments((appointmentsData || []) as Appointment[]);
         setPatients((patientsData || []) as Patient[]);
