@@ -1,0 +1,20 @@
+ETAPA 7 - AÇÕES DE PAGAMENTO EM HOOK
+
+Arquivos incluídos:
+- src/app/financeiro/page.tsx
+- src/hooks/financeiro/useFinancialPaymentActions.ts
+
+Alterações:
+- Estados e ações dos modais de recebimento e edição de pagamento foram movidos para um hook próprio.
+- Mantidos os mesmos campos, validações, atualizações no Supabase e recarregamento da página.
+- Nenhuma alteração visual nos modais nesta etapa.
+
+Validação executada:
+- npx tsc --noEmit (sem erros), sobre o projeto completo com as etapas financeiras anteriores.
+
+Após copiar a pasta src para o projeto:
+1. npm run build
+2. npm run dev
+3. Testar receber pagamento, editar pagamento parcial e atualizar os saldos.
+4. git add .
+5. git commit -m "Extrai ações de pagamento do financeiro"

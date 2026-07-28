@@ -12,6 +12,7 @@ import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import FinancialIntelligentDashboard from "@/components/financeiro/FinancialIntelligentDashboard";
 import FinancialOverviewCards from "@/components/financeiro/FinancialOverviewCards";
 import PatientsToChargeCard from "@/components/financeiro/PatientsToChargeCard";
+import { useFinancialPaymentActions } from "@/hooks/financeiro/useFinancialPaymentActions";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   loadFinancialPageData,
@@ -73,23 +74,6 @@ export default function FinanceiroPage() {
   const todayIso = new Date().toISOString().slice(0, 10);
 
   const [loading, setLoading] = useState(false);
-  const [isReceberOpen, setIsReceberOpen] = useState(false);
-  const [receberTarget, setReceberTarget] = useState<FinancialRecord | null>(null);
-  const [receberValor, setReceberValor] = useState("");
-  const [receberFormaPagamento, setReceberFormaPagamento] = useState("Pix");
-  const [receberRecibo, setReceberRecibo] = useState("nenhum");
-  const [receberObservacao, setReceberObservacao] = useState("");
-  const [receberSaving, setReceberSaving] = useState(false);
-
-  const [isEditPaymentOpen, setIsEditPaymentOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentTransaction | null>(null);
-  const [editPaymentAmount, setEditPaymentAmount] = useState("");
-  const [editPaymentMethod, setEditPaymentMethod] = useState("Pix");
-  const [editReceiptType, setEditReceiptType] = useState("nenhum");
-  const [editReceivedAt, setEditReceivedAt] = useState(todayIso);
-  const [editPaymentNote, setEditPaymentNote] = useState("");
-  const [editPaymentSaving, setEditPaymentSaving] = useState(false);
-
   const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(null);
 
   const [periodoFiltro, setPeriodoFiltro] = useState<PeriodoFiltro>("mes_atual");
@@ -382,6 +366,43 @@ export default function FinanceiroPage() {
     if (/cheque/i.test(v)) return "Cheque";
     return v;
   };
+
+  const {
+    isReceberOpen,
+    setIsReceberOpen,
+    receberTarget,
+    receberValor,
+    setReceberValor,
+    receberFormaPagamento,
+    setReceberFormaPagamento,
+    receberRecibo,
+    setReceberRecibo,
+    receberObservacao,
+    setReceberObservacao,
+    receberSaving,
+    isEditPaymentOpen,
+    editingPayment,
+    editPaymentAmount,
+    setEditPaymentAmount,
+    editPaymentMethod,
+    setEditPaymentMethod,
+    editReceiptType,
+    setEditReceiptType,
+    editReceivedAt,
+    setEditReceivedAt,
+    editPaymentNote,
+    setEditPaymentNote,
+    editPaymentSaving,
+    openReceberModal,
+    openEditPaymentModal,
+    closeEditPaymentModal,
+    handleEditPaymentConfirmar,
+    handleReceberConfirmar,
+  } = useFinancialPaymentActions({
+    reloadAll,
+    parseMoney,
+    labelFormaPagamento,
+  });
 
   const labelRecibo = (value: unknown) => {
     const v = String(value ?? "").trim().toLowerCase();
@@ -952,209 +973,6 @@ export default function FinanceiroPage() {
 
     await reloadAll();
   }
-
-  function openReceberModal(record: FinancialRecord) {
-    const total = parseMoney(record.amount);
-    const paid = parseMoney(record.paid_amount);
-    const remaining = Math.max(0, total - paid);
-
-    setReceberTarget(record);
-    setReceberValor(remaining > 0 ? String(remaining.toFixed(2)) : "");
-    setReceberFormaPagamento(
-      labelFormaPagamento(record.payment_method) === "—"
-        ? "Pix"
-        : labelFormaPagamento(record.payment_method)
-    );
-    setReceberRecibo(String(record.receipt_type ?? "nenhum") || "nenhum");
-    setReceberObservacao("");
-    setIsReceberOpen(true);
-  }
-
-  function openEditPaymentModal(payment: PaymentTransaction) {
-    setEditingPayment(payment);
-    setEditPaymentAmount(String(parseMoney(payment.amount).toFixed(2)));
-    setEditPaymentMethod(
-      labelFormaPagamento(payment.payment_method) === "—"
-        ? "Pix"
-        : labelFormaPagamento(payment.payment_method)
-    );
-    setEditReceiptType(String(payment.receipt_type || "nenhum"));
-    setEditReceivedAt(
-      payment.received_at
-        ? String(payment.received_at).slice(0, 10)
-        : new Date().toISOString().slice(0, 10)
-    );
-    setEditPaymentNote(payment.note || "");
-    setIsEditPaymentOpen(true);
-  }
-
-  function closeEditPaymentModal() {
-    if (editPaymentSaving) return;
-
-    setIsEditPaymentOpen(false);
-    setEditingPayment(null);
-    setEditPaymentAmount("");
-    setEditPaymentMethod("Pix");
-    setEditReceiptType("nenhum");
-    setEditReceivedAt(new Date().toISOString().slice(0, 10));
-    setEditPaymentNote("");
-  }
-
-  async function recalculateFinancialRecordAfterPaymentEdit(financialRecordId: string) {
-    const { data: recordData, error: recordError } = await supabaseNoSchemaCache
-      .from("financial_records")
-      .select("*")
-      .eq("id", financialRecordId)
-      .single();
-
-    if (recordError) throw recordError;
-
-    const { data: txData, error: txError } = await supabaseNoSchemaCache
-      .from("payment_transactions")
-      .select("*")
-      .eq("financial_record_id", financialRecordId)
-      .order("received_at", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (txError) throw txError;
-
-    const transactions = (txData || []) as PaymentTransaction[];
-    const totalPaid = transactions.reduce((acc, tx) => acc + parseMoney(tx.amount), 0);
-    const totalAmount = parseMoney((recordData as FinancialRecord).amount);
-
-    let newStatus = "pendente";
-    if (totalPaid <= 0) newStatus = "pendente";
-    else if (totalPaid < totalAmount) newStatus = "parcial";
-    else newStatus = "pago";
-
-    const latestPayment = transactions[0] || null;
-
-    const { error: updateRecordError } = await supabaseNoSchemaCache
-      .from("financial_records")
-      .update({
-        paid_amount: totalPaid,
-        status: newStatus,
-        payment_method: latestPayment?.payment_method || null,
-        receipt_type: latestPayment?.receipt_type || "nenhum",
-        paid_at: latestPayment?.received_at || null,
-      })
-      .eq("id", financialRecordId);
-
-    if (updateRecordError) throw updateRecordError;
-  }
-
-  async function handleEditPaymentConfirmar() {
-    if (!editingPayment) return;
-    if (editPaymentSaving) return;
-
-    const newAmount = parseFloat(String(editPaymentAmount).replace(",", "."));
-
-    if (isNaN(newAmount) || newAmount <= 0) {
-      alert("Informe um valor válido para o pagamento.");
-      return;
-    }
-
-    try {
-      setEditPaymentSaving(true);
-
-      const { error: updatePaymentError } = await supabaseNoSchemaCache
-        .from("payment_transactions")
-        .update({
-          amount: newAmount,
-          payment_method: editPaymentMethod,
-          receipt_type: editReceiptType,
-          note: editPaymentNote || null,
-          received_at: new Date(`${editReceivedAt}T12:00:00`).toISOString(),
-        })
-        .eq("id", editingPayment.id);
-
-      if (updatePaymentError) throw updatePaymentError;
-
-      await recalculateFinancialRecordAfterPaymentEdit(editingPayment.financial_record_id);
-
-      alert("Pagamento atualizado com sucesso.");
-      closeEditPaymentModal();
-      await reloadAll();
-    } catch (error: any) {
-      alert("Erro ao editar pagamento: " + (error?.message || "erro inesperado"));
-    } finally {
-      setEditPaymentSaving(false);
-    }
-  }
-
-  async function handleReceberConfirmar() {
-    const target = receberTarget;
-    if (!target?.id) return;
-    if (receberSaving) return;
-
-    const valorPagoAgora = parseFloat(String(receberValor).replace(",", "."));
-    if (isNaN(valorPagoAgora) || valorPagoAgora <= 0) {
-      alert("Informe um valor válido para receber.");
-      return;
-    }
-
-    const total = parseMoney(target.amount);
-    const pagoAtual = parseMoney(target.paid_amount);
-    const novoPago = pagoAtual + valorPagoAgora;
-
-    if (novoPago > total) {
-      alert("O valor recebido não pode ser maior que o saldo do débito.");
-      return;
-    }
-
-    let novoStatus = "pendente";
-    if (novoPago === 0) novoStatus = "pendente";
-    else if (novoPago < total) novoStatus = "parcial";
-    else novoStatus = "pago";
-
-    setReceberSaving(true);
-
-    try {
-      const { error: paymentInsertError } = await supabaseNoSchemaCache
-        .from("payment_transactions")
-        .insert([
-          {
-            financial_record_id: String(target.id),
-            patient_id: target.patient_id || null,
-            amount: valorPagoAgora,
-            payment_method: receberFormaPagamento,
-            receipt_type: receberRecibo,
-            note: receberObservacao || null,
-            received_at: new Date().toISOString(),
-          },
-        ]);
-
-      if (paymentInsertError) {
-        alert("Erro ao registrar pagamento: " + paymentInsertError.message);
-        return;
-      }
-
-      const { error: recordUpdateError } = await supabaseNoSchemaCache
-        .from("financial_records")
-        .update({
-          paid_amount: novoPago,
-          payment_method: receberFormaPagamento,
-          receipt_type: receberRecibo,
-          status: novoStatus,
-          paid_at: new Date().toISOString(),
-        })
-        .eq("id", String(target.id));
-
-      if (recordUpdateError) {
-        alert("Erro ao atualizar débito: " + recordUpdateError.message);
-        return;
-      }
-
-      setIsReceberOpen(false);
-      setReceberTarget(null);
-      setReceberValor("");
-      setReceberObservacao("");
-      await reloadAll();
-    } finally {
-      setReceberSaving(false);
-    }
-  }
-
 
   function exportFinanceiroExcel() {
     try {
