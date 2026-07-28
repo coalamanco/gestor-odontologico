@@ -11,13 +11,20 @@ import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryC
 import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
+  loadFinancialPageData,
+  type Expense,
+  type FinancialRecord,
+  type PatientFinancialBalance,
+  type PatientOption,
+  type PaymentTransaction,
+} from "@/lib/financeiro/financeiroService";
+import {
   getFinancialRecordAnalysis,
   getFinancialRecordBalance,
   getFinancialRecordDaysOverdue,
   getFinancialRecordDueDate,
   getFinancialRecordVisualStatus,
   isFinancialRecordOverdue as isFinancialOverdueByEngine,
-  reconcileFinancialRecordsWithTransactions,
 } from "@/lib/financialEngine";
 import {
   DollarSign,
@@ -35,51 +42,6 @@ import {
   Download,
 } from "lucide-react";
 
-type FinancialRecord = {
-  id: string;
-  patient_id?: string | null;
-  patient_treatment_id?: string | null;
-  budget_id?: string | null;
-  description?: string | null;
-  amount?: number | string | null;
-  paid_amount?: number | string | null;
-  payment_method?: string | null;
-  receipt_type?: string | null;
-  paid_at?: string | null;
-  status?: string | null;
-  due_date?: string | null;
-  created_at?: string | null;
-  installment_number?: number | null;
-  installments?: number | null;
-};
-
-type PaymentTransaction = {
-  id: string;
-  financial_record_id: string;
-  patient_id?: string | null;
-  amount?: number | string | null;
-  payment_method?: string | null;
-  receipt_type?: string | null;
-  note?: string | null;
-  received_at?: string | null;
-  created_at?: string | null;
-};
-
-type Expense = {
-  id: string;
-  description?: string | null;
-  category?: string | null;
-  amount?: number | string | null;
-  payment_date?: string | null;
-  status?: string | null;
-  created_at?: string | null;
-};
-
-type PatientOption = {
-  id: string;
-  name: string;
-};
-
 type PeriodoFiltro =
   | "hoje"
   | "ontem"
@@ -96,9 +58,7 @@ export default function FinanceiroPage() {
   const [pagamentos, setPagamentos] = useState<PaymentTransaction[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [patients, setPatients] = useState<PatientOption[]>([]);
-  const [saldosPorPaciente, setSaldosPorPaciente] = useState<
-    Array<{ patient_id: string; name: string; total: number; paid: number; balance: number; overdueBalance: number; dueTodayBalance: number; futureBalance: number }>
-  >([]);
+  const [saldosPorPaciente, setSaldosPorPaciente] = useState<PatientFinancialBalance[]>([]);
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -874,169 +834,22 @@ export default function FinanceiroPage() {
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
 
-  async function fetchPatients() {
-    const { data, error } = await supabaseNoSchemaCache
-      .from("patients")
-      .select("id, name")
-      .order("name", { ascending: true });
-
-    if (error) {
-      alert("Erro ao carregar pacientes: " + error.message);
-      return;
-    }
-
-    setPatients((data || []) as PatientOption[]);
-  }
-
-  async function fetchRegistros() {
-    const { data, error } = await supabaseNoSchemaCache
-      .from("financial_records")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .order("installment_number", { ascending: true });
-
-    if (error) {
-      alert("Erro ao carregar financeiro: " + error.message);
-      return;
-    }
-
-    const lista = (data || []) as FinancialRecord[];
-
-    const ids = lista.map((r) => r.id).filter(Boolean);
-
-    if (ids.length === 0) {
-      setRegistros(lista);
-      setPagamentos([]);
-      return;
-    }
-
-    const { data: pagamentosData, error: pagamentosError } = await supabaseNoSchemaCache
-      .from("payment_transactions")
-      .select("*")
-      .in("financial_record_id", ids)
-      .order("received_at", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (pagamentosError) {
-      alert("Erro ao carregar pagamentos: " + pagamentosError.message);
-      return;
-    }
-
-    const paymentList = (pagamentosData || []) as PaymentTransaction[];
-    setPagamentos(paymentList);
-    setRegistros(reconcileFinancialRecordsWithTransactions(lista, paymentList));
-  }
-
-  async function fetchExpenses() {
-    const { data, error } = await supabaseNoSchemaCache
-      .from("expenses")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.warn("Erro ao carregar despesas:", error.message);
-      setExpenses([]);
-      return;
-    }
-
-    setExpenses((data || []) as Expense[]);
-  }
-
-  async function fetchSaldosPorPaciente() {
-    const [patientsRes, recordsRes, paymentsRes] = await Promise.all([
-      supabaseNoSchemaCache
-        .from("patients")
-        .select("id, name")
-        .order("name", { ascending: true }),
-      supabaseNoSchemaCache
-        .from("financial_records")
-        .select(
-          "id, patient_id, amount, paid_amount, status, due_date, created_at, paid_at, installment_number, installments, description",
-        ),
-      supabaseNoSchemaCache
-        .from("payment_transactions")
-        .select("financial_record_id, amount, received_at, created_at"),
-    ]);
-
-    if (patientsRes.error || recordsRes.error || paymentsRes.error) {
-      setSaldosPorPaciente([]);
-      return;
-    }
-
-    const patientNameMap = new Map<string, string>();
-    for (const p of patientsRes.data ?? []) {
-      patientNameMap.set(String((p as any).id), String((p as any).name ?? ""));
-    }
-
-    const grouped: Record<
-      string,
-      {
-        total: number;
-        paid: number;
-        balance: number;
-        overdueBalance: number;
-        dueTodayBalance: number;
-        futureBalance: number;
-      }
-    > = {};
-
-    const reconciledRecords = reconcileFinancialRecordsWithTransactions(
-      (recordsRes.data || []) as FinancialRecord[],
-      (paymentsRes.data || []) as PaymentTransaction[],
-    );
-
-    for (const record of reconciledRecords) {
-      const patientId = String(record.patient_id ?? "");
-      if (!patientId) continue;
-
-      const analysis = getFinancialRecordAnalysis(record);
-
-      if (!grouped[patientId]) {
-        grouped[patientId] = {
-          total: 0,
-          paid: 0,
-          balance: 0,
-          overdueBalance: 0,
-          dueTodayBalance: 0,
-          futureBalance: 0,
-        };
-      }
-
-      grouped[patientId].total += analysis.total;
-      grouped[patientId].paid += analysis.paid;
-      grouped[patientId].balance += analysis.balance;
-      grouped[patientId].overdueBalance += analysis.overdueBalance;
-      grouped[patientId].dueTodayBalance += analysis.dueTodayBalance;
-      grouped[patientId].futureBalance += analysis.futureBalance;
-    }
-
-    const rows = Object.entries(grouped).map(([patient_id, values]) => ({
-      patient_id,
-      name: patientNameMap.get(patient_id) ?? patient_id,
-      total: Number(values.total.toFixed(2)),
-      paid: Number(values.paid.toFixed(2)),
-      balance: Number(values.balance.toFixed(2)),
-      overdueBalance: Number(values.overdueBalance.toFixed(2)),
-      dueTodayBalance: Number(values.dueTodayBalance.toFixed(2)),
-      futureBalance: Number(values.futureBalance.toFixed(2)),
-    }));
-
-    rows.sort(
-      (a, b) =>
-        b.overdueBalance - a.overdueBalance ||
-        b.balance - a.balance ||
-        a.name.localeCompare(b.name, "pt-BR"),
-    );
-    setSaldosPorPaciente(rows);
-  }
-
   async function reloadAll() {
-    await Promise.all([
-      fetchPatients(),
-      fetchRegistros(),
-      fetchSaldosPorPaciente(),
-      fetchExpenses(),
-    ]);
+    setLoading(true);
+
+    try {
+      const data = await loadFinancialPageData();
+      setPatients(data.patients);
+      setRegistros(data.records);
+      setPagamentos(data.payments);
+      setExpenses(data.expenses);
+      setSaldosPorPaciente(data.patientBalances);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao carregar o financeiro.";
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
