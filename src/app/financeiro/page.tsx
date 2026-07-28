@@ -10,6 +10,7 @@ import PremiumPageHeader from "@/components/layout/PremiumPageHeader";
 import FinancialSummaryCards from "../../components/financeiro/FinancialSummaryCards";
 import FinancialAlerts from "../../components/financeiro/FinancialAlerts";
 import FinancialIntelligentDashboard from "@/components/financeiro/FinancialIntelligentDashboard";
+import FinancialOverviewCards from "@/components/financeiro/FinancialOverviewCards";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
   loadFinancialPageData,
@@ -1991,120 +1992,11 @@ export default function FinanceiroPage() {
         recibosPendentes={intelligentSummary.recibosPendentes}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-slate-800">
-              Formas de pagamento
-            </h2>
-            <p className="text-[13px] text-slate-500">
-              Recebimentos do período selecionado.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {paymentMethodSummary.length === 0 && (
-              <p className="text-sm text-slate-400">
-                Nenhum pagamento no período.
-              </p>
-            )}
-
-            {paymentMethodSummary.map((item) => (
-              <div key={item.label} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-semibold text-slate-700">
-                    {item.label}
-                  </span>
-                  <span className="font-semibold text-[#239d9a]">
-                    {formatCurrency(item.total)}
-                  </span>
-                </div>
-
-                <div className="h-2 rounded-full bg-[#eefafa] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[#239d9a]"
-                    style={{ width: `${item.percent}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-slate-800">
-              Maiores saldos vencidos
-            </h2>
-            <p className="text-[13px] text-slate-500">
-              Pacientes com maior valor realmente vencido.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            {topOpenBalances.length === 0 && (
-              <p className="text-sm text-slate-400">
-                Nenhum saldo vencido.
-              </p>
-            )}
-
-            {topOpenBalances.map((item) => (
-              <div
-                key={item.patient_id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#edf7f7] bg-[#fbffff] px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-slate-800">
-                    {item.name}
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    Pago: {formatCurrency(item.paid)}
-                  </div>
-                </div>
-
-                <div className="text-[13px] font-semibold text-amber-600 whitespace-nowrap">
-                  {formatCurrency(item.overdueBalance)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm xl:col-span-1">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-slate-800">
-              Controle de recibos
-            </h2>
-            <p className="text-[13px] text-slate-500">
-              Visão rápida dos recibos solicitados.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-                Simples
-              </p>
-              <p className="mt-2 text-lg font-semibold text-cyan-700">
-                {receiptSummary.simples}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-600">
-                IR
-              </p>
-              <p className="mt-2 text-lg font-semibold text-purple-600">
-                {receiptSummary.impostoRenda}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-[#edf7f7] bg-[#fbffff] p-3 text-[13px] text-slate-600">
-            Dica: os lançamentos com recibo ficam destacados no histórico financeiro.
-          </div>
-        </div>
-      </div>
+      <FinancialOverviewCards
+        paymentMethods={paymentMethodSummary}
+        topOpenBalances={topOpenBalances}
+        receiptSummary={receiptSummary}
+      />
 
       <div className="rounded-3xl border border-[#d9eeee] bg-white p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
