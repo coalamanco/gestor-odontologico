@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,11 @@ import ReceivePaymentModal from "@/components/financeiro/ReceivePaymentModal";
 import EditPaymentModal from "@/components/financeiro/EditPaymentModal";
 import FinancialRecordDetailsModal from "@/components/financeiro/FinancialRecordDetailsModal";
 import { useFinancialPaymentActions } from "@/hooks/financeiro/useFinancialPaymentActions";
+import { useFinancialData } from "@/hooks/financeiro/useFinancialData";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
-  loadFinancialPageData,
   type Expense,
   type FinancialRecord,
-  type PatientFinancialBalance,
-  type PatientOption,
   type PaymentTransaction,
 } from "@/lib/financeiro/financeiroService";
 import {
@@ -60,11 +58,16 @@ type PeriodoFiltro =
   | "custom";
 
 export default function FinanceiroPage() {
-  const [registros, setRegistros] = useState<FinancialRecord[]>([]);
-  const [pagamentos, setPagamentos] = useState<PaymentTransaction[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [patients, setPatients] = useState<PatientOption[]>([]);
-  const [saldosPorPaciente, setSaldosPorPaciente] = useState<PatientFinancialBalance[]>([]);
+  const {
+    registros,
+    pagamentos,
+    expenses,
+    patients,
+    saldosPorPaciente,
+    loading,
+    setLoading,
+    reloadAll,
+  } = useFinancialData();
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -75,7 +78,6 @@ export default function FinanceiroPage() {
 
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  const [loading, setLoading] = useState(false);
   const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(null);
 
   const [periodoFiltro, setPeriodoFiltro] = useState<PeriodoFiltro>("mes_atual");
@@ -859,28 +861,6 @@ export default function FinanceiroPage() {
 
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
-
-  async function reloadAll() {
-    setLoading(true);
-
-    try {
-      const data = await loadFinancialPageData();
-      setPatients(data.patients);
-      setRegistros(data.records);
-      setPagamentos(data.payments);
-      setExpenses(data.expenses);
-      setSaldosPorPaciente(data.patientBalances);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao carregar o financeiro.";
-      alert(message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    reloadAll();
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
