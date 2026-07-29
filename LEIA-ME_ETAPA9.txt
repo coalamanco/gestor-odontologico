@@ -1,0 +1,38 @@
+ETAPA 9 — EXTRAÇÃO DO MODAL DE EDIÇÃO DE PAGAMENTO
+
+Arquivos principais desta etapa:
+
+1. src/components/financeiro/EditPaymentModal.tsx
+   - Novo componente visual do modal "Editar pagamento recebido".
+   - Mantém valor, data, forma de pagamento, tipo de recibo e observação.
+   - Não contém consultas ao banco nem altera as regras financeiras.
+
+2. src/app/financeiro/page.tsx
+   - Importa EditPaymentModal.
+   - Substitui o bloco JSX interno do modal pelo novo componente.
+
+Como aplicar:
+
+1. Extraia o ZIP.
+2. Copie a pasta src para a raiz do projeto, permitindo substituir os arquivos existentes.
+3. Execute:
+
+   npm run build
+   npm run dev
+
+Testes recomendados:
+
+- Abra o histórico de um lançamento com pagamento.
+- Clique em Editar.
+- Altere o valor e salve.
+- Abra novamente e confira o valor.
+- Altere data, forma de pagamento, recibo e observação.
+- Confira se o saldo e o status do lançamento continuam corretos.
+
+Depois de validar:
+
+   git add .
+   git commit -m "Extrai modal de edição de pagamento"
+
+Observação:
+Esta etapa não envia nada ao GitHub nem ao Vercel. As alterações permanecem locais até que seja executado git push e posteriormente integrado à branch de produção.
