@@ -1,0 +1,25 @@
+ETAPA 10 — MODAL DE DETALHES DO DÉBITO
+
+Arquivo novo:
+src/components/financeiro/FinancialRecordDetailsModal.tsx
+
+Arquivo atualizado:
+src/app/financeiro/page.tsx
+
+O que foi extraído:
+- informações completas do débito
+- saldo restante
+- status, parcela, forma de pagamento e recibo
+- histórico de pagamentos
+- botão para editar pagamento
+
+Nenhuma regra financeira ou consulta ao banco foi alterada.
+
+Depois de copiar a pasta src sobre a pasta src do projeto:
+1. npm run build
+2. npm run dev
+3. testar a abertura dos detalhes e a edição de um pagamento pelo histórico
+
+Commit sugerido:
+git add .
+git commit -m "Extrai modal de detalhes do débito"

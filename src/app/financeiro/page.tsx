@@ -14,6 +14,7 @@ import FinancialOverviewCards from "@/components/financeiro/FinancialOverviewCar
 import PatientsToChargeCard from "@/components/financeiro/PatientsToChargeCard";
 import ReceivePaymentModal from "@/components/financeiro/ReceivePaymentModal";
 import EditPaymentModal from "@/components/financeiro/EditPaymentModal";
+import FinancialRecordDetailsModal from "@/components/financeiro/FinancialRecordDetailsModal";
 import { useFinancialPaymentActions } from "@/hooks/financeiro/useFinancialPaymentActions";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
@@ -38,7 +39,6 @@ import {
   Trash2,
   TrendingUp,
   Wallet,
-  X,
   Info,
   CalendarDays,
   ChevronDown,
@@ -2140,112 +2140,17 @@ export default function FinanceiroPage() {
         </Card>
       </div>
 
-      {detailRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <Card className="w-full max-w-xl overflow-hidden border border-[#d9eeee] shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-[#e7f6f6] bg-gradient-to-r from-[#fbffff] to-[#f4fcfc]">
-              <div>
-                <CardTitle className="text-[#239d9a]">Detalhes do débito</CardTitle>
-                <CardDescription>Informações completas do lançamento.</CardDescription>
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setDetailRecord(null)}
-                className="rounded-full hover:bg-[#eefafa]"
-              >
-                <X size={20} />
-              </Button>
-            </CardHeader>
-
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2 rounded-2xl border border-[#e7f6f6] bg-[#fbffff] p-4 text-sm">
-                <div>
-                  <span className="font-semibold text-slate-700">Descrição:</span>{" "}
-                  <span className="text-slate-600">{detailRecord.description || "-"}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Valor:</span>{" "}
-                  <span className="text-slate-600">{formatCurrency(detailRecord.amount)}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Já pago:</span>{" "}
-                  <span className="text-slate-600">{formatCurrency(detailRecord.paid_amount)}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Falta pagar:</span>{" "}
-                  <span className="text-slate-600">
-                    {formatCurrency(
-                      Math.max(
-                        0,
-                        parseMoney(detailRecord.amount) - parseMoney(detailRecord.paid_amount)
-                      )
-                    )}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Status:</span>{" "}
-                  <span className="text-slate-600">{labelStatus(detailRecord.status)}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Parcela:</span>{" "}
-                  <span className="text-slate-600">
-                    {detailRecord.installment_number || 1}/{detailRecord.installments || 1}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Forma de pagamento:</span>{" "}
-                  <span className="text-slate-600">{labelFormaPagamento(detailRecord.payment_method)}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-slate-700">Recibo:</span>{" "}
-                  <span className="text-slate-600">{labelRecibo(detailRecord.receipt_type)}</span>
-                </div>
-              </div>
-
-              {(transactionsByRecord[detailRecord.id] || []).length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-[#239d9a]">Histórico de pagamentos</h3>
-                  <div className="space-y-2">
-                    {(transactionsByRecord[detailRecord.id] || []).map((tx) => (
-                      <div
-                        key={tx.id}
-                        className="rounded-xl border border-[#e7f6f6] bg-[#fbffff] px-3 py-2 text-sm"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                          <div className="text-slate-700">
-                            <strong>{formatCurrency(Number(tx.amount || 0))}</strong> em{" "}
-                            {tx.received_at
-                              ? new Date(tx.received_at).toLocaleDateString("pt-BR")
-                              : "-"}
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-slate-500">
-                              {labelFormaPagamento(tx.payment_method)} • {labelRecibo(tx.receipt_type)}
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={() => openEditPaymentModal(tx)}
-                              className="rounded-lg border border-[#d9eeee] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#239d9a] hover:bg-[#eefafa]"
-                            >
-                              Editar
-                            </button>
-                          </div>
-                        </div>
-                        {tx.note && <div className="mt-1 text-slate-500">Obs.: {tx.note}</div>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <FinancialRecordDetailsModal
+        record={detailRecord}
+        transactions={detailRecord ? transactionsByRecord[detailRecord.id] || [] : []}
+        onClose={() => setDetailRecord(null)}
+        onEditPayment={openEditPaymentModal}
+        parseMoney={parseMoney}
+        formatCurrency={formatCurrency}
+        labelStatus={labelStatus}
+        labelPaymentMethod={labelFormaPagamento}
+        labelReceipt={labelRecibo}
+      />
 
       <ReceivePaymentModal
         open={isReceberOpen}
