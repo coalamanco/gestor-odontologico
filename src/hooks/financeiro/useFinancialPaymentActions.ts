@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
+import { toInputDate } from "@/lib/financeiro/financeiroUtils";
 import type {
   FinancialRecord,
   PaymentTransaction,
@@ -18,7 +19,7 @@ export function useFinancialPaymentActions({
   parseMoney,
   labelFormaPagamento,
 }: UseFinancialPaymentActionsParams) {
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = toInputDate(new Date());
 
   const [isReceberOpen, setIsReceberOpen] = useState(false);
   const [receberTarget, setReceberTarget] = useState<FinancialRecord | null>(null);
@@ -61,7 +62,7 @@ export function useFinancialPaymentActions({
     setEditReceivedAt(
       payment.received_at
         ? String(payment.received_at).slice(0, 10)
-        : new Date().toISOString().slice(0, 10)
+        : toInputDate(new Date())
     );
     setEditPaymentNote(payment.note || "");
     setIsEditPaymentOpen(true);
@@ -75,7 +76,7 @@ export function useFinancialPaymentActions({
     setEditPaymentAmount("");
     setEditPaymentMethod("Pix");
     setEditReceiptType("nenhum");
-    setEditReceivedAt(new Date().toISOString().slice(0, 10));
+    setEditReceivedAt(toInputDate(new Date()));
     setEditPaymentNote("");
   }
 

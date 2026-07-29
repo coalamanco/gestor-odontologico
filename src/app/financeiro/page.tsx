@@ -77,7 +77,7 @@ export default function FinanceiroPage() {
     installments: "1",
   });
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = toInputDate(new Date());
 
   const [detailRecord, setDetailRecord] = useState<FinancialRecord | null>(null);
 
@@ -750,7 +750,7 @@ export default function FinanceiroPage() {
         amount: installmentAmount,
         paid_amount: 0,
         status: "pendente",
-        due_date: dueDate.toISOString().slice(0, 10),
+        due_date: toInputDate(dueDate),
         installment_number: index + 1,
         installments: installmentsNumeric,
       };
@@ -853,7 +853,7 @@ export default function FinanceiroPage() {
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = `financeiro-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = `financeiro-${toInputDate(new Date())}.xlsx`;
 
       document.body.appendChild(link);
       link.click();
