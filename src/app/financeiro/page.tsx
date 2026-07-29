@@ -17,9 +17,21 @@ import EditPaymentModal from "@/components/financeiro/EditPaymentModal";
 import FinancialRecordDetailsModal from "@/components/financeiro/FinancialRecordDetailsModal";
 import { useFinancialPaymentActions } from "@/hooks/financeiro/useFinancialPaymentActions";
 import { useFinancialData } from "@/hooks/financeiro/useFinancialData";
+import {
+  formatCurrency,
+  getExpenseDate,
+  getPeriodoRange,
+  getPeriodoSelectionLabel,
+  isExpensePaid,
+  isWithinPeriodo as isDateWithinPeriodo,
+  labelStatus,
+  parseMoney,
+  periodoOptions,
+  toInputDate,
+  type PeriodoFiltro,
+} from "@/lib/financeiro/financeiroUtils";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
 import {
-  type Expense,
   type FinancialRecord,
   type PaymentTransaction,
 } from "@/lib/financeiro/financeiroService";
@@ -45,17 +57,6 @@ import {
   AlertTriangle,
   Download,
 } from "lucide-react";
-
-type PeriodoFiltro =
-  | "hoje"
-  | "ontem"
-  | "semana_atual"
-  | "semana_passada"
-  | "mes_atual"
-  | "mes_passado"
-  | "ultimos_30"
-  | "proximos_30"
-  | "custom";
 
 export default function FinanceiroPage() {
   const {
@@ -89,178 +90,25 @@ export default function FinanceiroPage() {
 
   const resultadosRef = useRef<HTMLDivElement | null>(null);
 
-  const parseMoney = (value: unknown) => {
-    if (value === null || value === undefined || value === "") return 0;
-    if (typeof value === "number") return value;
-    return Number(String(value).replace(",", ".")) || 0;
-  };
-
-  const formatCurrency = (value: unknown) => {
-    const numberValue = parseMoney(value);
-    return numberValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
-
-  const toDateOnly = (date: Date) => {
-    const copy = new Date(date);
-    copy.setHours(0, 0, 0, 0);
-    return copy;
-  };
-
-  const endOfDate = (date: Date) => {
-    const copy = new Date(date);
-    copy.setHours(23, 59, 59, 999);
-    return copy;
-  };
-
-  const toInputDate = (date: Date) => date.toISOString().slice(0, 10);
-
-  const getStartOfWeek = (date: Date) => {
-    const copy = toDateOnly(date);
-    const day = copy.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    copy.setDate(copy.getDate() + diff);
-    return copy;
-  };
-
-  const getPeriodoRange = (periodo: PeriodoFiltro) => {
-    const now = new Date();
-
-    if (periodo === "hoje") {
-      return { start: toDateOnly(now), end: endOfDate(now) };
-    }
-
-    if (periodo === "ontem") {
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      return { start: toDateOnly(yesterday), end: endOfDate(yesterday) };
-    }
-
-    if (periodo === "semana_atual") {
-      const start = getStartOfWeek(now);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      return { start, end: endOfDate(end) };
-    }
-
-    if (periodo === "semana_passada") {
-      const start = getStartOfWeek(now);
-      start.setDate(start.getDate() - 7);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      return { start, end: endOfDate(end) };
-    }
-
-    if (periodo === "mes_atual") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      return { start, end: endOfDate(end) };
-    }
-
-    if (periodo === "mes_passado") {
-      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const end = new Date(now.getFullYear(), now.getMonth(), 0);
-      return { start, end: endOfDate(end) };
-    }
-
-    if (periodo === "ultimos_30") {
-      const start = new Date(now);
-      start.setDate(now.getDate() - 30);
-      return { start: toDateOnly(start), end: endOfDate(now) };
-    }
-
-    if (periodo === "proximos_30") {
-      const end = new Date(now);
-      end.setDate(now.getDate() + 30);
-      return { start: toDateOnly(now), end: endOfDate(end) };
-    }
-
-    const start = dataInicio ? new Date(`${dataInicio}T00:00:00`) : new Date("1900-01-01T00:00:00");
-    const end = dataFim ? new Date(`${dataFim}T23:59:59`) : new Date("2999-12-31T23:59:59");
-
-    return { start, end };
-  };
-
-  const isWithinPeriodo = (dateString?: string | null) => {
-    if (!dateString) return false;
-
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return false;
-
-    const { start, end } = getPeriodoRange(periodoFiltro);
-    return date >= start && date <= end;
-  };
-
-  const isExpensePaid = (expense: Expense) => {
-    return String(expense.status || "").trim().toLowerCase() === "pago";
-  };
-
-  const getExpenseDate = (expense: Expense) => {
-    return expense.payment_date || expense.created_at || null;
-  };
-
   const applyPeriodo = (periodo: PeriodoFiltro) => {
     setPeriodoFiltro(periodo);
 
     if (periodo !== "custom") {
-      const { start, end } = getPeriodoRange(periodo);
+      const { start, end } = getPeriodoRange(periodo, dataInicio, dataFim);
       setDataInicio(toInputDate(start));
       setDataFim(toInputDate(end));
     }
   };
 
   const labelPeriodoAtual = () => {
-    const { start, end } = getPeriodoRange(periodoFiltro);
+    const { start, end } = getPeriodoRange(periodoFiltro, dataInicio, dataFim);
     return `${start.toLocaleDateString("pt-BR")} até ${end.toLocaleDateString("pt-BR")}`;
   };
 
-  const labelPeriodoSelecionado = () => {
-    switch (periodoFiltro) {
-      case "hoje":
-        return "de hoje";
-      case "ontem":
-        return "de ontem";
-      case "semana_atual":
-        return "dessa semana";
-      case "semana_passada":
-        return "da semana passada";
-      case "mes_atual":
-        return "desse mês";
-      case "mes_passado":
-        return "do mês passado";
-      case "ultimos_30":
-        return "dos últimos 30 dias";
-      case "proximos_30":
-        return "dos próximos 30 dias";
-      case "custom":
-        return "escolher período";
-      default:
-        return "desse mês";
-    }
-  };
+  const labelPeriodoSelecionado = () => getPeriodoSelectionLabel(periodoFiltro);
 
-  const periodoOptions: Array<{ value: PeriodoFiltro; label: string }> = [
-    { value: "hoje", label: "de hoje" },
-    { value: "ontem", label: "de ontem" },
-    { value: "semana_atual", label: "dessa semana" },
-    { value: "semana_passada", label: "da semana passada" },
-    { value: "mes_atual", label: "desse mês" },
-    { value: "mes_passado", label: "do mês passado" },
-    { value: "ultimos_30", label: "dos últimos 30 dias" },
-    { value: "proximos_30", label: "dos próximos 30 dias" },
-    { value: "custom", label: "escolher período" },
-  ];
-
-  const labelStatus = (value: unknown) => {
-    const v = String(value ?? "").trim().toLowerCase();
-    if (v === "pago" || v === "paid") return "Pago";
-    if (v === "parcial") return "Parcial";
-    if (v === "pendente" || v === "pending") return "Pendente";
-    if (v === "cancelado" || v === "cancelled" || v === "canceled") return "Cancelado";
-    return v ? String(value) : "—";
-  };
+  const isWithinPeriodo = (dateString?: string | null) =>
+    isDateWithinPeriodo(dateString, periodoFiltro, dataInicio, dataFim);
 
   const statusBadgeClass = (value: unknown) => {
     const v = String(value ?? "").trim().toLowerCase();

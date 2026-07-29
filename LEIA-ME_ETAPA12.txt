@@ -1,0 +1,28 @@
+ETAPA 12 — UTILITÁRIOS DO FINANCEIRO
+
+Arquivos alterados/criados:
+- src/app/financeiro/page.tsx
+- src/lib/financeiro/financeiroUtils.ts
+
+O que foi extraído do page.tsx:
+- tipo PeriodoFiltro
+- opções do filtro de período
+- conversão e formatação monetária em pt-BR/BRL
+- cálculo dos intervalos de datas
+- validação de data dentro do período
+- identificação de despesas pagas
+- obtenção da data da despesa
+- rótulos de período e status
+
+Nenhuma regra de banco de dados ou reconciliação financeira foi alterada.
+
+VALIDAÇÃO:
+1. Copie a pasta src sobre a pasta src do projeto.
+2. Execute npm run build.
+3. Execute npm run dev.
+4. Teste todos os filtros de período, inclusive período personalizado.
+5. Confira valores em reais, despesas e status.
+
+COMMIT SUGERIDO:
+git add .
+git commit -m "Centraliza utilitários do financeiro"
