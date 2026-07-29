@@ -129,6 +129,43 @@ export function useFinancialPaymentActions({
     try {
       setEditPaymentSaving(true);
 
+      const { data: recordData, error: recordError } = await supabaseNoSchemaCache
+        .from("financial_records")
+        .select("amount")
+        .eq("id", editingPayment.financial_record_id)
+        .single();
+
+      if (recordError) throw recordError;
+
+      const { data: otherPaymentsData, error: otherPaymentsError } =
+        await supabaseNoSchemaCache
+          .from("payment_transactions")
+          .select("amount")
+          .eq("financial_record_id", editingPayment.financial_record_id)
+          .neq("id", editingPayment.id);
+
+      if (otherPaymentsError) throw otherPaymentsError;
+
+      const recordTotal = parseMoney(recordData?.amount);
+      const otherPaymentsTotal = (otherPaymentsData || []).reduce(
+        (sum, payment) => sum + parseMoney(payment.amount),
+        0
+      );
+      const totalAfterEdit = otherPaymentsTotal + newAmount;
+      const availableForThisPayment = Math.max(0, recordTotal - otherPaymentsTotal);
+
+      if (totalAfterEdit - recordTotal > 0.005) {
+        const availableFormatted = availableForThisPayment.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+
+        alert(
+          `O valor deste pagamento não pode ultrapassar ${availableFormatted}, pois os demais pagamentos já somam parte do débito.`
+        );
+        return;
+      }
+
       const { error: updatePaymentError } = await supabaseNoSchemaCache
         .from("payment_transactions")
         .update({

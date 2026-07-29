@@ -1,0 +1,28 @@
+ETAPA 13 — VALIDAÇÃO DA EDIÇÃO DE PAGAMENTO
+
+Arquivo alterado:
+- src/hooks/financeiro/useFinancialPaymentActions.ts
+
+O que mudou:
+- Antes de editar um pagamento, o sistema consulta o valor total do débito.
+- Soma todos os outros pagamentos ligados ao mesmo débito, excluindo o pagamento em edição.
+- Impede que o novo valor faça a soma recebida ultrapassar o valor total do débito.
+- Informa, em reais, o valor máximo permitido para aquele pagamento.
+- Nenhuma tabela ou estrutura do banco foi alterada.
+
+TESTE RECOMENDADO
+1. Abra um débito que possua dois ou mais pagamentos.
+2. Edite um dos pagamentos e informe um valor que faça o total ultrapassar o débito.
+3. Confirme que o sistema bloqueia o salvamento e mostra o limite disponível.
+4. Informe um valor dentro do limite e confirme que salva normalmente.
+5. Verifique o saldo e o status do débito após a edição.
+
+COMANDOS
+npm run build
+npm run dev
+
+Após validar:
+git add .
+git commit -m "Impede pagamento editado acima do débito"
+
+Esta etapa não contém git push e não publica no Vercel.
