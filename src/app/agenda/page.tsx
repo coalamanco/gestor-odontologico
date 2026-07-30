@@ -2,252 +2,37 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { loadAgendaPageData } from "@/lib/agenda/agendaService";
 import { useRouter } from "next/navigation";
 
-type MainType = "consulta" | "compromisso";
-type ConsultaMotivo = "consulta" | "retorno" | "tratamento";
-type AppointmentStatus =
-  | "agendado"
-  | "confirmado"
-  | "em_atendimento"
-  | "finalizado"
-  | "faltou"
-  | "cancelado";
-
-const SLOT_HEIGHT = 28;
-const START_HOUR = 8;
-const END_HOUR = 20;
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function timeToMinutes(time: string) {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function startOfWeek(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function addDays(date: Date, days: number) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function formatDate(date: Date) {
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  return `${year}-${month}-${day}`;
-}
-
-function formatDateBr(dateString: string) {
-  if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-function isTodayDate(dateString: string) {
-  return dateString === formatDate(new Date());
-}
-
-function getWeekdayLabel(date: Date) {
-  const labels = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-  return labels[date.getDay()] || "DIA";
-}
-
-
-type HolidayInfo = {
-  name: string;
-  scope: "nacional" | "municipal";
-};
-
-function getEasterDate(year: number) {
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31);
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-
-  return new Date(year, month - 1, day);
-}
-
-function addHoliday(holidays: Record<string, HolidayInfo>, date: Date, info: HolidayInfo) {
-  holidays[formatDate(date)] = info;
-}
-
-function getHolidayMap(year: number) {
-  const holidays: Record<string, HolidayInfo> = {};
-
-  // Feriados nacionais oficiais
-  holidays[`${year}-01-01`] = { name: "Confraternização Universal", scope: "nacional" };
-  holidays[`${year}-04-21`] = { name: "Tiradentes", scope: "nacional" };
-  holidays[`${year}-05-01`] = { name: "Dia do Trabalho", scope: "nacional" };
-  holidays[`${year}-09-07`] = { name: "Independência do Brasil", scope: "nacional" };
-  holidays[`${year}-10-12`] = { name: "Nossa Senhora Aparecida", scope: "nacional" };
-  holidays[`${year}-11-02`] = { name: "Finados", scope: "nacional" };
-  holidays[`${year}-11-15`] = { name: "Proclamação da República", scope: "nacional" };
-  holidays[`${year}-11-20`] = { name: "Consciência Negra", scope: "nacional" };
-  holidays[`${year}-12-25`] = { name: "Natal", scope: "nacional" };
-
-  const easter = getEasterDate(year);
-  const goodFriday = new Date(easter);
-  goodFriday.setDate(easter.getDate() - 2);
-  addHoliday(holidays, goodFriday, { name: "Sexta-feira Santa", scope: "nacional" });
-
-  // Feriados municipais de Araranguá-SC
-  holidays[`${year}-04-03`] = { name: "Aniversário de Araranguá", scope: "municipal" };
-  holidays[`${year}-05-04`] = { name: "Nossa Senhora Mãe dos Homens", scope: "municipal" };
-
-  return holidays;
-}
-
-function getHolidayInfo(dateString: string) {
-  if (!dateString) return null;
-  const year = Number(dateString.slice(0, 4));
-  if (!Number.isFinite(year)) return null;
-  return getHolidayMap(year)[dateString] || null;
-}
-
-function normalizePhone(value?: string | null) {
-  if (!value) return "";
-  return String(value).replace(/\D/g, "");
-}
-
-function parseHourValue(value: any, fallback: number) {
-  const raw = String(value ?? "").trim();
-
-  if (!raw) return fallback;
-
-  const hour = Number(raw.includes(":") ? raw.split(":")[0] : raw);
-
-  if (!Number.isFinite(hour)) return fallback;
-  return Math.min(23, Math.max(0, hour));
-}
-
-function parsePositiveNumber(value: any, fallback: number) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
-  return parsed;
-}
-
-const PROFESSIONAL_COLORS = [
-  "#239d9a",
-  "#2563eb",
-  "#7c3aed",
-  "#ea580c",
-  "#16a34a",
-  "#db2777",
-  "#0891b2",
-  "#9333ea",
-  "#ca8a04",
-  "#475569",
-];
-
-function getStableColorIndex(value?: string | null) {
-  if (!value) return 0;
-
-  let hash = 0;
-
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-
-  return hash % PROFESSIONAL_COLORS.length;
-}
-
-function getProfessionalColor(professionalId?: string | null) {
-  if (!professionalId) return "#239d9a";
-  return PROFESSIONAL_COLORS[getStableColorIndex(professionalId)];
-}
-
-function getProfessionalInitials(name?: string | null) {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (parts.length === 0) return "TP";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
-
-
-function addMinutesToTime(time: string, minutes: number) {
-  const [hour, minute] = String(time || "08:00").split(":").map(Number);
-  const date = new Date(2000, 0, 1, hour || 8, minute || 0, 0, 0);
-  date.setMinutes(date.getMinutes() + minutes);
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function minutesBetweenTimes(startTime?: string | null, endTime?: string | null) {
-  if (!startTime || !endTime) return 60;
-  const start = timeToMinutes(startTime);
-  const end = timeToMinutes(endTime);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 60;
-  return end - start;
-}
-
-function getBlockTypeLabel(type?: string | null) {
-  if (type === "almoco") return "Almoço";
-  if (type === "ferias") return "Férias";
-  if (type === "reuniao") return "Reunião";
-  if (type === "curso") return "Curso/Congresso";
-  if (type === "pessoal") return "Pessoal";
-  if (type === "manutencao") return "Manutenção";
-  return "Bloqueio";
-}
-
-function getDefaultBlockTitle(type?: string | null) {
-  const label = getBlockTypeLabel(type);
-  return label === "Bloqueio" ? "Horário bloqueado" : label;
-}
-
-function getBlockColor(type?: string | null) {
-  if (type === "almoco") return "#78716c";
-  if (type === "ferias") return "#475569";
-  if (type === "reuniao") return "#4b5563";
-  if (type === "curso") return "#6d28d9";
-  if (type === "pessoal") return "#9f1239";
-  if (type === "manutencao") return "#92400e";
-  return "#6b7280";
-}
-
-function getFallbackAppointmentColor(status?: string | null, type?: string | null, title?: string | null) {
-  if (type === "compromisso") return "#64748b";
-
-  if (status === "confirmado") return "#10b981";
-  if (status === "em_atendimento") return "#2563eb";
-  if (status === "finalizado") return "#64748b";
-  if (status === "faltou") return "#ef4444";
-  if (status === "cancelado") return "#94a3b8";
-
-  const motivo = String(title || "").toLowerCase();
-
-  if (motivo === "retorno") return "#10b981";
-  if (motivo === "tratamento") return "#14b8a6";
-
-  return "#0ea5a4";
-}
-
+import {
+  SLOT_HEIGHT,
+  START_HOUR,
+  END_HOUR,
+  addDays,
+  addMinutesToTime,
+  formatDate,
+  formatDateBr,
+  getBlockColor,
+  getBlockTypeLabel,
+  getDefaultBlockTitle,
+  getFallbackAppointmentColor,
+  getHolidayInfo,
+  getProfessionalColor,
+  getProfessionalInitials,
+  getWeekdayLabel,
+  isTodayDate,
+  minutesBetweenTimes,
+  normalizePhone,
+  pad,
+  parseHourValue,
+  parsePositiveNumber,
+  startOfWeek,
+  timeToMinutes,
+  type AppointmentStatus,
+  type ConsultaMotivo,
+  type MainType,
+} from "@/lib/agenda/agendaUtils";
 export default function AgendaPage() {
   const router = useRouter();
 
@@ -397,62 +182,18 @@ export default function AgendaPage() {
   const suppressNextClickRef = useRef(false);
 
   const loadData = async () => {
-    const { data: p } = await supabase.from("patients").select("*").order("name");
-    const { data: profs } = await supabase
-      .from("professionals")
-      .select("id, name, cro, specialty, active")
-      .order("name");
+    try {
+      const data = await loadAgendaPageData();
 
-    const { data: a } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("date")
-      .order("start_time");
-
-    const { data: blocks } = await supabase
-      .from("schedule_blocks")
-      .select("*")
-      .order("date")
-      .order("start_time");
-
-    const { data: f } = await supabase
-      .from("financial_records")
-      .select("*");
-
-    const { data: templates } = await supabase
-      .from("message_templates")
-      .select("id, type, title, content, active")
-      .eq("active", true);
-
-    const { data: settings } = await supabase
-      .from("clinic_settings")
-      .select("start_hour, end_hour, max_patients_day")
-      .eq("id", 1)
-      .maybeSingle();
-
-    if (p) setPatients(p);
-    if (profs) setProfessionals(profs);
-    if (a) setAppointments(a);
-    if (blocks) setScheduleBlocks(blocks);
-    if (f) setFinancialRecords(f);
-    if (templates) setMessageTemplates(templates);
-
-    if (settings) {
-      const startHour = parseHourValue(settings.start_hour, START_HOUR);
-      let endHour = parseHourValue(settings.end_hour, END_HOUR);
-
-      if (endHour <= startHour) {
-        endHour = END_HOUR;
-      }
-
-      setClinicSettings({
-        start_hour: startHour,
-        end_hour: endHour,
-        max_patients_day: parsePositiveNumber(
-          settings.max_patients_day,
-          15
-        ),
-      });
+      setPatients(data.patients);
+      setProfessionals(data.professionals);
+      setAppointments(data.appointments);
+      setScheduleBlocks(data.scheduleBlocks);
+      setFinancialRecords(data.financialRecords);
+      setMessageTemplates(data.messageTemplates);
+      setClinicSettings(data.clinicSettings);
+    } catch (error) {
+      console.error("Erro ao carregar dados da agenda:", error);
     }
   };
 

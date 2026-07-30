@@ -1,0 +1,35 @@
+AGENDA — ETAPA 1
+
+Objetivo
+- Centralizar tipos, constantes e funções utilitárias da Agenda.
+- Não alterar consultas, regras de agendamento, drag & drop, resize, Google Agenda ou interface.
+
+Arquivos
+- Atualizado: src/app/agenda/page.tsx
+- Criado: src/lib/agenda/agendaUtils.ts
+
+Principais itens extraídos
+- tipos de agendamento e status
+- horários e altura dos slots
+- conversão e formatação de datas/horários
+- cálculo da semana
+- feriados nacionais e municipais de Araranguá
+- cores e iniciais dos profissionais
+- cores e rótulos dos bloqueios
+- funções auxiliares de duração e telefone
+
+Teste recomendado
+1. npm run build
+2. npm run dev
+3. Abrir as visões Dia e Semana.
+4. Navegar entre semanas e usar o botão Hoje.
+5. Conferir feriados e horários.
+6. Abrir, arrastar e redimensionar um agendamento.
+7. Abrir um bloqueio de horário.
+
+Commit sugerido
+git add .
+git commit -m "Centraliza utilitários da agenda"
+
+Observação
+Os arquivos com credenciais presentes no ZIP enviado não foram incluídos nesta entrega.

@@ -1,0 +1,36 @@
+AGENDA — ETAPA 2
+
+Objetivo
+Centralizar o carregamento inicial da Agenda em um serviço próprio.
+
+Novo arquivo
+src/lib/agenda/agendaService.ts
+
+Alterado
+src/app/agenda/page.tsx
+
+O que mudou
+- As sete consultas iniciais ao Supabase saíram do page.tsx.
+- O carregamento agora é feito por loadAgendaPageData().
+- As consultas independentes são executadas em paralelo com Promise.all.
+- A normalização das configurações da clínica ficou no serviço.
+- O page.tsx continua controlando os estados da tela.
+
+O que não mudou
+- Criação e edição de agendamentos.
+- Arrastar e redimensionar.
+- Bloqueios.
+- Google Agenda.
+- WhatsApp e lembretes.
+- Aparência e filtros.
+
+Teste
+1. npm run build
+2. npm run dev
+3. Abrir Agenda e atualizar a página.
+4. Conferir pacientes, profissionais, agendamentos, bloqueios e horários.
+5. Testar Dia/Semana, drag, resize e Google Agenda.
+
+Commit sugerido
+git add .
+git commit -m "Extrai carregamento inicial da agenda"
