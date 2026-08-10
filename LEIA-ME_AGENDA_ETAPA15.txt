@@ -1,0 +1,21 @@
+ETAPA 15 - NAVEGACAO E ESTADO DE VISUALIZACAO DA AGENDA
+
+Arquivos desta etapa:
+- src/app/agenda/page.tsx
+- src/hooks/agenda/useAgendaNavigation.ts
+
+O novo hook centraliza:
+- estado Dia/Semana e data-base;
+- mini calendario;
+- deteccao de mobile;
+- swipe horizontal na visao Dia;
+- horarios da grade;
+- marcador da hora atual;
+- posicionamento/rolagem inicial da agenda.
+
+Nenhuma regra de persistencia, drag/drop, resize, Supabase ou Google Calendar foi alterada.
+
+Depois de copiar a pasta src para o projeto:
+1. npm run build
+2. npm run dev
+3. Testar Dia/Semana, Hoje, anterior/proximo, mini calendario e swipe no celular.

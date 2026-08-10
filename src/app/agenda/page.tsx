@@ -7,6 +7,7 @@ import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderAction
 import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
 import { useAgendaBlockActions } from "@/hooks/agenda/useAgendaBlockActions";
 import { useAgendaQuickPatient } from "@/hooks/agenda/useAgendaQuickPatient";
+import { useAgendaNavigation } from "@/hooks/agenda/useAgendaNavigation";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -31,13 +32,11 @@ import {
   getHolidayInfo,
   getProfessionalColor,
   getProfessionalInitials,
-  getWeekdayLabel,
   isTodayDate,
   minutesBetweenTimes,
   pad,
   parseHourValue,
   parsePositiveNumber,
-  startOfWeek,
   timeToMinutes,
   type AppointmentStatus,
   type ConsultaMotivo,
@@ -61,12 +60,6 @@ export default function AgendaPage() {
 
   const { connectGoogleCalendar, syncExistingGoogleAppointments } =
     useAgendaGoogleActions({ loadData });
-
-  const agendaScrollRef = useRef<HTMLDivElement | null>(null);
-  const touchStartXRef = useRef(0);
-  const touchStartYRef = useRef(0);
-  const touchStartTimeRef = useRef(0);
-  const [now, setNow] = useState(new Date());
 
   const [showModal, setShowModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -108,13 +101,6 @@ export default function AgendaPage() {
     all_day: false,
   });
 
-  const [weekBaseDate, setWeekBaseDate] = useState<Date>(new Date());
-  const [mobileView, setMobileView] = useState<"day" | "week">("day");
-  const [isMobileAgenda, setIsMobileAgenda] = useState(false);
-  const [showMiniCalendar, setShowMiniCalendar] = useState(false);
-  const [miniCalendarDate, setMiniCalendarDate] = useState<Date>(new Date());
-  const [showMobileAgendaSheet, setShowMobileAgendaSheet] = useState(false);
-
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const draggingIdRef = useRef<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
@@ -129,17 +115,6 @@ export default function AgendaPage() {
   const resizeCurrentDurationRef = useRef(30);
   const isResizingRef = useRef(false);
   const suppressNextClickRef = useRef(false);
-
-  useEffect(() => {
-    const updateMobileAgenda = () => {
-      setIsMobileAgenda(window.innerWidth < 768);
-    };
-
-    updateMobileAgenda();
-    window.addEventListener("resize", updateMobileAgenda);
-
-    return () => window.removeEventListener("resize", updateMobileAgenda);
-  }, []);
 
   const {
     showQuickPatientForm,
@@ -192,97 +167,37 @@ export default function AgendaPage() {
     loadData,
   });
 
-  const days = useMemo(() => {
-    if (isMobileAgenda && mobileView === "day") {
-      return [
-        {
-          date: formatDate(weekBaseDate),
-          label: getWeekdayLabel(weekBaseDate),
-          num: pad(weekBaseDate.getDate()),
-        },
-      ];
-    }
-
-    const start = startOfWeek(weekBaseDate);
-    const labels = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-
-    return Array.from({ length: 6 }).map((_, i) => {
-      const d = addDays(start, i);
-      return {
-        date: formatDate(d),
-        label: labels[i],
-        num: pad(d.getDate()),
-      };
-    });
-  }, [weekBaseDate, isMobileAgenda, mobileView]);
-
-  const miniCalendarDays = useMemo(() => {
-    const year = miniCalendarDate.getFullYear();
-    const month = miniCalendarDate.getMonth();
-
-    const firstDay = new Date(year, month, 1);
-    const firstWeekday = firstDay.getDay();
-    const mondayOffset = firstWeekday === 0 ? 6 : firstWeekday - 1;
-
-    const startDate = new Date(year, month, 1 - mondayOffset);
-
-    return Array.from({ length: 42 }).map((_, index) => {
-      const current = addDays(startDate, index);
-      return {
-        date: current,
-        dateKey: formatDate(current),
-        day: current.getDate(),
-        currentMonth: current.getMonth() === month,
-        today: isTodayDate(formatDate(current)),
-      };
-    });
-  }, [miniCalendarDate]);
-
-  const selectMiniCalendarDay = (selectedDate: Date) => {
-    setWeekBaseDate(selectedDate);
-    setMiniCalendarDate(selectedDate);
-    setShowMiniCalendar(false);
-  };
-
-  const goToPreviousDay = () => {
-    setWeekBaseDate((prev) => addDays(prev, -1));
-  };
-
-  const goToNextDay = () => {
-    setWeekBaseDate((prev) => addDays(prev, 1));
-  };
-
-  const handleAgendaTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!isMobileAgenda || mobileView !== "day") return;
-
-    const touch = event.touches[0];
-    touchStartXRef.current = touch.clientX;
-    touchStartYRef.current = touch.clientY;
-    touchStartTimeRef.current = Date.now();
-  };
-
-  const handleAgendaTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!isMobileAgenda || mobileView !== "day") return;
-    if (showModal || showBlockModal || selectedAppointmentDetails || selectedBlockDetails) return;
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - touchStartXRef.current;
-    const deltaY = touch.clientY - touchStartYRef.current;
-    const elapsed = Date.now() - touchStartTimeRef.current;
-
-    const isHorizontalSwipe =
-      Math.abs(deltaX) > 70 &&
-      Math.abs(deltaX) > Math.abs(deltaY) * 1.4 &&
-      elapsed < 900;
-
-    if (!isHorizontalSwipe) return;
-
-    if (deltaX < 0) {
-      goToNextDay();
-    } else {
-      goToPreviousDay();
-    }
-  };
+  const {
+    agendaScrollRef,
+    now,
+    weekBaseDate,
+    setWeekBaseDate,
+    mobileView,
+    setMobileView,
+    isMobileAgenda,
+    showMiniCalendar,
+    setShowMiniCalendar,
+    miniCalendarDate,
+    setMiniCalendarDate,
+    showMobileAgendaSheet,
+    setShowMobileAgendaSheet,
+    days,
+    miniCalendarDays,
+    selectMiniCalendarDay,
+    goToPreviousDay,
+    goToNextDay,
+    handleAgendaTouchStart,
+    handleAgendaTouchEnd,
+    hours,
+    currentTimePosition,
+  } = useAgendaNavigation({
+    clinicSettings,
+    interactionBlocked:
+      showModal ||
+      showBlockModal ||
+      Boolean(selectedAppointmentDetails) ||
+      Boolean(selectedBlockDetails),
+  });
 
   const filteredPatients = useMemo(() => {
     const termo = search.toLowerCase().trim();
@@ -300,54 +215,6 @@ export default function AgendaPage() {
 
     return [...startsWith, ...includes].slice(0, 8);
   }, [search, patients]);
-
-  const hours: string[] = useMemo(() => {
-    const result: string[] = [];
-
-    for (let h = clinicSettings.start_hour; h < clinicSettings.end_hour; h++) {
-      for (let m of [0, 15, 30, 45]) {
-        result.push(`${pad(h)}:${pad(m)}`);
-      }
-    }
-
-    return result;
-  }, [clinicSettings.start_hour, clinicSettings.end_hour]);
-
-  const currentTimePosition = useMemo(() => {
-    const totalMinutes = now.getHours() * 60 + now.getMinutes();
-    const startMinutes = clinicSettings.start_hour * 60;
-    const endMinutes = clinicSettings.end_hour * 60;
-
-    if (totalMinutes < startMinutes || totalMinutes > endMinutes) {
-      return null;
-    }
-
-    return ((totalMinutes - startMinutes) / 15) * SLOT_HEIGHT;
-  }, [now, clinicSettings.start_hour, clinicSettings.end_hour]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(new Date());
-    }, 60000);
-
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const container = agendaScrollRef.current;
-    if (!container) return;
-
-    const totalMinutes = now.getHours() * 60 + now.getMinutes();
-    const startMinutes = clinicSettings.start_hour * 60;
-
-    if (totalMinutes < startMinutes) {
-      container.scrollTop = 0;
-      return;
-    }
-
-    const position = ((totalMinutes - startMinutes) / 15) * SLOT_HEIGHT;
-    container.scrollTop = Math.max(0, position - 160);
-  }, [clinicSettings.start_hour]);
 
   const {
     getPatientDebt,
