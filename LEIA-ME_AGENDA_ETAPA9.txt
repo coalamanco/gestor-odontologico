@@ -1,0 +1,21 @@
+ETAPA 9 - DETALHES DA AGENDA
+
+Arquivos alterados/criados:
+- src/app/agenda/page.tsx
+- src/components/agenda/AppointmentDetailsModal.tsx
+- src/components/agenda/BlockDetailsModal.tsx
+
+Objetivo:
+Extrair do page.tsx os modais de detalhes do agendamento e do bloqueio, sem alterar as regras de negocio.
+
+Validacao:
+1. npm run build
+2. npm run dev
+3. Abrir detalhes de um agendamento
+4. Alterar status
+5. Abrir prontuario
+6. Reagendar inteligente
+7. Editar e excluir agendamento
+8. Confirmar por WhatsApp quando aplicavel
+9. Abrir detalhes de bloqueio
+10. Editar e remover bloqueio

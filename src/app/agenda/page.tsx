@@ -8,6 +8,8 @@ import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
 import { WeekView } from "@/components/agenda/WeekView";
 import { DayView } from "@/components/agenda/DayView";
+import { AppointmentDetailsModal } from "@/components/agenda/AppointmentDetailsModal";
+import { BlockDetailsModal } from "@/components/agenda/BlockDetailsModal";
 import { useRouter } from "next/navigation";
 
 import {
@@ -1870,255 +1872,41 @@ export default function AgendaPage() {
         />
       )}
 
-      {selectedBlockDetails && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-[520px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
-            <div
-              className="p-5 text-white"
-              style={{ backgroundColor: selectedBlockDetails.color || getBlockColor(selectedBlockDetails.block_type) }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-semibold leading-tight">
-                    {selectedBlockDetails.title || getDefaultBlockTitle(selectedBlockDetails.block_type)}
-                  </h2>
-                  <p className="mt-1 text-sm opacity-95">
-                    {formatDateBr(selectedBlockDetails.date)} • {selectedBlockDetails.all_day ? "Dia inteiro" : `${selectedBlockDetails.start_time} - ${selectedBlockDetails.end_time}`}
-                  </p>
-                  <p className="mt-1 text-sm font-bold opacity-95">
-                    Profissional: {getProfessionalLabel(selectedBlockDetails.professional_id) || "Todos os profissionais"}
-                  </p>
-                </div>
+      <BlockDetailsModal
+        block={selectedBlockDetails}
+        onClose={() => setSelectedBlockDetails(null)}
+        getBlockColor={getBlockColor}
+        getDefaultBlockTitle={getDefaultBlockTitle}
+        formatDateBr={formatDateBr}
+        getProfessionalLabel={getProfessionalLabel}
+        onEdit={editScheduleBlock}
+        onDelete={deleteScheduleBlock}
+      />
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedBlockDetails(null)}
-                  className="w-9 h-9 rounded-full bg-black/10 hover:bg-white/30 text-white text-xl"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {selectedBlockDetails.description && (
-                <div className="rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3 text-sm text-slate-700 whitespace-pre-wrap">
-                  {selectedBlockDetails.description}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => editScheduleBlock(selectedBlockDetails)}
-                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
-                >
-                  Editar bloqueio
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => deleteScheduleBlock(selectedBlockDetails.id)}
-                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700 hover:bg-red-100"
-                >
-                  Remover bloqueio
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedAppointmentDetails && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-[560px] rounded-[18px] overflow-hidden bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] border border-[#c2dddd]">
-            <div
-              className={`${!selectedAppointmentDetails.professional_id ? getColor(selectedAppointmentDetails) : ""} text-white p-5 shadow-inner`}
-              style={getAppointmentStyle(selectedAppointmentDetails)}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-semibold leading-tight">
-                    {getAppointmentPatientName(selectedAppointmentDetails)}
-                  </h2>
-
-                  <p className="mt-1 text-sm opacity-95">
-                    {formatDateBr(selectedAppointmentDetails.date)} •{" "}
-                    {selectedAppointmentDetails.start_time} •{" "}
-                    {selectedAppointmentDetails.duration || 30} min
-                  </p>
-
-                  <p className="mt-1 text-sm opacity-95">
-                    {selectedAppointmentDetails.type === "compromisso"
-                      ? "Compromisso"
-                      : selectedAppointmentDetails.title || "Consulta"}
-                  </p>
-
-                  {selectedAppointmentDetails.professional_id && (
-                    <p className="mt-1 text-sm font-bold opacity-95">
-                      Profissional:{" "}
-                      {getProfessionalLabel(selectedAppointmentDetails.professional_id)}
-                    </p>
-                  )}
-
-                  {hasDebt(selectedAppointmentDetails.patient_id) && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openPatientFinance(selectedAppointmentDetails.patient_id)
-                      }
-                      className="mt-3 inline-flex items-center rounded-full bg-black/10 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-white hover:bg-white/30"
-                      title="Abrir financeiro do paciente"
-                    >
-                      💰 Débito:{" "}
-                      {formatCurrency(
-                        getPatientDebt(selectedAppointmentDetails.patient_id)
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedAppointmentDetails(null)}
-                  className="w-9 h-9 rounded-full bg-black/10 hover:bg-white/30 text-white text-xl"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {selectedAppointmentDetails.type !== "compromisso" && (
-                <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Status da consulta
-                  </label>
-                  <select
-                    value={selectedAppointmentDetails.status || "agendado"}
-                    onChange={(e) =>
-                      updateAppointmentStatus(
-                        selectedAppointmentDetails.id,
-                        e.target.value as AppointmentStatus
-                      )
-                    }
-                    className="w-full rounded-xl border border-[#d4e8e8] bg-white p-3 text-[13px] font-semibold text-slate-700 outline-none transition focus:border-[#239d9a] focus:ring-2 focus:ring-[#239d9a]/10"
-                  >
-                    <option value="agendado">Agendada</option>
-                    <option value="confirmado">Confirmada</option>
-                    <option value="em_atendimento">Em atendimento</option>
-                    <option value="finalizado">Finalizada</option>
-                    <option value="faltou">Faltou</option>
-                    <option value="cancelado">Cancelada</option>
-                  </select>
-                </div>
-              )}
-
-              {selectedAppointmentDetails.description && (
-                <div className="rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3">
-                  <div className="text-[12px] font-medium uppercase tracking-widest text-slate-400 mb-1">
-                    Descrição
-                  </div>
-                  <div className="text-sm text-slate-700 whitespace-pre-wrap">
-                    {selectedAppointmentDetails.description}
-                  </div>
-                </div>
-              )}
-
-              {selectedAppointmentDetails.type !== "compromisso" && (
-                <div className="rounded-xl border border-[#c2dddd] bg-[#fbffff] p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-bold text-slate-700">
-                        Lembrete
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {selectedAppointmentDetails.reminder_sent_at
-                          ? "Lembrete marcado como enviado"
-                          : selectedAppointmentDetails.reminder_enabled
-                            ? `Pendente para ${selectedAppointmentDetails.reminder_before_hours || 24}h antes`
-                            : "Lembrete desativado"}
-                      </div>
-                    </div>
-
-                    {selectedAppointmentDetails.reminder_sent_at ? (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-green-700">
-                        Enviado
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-[12px] font-medium uppercase tracking-widest text-yellow-700">
-                        Pendente
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {selectedAppointmentDetails.patient_id && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/pacientes/${selectedAppointmentDetails.patient_id}`
-                      )
-                    }
-                    className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
-                  >
-                    Abrir prontuário
-                  </button>
-                )}
-
-                {selectedAppointmentDetails.type !== "compromisso" && (
-                  <button
-                    type="button"
-                    onClick={() => openSmartReschedule(selectedAppointmentDetails)}
-                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] font-semibold text-amber-800 hover:bg-amber-100"
-                  >
-                    Reagendar inteligente
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const appointmentToEdit = selectedAppointmentDetails;
-                    setSelectedAppointmentDetails(null);
-                    openEdit(appointmentToEdit);
-                  }}
-                  className="rounded-xl border border-[#c2dddd] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
-                >
-                  Editar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteAppointment(selectedAppointmentDetails.id)}
-                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700 hover:bg-red-100"
-                >
-                  Excluir agendamento
-                </button>
-
-                {selectedAppointmentDetails.type !== "compromisso" &&
-                  hasReminderPhone(selectedAppointmentDetails) &&
-                  !selectedAppointmentDetails.reminder_sent_at && (
-                    <a
-                      href={buildWhatsappHref(selectedAppointmentDetails, "confirmacao")}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={() =>
-                        markReminderAsSent(selectedAppointmentDetails.id)
-                      }
-                      className="sm:col-span-2 rounded-xl bg-[#1fb36e] px-4 py-3 text-center text-[13px] font-semibold text-white hover:bg-[#18975d]"
-                    >
-                      Confirmar por WhatsApp
-                    </a>
-                  )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AppointmentDetailsModal
+        appointment={selectedAppointmentDetails}
+        onClose={() => setSelectedAppointmentDetails(null)}
+        getColor={getColor}
+        getAppointmentStyle={getAppointmentStyle}
+        getAppointmentPatientName={getAppointmentPatientName}
+        formatDateBr={formatDateBr}
+        getProfessionalLabel={getProfessionalLabel}
+        hasDebt={hasDebt}
+        openPatientFinance={openPatientFinance}
+        formatCurrency={formatCurrency}
+        getPatientDebt={getPatientDebt}
+        updateAppointmentStatus={updateAppointmentStatus}
+        openPatientRecord={(patientId) => router.push(`/pacientes/${patientId}`)}
+        openSmartReschedule={openSmartReschedule}
+        onEdit={(appointment) => {
+          setSelectedAppointmentDetails(null);
+          openEdit(appointment);
+        }}
+        onDelete={handleDeleteAppointment}
+        hasReminderPhone={hasReminderPhone}
+        buildWhatsappHref={buildWhatsappHref}
+        markReminderAsSent={markReminderAsSent}
+      />
 
       <BlockModal
         showBlockModal={showBlockModal}
