@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
+import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -44,64 +45,6 @@ import {
 export default function AgendaPage() {
   const router = useRouter();
 
-  const connectGoogleCalendar = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        alert("Usuário não autenticado.");
-        return;
-      }
-
-      window.location.href = `/api/google/calendar/connect?userId=${user.id}`;
-    } catch (error) {
-      console.error("Erro ao conectar Google Agenda:", error);
-      alert("Erro ao conectar Google Agenda.");
-    }
-  };
-
-  const syncExistingGoogleAppointments = async () => {
-    const ok = window.confirm(
-      "Deseja sincronizar as consultas existentes com o Google Agenda? Isso pode levar alguns segundos."
-    );
-
-    if (!ok) return;
-
-    try {
-      const response = await fetch("/api/google/calendar/sync-existing", {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
-      });
-
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Erro ao sincronizar consultas antigas:", result);
-        alert(
-          result?.error ||
-            result?.details ||
-            "Erro ao sincronizar consultas antigas com Google Agenda."
-        );
-        return;
-      }
-
-      alert(
-        `Sincronização concluída. Criados: ${result?.created || 0}. Vinculados: ${result?.linked || 0}. Ignorados: ${result?.skipped || 0}. Erros: ${result?.errors || 0}.`
-      );
-
-      await loadData();
-    } catch (error) {
-      console.error("Erro inesperado ao sincronizar consultas antigas:", error);
-      alert("Erro inesperado ao sincronizar consultas antigas.");
-    }
-  };
-
   const {
     patients,
     setPatients,
@@ -115,6 +58,9 @@ export default function AgendaPage() {
     clinicSettings,
     loadData,
   } = useAgendaData();
+
+  const { connectGoogleCalendar, syncExistingGoogleAppointments } =
+    useAgendaGoogleActions({ loadData });
 
   const agendaScrollRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef(0);
