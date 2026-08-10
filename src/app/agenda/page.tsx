@@ -6,6 +6,7 @@ import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
 import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
 import { useAgendaBlockActions } from "@/hooks/agenda/useAgendaBlockActions";
+import { useAgendaQuickPatient } from "@/hooks/agenda/useAgendaQuickPatient";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -32,7 +33,6 @@ import {
   getWeekdayLabel,
   isTodayDate,
   minutesBetweenTimes,
-  normalizePhone,
   pad,
   parseHourValue,
   parsePositiveNumber,
@@ -78,14 +78,6 @@ export default function AgendaPage() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [selectedProfessionalId, setSelectedProfessionalId] = useState("");
 
-  const [showQuickPatientForm, setShowQuickPatientForm] = useState(false);
-  const [savingQuickPatient, setSavingQuickPatient] = useState(false);
-  const [quickPatientForm, setQuickPatientForm] = useState({
-    name: "",
-    phone: "",
-    cpf: "",
-    email: "",
-  });
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("08:00");
@@ -148,6 +140,23 @@ export default function AgendaPage() {
     return () => window.removeEventListener("resize", updateMobileAgenda);
   }, []);
 
+  const {
+    showQuickPatientForm,
+    savingQuickPatient,
+    quickPatientForm,
+    setQuickPatientForm,
+    updateQuickPatientField,
+    openQuickPatientForm,
+    closeQuickPatientForm,
+    saveQuickPatient,
+    resetQuickPatientForm,
+  } = useAgendaQuickPatient({
+    search,
+    setSearch,
+    setPatients,
+    setSelectedPatient,
+  });
+
   const resetForm = () => {
     setEditingId(null);
     setSearch("");
@@ -163,76 +172,7 @@ export default function AgendaPage() {
     setAppointmentStatus("agendado");
     setReminderEnabled(true);
     setReminderBeforeHours("24");
-    setShowQuickPatientForm(false);
-    setQuickPatientForm({ name: "", phone: "", cpf: "", email: "" });
-  };
-
-  const updateQuickPatientField = (field: string, value: string) => {
-    setQuickPatientForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-
-  const openQuickPatientForm = () => {
-    setShowQuickPatientForm(true);
-    setQuickPatientForm((current) => ({
-      ...current,
-      name: current.name || search,
-    }));
-  };
-
-  const closeQuickPatientForm = () => {
-    if (savingQuickPatient) return;
-    setShowQuickPatientForm(false);
-  };
-
-  const saveQuickPatient = async () => {
-    const name = quickPatientForm.name.trim();
-
-    if (!name) {
-      alert("Informe o nome do paciente.");
-      return;
-    }
-
-    try {
-      setSavingQuickPatient(true);
-
-      const payload = {
-        name,
-        phone: normalizePhone(quickPatientForm.phone) || null,
-        cpf: String(quickPatientForm.cpf || "").replace(/\D/g, "") || null,
-        email: quickPatientForm.email.trim() || null,
-      };
-
-      const { data, error } = await supabase
-        .from("patients")
-        .insert(payload)
-        .select("*")
-        .single();
-
-      if (error) {
-        alert("Erro ao cadastrar paciente: " + error.message);
-        return;
-      }
-
-      if (data) {
-        setPatients((current) =>
-          [...current, data].sort((a, b) =>
-            String(a?.name || "").localeCompare(String(b?.name || ""), "pt-BR")
-          )
-        );
-        setSelectedPatient(data);
-        setSearch(data.name || name);
-      }
-
-      setQuickPatientForm({ name: "", phone: "", cpf: "", email: "" });
-      setShowQuickPatientForm(false);
-    } catch (error: any) {
-      alert("Erro inesperado ao cadastrar paciente: " + (error?.message || "erro desconhecido"));
-    } finally {
-      setSavingQuickPatient(false);
-    }
+    resetQuickPatientForm();
   };
 
 
