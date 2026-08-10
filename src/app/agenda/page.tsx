@@ -7,6 +7,7 @@ import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
 import { WeekView } from "@/components/agenda/WeekView";
+import { DayView } from "@/components/agenda/DayView";
 import { useRouter } from "next/navigation";
 
 import {
@@ -1775,6 +1776,56 @@ export default function AgendaPage() {
     };
   }, [filteredAppointmentsByProfessional, financialRecords]);
 
+  const agendaGridProps = {
+    hours: hours,
+    statusFilter: statusFilter,
+    filteredAppointmentsByProfessional: filteredAppointmentsByProfessional,
+    clinicSettings: clinicSettings,
+    agendaScrollRef: agendaScrollRef,
+    handleAgendaTouchStart: handleAgendaTouchStart,
+    handleAgendaTouchEnd: handleAgendaTouchEnd,
+    getHolidayInfo: getHolidayInfo,
+    isTodayDate: isTodayDate,
+    formatDateBr: formatDateBr,
+    getDayOccupation: getDayOccupation,
+    slotDividerClass: slotDividerClass,
+    timeColumnClass: timeColumnClass,
+    isMobileAgenda: isMobileAgenda,
+    isResizingRef: isResizingRef,
+    suppressNextClickRef: suppressNextClickRef,
+    draggingId: draggingId,
+    draggingIdRef: draggingIdRef,
+    setDraggingId: setDraggingId,
+    openNew: openNew,
+    handleDropOnCell: handleDropOnCell,
+    getScheduleBlocksForSlot: getScheduleBlocksForSlot,
+    getProfessionalById: getProfessionalById,
+    getBlockColor: getBlockColor,
+    setSelectedBlockDetails: setSelectedBlockDetails,
+    getScheduleBlockHeight: getScheduleBlockHeight,
+    getDefaultBlockTitle: getDefaultBlockTitle,
+    setSelectedAppointmentDetails: setSelectedAppointmentDetails,
+    hasDebt: hasDebt,
+    getAppointmentStyle: getAppointmentStyle,
+    getDurationHeight: getDurationHeight,
+    getAppointmentPatientName: getAppointmentPatientName,
+    getProfessionalLabel: getProfessionalLabel,
+    getProfessionalInitials: getProfessionalInitials,
+    appointmentTypeLabel: appointmentTypeLabel,
+    statusBadgeClass: statusBadgeClass,
+    statusLabel: statusLabel,
+    openPatientFinance: openPatientFinance,
+    formatCurrency: formatCurrency,
+    getPatientDebt: getPatientDebt,
+    setResizingId: setResizingId,
+    setResizeStartY: setResizeStartY,
+    setResizeStartDuration: setResizeStartDuration,
+    resizeCurrentDurationRef: resizeCurrentDurationRef,
+    currentTimePosition: currentTimePosition,
+    now: now,
+    pad: pad,
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#f7ffff] via-[#f4fbfb] to-[#eef8f8]">
       <AgendaToolbar
@@ -1806,57 +1857,18 @@ export default function AgendaPage() {
         goToNextDay={goToNextDay}
       />
 
-      <WeekView
-        days={days}
-        hours={hours}
-        statusFilter={statusFilter}
-        filteredAppointmentsByProfessional={filteredAppointmentsByProfessional}
-        clinicSettings={clinicSettings}
-        agendaScrollRef={agendaScrollRef}
-        handleAgendaTouchStart={handleAgendaTouchStart}
-        handleAgendaTouchEnd={handleAgendaTouchEnd}
-        getHolidayInfo={getHolidayInfo}
-        isTodayDate={isTodayDate}
-        formatDateBr={formatDateBr}
-        getDayOccupation={getDayOccupation}
-        slotDividerClass={slotDividerClass}
-        timeColumnClass={timeColumnClass}
-        isMobileAgenda={isMobileAgenda}
-        mobileView={mobileView}
-        isResizingRef={isResizingRef}
-        suppressNextClickRef={suppressNextClickRef}
-        draggingId={draggingId}
-        draggingIdRef={draggingIdRef}
-        setDraggingId={setDraggingId}
-        openNew={openNew}
-        handleDropOnCell={handleDropOnCell}
-        getScheduleBlocksForSlot={getScheduleBlocksForSlot}
-        getProfessionalById={getProfessionalById}
-        getBlockColor={getBlockColor}
-        setSelectedBlockDetails={setSelectedBlockDetails}
-        getScheduleBlockHeight={getScheduleBlockHeight}
-        getDefaultBlockTitle={getDefaultBlockTitle}
-        setSelectedAppointmentDetails={setSelectedAppointmentDetails}
-        hasDebt={hasDebt}
-        getAppointmentStyle={getAppointmentStyle}
-        getDurationHeight={getDurationHeight}
-        getAppointmentPatientName={getAppointmentPatientName}
-        getProfessionalLabel={getProfessionalLabel}
-        getProfessionalInitials={getProfessionalInitials}
-        appointmentTypeLabel={appointmentTypeLabel}
-        statusBadgeClass={statusBadgeClass}
-        statusLabel={statusLabel}
-        openPatientFinance={openPatientFinance}
-        formatCurrency={formatCurrency}
-        getPatientDebt={getPatientDebt}
-        setResizingId={setResizingId}
-        setResizeStartY={setResizeStartY}
-        setResizeStartDuration={setResizeStartDuration}
-        resizeCurrentDurationRef={resizeCurrentDurationRef}
-        currentTimePosition={currentTimePosition}
-        now={now}
-        pad={pad}
-      />
+      {isMobileAgenda && mobileView === "day" ? (
+        <DayView
+          {...agendaGridProps}
+          day={days[0]}
+        />
+      ) : (
+        <WeekView
+          {...agendaGridProps}
+          days={days}
+          mobileView={mobileView}
+        />
+      )}
 
       {selectedBlockDetails && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">

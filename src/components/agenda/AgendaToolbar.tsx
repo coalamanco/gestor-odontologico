@@ -80,7 +80,7 @@ export function AgendaToolbar({
 }: AgendaToolbarProps) {
   return (
     <>
-      <div className="hidden border-b border-[#d9eeee] bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(35,157,154,0.06)] backdrop-blur-md md:block">
+      <div className="relative z-[100] hidden overflow-visible border-b border-[#d9eeee] bg-white/90 px-3 py-2 shadow-[0_8px_22px_rgba(35,157,154,0.06)] backdrop-blur-md md:block">
         <div className="grid min-h-[42px] grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
       
@@ -305,7 +305,7 @@ export function AgendaToolbar({
         </div>
       </div>
       
-      <div className="border-b border-[#d7e7e7] bg-white/95 px-2 py-1.5 shadow-sm md:hidden">
+      <div className="relative z-[100] overflow-visible border-b border-[#d7e7e7] bg-white/95 px-2 py-1.5 shadow-sm md:hidden">
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
           <button type="button" onClick={() => { setShowMiniCalendar(false); setWeekBaseDate(new Date()); setMiniCalendarDate(new Date()); }} className="h-9 rounded-[1.35rem] bg-[#239d9a] px-4 text-[13px] font-semibold text-white shadow-sm active:scale-[0.98]">Hoje</button>
           <div className="flex min-w-0 items-center gap-2 rounded-[1.35rem] border border-[#c2dddd] bg-white px-2 shadow-sm">

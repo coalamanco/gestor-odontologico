@@ -1,0 +1,14 @@
+Correção do mini calendário da Agenda
+
+Problema: o mini calendário abria atrás da grade/cabeçalho da Agenda.
+Causa: o backdrop-blur da toolbar cria um stacking context; a grade semanal usa sticky z-30 e podia ser desenhada por cima do popup.
+Correção: a toolbar recebeu position relative, z-index alto e overflow visível, mantendo o z-index interno do mini calendário.
+
+Arquivos alterados:
+- src/components/agenda/AgendaToolbar.tsx
+
+Depois de substituir:
+npm run build
+npm run dev
+
+Teste: abrir o botão de calendário e confirmar que o popup aparece totalmente por cima da agenda.

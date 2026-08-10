@@ -2,7 +2,7 @@
 
 import React from "react";
 
-interface WeekViewProps {
+export interface WeekViewProps {
   days: any[];
   hours: string[];
   statusFilter: string;
