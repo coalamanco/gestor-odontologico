@@ -76,10 +76,11 @@ export async function POST(request: NextRequest) {
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey =
+      process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error("Supabase service role não configurado.");
+      throw new Error("Chave administrativa do Supabase não configurada (SUPABASE_SECRET_KEY ou SUPABASE_SERVICE_ROLE_KEY).");
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);

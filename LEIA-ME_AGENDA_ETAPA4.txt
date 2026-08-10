@@ -1,0 +1,29 @@
+REORGANIZAÇÃO DA AGENDA — ETAPA 4
+
+Criado:
+- src/components/agenda/AgendaToolbar.tsx
+
+Atualizado:
+- src/app/agenda/page.tsx
+
+A barra superior desktop, os controles móveis e o painel móvel da agenda foram extraídos para AgendaToolbar.
+Não foram alteradas regras de agendamento, Supabase, drag and drop, redimensionamento, bloqueios, Google Agenda ou WhatsApp.
+
+TESTE
+1. Copie a pasta src sobre a pasta src do projeto.
+2. Execute: npm run build
+3. Execute: npm run dev
+4. Teste desktop e celular:
+   - botão Hoje
+   - mini calendário
+   - filtro de profissional
+   - filtro de status
+   - visão Dia/Semana
+   - navegação anterior/próximo
+   - Bloquear horário
+   - Google Agenda e Sincronizar
+
+COMMIT SUGERIDO
+
+git add .
+git commit -m "Extrai barra de controles da agenda"
