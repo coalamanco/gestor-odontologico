@@ -1,0 +1,4 @@
+ETAPA 10 - Agenda
+Extrai ações de lembrete/WhatsApp para useAgendaReminderActions.ts.
+Remove código cliente não utilizado de envio automático; o lembrete automático continua sendo tratado pela rotina/cron já existente.
+Também remove uma declaração duplicada de draggingIdRef.

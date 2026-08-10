@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
+import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -793,74 +794,18 @@ export default function AgendaPage() {
     (professional) => professional.active !== false
   );
 
-  const buildWhatsappHref = (appointment: any, type = "lembrete") => {
-    const patient = getPatientByAppointment(appointment);
-    const phoneDigits = normalizePhone(patient?.phone);
-
-    if (!phoneDigits) return "#";
-
-    const phone = phoneDigits.startsWith("55")
-      ? phoneDigits
-      : `55${phoneDigits}`;
-
-    const patientName =
-      patient?.name || appointment.patient_name || "paciente";
-
-    const procedureName =
-      appointment.type === "compromisso"
-        ? appointment.title || "compromisso"
-        : appointment.title || "consulta";
-
-    const patientDebt = formatCurrency(getPatientDebt(appointment.patient_id));
-
-    const template =
-      messageTemplates.find((item) => item.type === type && item.content) ||
-      messageTemplates.find((item) => item.type === "lembrete" && item.content);
-
-    const fallbackMessage =
-      `Olá, ${patientName}! Tudo bem? 😊\n\n` +
-      `Passando para lembrar da sua ${procedureName} no consultório.\n\n` +
-      `📅 Data: ${formatDateBr(appointment.date)}\n` +
-      `⏰ Horário: ${appointment.start_time}\n\n` +
-      `Por favor, confirme sua presença.\n\n` +
-      `Obrigado(a)!`;
-
-    let message = template?.content || fallbackMessage;
-
-    message = message
-      .replaceAll("{{nome}}", patientName)
-      .replaceAll("{{data}}", formatDateBr(appointment.date))
-      .replaceAll("{{hora}}", appointment.start_time || "")
-      .replaceAll("{{valor}}", patientDebt)
-      .replaceAll("{{procedimento}}", procedureName);
-
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  };
-
-  const hasReminderPhone = (appointment: any) => {
-    const patient = getPatientByAppointment(appointment);
-    return Boolean(normalizePhone(patient?.phone));
-  };
-
-  const markReminderAsSent = async (appointmentId: string) => {
-    const { error } = await supabase
-      .from("appointments")
-      .update({ reminder_sent_at: new Date().toISOString() })
-      .eq("id", appointmentId);
-
-    if (error) {
-      alert("Erro ao marcar lembrete como enviado: " + error.message);
-      return;
-    }
-
-    setSelectedAppointmentDetails((prev: any) =>
-      prev && prev.id === appointmentId
-        ? { ...prev, reminder_sent_at: new Date().toISOString() }
-        : prev
-    );
-
-    await loadData();
-  };
+  const {
+    buildWhatsappHref,
+    hasReminderPhone,
+    markReminderAsSent,
+  } = useAgendaReminderActions({
+    getPatientByAppointment,
+    messageTemplates,
+    getPatientDebt,
+    formatCurrency,
+    loadData,
+    setSelectedAppointmentDetails,
+  });
 
   const isSlotAvailable = (
     targetDate: string,
@@ -1050,213 +995,6 @@ export default function AgendaPage() {
     return true;
   };
 
-
-  const buildAutomaticWhatsappMessage = (appointmentPayload: any) => {
-    const patientFromList = getPatientByAppointment(appointmentPayload);
-    const patientName =
-      selectedPatient?.name ||
-      patientFromList?.name ||
-      appointmentPayload.patient_name ||
-      "paciente";
-
-    const procedureName =
-      appointmentPayload.type === "compromisso"
-        ? appointmentPayload.title || "compromisso"
-        : appointmentPayload.title || "consulta";
-
-    const patientDebt = formatCurrency(
-      getPatientDebt(appointmentPayload.patient_id)
-    );
-
-    const template =
-      messageTemplates.find(
-        (item) => item.type === "confirmacao" && item.content
-      ) ||
-      messageTemplates.find((item) => item.type === "lembrete" && item.content);
-
-    const fallbackMessage =
-      `Olá, ${patientName}! Tudo bem? 😊\n\n` +
-      `Sua ${procedureName} foi agendada no consultório.\n\n` +
-      `📅 Data: ${formatDateBr(appointmentPayload.date)}\n` +
-      `⏰ Horário: ${appointmentPayload.start_time}\n\n` +
-      `Por favor, confirme sua presença.\n\n` +
-      `Obrigado(a)!`;
-
-    let message = template?.content || fallbackMessage;
-
-    message = message
-      .replaceAll("{{nome}}", patientName)
-      .replaceAll("{{data}}", formatDateBr(appointmentPayload.date))
-      .replaceAll("{{hora}}", appointmentPayload.start_time || "")
-      .replaceAll("{{valor}}", patientDebt)
-      .replaceAll("{{procedimento}}", procedureName);
-
-    return message;
-  };
-
-  const sendAutomaticWhatsappConfirmation = async (
-    appointmentPayload: any,
-    appointmentId?: string | null
-  ) => {
-    const appointmentType = String(appointmentPayload?.type || "").toLowerCase();
-
-    if (appointmentType !== "consulta") {
-      console.log("WhatsApp automático ignorado: não é consulta.", {
-        type: appointmentPayload?.type,
-      });
-
-      return {
-        ok: false,
-        reason: "not_consulta",
-        message: "O envio automático só é feito para consultas.",
-      };
-    }
-
-    if (!appointmentPayload.patient_id) {
-      console.warn("WhatsApp automático não enviado: consulta sem paciente.");
-
-      return {
-        ok: false,
-        reason: "missing_patient",
-        message: "Consulta sem paciente vinculado.",
-      };
-    }
-
-    try {
-      console.log("Iniciando envio automático de WhatsApp.", {
-        appointmentId,
-        patientId: appointmentPayload.patient_id,
-      });
-
-      const patientFromList = getPatientByAppointment(appointmentPayload);
-
-      let patientName =
-        selectedPatient?.name ||
-        patientFromList?.name ||
-        appointmentPayload.patient_name ||
-        "paciente";
-      let patientPhone = selectedPatient?.phone || patientFromList?.phone || "";
-
-      if (!normalizePhone(patientPhone)) {
-        const { data: patientFromDb, error: patientError } = await supabase
-          .from("patients")
-          .select("name, phone")
-          .eq("id", appointmentPayload.patient_id)
-          .maybeSingle();
-
-        if (patientError) {
-          console.warn(
-            "WhatsApp automático não enviado: erro ao buscar paciente.",
-            patientError
-          );
-
-          return {
-            ok: false,
-            reason: "patient_error",
-            message: patientError.message || "Erro ao buscar paciente.",
-          };
-        }
-
-        patientName = patientFromDb?.name || patientName;
-        patientPhone = patientFromDb?.phone || "";
-      }
-
-      const phoneDigits = normalizePhone(patientPhone);
-
-      if (!phoneDigits) {
-        console.warn("WhatsApp automático não enviado: paciente sem telefone.");
-
-        return {
-          ok: false,
-          reason: "missing_phone",
-          message: "Paciente sem telefone/WhatsApp cadastrado.",
-        };
-      }
-
-      const phone = phoneDigits.startsWith("55")
-        ? phoneDigits
-        : `55${phoneDigits}`;
-
-      const message = buildAutomaticWhatsappMessage({
-        ...appointmentPayload,
-        patient_name: patientName,
-      });
-
-      console.log("Chamando API interna /api/whatsapp/send", {
-        appointmentId,
-        phone,
-      });
-
-      const response = await fetch("/api/whatsapp/send", {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone,
-          message,
-        }),
-      });
-
-      const responseText = await response.text();
-      let result: any = null;
-
-      try {
-        result = responseText ? JSON.parse(responseText) : null;
-      } catch {
-        result = responseText;
-      }
-
-      console.log("Resposta da API WhatsApp:", {
-        ok: response.ok,
-        status: response.status,
-        result,
-      });
-
-      if (!response.ok) {
-        return {
-          ok: false,
-          reason: "api_error",
-          status: response.status,
-          message:
-            result?.error ||
-            result?.message ||
-            `Erro ${response.status} ao chamar API do WhatsApp.`,
-          details: result,
-        };
-      }
-
-      if (appointmentId) {
-        const { error: updateError } = await supabase
-          .from("appointments")
-          .update({ reminder_sent_at: new Date().toISOString() })
-          .eq("id", appointmentId);
-
-        if (updateError) {
-          console.warn(
-            "WhatsApp enviado, mas não consegui marcar como avisado.",
-            updateError
-          );
-        }
-      }
-
-      return {
-        ok: true,
-        reason: "sent",
-        message: "WhatsApp enviado com sucesso.",
-        details: result,
-      };
-    } catch (error: any) {
-      console.warn("Erro ao enviar WhatsApp automático:", error);
-
-      return {
-        ok: false,
-        reason: "unexpected_error",
-        message: error?.message || "Erro inesperado ao enviar WhatsApp.",
-      };
-    }
-  };
 
   const handleSave = async () => {
     if (savingAppointmentRef.current) {
