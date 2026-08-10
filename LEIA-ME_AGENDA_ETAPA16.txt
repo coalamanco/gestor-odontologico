@@ -1,0 +1,29 @@
+AGENDA — ETAPA 16
+
+Objetivo: extrair dados derivados e regras de exibição da grade para um hook dedicado.
+
+Novo arquivo:
+- src/hooks/agenda/useAgendaDerivedData.ts
+
+Alterado:
+- src/app/agenda/page.tsx
+
+O hook concentra:
+- profissional selecionado
+- filtro de agendamentos por profissional
+- iniciais/cor do profissional
+- estilo visual de agendamentos
+- filtro de bloqueios por profissional
+- busca de bloqueios por horário
+- altura dos bloqueios
+- alertas do dia (não confirmados, faltas e pacientes com débito)
+
+Nenhuma regra de criação, edição, exclusão, drag/drop, resize, Google Calendar ou WhatsApp foi alterada.
+
+Após copiar a pasta src para o projeto:
+1. npm run build
+2. npm run dev
+3. Testar Dia/Semana, filtro de profissional, bloqueios, alertas, drag e resize.
+4. Se tudo estiver certo:
+   git add .
+   git commit -m "Extrai dados derivados da agenda"

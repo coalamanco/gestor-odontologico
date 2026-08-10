@@ -1,0 +1,15 @@
+AGENDA - ETAPA 17
+
+Novo arquivo:
+- src/hooks/agenda/useAgendaAppointmentForm.ts
+
+O hook concentra os estados do formulario de agendamento, busca de pacientes e reset do formulario.
+Nenhuma regra de salvamento, drag/drop, resize, Google Calendar, bloqueios ou WhatsApp foi alterada.
+
+Depois de copiar src para o projeto:
+1. npm run build
+2. npm run dev
+3. Testar novo agendamento, editar agendamento, busca de paciente, compromisso, lembrete e salvar/cancelar.
+4. Se tudo estiver correto:
+   git add .
+   git commit -m "Extrai estado do formulario de agendamento"

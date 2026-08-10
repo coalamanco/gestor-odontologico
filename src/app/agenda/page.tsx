@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
@@ -8,6 +8,8 @@ import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
 import { useAgendaBlockActions } from "@/hooks/agenda/useAgendaBlockActions";
 import { useAgendaQuickPatient } from "@/hooks/agenda/useAgendaQuickPatient";
 import { useAgendaNavigation } from "@/hooks/agenda/useAgendaNavigation";
+import { useAgendaDerivedData } from "@/hooks/agenda/useAgendaDerivedData";
+import { useAgendaAppointmentForm } from "@/hooks/agenda/useAgendaAppointmentForm";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -40,7 +42,6 @@ import {
   timeToMinutes,
   type AppointmentStatus,
   type ConsultaMotivo,
-  type MainType,
 } from "@/lib/agenda/agendaUtils";
 export default function AgendaPage() {
   const router = useRouter();
@@ -61,33 +62,47 @@ export default function AgendaPage() {
   const { connectGoogleCalendar, syncExistingGoogleAppointments } =
     useAgendaGoogleActions({ loadData });
 
-  const [showModal, setShowModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedBlockDetails, setSelectedBlockDetails] = useState<any | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedAppointmentDetails, setSelectedAppointmentDetails] =
     useState<any | null>(null);
 
-  const [search, setSearch] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState("");
-
-
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("08:00");
-
-  const [mainType, setMainType] = useState<MainType>("consulta");
-  const [consultaMotivo, setConsultaMotivo] =
-    useState<ConsultaMotivo>("consulta");
-
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("30");
-  const [appointmentStatus, setAppointmentStatus] =
-    useState<AppointmentStatus>("agendado");
-
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderBeforeHours, setReminderBeforeHours] = useState("24");
+  const {
+    showModal,
+    setShowModal,
+    editingId,
+    setEditingId,
+    search,
+    setSearch,
+    selectedPatient,
+    setSelectedPatient,
+    selectedProfessionalId,
+    setSelectedProfessionalId,
+    date,
+    setDate,
+    time,
+    setTime,
+    mainType,
+    setMainType,
+    consultaMotivo,
+    setConsultaMotivo,
+    title,
+    setTitle,
+    description,
+    setDescription,
+    duration,
+    setDuration,
+    appointmentStatus,
+    setAppointmentStatus,
+    reminderEnabled,
+    setReminderEnabled,
+    reminderBeforeHours,
+    setReminderBeforeHours,
+    savingAppointment,
+    setSavingAppointment,
+    filteredPatients,
+    resetAppointmentForm,
+  } = useAgendaAppointmentForm({ patients });
 
   const [blockForm, setBlockForm] = useState({
     id: "",
@@ -106,7 +121,6 @@ export default function AgendaPage() {
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [selectedAgendaProfessionalId, setSelectedAgendaProfessionalId] = useState<string>("");
   const [confirmingAllToday, setConfirmingAllToday] = useState(false);
-  const [savingAppointment, setSavingAppointment] = useState(false);
   const savingAppointmentRef = useRef(false);
 
   const [resizingId, setResizingId] = useState<string | null>(null);
@@ -134,20 +148,7 @@ export default function AgendaPage() {
   });
 
   const resetForm = () => {
-    setEditingId(null);
-    setSearch("");
-    setSelectedPatient(null);
-    setSelectedProfessionalId("");
-    setDate("");
-    setTime("08:00");
-    setMainType("consulta");
-    setConsultaMotivo("consulta");
-    setTitle("");
-    setDescription("");
-    setDuration("30");
-    setAppointmentStatus("agendado");
-    setReminderEnabled(true);
-    setReminderBeforeHours("24");
+    resetAppointmentForm();
     resetQuickPatientForm();
   };
 
@@ -199,23 +200,6 @@ export default function AgendaPage() {
       Boolean(selectedBlockDetails),
   });
 
-  const filteredPatients = useMemo(() => {
-    const termo = search.toLowerCase().trim();
-    if (!termo) return [];
-
-    const startsWith = patients.filter((p) =>
-      (p.name || "").toLowerCase().startsWith(termo)
-    );
-
-    const includes = patients.filter(
-      (p) =>
-        (p.name || "").toLowerCase().includes(termo) &&
-        !(p.name || "").toLowerCase().startsWith(termo)
-    );
-
-    return [...startsWith, ...includes].slice(0, 8);
-  }, [search, patients]);
-
   const {
     getPatientDebt,
     hasDebt,
@@ -240,6 +224,25 @@ export default function AgendaPage() {
     professionals,
     router,
     loadData,
+  });
+
+  const {
+    selectedAgendaProfessional,
+    filteredAppointmentsByProfessional,
+    selectedProfessionalInitials,
+    selectedProfessionalColor,
+    getAppointmentStyle,
+    filteredScheduleBlocksByProfessional,
+    getScheduleBlocksForSlot,
+    getScheduleBlockHeight,
+    agendaAlerts,
+  } = useAgendaDerivedData({
+    activeProfessionals,
+    appointments,
+    scheduleBlocks,
+    selectedAgendaProfessionalId,
+    clinicSettings,
+    hasDebt,
   });
 
   const getDayOccupation = (targetDate: string) => {
@@ -911,74 +914,6 @@ export default function AgendaPage() {
   }, []);
 
 
-  const selectedAgendaProfessional = useMemo(() => {
-    if (!selectedAgendaProfessionalId) return null;
-    return activeProfessionals.find(
-      (professional) => professional.id === selectedAgendaProfessionalId
-    ) || null;
-  }, [activeProfessionals, selectedAgendaProfessionalId]);
-
-  const filteredAppointmentsByProfessional = useMemo(() => {
-    if (!selectedAgendaProfessionalId) return appointments;
-
-    return appointments.filter(
-      (appointment) => appointment.professional_id === selectedAgendaProfessionalId
-    );
-  }, [appointments, selectedAgendaProfessionalId]);
-
-  const selectedProfessionalInitials = useMemo(() => {
-    return selectedAgendaProfessionalId
-      ? getProfessionalInitials(selectedAgendaProfessional?.name)
-      : "TP";
-  }, [selectedAgendaProfessional, selectedAgendaProfessionalId]);
-
-  const selectedProfessionalColor = useMemo(() => {
-    return selectedAgendaProfessionalId
-      ? getProfessionalColor(selectedAgendaProfessionalId)
-      : "#239d9a";
-  }, [selectedAgendaProfessionalId]);
-
-  const getAppointmentStyle = (appointment: any) => {
-    const backgroundColor = getFallbackAppointmentColor(
-      appointment?.status,
-      appointment?.type,
-      appointment?.title
-    );
-
-    return { backgroundColor };
-  };
-
-
-
-  const filteredScheduleBlocksByProfessional = useMemo(() => {
-    if (!selectedAgendaProfessionalId) return scheduleBlocks;
-
-    return scheduleBlocks.filter(
-      (block) => !block.professional_id || block.professional_id === selectedAgendaProfessionalId
-    );
-  }, [scheduleBlocks, selectedAgendaProfessionalId]);
-
-  const getScheduleBlocksForSlot = (targetDate: string, targetTime: string) => {
-    return filteredScheduleBlocksByProfessional.filter((block) => {
-      if (block.date !== targetDate) return false;
-
-      if (block.all_day) {
-        return targetTime === `${pad(clinicSettings.start_hour)}:00`;
-      }
-
-      return block.start_time === targetTime;
-    });
-  };
-
-  const getScheduleBlockHeight = (block: any) => {
-    const durationMinutes = block.all_day
-      ? (clinicSettings.end_hour - clinicSettings.start_hour) * 60
-      : minutesBetweenTimes(block.start_time, block.end_time);
-
-    const slots = Math.max(1, Math.ceil(durationMinutes / 15));
-    return slots * SLOT_HEIGHT - 6;
-  };
-
   const confirmAllTodayAppointments = async () => {
     const appointmentsToConfirm = agendaAlerts.naoConfirmados;
 
@@ -1016,28 +951,6 @@ export default function AgendaPage() {
       setConfirmingAllToday(false);
     }
   };
-
-  const agendaAlerts = useMemo(() => {
-    const today = formatDate(new Date());
-
-    const todayAppointments = filteredAppointmentsByProfessional.filter(
-      (a) => a.date === today && a.type !== "compromisso"
-    );
-
-    const naoConfirmados = todayAppointments.filter(
-      (a) => (a.status || "agendado") === "agendado"
-    );
-
-    const faltaram = todayAppointments.filter((a) => a.status === "faltou");
-
-    const comDebito = todayAppointments.filter((a) => hasDebt(a.patient_id));
-
-    return {
-      naoConfirmados,
-      faltaram,
-      comDebito,
-    };
-  }, [filteredAppointmentsByProfessional, financialRecords]);
 
   const agendaGridProps = {
     hours: hours,
