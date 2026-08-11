@@ -12,6 +12,7 @@ import { useAgendaDerivedData } from "@/hooks/agenda/useAgendaDerivedData";
 import { useAgendaAppointmentForm } from "@/hooks/agenda/useAgendaAppointmentForm";
 import { useAgendaAppointmentActions } from "@/hooks/agenda/useAgendaAppointmentActions";
 import { useAgendaResizeActions } from "@/hooks/agenda/useAgendaResizeActions";
+import { useAgendaDragActions } from "@/hooks/agenda/useAgendaDragActions";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -321,45 +322,15 @@ export default function AgendaPage() {
     setSavingAppointment,
   });
 
-  const handleDropOnCell = async (targetDate: string, targetTime: string) => {
-    // Usa a ref porque ela é atualizada de forma síncrona no dragStart.
-    // O state do React pode ainda não ter sido aplicado no primeiro movimento.
-    const appointmentId = draggingIdRef.current || draggingId;
-    if (!appointmentId) return;
-
-    const current = appointments.find((a) => a.id === appointmentId);
-    if (!current) {
-      draggingIdRef.current = null;
-      setDraggingId(null);
-      return;
-    }
-
-    if (
-      !isSlotAvailable(
-        targetDate,
-        targetTime,
-        Number(current.duration || 30),
-        appointmentId,
-        current.professional_id
-      )
-    ) {
-      alert("Esse horário está ocupado ou ultrapassa o fim do expediente.");
-      draggingIdRef.current = null;
-      setDraggingId(null);
-      return;
-    }
-
-    await updateAppointment(appointmentId, {
-      date: targetDate,
-      start_time: targetTime,
-    });
-
-    draggingIdRef.current = null;
-    setDraggingId(null);
-    window.setTimeout(() => {
-      suppressNextClickRef.current = false;
-    }, 250);
-  };
+  const { handleDropOnCell } = useAgendaDragActions({
+    draggingId,
+    draggingIdRef,
+    setDraggingId,
+    appointments,
+    isSlotAvailable,
+    updateAppointment,
+    suppressNextClickRef,
+  });
 
   useAgendaResizeActions({
     resizingId,

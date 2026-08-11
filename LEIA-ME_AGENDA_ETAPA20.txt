@@ -1,0 +1,26 @@
+AGENDA — ETAPA 20
+
+Objetivo:
+Extrair a lógica do drop/arraste dos agendamentos para um hook dedicado, sem alterar o comportamento da Agenda.
+
+Novo arquivo:
+- src/hooks/agenda/useAgendaDragActions.ts
+
+Alterado:
+- src/app/agenda/page.tsx
+
+O hook centraliza:
+- identificação síncrona do agendamento em arraste via draggingIdRef;
+- validação do slot de destino;
+- atualização de data/horário ao soltar;
+- limpeza do estado de drag;
+- proteção contra clique logo após o drop.
+
+A correção do movimento de 15 minutos no WeekView não foi alterada nesta etapa.
+A lógica de resize da Etapa 19 também não foi alterada.
+
+Após substituir os arquivos:
+1. npm run build
+2. npm run dev
+3. Testar arraste de 15 minutos, arraste maior, resize de 15 minutos e abertura do agendamento.
+4. Se tudo estiver correto, fazer o commit de segurança.
