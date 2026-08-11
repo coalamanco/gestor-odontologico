@@ -107,6 +107,27 @@ export function WeekView(props: WeekViewProps) {
     pad,
   } = props;
 
+  const resolveDropTimeFromPointer = (
+    baseTime: string,
+    event: React.DragEvent<HTMLDivElement>
+  ) => {
+    const baseIndex = hours.indexOf(baseTime);
+    if (baseIndex < 0) return baseTime;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.height) return baseTime;
+
+    // Agendamentos com duração maior que 15 min transbordam visualmente
+    // sobre as células seguintes. Ao mover apenas um slot, o drop pode
+    // continuar chegando à célula de origem. Nesse caso, usamos a posição
+    // real do ponteiro para descobrir em qual linha de 15 min ele foi solto.
+    const slotOffset = Math.floor((event.clientY - rect.top) / rect.height);
+    if (slotOffset === 0) return baseTime;
+
+    const targetIndex = baseIndex + slotOffset;
+    return hours[targetIndex] || baseTime;
+  };
+
   return (
   <div className="flex-1 flex flex-col min-h-0 p-1.5 md:p-2.5">
     <div
@@ -204,7 +225,9 @@ export function WeekView(props: WeekViewProps) {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
-                  handleDropOnCell(d.date, h);
+                  e.stopPropagation();
+                  const resolvedTime = resolveDropTimeFromPointer(h, e);
+                  handleDropOnCell(d.date, resolvedTime);
                 }}
               >
                 {getScheduleBlocksForSlot(d.date, h).map((block) => {
