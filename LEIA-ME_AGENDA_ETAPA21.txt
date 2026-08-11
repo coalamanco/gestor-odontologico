@@ -1,0 +1,16 @@
+ETAPA 21 - REFACTOR DA AGENDA
+
+Objetivo:
+Extrair do src/app/agenda/page.tsx os efeitos globais da página:
+- atalhos de teclado N e H;
+- atualização dos dados financeiros ao retornar o foco para a janela;
+- subscriptions realtime das tabelas financial_records e payment_transactions.
+
+Novo arquivo:
+src/hooks/agenda/useAgendaPageEffects.ts
+
+Arquivo substituído:
+src/app/agenda/page.tsx
+
+Esta etapa apenas move a lógica existente para um hook dedicado.
+Não altera drag, resize, salvamento de consultas, bloqueios, Google Agenda ou regras financeiras.

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
@@ -13,6 +13,7 @@ import { useAgendaAppointmentForm } from "@/hooks/agenda/useAgendaAppointmentFor
 import { useAgendaAppointmentActions } from "@/hooks/agenda/useAgendaAppointmentActions";
 import { useAgendaResizeActions } from "@/hooks/agenda/useAgendaResizeActions";
 import { useAgendaDragActions } from "@/hooks/agenda/useAgendaDragActions";
+import { useAgendaPageEffects } from "@/hooks/agenda/useAgendaPageEffects";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -348,76 +349,16 @@ export default function AgendaPage() {
     updateAppointment,
   });
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const tagName = target?.tagName?.toLowerCase();
-
-      if (
-        tagName === "input" ||
-        tagName === "textarea" ||
-        tagName === "select" ||
-        showModal ||
-        selectedAppointmentDetails
-      ) {
-        return;
-      }
-
-      if (event.key.toLowerCase() === "n") {
-        event.preventDefault();
-        openNew(days[0]?.date, `${pad(clinicSettings.start_hour)}:00`);
-      }
-
-      if (event.key.toLowerCase() === "h") {
-        event.preventDefault();
-        setWeekBaseDate(new Date());
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [days, showModal, selectedAppointmentDetails, selectedAgendaProfessionalId, clinicSettings.start_hour]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      refreshFinancialData();
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    const channel = supabase
-      .channel("agenda-financial-records-sync")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "financial_records",
-        },
-        () => {
-          refreshFinancialData();
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "payment_transactions",
-        },
-        () => {
-          refreshFinancialData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
+  useAgendaPageEffects({
+    days,
+    showModal,
+    selectedAppointmentDetails,
+    selectedAgendaProfessionalId,
+    clinicStartHour: clinicSettings.start_hour,
+    openNew,
+    setWeekBaseDate,
+    refreshFinancialData,
+  });
 
   const confirmAllTodayAppointments = async () => {
     const appointmentsToConfirm = agendaAlerts.naoConfirmados;
