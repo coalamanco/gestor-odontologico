@@ -1,0 +1,13 @@
+AGENDA — ETAPA 18
+
+Arquivos:
+- src/app/agenda/page.tsx
+- src/hooks/agenda/useAgendaAppointmentActions.ts
+
+Objetivo:
+Centralizar as ações principais dos agendamentos (salvar, editar, excluir, status, disponibilidade, reagendamento inteligente e sincronização pontual com Google Agenda) sem alterar a interface.
+
+Após copiar a pasta src sobre o projeto:
+1. npm run build
+2. npm run dev
+3. Testar criar/editar/excluir, status, drag, resize e reagendamento inteligente.
