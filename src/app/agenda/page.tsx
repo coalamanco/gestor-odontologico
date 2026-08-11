@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
 import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
@@ -14,6 +13,7 @@ import { useAgendaAppointmentActions } from "@/hooks/agenda/useAgendaAppointment
 import { useAgendaResizeActions } from "@/hooks/agenda/useAgendaResizeActions";
 import { useAgendaDragActions } from "@/hooks/agenda/useAgendaDragActions";
 import { useAgendaPageEffects } from "@/hooks/agenda/useAgendaPageEffects";
+import { useAgendaDayActions } from "@/hooks/agenda/useAgendaDayActions";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -118,8 +118,6 @@ export default function AgendaPage() {
   const draggingIdRef = useRef<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [selectedAgendaProfessionalId, setSelectedAgendaProfessionalId] = useState<string>("");
-  const [confirmingAllToday, setConfirmingAllToday] = useState(false);
-
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [resizeStartY, setResizeStartY] = useState(0);
   const [resizeStartDuration, setResizeStartDuration] = useState(30);
@@ -242,16 +240,13 @@ export default function AgendaPage() {
     hasDebt,
   });
 
-  const getDayOccupation = (targetDate: string) => {
-    const dayAppointments = filteredAppointmentsByProfessional.filter(
-      (a) => a.date === targetDate && a.type !== "compromisso"
-    );
-
-    return {
-      used: dayAppointments.length,
-      total: clinicSettings.max_patients_day,
-    };
-  };
+  const { getDayOccupation } = useAgendaDayActions({
+    filteredAppointmentsByProfessional,
+    maxPatientsDay: clinicSettings.max_patients_day,
+    agendaAlerts,
+    setStatusFilter,
+    loadData,
+  });
 
   const {
     buildWhatsappHref,
@@ -359,44 +354,6 @@ export default function AgendaPage() {
     setWeekBaseDate,
     refreshFinancialData,
   });
-
-  const confirmAllTodayAppointments = async () => {
-    const appointmentsToConfirm = agendaAlerts.naoConfirmados;
-
-    if (appointmentsToConfirm.length === 0) {
-      alert("Não há consultas agendadas para confirmar hoje.");
-      return;
-    }
-
-    const ok = window.confirm(
-      `Confirmar ${appointmentsToConfirm.length} consulta(s) de hoje?`
-    );
-
-    if (!ok) return;
-
-    try {
-      setConfirmingAllToday(true);
-
-      const ids = appointmentsToConfirm.map((item) => item.id);
-
-      const { error } = await supabase
-        .from("appointments")
-        .update({ status: "confirmado" })
-        .in("id", ids);
-
-      if (error) {
-        alert("Erro ao confirmar consultas: " + error.message);
-        return;
-      }
-
-      setStatusFilter("todos");
-      await loadData();
-
-      alert("Consultas confirmadas com sucesso.");
-    } finally {
-      setConfirmingAllToday(false);
-    }
-  };
 
   const agendaGridProps = {
     hours: hours,

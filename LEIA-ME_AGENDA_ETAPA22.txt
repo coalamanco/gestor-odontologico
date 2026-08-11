@@ -1,0 +1,30 @@
+ETAPA 22 - AGENDA
+
+Objetivo:
+Extrair do src/app/agenda/page.tsx as ações relacionadas ao dia da Agenda.
+
+Novo hook:
+src/hooks/agenda/useAgendaDayActions.ts
+
+Movido sem alterar a regra existente:
+- cálculo de ocupação diária (getDayOccupation)
+- confirmação em lote das consultas não confirmadas do dia
+- estado de processamento da confirmação em lote
+
+Não alterado:
+- drag & drop
+- correção de arraste em intervalos de 15 minutos
+- redimensionamento
+- criação/edição/exclusão de agendamentos
+- bloqueios
+- lembretes
+- Google Agenda
+- componentes visuais
+
+Validação recomendada:
+1. npm run build
+2. npm run dev
+3. conferir contadores de pacientes no cabeçalho dos dias
+4. testar abertura de agendamento
+5. testar drag de 15 minutos
+6. testar resize
