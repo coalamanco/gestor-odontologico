@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useRef, useState } from "react";
 import { useAgendaData } from "@/hooks/agenda/useAgendaData";
 import { useAgendaReminderActions } from "@/hooks/agenda/useAgendaReminderActions";
 import { useAgendaGoogleActions } from "@/hooks/agenda/useAgendaGoogleActions";
@@ -14,6 +13,7 @@ import { useAgendaResizeActions } from "@/hooks/agenda/useAgendaResizeActions";
 import { useAgendaDragActions } from "@/hooks/agenda/useAgendaDragActions";
 import { useAgendaPageEffects } from "@/hooks/agenda/useAgendaPageEffects";
 import { useAgendaDayActions } from "@/hooks/agenda/useAgendaDayActions";
+import { useAgendaUiState } from "@/hooks/agenda/useAgendaUiState";
 import { AgendaToolbar } from "@/components/agenda/AgendaToolbar";
 import { AppointmentModal } from "@/components/agenda/AppointmentModal";
 import { BlockModal } from "@/components/agenda/BlockModal";
@@ -60,10 +60,6 @@ export default function AgendaPage() {
   const { connectGoogleCalendar, syncExistingGoogleAppointments } =
     useAgendaGoogleActions({ loadData });
 
-  const [showBlockModal, setShowBlockModal] = useState(false);
-  const [selectedBlockDetails, setSelectedBlockDetails] = useState<any | null>(null);
-  const [selectedAppointmentDetails, setSelectedAppointmentDetails] =
-    useState<any | null>(null);
 
   const {
     showModal,
@@ -102,28 +98,32 @@ export default function AgendaPage() {
     resetAppointmentForm,
   } = useAgendaAppointmentForm({ patients });
 
-  const [blockForm, setBlockForm] = useState({
-    id: "",
-    professional_id: "",
-    block_type: "bloqueio",
-    title: "Horário bloqueado",
-    description: "",
-    date: "",
-    start_time: "12:00",
-    end_time: "13:00",
-    all_day: false,
-  });
-
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const draggingIdRef = useRef<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const [selectedAgendaProfessionalId, setSelectedAgendaProfessionalId] = useState<string>("");
-  const [resizingId, setResizingId] = useState<string | null>(null);
-  const [resizeStartY, setResizeStartY] = useState(0);
-  const [resizeStartDuration, setResizeStartDuration] = useState(30);
-  const resizeCurrentDurationRef = useRef(30);
-  const isResizingRef = useRef(false);
-  const suppressNextClickRef = useRef(false);
+  const {
+    showBlockModal,
+    setShowBlockModal,
+    selectedBlockDetails,
+    setSelectedBlockDetails,
+    selectedAppointmentDetails,
+    setSelectedAppointmentDetails,
+    blockForm,
+    setBlockForm,
+    draggingId,
+    setDraggingId,
+    draggingIdRef,
+    statusFilter,
+    setStatusFilter,
+    selectedAgendaProfessionalId,
+    setSelectedAgendaProfessionalId,
+    resizingId,
+    setResizingId,
+    resizeStartY,
+    setResizeStartY,
+    resizeStartDuration,
+    setResizeStartDuration,
+    resizeCurrentDurationRef,
+    isResizingRef,
+    suppressNextClickRef,
+  } = useAgendaUiState();
 
   const {
     showQuickPatientForm,

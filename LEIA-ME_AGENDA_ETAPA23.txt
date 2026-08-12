@@ -1,0 +1,19 @@
+ETAPA 23 - Estado de interface da Agenda
+
+Objetivo:
+- Centralizar estados puramente visuais/interativos da pagina da Agenda em useAgendaUiState.
+- Nao alterar regras de negocio, banco, Google Agenda, drag/drop ou resize.
+
+Arquivos:
+- src/app/agenda/page.tsx (substituir)
+- src/hooks/agenda/useAgendaUiState.ts (novo)
+
+Validacao recomendada:
+1. npm run build
+2. npm run dev
+3. Abrir Agenda
+4. Abrir/fechar detalhes de consulta e bloqueio
+5. Trocar filtro/status e profissional
+6. Drag de 15 minutos
+7. Resize de 15 minutos
+8. Criar/editar consulta e abrir bloqueio
