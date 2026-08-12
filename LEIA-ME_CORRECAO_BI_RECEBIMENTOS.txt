@@ -1,0 +1,24 @@
+CORREÇÃO BI EXECUTIVO — RECEITA POR DATA REAL DO PAGAMENTO
+
+Problema confirmado:
+- Financeiro e Dashboard principal passaram a mostrar R$ 7.620,00 em agosto/2026.
+- BI Executivo ainda mostrava R$ 7.820,00.
+- O lançamento de R$ 1.200,00 possuía R$ 1.000,00 recebidos em agosto e R$ 200,00 em outro período.
+- O BI agrupava o total pago do lançamento pela data paid_at/created_at do financial_record, atribuindo os R$ 1.200,00 inteiros a agosto.
+
+Correção:
+- A série mensal do BI Executivo agora usa payment_transactions.amount pela data real received_at (fallback created_at da transação).
+- Um pagamento parcial é atribuído ao mês em que cada transação realmente ocorreu.
+- Registros históricos sem nenhuma payment_transaction continuam usando paid_amount/status como fallback de compatibilidade.
+- Nenhum dado do Supabase é alterado.
+- Agenda, Financeiro e Dashboard principal não são modificados por este ZIP.
+
+Arquivos:
+- src/app/dashboard/executivo/page.tsx
+- src/lib/smartGoals.ts
+
+Validação esperada:
+1. npm run build
+2. npm run dev
+3. BI Executivo > Análises Executivas
+4. Receita Atual deve mostrar R$ 7.620,00 para agosto/2026.

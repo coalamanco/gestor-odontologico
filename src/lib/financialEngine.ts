@@ -17,6 +17,7 @@ export type FinancialPaymentTransaction = {
   id?: string | null;
   financial_record_id?: string | null;
   amount?: number | string | null;
+  payment_method?: string | null;
   received_at?: string | null;
   created_at?: string | null;
 };

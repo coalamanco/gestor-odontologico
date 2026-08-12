@@ -347,6 +347,9 @@ export default function DashboardExecutivoPage() {
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>(
     [],
   );
+  const [paymentTransactions, setPaymentTransactions] = useState<
+    FinancialPaymentTransaction[]
+  >([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [procedurePricings, setProcedurePricings] = useState<
@@ -424,6 +427,9 @@ export default function DashboardExecutivoPage() {
         );
 
       setFinancialRecords(reconciledFinancialRecords);
+      setPaymentTransactions(
+        (paymentTransactionsData || []) as FinancialPaymentTransaction[],
+      );
       setTreatments((treatmentsData || []) as Treatment[]);
       setClinicalNotes((notesData || []) as ClinicalNote[]);
 
@@ -661,6 +667,7 @@ export default function DashboardExecutivoPage() {
       currentCommercialGoal: configuredGoals.commercialGoal,
       currentConversionGoal: configuredGoals.conversionGoal,
       financialRecords,
+      paymentTransactions,
       budgets,
       campaigns: campaignProjections,
       scoredPatients: scoredPatients.map((item) => ({
@@ -676,6 +683,7 @@ export default function DashboardExecutivoPage() {
     goals.annualGoal,
     configuredGoals,
     financialRecords,
+    paymentTransactions,
     budgets,
     campaignProjections,
     scoredPatients,

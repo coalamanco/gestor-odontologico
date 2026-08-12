@@ -10,6 +10,14 @@ export type SmartGoalFinancialRecord = {
   paid_at?: string | null;
 };
 
+export type SmartGoalPaymentTransaction = {
+  id?: string | null;
+  financial_record_id?: string | null;
+  amount?: number | string | null;
+  received_at?: string | null;
+  created_at?: string | null;
+};
+
 export type SmartGoalBudget = {
   id?: string | null;
   patient_id?: string | null;
@@ -41,6 +49,7 @@ export type SmartGoalsInput = {
   currentCommercialGoal?: number;
   currentConversionGoal?: number;
   financialRecords?: SmartGoalFinancialRecord[];
+  paymentTransactions?: SmartGoalPaymentTransaction[];
   budgets?: SmartGoalBudget[];
   campaigns?: SmartGoalCampaign[];
   scoredPatients?: SmartGoalScoredPatient[];
@@ -187,6 +196,7 @@ function average(values: number[]) {
 
 function buildMonthlySeries(
   financialRecords: SmartGoalFinancialRecord[],
+  paymentTransactions: SmartGoalPaymentTransaction[],
   budgets: SmartGoalBudget[],
   baseDate: Date
 ): MonthlyRevenuePoint[] {
@@ -210,7 +220,46 @@ function buildMonthlySeries(
 
   const patientsByMonth = new Map<string, Set<string>>();
 
+  const recordsById = new Map(
+    financialRecords
+      .filter((record) => Boolean(record.id))
+      .map((record) => [String(record.id), record]),
+  );
+
+  const recordIdsWithTransactions = new Set<string>();
+
+  paymentTransactions.forEach((transaction) => {
+    const recordId = String(transaction.financial_record_id || "");
+    if (recordId) recordIdsWithTransactions.add(recordId);
+
+    const date = getDate(transaction.received_at || transaction.created_at);
+    if (!date) return;
+
+    const key = getMonthKey(date);
+    const point = pointMap.get(key);
+    if (!point) return;
+
+    const paidValue = Math.max(0, parseMoney(transaction.amount));
+    point.revenue += paidValue;
+
+    const patientId = recordId ? recordsById.get(recordId)?.patient_id : null;
+    if (patientId && paidValue > 0) {
+      if (!patientsByMonth.has(key)) {
+        patientsByMonth.set(key, new Set<string>());
+      }
+
+      patientsByMonth.get(key)!.add(String(patientId));
+    }
+  });
+
+  // Compatibilidade com lançamentos históricos que foram marcados como pagos
+  // antes da criação de payment_transactions. Quando existe ao menos uma
+  // transação para o lançamento, a receita é distribuída exclusivamente pelas
+  // datas reais dessas transações para evitar atribuir pagamentos ao mês errado.
   financialRecords.forEach((record) => {
+    const recordId = String(record.id || "");
+    if (recordId && recordIdsWithTransactions.has(recordId)) return;
+
     const date = getDate(record.paid_at || record.created_at);
     if (!date) return;
 
@@ -219,7 +268,6 @@ function buildMonthlySeries(
     if (!point) return;
 
     const paidValue = getRecordPaidValue(record);
-
     point.revenue += paidValue;
 
     if (record.patient_id && paidValue > 0) {
@@ -335,6 +383,7 @@ export function calculateSmartGoals(input: SmartGoalsInput): SmartGoalsResult {
   const baseDate = input.baseDate || new Date();
 
   const financialRecords = input.financialRecords || [];
+  const paymentTransactions = input.paymentTransactions || [];
   const budgets = input.budgets || [];
   const campaigns = input.campaigns || [];
   const scoredPatients = input.scoredPatients || [];
@@ -345,7 +394,12 @@ export function calculateSmartGoals(input: SmartGoalsInput): SmartGoalsResult {
   const currentCommercialGoal = Number(input.currentCommercialGoal || 20);
   const currentConversionGoal = Number(input.currentConversionGoal || 35);
 
-  const monthlySeries = buildMonthlySeries(financialRecords, budgets, baseDate);
+  const monthlySeries = buildMonthlySeries(
+    financialRecords,
+    paymentTransactions,
+    budgets,
+    baseDate,
+  );
   const revenues = monthlySeries.map((point) => point.revenue);
 
   const currentMonthRevenue = revenues[revenues.length - 1] || 0;
