@@ -25,21 +25,14 @@ import { useRouter } from "next/navigation";
 import { createAgendaDisplayHelpers } from "@/lib/agenda/agendaDisplayHelpers";
 
 import {
-  START_HOUR,
-  END_HOUR,
   formatDateBr,
   getBlockColor,
-  getBlockTypeLabel,
   getDefaultBlockTitle,
   getFallbackAppointmentColor,
   getHolidayInfo,
-  getProfessionalColor,
   getProfessionalInitials,
   isTodayDate,
-  minutesBetweenTimes,
   pad,
-  parseHourValue,
-  parsePositiveNumber,
 } from "@/lib/agenda/agendaUtils";
 export default function AgendaPage() {
   const router = useRouter();
@@ -59,7 +52,6 @@ export default function AgendaPage() {
 
   const { connectGoogleCalendar, syncExistingGoogleAppointments } =
     useAgendaGoogleActions({ loadData });
-
 
   const {
     showModal,
@@ -147,7 +139,6 @@ export default function AgendaPage() {
     resetQuickPatientForm();
   };
 
-
   const {
     openNewBlock,
     saveScheduleBlock,
@@ -222,12 +213,10 @@ export default function AgendaPage() {
   });
 
   const {
-    selectedAgendaProfessional,
     filteredAppointmentsByProfessional,
     selectedProfessionalInitials,
     selectedProfessionalColor,
     getAppointmentStyle,
-    filteredScheduleBlocksByProfessional,
     getScheduleBlocksForSlot,
     getScheduleBlockHeight,
     agendaAlerts,
@@ -260,7 +249,6 @@ export default function AgendaPage() {
     loadData,
     setSelectedAppointmentDetails,
   });
-
 
   const {
     updateAppointmentStatus,

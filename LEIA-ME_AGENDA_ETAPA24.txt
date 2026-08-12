@@ -1,0 +1,30 @@
+ETAPA 24 — LIMPEZA FINAL DO PAGE.TSX DA AGENDA
+
+Objetivo:
+- remover imports e valores derivados que ficaram sem uso após as extrações das Etapas 19–23;
+- manter o page.tsx como orquestrador dos hooks e componentes da Agenda;
+- não alterar regras de negócio nem comportamento da interface.
+
+Alterações:
+- removidos imports não utilizados de agendaUtils;
+- removidos retornos não utilizados de useAgendaDerivedData;
+- pequenos ajustes de espaçamento no arquivo.
+
+Não foram alterados:
+- drag & drop e correção de 15 minutos;
+- resize;
+- criação/edição/exclusão de agendamentos;
+- bloqueios;
+- Google Agenda;
+- Financeiro;
+- banco de dados.
+
+Validação recomendada:
+1. npm run build
+2. npm run dev
+3. abrir Agenda
+4. abrir agendamento
+5. drag de 15 minutos
+6. resize
+7. novo agendamento
+8. bloqueio
