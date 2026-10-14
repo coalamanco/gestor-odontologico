@@ -1291,6 +1291,12 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
   const [patientFiles, setPatientFiles] = useState<PatientFile[]>([]);
   const [clinicalFollowups, setClinicalFollowups] = useState<ClinicalFollowup[]>([]);
+  const [sessionPlans, setSessionPlans] = useState<any[]>([]);
+  const [sessionPlanText, setSessionPlanText] = useState("");
+  const [sessionPlanDate, setSessionPlanDate] = useState("");
+  const [savingSessionPlan, setSavingSessionPlan] = useState(false);
+  const [sessionPlanError, setSessionPlanError] = useState("");
+
   const [updatingClinicalFollowup, setUpdatingClinicalFollowup] = useState<string | null>(null);
   const [uploadingPatientFile, setUploadingPatientFile] = useState(false);
   const [selectedPatientFile, setSelectedPatientFile] =
@@ -1619,6 +1625,19 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
         .order("created_at", { ascending: false });
 
       if (clinicalFollowupsError) throw clinicalFollowupsError;
+
+      // Planejamento clínico independente dos acompanhamentos automáticos do CRM.
+      const { data: plansData, error: plansError } = await supabase
+        .from("patient_session_plans")
+        .select("*")
+        .eq("patient_id", params.id)
+        .order("created_at", { ascending: false });
+      if (plansError) {
+        setSessionPlanError("Planejamento indisponível. Verifique se a tabela patient_session_plans foi criada no Supabase.");
+      } else {
+        setSessionPlanError("");
+        setSessionPlans(plansData || []);
+      }
 
       const { data: auditData, error: auditError } = await supabase
         .from("audit_logs")
@@ -3836,6 +3855,39 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
   }, [clinicalNotes]);
 
 
+  const saveSessionPlan = async () => {
+    if (!sessionPlanText.trim()) return alert("Descreva o planejamento da próxima sessão.");
+    try {
+      setSavingSessionPlan(true);
+      const { error } = await supabase.from("patient_session_plans").insert({
+        patient_id: params.id,
+        description: sessionPlanText.trim(),
+        planned_date: sessionPlanDate || null,
+        status: "pendente",
+      });
+      if (error) throw error;
+      setSessionPlanText("");
+      setSessionPlanDate("");
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao salvar planejamento: " + (error?.message || "Erro desconhecido"));
+    } finally {
+      setSavingSessionPlan(false);
+    }
+  };
+
+  const toggleSessionPlan = async (plan: any) => {
+    try {
+      const { error } = await supabase.from("patient_session_plans")
+        .update({ status: plan.status === "concluido" ? "pendente" : "concluido" })
+        .eq("id", plan.id).eq("patient_id", params.id);
+      if (error) throw error;
+      await loadData();
+    } catch (error: any) {
+      alert("Erro ao atualizar planejamento: " + (error?.message || "Erro desconhecido"));
+    }
+  };
+
   const pendingClinicalFollowups = useMemo(() => {
     return clinicalFollowups
       .filter((followup) => followup.status !== "concluido" && followup.status !== "cancelado")
@@ -5093,7 +5145,43 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </div>
             </div>
 
-            <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
+            <div className="space-y-4">
+              <div className="rounded-[1.15rem] border border-[#bde8e7] bg-white p-3 shadow-sm md:p-4">
+                <h2 className="text-base font-black text-slate-800">Planejamento da próxima sessão</h2>
+                <p className="mb-3 text-xs text-slate-500">Anotações internas sobre o que realizar no próximo atendimento.</p>
+                {sessionPlanError && <p className="mb-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{sessionPlanError}</p>}
+                <textarea value={sessionPlanText} onChange={(e) => setSessionPlanText(e.target.value)}
+                  placeholder="Ex.: Diagramar fio de aço 0,017 × 0,025 na próxima consulta"
+                  className="min-h-[95px] w-full rounded-xl border border-[#d9eeee] bg-[#fbffff] p-3 text-sm outline-none focus:border-[#239d9a]" />
+                <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
+                  <label className="text-xs font-bold text-slate-600">Data prevista (opcional)
+                    <input type="date" value={sessionPlanDate} onChange={(e) => setSessionPlanDate(e.target.value)}
+                      className="mt-1 block rounded-lg border border-[#d9eeee] p-2 text-sm" />
+                  </label>
+                  <button type="button" disabled={savingSessionPlan || Boolean(sessionPlanError)} onClick={saveSessionPlan}
+                    className="rounded-xl bg-[#239d9a] px-4 py-2 text-xs font-black text-white disabled:opacity-50">
+                    {savingSessionPlan ? "Salvando..." : "Salvar planejamento"}
+                  </button>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {sessionPlans.length === 0 && <p className="text-xs text-slate-400">Nenhum planejamento registrado.</p>}
+                  {sessionPlans.map((plan: any) => (
+                    <div key={plan.id} className="rounded-xl border border-[#e3f2f2] bg-[#fbffff] p-3">
+                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-slate-500">
+                          {plan.planned_date ? `Previsto: ${new Date(`${plan.planned_date}T12:00:00`).toLocaleDateString("pt-BR")}` : "Sem data prevista"}
+                        </span>
+                        <button type="button" onClick={() => toggleSessionPlan(plan)}
+                          className="rounded-lg border border-[#bde8e7] px-2 py-1 text-[11px] font-bold text-[#239d9a]">
+                          {plan.status === "concluido" ? "Reabrir" : "Marcar realizado"}
+                        </button>
+                      </div>
+                      <p className={`whitespace-pre-wrap text-sm ${plan.status === "concluido" ? "text-slate-400 line-through" : "text-slate-700"}`}>{plan.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white rounded-[1.15rem] border border-[#d8eeee] p-3 shadow-sm md:p-4">
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div>
                   <h2 className="text-base font-black text-slate-800">
@@ -5259,6 +5347,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             </div>
           </div>
