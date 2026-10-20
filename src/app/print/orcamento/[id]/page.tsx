@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Download, Printer } from "lucide-react";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { supabase } from "@/lib/supabase";
 
@@ -312,52 +311,101 @@ export default function PrintOrcamentoPage() {
   };
 
   const generatePdf = async () => {
-    const element = printRef.current;
-
-    if (!element) {
-      alert("Não foi possível encontrar o conteúdo para gerar o PDF.");
-      return;
-    }
-
     try {
       setGeneratingPdf(true);
-
-      const canvasSignature = signatureCanvasRef.current;
-      if (canvasSignature) {
-        setSignatureDataUrl(canvasSignature.toDataURL("image/png"));
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 250));
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      const left = 17;
+      const right = 193;
+      const width = right - left;
+      const bottom = 274;
+      let y = 18;
+      const nextPage = (needed = 8) => {
+        if (y + needed > bottom) { pdf.addPage(); y = 18; }
+      };
+      const line = () => { nextPage(3); pdf.setDrawColor(190); pdf.line(left, y, right, y); y += 4; };
+      const textLine = (label: string, value: string, bold = false) => {
+        nextPage(6);
+        pdf.setFont("helvetica", bold ? "bold" : "normal");
+        pdf.text(label, left, y);
+        pdf.text(value, right, y, { align: "right" });
+        y += 5.5;
+      };
+      pdf.setTextColor(40);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(professionalName, left, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.text(professionalCro, right, y, { align: "right" });
+      y += 6;
+      line();
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("ORÇAMENTO ODONTOLÓGICO", left, y);
+      y += 8;
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Paciente: ${patient?.name || "Paciente"}`, left, y); y += 5;
+      pdf.text(`CPF: ${patient?.cpf || "-"}    Telefone: ${patient?.phone || "-"}`, left, y); y += 5;
+      pdf.text(`Data: ${formatDateBr(budget.created_at)}    Situação: ${normalizeStatus(budget.status)}`, left, y); y += 6;
+      line();
+      pdf.setFont("helvetica", "bold");
+      pdf.text("PROCEDIMENTOS PROPOSTOS", left, y); y += 6;
+      pdf.setFontSize(8);
+      pdf.text("Procedimento", left, y);
+      pdf.text("Dente", 126, y);
+      pdf.text("Face", 145, y);
+      pdf.text("Qtd.", 160, y);
+      pdf.text("Valor", right, y, { align: "right" }); y += 3;
+      line();
+      pdf.setFont("helvetica", "normal");
+      for (const item of items) {
+        const quantity = Number(item.quantity || 1);
+        const unit = parseMoney(item.unit_price);
+        const value = parseMoney(item.total || item.amount) || unit * quantity;
+        const name = item.procedure_name || item.treatment_name || "Procedimento";
+        const lines = pdf.splitTextToSize(name, 100) as string[];
+        nextPage(Math.max(6, lines.length * 4.5 + 2));
+        pdf.text(lines, left, y);
+        pdf.text(String(item.tooth || "-"), 126, y);
+        pdf.text(String(item.face || "-"), 145, y);
+        pdf.text(String(quantity), 160, y);
+        pdf.text(formatCurrency(value), right, y, { align: "right" });
+        y += Math.max(6, lines.length * 4.5 + 2);
       }
-
+      if (!items.length) { pdf.text("Nenhum procedimento registrado.", left, y); y += 6; }
+      line();
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("RESUMO FINANCEIRO", left, y); y += 6;
+      textLine("Subtotal", formatCurrency(subtotal));
+      textLine("Desconto", formatCurrency(discount));
+      textLine("Entrada", formatCurrency(entryValue));
+      textLine("Total do orçamento", formatCurrency(total), true);
+      textLine("Saldo a parcelar", formatCurrency(remaining));
+      textLine("Parcelamento", `${installments}x de ${formatCurrency(installmentValue)}`);
+      line();
+      pdf.setFont("helvetica", "bold");
+      pdf.text("OBSERVAÇÕES", left, y); y += 5;
+      pdf.setFont("helvetica", "normal");
+      const notes = budget.notes || "Este orçamento foi elaborado conforme planejamento clínico apresentado. Valores e condições podem ser ajustados conforme evolução do tratamento.";
+      const noteLines = pdf.splitTextToSize(notes, width) as string[];
+      for (const note of noteLines) { nextPage(5); pdf.text(note, left, y); y += 4.5; }
+      nextPage(29);
+      y += 19;
+      pdf.setDrawColor(110);
+      pdf.line(left, y, 96, y);
+      pdf.line(112, y, right, y);
+      if (signatureDataUrl) {
+        try { pdf.addImage(signatureDataUrl, "PNG", left + 10, y - 17, 55, 16); } catch { /* assinatura opcional */ }
+      }
+      y += 5;
+      pdf.setFontSize(8);
+      pdf.text(patient?.name || "Paciente ou responsável", 56, y, { align: "center" });
+      pdf.text(professionalName, 152, y, { align: "center" });
+      y += 4;
+      pdf.text("Paciente ou responsável", 56, y, { align: "center" });
+      pdf.text(professionalCro, 152, y, { align: "center" });
       const today = new Date().toISOString().slice(0, 10);
       pdf.save(`Orcamento_${safePatientName || "paciente"}_${today}.pdf`);
     } catch (error: any) {
@@ -406,6 +454,10 @@ export default function PrintOrcamentoPage() {
           .print-document { display: none !important; }
           .no-print { display: none !important; }
           .paper-only, .paper-only * { visibility: visible !important; }
+          .paper-only { z-index: 2147483647 !important; }
+          body { margin: 0 !important; }
+          .paper-only h1, .paper-only h2 { break-after: avoid !important; }
+          .paper-only .paper-signatures { margin-top: 9mm !important; }
           .paper-only {
             display: block !important; position: absolute !important; top: 0 !important;
             left: 0 !important; width: 100% !important; max-width: none !important;
