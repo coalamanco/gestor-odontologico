@@ -398,163 +398,36 @@ export default function PrintOrcamentoPage() {
   return (
     <div className="min-h-screen bg-[#edf8f8] p-3 print:bg-white print:p-0 md:p-6">
       <style jsx global>{`
+        @media screen { .paper-only { display: none !important; } }
         @media print {
-          @page { size: A4 portrait; margin: 12mm; }
-          html, body { height: auto !important; overflow: visible !important; }
+          @page { size: A4 portrait; margin: 14mm 15mm; }
+          html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
           body * { visibility: hidden !important; }
-          .print-document, .print-document * { visibility: visible !important; }
-          .print-document {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            overflow: visible !important;
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            transform: none !important;
-          }
-          body:has(.print-document) { margin: 0 !important; padding: 0 !important; }
-          body:has(.print-document) :is(header, nav, aside, footer):not(.print-document *) { visibility: hidden !important; }
-          .print-document :is(table, tr, img, svg) { break-inside: avoid; page-break-inside: avoid; }
-
-          .no-print {
-            display: none !important;
-          }
-
-          body {
-            background: white !important;
-          }
-
-          .print-document {
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
-            border-radius: 0 !important;
-          }
-
-          .print-avoid-break {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          .signature-drawing-box {
-            display: none !important;
-          }
-
-          /* Versão impressa compacta: não altera a apresentação na tela. */
-          .print-document {
+          .print-document { display: none !important; }
+          .no-print { display: none !important; }
+          .paper-only, .paper-only * { visibility: visible !important; }
+          .paper-only {
+            display: block !important; position: absolute !important; top: 0 !important;
+            left: 0 !important; width: 100% !important; max-width: none !important;
+            background: white !important; color: #222 !important;
             font-family: Arial, Helvetica, sans-serif !important;
-            font-size: 9pt !important;
-            line-height: 1.35 !important;
-            color: #263238 !important;
+            font-size: 9.5pt !important; line-height: 1.35 !important;
+            margin: 0 !important; padding: 0 !important;
           }
-          .print-document * {
-            box-shadow: none !important;
-            text-shadow: none !important;
-            letter-spacing: normal !important;
-          }
-          .print-document > section:first-child {
-            padding: 8mm 0 4mm !important;
-            background: white !important;
-            color: #24323b !important;
-            overflow: visible !important;
-          }
-          .print-document > section:first-child .absolute { display: none !important; }
-          .print-document > section:first-child .relative.z-10 {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: flex-start !important;
-            justify-content: space-between !important;
-            gap: 8mm !important;
-          }
-          .print-document > section:first-child h1 {
-            font-size: 15pt !important;
-            line-height: 1.2 !important;
-            margin-top: 2mm !important;
-            font-weight: 700 !important;
-          }
-          .print-document > section:first-child p {
-            font-size: 8pt !important;
-            line-height: 1.3 !important;
-            margin-top: 2mm !important;
-            max-width: 95mm !important;
-          }
-          .print-document > section:first-child .rounded-3xl {
-            min-width: 55mm !important;
-            padding: 0 !important;
-            border: 0 !important;
-            text-align: right !important;
-            background: white !important;
-          }
-          .print-document > section:first-child .text-lg { font-size: 10pt !important; }
-          .print-document > section:first-child .text-xs,
-          .print-document > section:first-child .text-\\[11px\\] {
-            font-size: 7.5pt !important;
-          }
-          .print-document > section:first-child [class*="text-cyan"],
-          .print-document > section:first-child [class*="text-white"] {
-            color: #35434c !important;
-          }
-          .print-document > section:nth-child(2) {
-            padding: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 3mm !important;
-          }
-          .print-document > section:nth-child(2) > * {
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-          }
-          .print-document .rounded-3xl,
-          .print-document .rounded-2xl,
-          .print-document .rounded-full {
-            border-radius: 2mm !important;
-          }
-          .print-document [class*="p-5"],
-          .print-document [class*="p-6"],
-          .print-document [class*="p-4"] {
-            padding: 2.5mm !important;
-          }
-          .print-document [class*="px-5"] { padding-left: 2.5mm !important; padding-right: 2.5mm !important; }
-          .print-document [class*="py-4"] { padding-top: 2mm !important; padding-bottom: 2mm !important; }
-          .print-document [class*="mt-"] { margin-top: 1.5mm !important; }
-          .print-document [class*="gap-"] { gap: 2mm !important; }
-          .print-document [class*="space-y-"] > :not([hidden]) ~ :not([hidden]) {
-            margin-top: 2mm !important;
-          }
-          .print-document .text-3xl,
-          .print-document .text-4xl { font-size: 15pt !important; }
-          .print-document .text-2xl { font-size: 11pt !important; }
-          .print-document .text-xl { font-size: 10pt !important; }
-          .print-document .text-lg { font-size: 10pt !important; }
-          .print-document .text-sm { font-size: 8.5pt !important; line-height: 1.35 !important; }
-          .print-document .text-xs { font-size: 7.5pt !important; line-height: 1.3 !important; }
-          .print-document .font-black { font-weight: 700 !important; }
-          .print-document .leading-7,
-          .print-document .leading-6 { line-height: 1.4 !important; }
-          .print-document .grid { display: grid !important; }
-          .print-document .md\\:grid-cols-3 { grid-template-columns: 2fr 1fr !important; }
-          .print-document .md\\:col-span-2 { grid-column: span 1 !important; }
-          .print-document .md\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
-          .print-document .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
-          .print-document .md\\:flex-row { flex-direction: row !important; }
-          .print-document .pt-14 { padding-top: 4mm !important; }
-          .print-document .gap-14 { gap: 8mm !important; }
-          .print-document .h-20 { height: 15mm !important; }
-          .print-document .mt-10 { margin-top: 3mm !important; }
-          .print-document .print-avoid-break {
-            break-inside: auto !important;
-            page-break-inside: auto !important;
-          }
-          .print-document .print-avoid-break > .grid,
-          .print-document .print-avoid-break > .flex {
-            break-inside: avoid !important;
-          }
-          .print-document > section:nth-child(2) > section:last-child {
-            break-inside: avoid !important;
-          }
+          .paper-only h1 { font-size: 15pt; margin: 3mm 0 1mm; }
+          .paper-only h2 { font-size: 10.5pt; margin: 4mm 0 2mm; border-bottom: 1px solid #aaa; padding-bottom: 1mm; }
+          .paper-only p { margin: 1.5mm 0; }
+          .paper-only .paper-top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #777; padding-bottom: 3mm; }
+          .paper-only .paper-muted { color: #555; font-size: 8.5pt; }
+          .paper-only table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+          .paper-only th, .paper-only td { text-align: left; border-bottom: 1px solid #ddd; padding: 1.8mm 1mm; vertical-align: top; }
+          .paper-only th { font-weight: 700; background: #f5f5f5 !important; }
+          .paper-only .num { text-align: right; white-space: nowrap; }
+          .paper-only tr { break-inside: avoid; }
+          .paper-only .paper-signatures { display: flex; gap: 15mm; margin-top: 16mm; break-inside: avoid; }
+          .paper-only .paper-signature { flex: 1; text-align: center; border-top: 1px solid #777; padding-top: 2mm; }
+          .paper-only .paper-signature img { max-height: 13mm; max-width: 100%; display: block; margin: -13mm auto 0; }
+          .paper-only .paper-footer { margin-top: 7mm; font-size: 8pt; color: #666; border-top: 1px solid #ddd; padding-top: 2mm; }
         }
       `}</style>
 
@@ -589,6 +462,59 @@ export default function PrintOrcamentoPage() {
           </button>
         </div>
       </div>
+
+      {/* Documento próprio para impressão: independente dos cartões do aplicativo. */}
+      <article className="paper-only" aria-label="Orçamento para impressão">
+        <div className="paper-top">
+          <div>
+            <strong>{professionalName}</strong>
+            <div className="paper-muted">{professionalCro}</div>
+            <div className="paper-muted">{clinicSettings?.phone || clinicSettings?.whatsapp || ""}</div>
+          </div>
+          <div style={{ textAlign: "right" }} className="paper-muted">
+            {clinicName}<div>Data: {formatDateBr(budget.created_at)}</div>
+          </div>
+        </div>
+        <h1>ORÇAMENTO ODONTOLÓGICO</h1>
+        <p><strong>Paciente:</strong> {patient?.name || "Paciente"}</p>
+        <p><strong>CPF:</strong> {patient?.cpf || "-"} &nbsp;&nbsp; <strong>Telefone:</strong> {patient?.phone || "-"}</p>
+        <p className="paper-muted"><strong>Situação:</strong> {normalizeStatus(budget.status)} &nbsp; | &nbsp; <strong>Recibo:</strong> {receiptLabel(budget.receipt_type)}</p>
+        <h2>Procedimentos propostos</h2>
+        <table>
+          <thead><tr><th>Procedimento</th><th>Dente</th><th>Face</th><th>Qtd.</th><th className="num">Valor</th></tr></thead>
+          <tbody>
+            {items.length === 0 ? <tr><td colSpan={5}>Nenhum procedimento registrado.</td></tr> : items.map((item, index) => {
+              const quantity = Number(item.quantity || 1);
+              const unit = parseMoney(item.unit_price);
+              const itemTotal = parseMoney(item.total || item.amount) || unit * quantity;
+              return <tr key={item.id || index}>
+                <td>{item.procedure_name || item.treatment_name || "Procedimento"}</td>
+                <td>{item.tooth || "-"}</td><td>{item.face || "-"}</td><td>{quantity}</td>
+                <td className="num">{formatCurrency(itemTotal)}</td>
+              </tr>;
+            })}
+          </tbody>
+        </table>
+        <h2>Resumo financeiro</h2>
+        <table><tbody>
+          <tr><td>Subtotal</td><td className="num">{formatCurrency(subtotal)}</td></tr>
+          <tr><td>Desconto</td><td className="num">{formatCurrency(discount)}</td></tr>
+          <tr><td>Entrada ({budget.entry_status === "pendente" ? "pendente" : "paga"})</td><td className="num">{formatCurrency(entryValue)}</td></tr>
+          <tr><td><strong>Total do orçamento</strong></td><td className="num"><strong>{formatCurrency(total)}</strong></td></tr>
+          <tr><td>Saldo a parcelar</td><td className="num">{formatCurrency(remaining)}</td></tr>
+          <tr><td>Parcelamento</td><td className="num">{installments}x de {formatCurrency(installmentValue)}</td></tr>
+        </tbody></table>
+        <h2>Observações</h2>
+        <p style={{ whiteSpace: "pre-wrap" }}>{budget.notes || "Este orçamento foi elaborado conforme planejamento clínico apresentado. Valores e condições podem ser ajustados conforme evolução do tratamento."}</p>
+        <div className="paper-signatures">
+          <div className="paper-signature">
+            {signatureDataUrl && <img src={signatureDataUrl} alt="Assinatura do paciente" />}
+            <strong>{patient?.name || "Paciente"}</strong><div className="paper-muted">Paciente ou responsável</div>
+          </div>
+          <div className="paper-signature"><strong>{professionalName}</strong><div className="paper-muted">{professionalCro}</div></div>
+        </div>
+        <div className="paper-footer">{clinicName} {clinicSettings?.address ? `• ${clinicSettings.address}` : ""}</div>
+      </article>
 
       <main
         ref={printRef}
