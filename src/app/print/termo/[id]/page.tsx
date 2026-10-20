@@ -447,6 +447,24 @@ export default function PrintTermoConsentimentoPage() {
     <div className="min-h-screen bg-[#edf8f8] p-3 print:bg-white print:p-0 md:p-6">
       <style jsx global>{`
         @media print {
+          @page { size: A4 portrait; margin: 12mm; }
+          html, body { height: auto !important; overflow: visible !important; }
+          body * { visibility: hidden !important; }
+          .print-document, .print-document * { visibility: visible !important; }
+          .print-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            transform: none !important;
+          }
+          body:has(.print-document) { margin: 0 !important; padding: 0 !important; }
+          body:has(.print-document) :is(header, nav, aside, footer):not(.print-document *) { visibility: hidden !important; }
+          .print-document :is(table, tr, img, svg) { break-inside: avoid; page-break-inside: avoid; }
+
           .no-print {
             display: none !important;
           }

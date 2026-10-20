@@ -573,6 +573,24 @@ export default function PrintProntuarioPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f7ffff] via-[#f3fcfc] to-[#eef8f8] p-3 print:bg-white print:p-0 md:p-6">
       <style jsx global>{`
         @media print {
+          @page { size: A4 portrait; margin: 12mm; }
+          html, body { height: auto !important; overflow: visible !important; }
+          body * { visibility: hidden !important; }
+          .print-page, .print-page * { visibility: visible !important; }
+          .print-page {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            transform: none !important;
+          }
+          body:has(.print-page) { margin: 0 !important; padding: 0 !important; }
+          body:has(.print-page) :is(header, nav, aside, footer):not(.print-page *) { visibility: hidden !important; }
+          .print-page :is(table, tr, img, svg) { break-inside: avoid; page-break-inside: avoid; }
+
           .no-print {
             display: none !important;
           }
