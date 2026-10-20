@@ -310,6 +310,45 @@ export default function PrintOrcamentoPage() {
     setIsDrawingSignature(false);
   };
 
+  const printProfessionalDocument = () => {
+    const article = document.querySelector<HTMLElement>("article.paper-only");
+    if (!article) {
+      alert("Documento de impressão não encontrado.");
+      return;
+    }
+    const frame = document.createElement("iframe");
+    frame.setAttribute("title", "Impressão do orçamento odontológico");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(frame);
+    const doc = frame.contentDocument;
+    if (!doc) { frame.remove(); alert("Não foi possível abrir a impressão."); return; }
+    const printCss = `
+      @page { size: A4 portrait; margin: 14mm 15mm; }
+      html, body { margin:0; padding:0; color:#222; background:#fff; font:9pt/1.35 Arial,Helvetica,sans-serif; }
+      * { box-sizing:border-box; }
+      h1 { font-size:14pt; margin:3mm 0 2mm; }
+      h2 { font-size:10pt; margin:4mm 0 2mm; padding-bottom:1mm; border-bottom:1px solid #aaa; break-after:avoid; }
+      p { margin:1.5mm 0; }
+      .paper-top { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #777; padding-bottom:3mm; }
+      .paper-muted { color:#555; font-size:8pt; }
+      table { width:100%; border-collapse:collapse; font-size:8.5pt; }
+      th,td { text-align:left; border-bottom:1px solid #ddd; padding:1.6mm 1mm; vertical-align:top; }
+      th { font-weight:bold; background:#f5f5f5; }
+      .num { text-align:right; white-space:nowrap; }
+      tr { break-inside:avoid; }
+      .paper-signatures { display:flex; gap:12mm; margin-top:14mm; break-inside:avoid; }
+      .paper-signature { flex:1; text-align:center; border-top:1px solid #777; padding-top:2mm; }
+      .paper-signature img { max-height:13mm; max-width:100%; display:block; margin:-13mm auto 0; }
+      .paper-footer { margin-top:5mm; font-size:7.5pt; color:#666; border-top:1px solid #ddd; padding-top:2mm; }
+    `;
+    doc.open();
+    doc.write("<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><title>Orçamento odontológico</title><style>" + printCss + "</style></head><body>" + article.innerHTML + "</body></html>");
+    doc.close();
+    const cleanup = () => { window.setTimeout(() => frame.remove(), 1200); };
+    frame.contentWindow?.addEventListener("afterprint", cleanup, { once: true });
+    window.setTimeout(() => { frame.contentWindow?.focus(); frame.contentWindow?.print(); }, 300);
+  };
+
   const generatePdf = async () => {
     if (!budget) {
       alert("Orçamento não carregado. Aguarde e tente novamente.");
@@ -500,7 +539,7 @@ export default function PrintOrcamentoPage() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={printProfessionalDocument}
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-5 py-2 text-sm font-black text-white shadow-sm"
           >
             <Printer size={17} />
