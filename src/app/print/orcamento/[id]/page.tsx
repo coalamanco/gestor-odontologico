@@ -311,6 +311,10 @@ export default function PrintOrcamentoPage() {
   };
 
   const generatePdf = async () => {
+    if (!budget) {
+      alert("Orçamento não carregado. Aguarde e tente novamente.");
+      return;
+    }
     try {
       setGeneratingPdf(true);
       const pdf = new jsPDF("p", "mm", "a4");
