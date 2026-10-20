@@ -442,6 +442,119 @@ export default function PrintOrcamentoPage() {
           .signature-drawing-box {
             display: none !important;
           }
+
+          /* Versão impressa compacta: não altera a apresentação na tela. */
+          .print-document {
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-size: 9pt !important;
+            line-height: 1.35 !important;
+            color: #263238 !important;
+          }
+          .print-document * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+            letter-spacing: normal !important;
+          }
+          .print-document > section:first-child {
+            padding: 8mm 0 4mm !important;
+            background: white !important;
+            color: #24323b !important;
+            overflow: visible !important;
+          }
+          .print-document > section:first-child .absolute { display: none !important; }
+          .print-document > section:first-child .relative.z-10 {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 8mm !important;
+          }
+          .print-document > section:first-child h1 {
+            font-size: 15pt !important;
+            line-height: 1.2 !important;
+            margin-top: 2mm !important;
+            font-weight: 700 !important;
+          }
+          .print-document > section:first-child p {
+            font-size: 8pt !important;
+            line-height: 1.3 !important;
+            margin-top: 2mm !important;
+            max-width: 95mm !important;
+          }
+          .print-document > section:first-child .rounded-3xl {
+            min-width: 55mm !important;
+            padding: 0 !important;
+            border: 0 !important;
+            text-align: right !important;
+            background: white !important;
+          }
+          .print-document > section:first-child .text-lg { font-size: 10pt !important; }
+          .print-document > section:first-child .text-xs,
+          .print-document > section:first-child .text-\\[11px\\] {
+            font-size: 7.5pt !important;
+          }
+          .print-document > section:first-child [class*="text-cyan"],
+          .print-document > section:first-child [class*="text-white"] {
+            color: #35434c !important;
+          }
+          .print-document > section:nth-child(2) {
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 3mm !important;
+          }
+          .print-document > section:nth-child(2) > * {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+          }
+          .print-document .rounded-3xl,
+          .print-document .rounded-2xl,
+          .print-document .rounded-full {
+            border-radius: 2mm !important;
+          }
+          .print-document [class*="p-5"],
+          .print-document [class*="p-6"],
+          .print-document [class*="p-4"] {
+            padding: 2.5mm !important;
+          }
+          .print-document [class*="px-5"] { padding-left: 2.5mm !important; padding-right: 2.5mm !important; }
+          .print-document [class*="py-4"] { padding-top: 2mm !important; padding-bottom: 2mm !important; }
+          .print-document [class*="mt-"] { margin-top: 1.5mm !important; }
+          .print-document [class*="gap-"] { gap: 2mm !important; }
+          .print-document [class*="space-y-"] > :not([hidden]) ~ :not([hidden]) {
+            margin-top: 2mm !important;
+          }
+          .print-document .text-3xl,
+          .print-document .text-4xl { font-size: 15pt !important; }
+          .print-document .text-2xl { font-size: 11pt !important; }
+          .print-document .text-xl { font-size: 10pt !important; }
+          .print-document .text-lg { font-size: 10pt !important; }
+          .print-document .text-sm { font-size: 8.5pt !important; line-height: 1.35 !important; }
+          .print-document .text-xs { font-size: 7.5pt !important; line-height: 1.3 !important; }
+          .print-document .font-black { font-weight: 700 !important; }
+          .print-document .leading-7,
+          .print-document .leading-6 { line-height: 1.4 !important; }
+          .print-document .grid { display: grid !important; }
+          .print-document .md\\:grid-cols-3 { grid-template-columns: 2fr 1fr !important; }
+          .print-document .md\\:col-span-2 { grid-column: span 1 !important; }
+          .print-document .md\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
+          .print-document .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+          .print-document .md\\:flex-row { flex-direction: row !important; }
+          .print-document .pt-14 { padding-top: 4mm !important; }
+          .print-document .gap-14 { gap: 8mm !important; }
+          .print-document .h-20 { height: 15mm !important; }
+          .print-document .mt-10 { margin-top: 3mm !important; }
+          .print-document .print-avoid-break {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+          .print-document .print-avoid-break > .grid,
+          .print-document .print-avoid-break > .flex {
+            break-inside: avoid !important;
+          }
+          .print-document > section:nth-child(2) > section:last-child {
+            break-inside: avoid !important;
+          }
         }
       `}</style>
 
