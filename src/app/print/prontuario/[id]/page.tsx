@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 function formatDateBr(value?: string | null) {
   if (!value) return "";
@@ -152,7 +150,7 @@ export default function PrintProntuarioPage() {
   const patientId = params?.id as string;
 
   const [loading, setLoading] = useState(true);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const generatingPdf = false;
   const [patient, setPatient] = useState<any>(null);
   const [clinicSettings, setClinicSettings] = useState<any>(null);
 
@@ -494,55 +492,12 @@ export default function PrintProntuarioPage() {
     }, 50);
   };
 
-  const generatePDF = async () => {
-    const element = printRef.current;
-
-    if (!element) {
-      alert("Não foi possível encontrar o conteúdo do prontuário para gerar o PDF.");
-      return;
-    }
-
-    try {
-      setGeneratingPdf(true);
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: element.scrollWidth,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 0;
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + margin;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const today = new Date().toISOString().slice(0, 10);
-      pdf.save(`Prontuario_${safeFileName(patientName) || "paciente"}_${today}.pdf`);
-    } catch (error: any) {
-      alert("Erro ao gerar PDF: " + (error?.message || "erro desconhecido"));
-    } finally {
-      setGeneratingPdf(false);
-    }
+  // Usa o mesmo documento clínico compacto para papel e PDF.
+  // O usuário seleciona "Salvar como PDF" no destino da impressão.
+  const generatePDF = () => {
+    alert('Na janela que abrir, escolha "Salvar como PDF" em Destino e clique em Salvar. Assim o PDF terá exatamente a formatação compacta da impressão.');
+    printProfessionalDocument();
   };
-
 
   const printProfessionalDocument = () => {
     const source = printRef.current;
@@ -708,7 +663,7 @@ export default function PrintProntuarioPage() {
             disabled={generatingPdf}
             className="rounded-xl bg-slate-800 px-5 py-2 text-sm font-black text-white shadow-sm hover:bg-slate-700 disabled:opacity-60"
           >
-            {generatingPdf ? "Gerando PDF..." : "Baixar PDF premium"}
+            {generatingPdf ? "Gerando PDF..." : "Salvar PDF (A4 compacto)"}
           </button>
         </div>
       </div>
