@@ -546,63 +546,67 @@ export default function PrintProntuarioPage() {
 
   const printProfessionalDocument = () => {
     const source = printRef.current;
-    if (!source) {
-      alert("Documento não disponível para impressão.");
-      return;
-    }
+    if (!source) { alert("Prontuário indisponível para impressão."); return; }
+
+    // Documento independente: não importa CSS/Tailwind do Gestor.
+    const copy = source.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll(".no-print,button,input,textarea,select,canvas").forEach((node) => node.remove());
+    // Evita fundos decorativos, cartões e quebras forçadas da interface.
+    copy.querySelectorAll("*").forEach((node) => {
+      const element = node as HTMLElement;
+      const original = element.getAttribute("class") || "";
+      if (original.split(/\s+/).includes("absolute")) { element.remove(); return; }
+      element.removeAttribute("class");
+      element.removeAttribute("style");
+    });
+    copy.removeAttribute("class");
+    copy.removeAttribute("style");
+    copy.id = "clinical-print";
+
     const frame = document.createElement("iframe");
-    frame.title = "Documento odontológico para impressão";
+    frame.title = "Impressão do prontuário";
     frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
     document.body.appendChild(frame);
     const doc = frame.contentDocument;
     if (!doc) { frame.remove(); alert("Não foi possível abrir a impressão."); return; }
-    const cssLinks = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'))
-      .map((link) => `<link rel="stylesheet" href="${link.href}">`).join("");
-    const printCss = `
-      @page { size:A4 portrait; margin:14mm 15mm; }
-      html,body { background:white!important; color:#222!important; margin:0!important; padding:0!important; font:9pt/1.35 Arial,Helvetica,sans-serif!important; }
-      * { box-sizing:border-box!important; box-shadow:none!important; text-shadow:none!important; }
-      main { width:100%!important; max-width:none!important; margin:0!important; border:0!important; border-radius:0!important; overflow:visible!important; background:white!important; }
-      main > header:first-child, main > section:first-child {
-        background:white!important; color:#222!important; padding:2mm 0 3mm!important;
-        border-bottom:1px solid #777!important; border-radius:0!important;
-      }
-      main > header:first-child *, main > section:first-child * { color:#222!important; }
-      main > header:first-child .absolute, main > section:first-child .absolute { display:none!important; }
-      main > header:first-child h1, main > section:first-child h1 { font-size:14pt!important; line-height:1.2!important; margin:1mm 0!important; }
-      main > header:first-child p, main > section:first-child p { font-size:8pt!important; }
-      main > section, main > div, main > article { padding:2mm 0!important; margin:0!important; }
-      main .grid { gap:2mm!important; }
-      main [class*="gap-"] { gap:2mm!important; }
-      main [class*="space-y-"] > :not([hidden]) ~ :not([hidden]) { margin-top:2mm!important; }
-      main [class*="rounded-"] { border-radius:1mm!important; }
-      main [class*="p-8"], main [class*="p-7"], main [class*="p-6"], main [class*="p-5"], main [class*="p-4"] { padding:2.5mm!important; }
-      main [class*="px-8"], main [class*="px-10"] { padding-left:2.5mm!important; padding-right:2.5mm!important; }
-      main [class*="py-8"], main [class*="py-9"] { padding-top:2mm!important; padding-bottom:2mm!important; }
-      main [class*="mt-"] { margin-top:2mm!important; }
-      main [class*="mb-"] { margin-bottom:2mm!important; }
-      main .text-4xl, main .text-3xl { font-size:14pt!important; }
-      main .text-2xl, main .text-xl { font-size:11pt!important; }
-      main .text-lg { font-size:10pt!important; }
-      main .text-sm { font-size:8.5pt!important; }
-      main .text-xs { font-size:7.5pt!important; }
-      main .font-black { font-weight:700!important; }
-      main .bg-gradient-to-r, main .bg-gradient-to-br { background:white!important; }
-      main .text-white { color:#222!important; }
-      main .no-print, main button, main input, main textarea, main select { display:none!important; }
-      main table { width:100%!important; border-collapse:collapse!important; font-size:8.5pt!important; }
-      main th, main td { padding:1.5mm!important; border-bottom:1px solid #ddd!important; }
-      main tr, main img, main svg { break-inside:avoid!important; }
-      main h1, main h2, main h3 { break-after:avoid!important; }
-      main p { orphans:3; widows:3; }
-      main [class*="min-h-"] { min-height:0!important; }
-      main [class*="h-32"], main [class*="h-40"] { height:auto!important; }
+    const css = `
+      @page { size:A4 portrait; margin:13mm 15mm; }
+      *, *::before, *::after { box-sizing:border-box; }
+      html, body { margin:0; padding:0; background:white; color:#20252a; font:9pt/1.35 Arial,Helvetica,sans-serif; }
+      #clinical-print { width:100%; margin:0; padding:0; }
+      #clinical-print > section:first-child { border-bottom:1px solid #555; padding:0 0 3mm; margin-bottom:3mm; }
+      #clinical-print > section:nth-child(2) { padding:0 0 2mm; border-bottom:1px solid #bbb; margin-bottom:2mm; }
+      #clinical-print > div { padding:0; }
+      h1 { font-size:15pt; margin:1mm 0; line-height:1.2; }
+      h2 { font-size:11pt; margin:0 0 1.5mm; padding:0 0 1mm; border-bottom:1px solid #888; }
+      h3 { font-size:9pt; margin:0 0 1mm; }
+      p { margin:1mm 0 2mm; orphans:3; widows:3; }
+      section { margin:0 0 3mm; padding:0; }
+      section > div { margin:0 0 1.5mm; }
+      section > div > div { margin-bottom:1mm; }
+      section > div > div > div { margin-bottom:.7mm; }
+      div { min-width:0; }
+      main > section:first-child > div { display:flex; justify-content:space-between; gap:8mm; align-items:start; }
+      main > section:nth-child(2) > div { display:flex; flex-wrap:wrap; gap:3mm; }
+      main > section:nth-child(2) > div > div { flex:1; min-width:40mm; }
+      strong, b { font-weight:700; }
+      img { max-width:100%; max-height:20mm; object-fit:contain; }
+      table { width:100%; border-collapse:collapse; }
+      th,td { padding:1.2mm; border-bottom:1px solid #ddd; text-align:left; }
+      h1,h2,h3 { break-after:avoid; }
+      tr,img { break-inside:avoid; }
+      section { break-before:auto; break-after:auto; }
+      section > div > div { break-inside:auto; }
+      /* Assinaturas: compactas e sem salto de página artificial. */
+      section:last-child > div { margin-top:3mm; }
+      section:last-child > div > div { margin:0 0 3mm; }
+      a { color:#20252a; text-decoration:none; }
+      @media print { body { print-color-adjust:economy; -webkit-print-color-adjust:economy; } }
     `;
     doc.open();
-    doc.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Documento odontológico</title>' +
-      cssLinks + '<style>' + printCss + '</style></head><body>' + source.outerHTML + '</body></html>');
+    doc.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Prontuário odontológico</title><style>' + css + '</style></head><body>' + copy.outerHTML + '</body></html>');
     doc.close();
-    const cleanup = () => window.setTimeout(() => frame.remove(), 1500);
+    const cleanup = () => window.setTimeout(() => frame.remove(), 2000);
     frame.contentWindow?.addEventListener("afterprint", cleanup, { once:true });
     window.setTimeout(() => { frame.contentWindow?.focus(); frame.contentWindow?.print(); }, 500);
   };
