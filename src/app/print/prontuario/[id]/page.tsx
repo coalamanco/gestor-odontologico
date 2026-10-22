@@ -30,6 +30,14 @@ function formatDateTimeBr(value?: string | null) {
   });
 }
 
+function formatCurrency(value: number | string | null | undefined) {
+  const amount = typeof value === "number" ? value : Number(value ?? 0);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number.isFinite(amount) ? amount : 0);
+}
+
 function getValue(obj: any, keys: string[]) {
   for (const key of keys) {
     if (obj?.[key] !== undefined && obj?.[key] !== null && obj?.[key] !== "") {
