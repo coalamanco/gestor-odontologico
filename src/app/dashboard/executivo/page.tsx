@@ -39,6 +39,7 @@ import {
   getFinancialRecordOverdueBalance,
   isFinancialRecordOverdue as isFinancialOverdueByEngine,
   reconcileFinancialRecordsWithTransactions,
+  parseFinancialMoney,
   type FinancialPaymentTransaction,
 } from "@/lib/financialEngine";
 
@@ -613,20 +614,65 @@ export default function DashboardExecutivoPage() {
     ];
   }, [scoredPatients]);
 
+  // Receita do mês: utilizar a data de cada pagamento, e não a data de
+  // criação do lançamento. Isso impede que pagamentos de outros meses sejam
+  // comparados com a meta mensal atual.
+  const monthlyReceived = useMemo(() => {
+    const monthKey = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+    }).format(new Date());
+
+    const isCurrentMonth = (value?: string | null) =>
+      Boolean(value && String(value).slice(0, 7) === monthKey);
+
+    const transactionRecordIds = new Set(
+      paymentTransactions
+        .map((transaction) => String(transaction.financial_record_id || ""))
+        .filter(Boolean),
+    );
+
+    const fromTransactions = paymentTransactions.reduce((sum, transaction) => {
+      if (!isCurrentMonth(transaction.received_at || transaction.created_at)) return sum;
+      return sum + Math.max(0, parseFinancialMoney(transaction.amount));
+    }, 0);
+
+    // Compatibilidade com registros antigos sem transações individualizadas.
+    // Sem paid_at confiável, não atribuímos o pagamento a um mês arbitrário.
+    const fromLegacyRecords = financialRecords.reduce((sum, record) => {
+      if (transactionRecordIds.has(String(record.id))) return sum;
+      if (!isCurrentMonth(record.paid_at)) return sum;
+      return sum + Math.max(0, parseFinancialMoney(record.paid_amount));
+    }, 0);
+
+    return Number((fromTransactions + fromLegacyRecords).toFixed(2));
+  }, [paymentTransactions, financialRecords]);
+
   const forecast = useMemo(() => {
-    return calculateRevenueForecast({
-      budgets,
-      financialRecords,
-      campaigns: campaignProjections,
-      scoredPatients: scoredPatients.map((item) => ({
-        id: item.patient.id,
-        score: item.score,
-        closingChance: item.closingChance,
-        vipLevel: item.vipLevel,
-        financialPotential: item.financialPotential,
-      })),
+    // Orçamentos recentes são oportunidades, não receita recebida.
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const recentBudgets = budgets.filter((budget) => {
+      if (!budget.created_at) return false;
+      const date = new Date(budget.created_at);
+      return !Number.isNaN(date.getTime()) && date >= cutoff;
     });
-  }, [budgets, financialRecords, campaignProjections, scoredPatients]);
+
+    return calculateRevenueForecast({
+      budgets: recentBudgets,
+      financialRecords: [{
+        id: "recebimentos-mes-bi",
+        amount: monthlyReceived,
+        paid_amount: monthlyReceived,
+        status: "pago",
+      }],
+      // Não transformar quantidade de pacientes cadastrados ou campanhas
+      // hipotéticas em valores financeiros previstos.
+      campaigns: [],
+      scoredPatients: [],
+    });
+  }, [budgets, monthlyReceived]);
 
   const goals = useMemo(() => {
     return calculateClinicGoals({
@@ -1065,21 +1111,21 @@ export default function DashboardExecutivoPage() {
     {
       title: "Confirmado",
       value: formatCurrency(forecast.confirmedRevenue),
-      subtitle: "Receita já registrada",
+      subtitle: "Pagamentos recebidos neste mês",
       icon: DollarSign,
       color: "from-[#239d9a] to-[#68d4d0]",
     },
     {
       title: "Provável",
       value: formatCurrency(forecast.probableRevenue),
-      subtitle: "Previsão com CRM",
+      subtitle: "Recebido + estimativa de orçamentos recentes",
       icon: TrendingUp,
       color: "from-[#239d9a] to-[#68d4d0]",
     },
     {
       title: "Potencial",
       value: formatCurrency(forecast.potentialRevenue),
-      subtitle: "Pipeline máximo",
+      subtitle: "Cenário estimado, não recebido",
       icon: Target,
       color: "from-[#239d9a] to-[#68d4d0]",
     },
