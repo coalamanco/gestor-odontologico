@@ -1591,6 +1591,14 @@ export default function OrcamentoPage({
                         PDF
                       </Link>
 
+                      <Link
+                        href={`/print/aceite/${budget.id}`}
+                        target="_blank"
+                        className="rounded-xl border border-[#d9eeee] bg-white px-3 py-2 text-[13px] font-semibold text-slate-700 hover:bg-[#f7ffff]"
+                      >
+                        Termo de aceite
+                      </Link>
+
                       {!isApproved && (
                         <>
                           <button
@@ -1648,6 +1656,14 @@ export default function OrcamentoPage({
                   className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#46c1bf] to-[#7ccfce] px-4 py-2 text-sm font-black text-white shadow-sm hover:opacity-95"
                 >
                   Imprimir orçamento premium
+                </Link>
+
+                <Link
+                  href={`/print/aceite/${selectedBudget.id}`}
+                  target="_blank"
+                  className="inline-flex items-center justify-center rounded-xl border border-[#bde8e7] bg-white px-4 py-2 text-sm font-semibold text-[#167d7b]"
+                >
+                  Termo de aceite e autorização
                 </Link>
 
                 <Link
