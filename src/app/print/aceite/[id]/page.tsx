@@ -162,11 +162,10 @@ export default function TermoAceitePage() {
       </section>
       <section className="signature-section mt-5">
         <div className="actions mb-2 flex items-center justify-between text-xs"><strong>Assinatura do paciente ou responsável</strong><button onClick={clear} className="rounded border px-3 py-1">Limpar assinatura</button></div>
-        <canvas ref={canvas} width={750} height={120} onPointerDown={start} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} className="signature-canvas actions h-24 w-full touch-none rounded border border-slate-300 bg-white" />
-        {signature && <img src={signature} alt="Assinatura do paciente" className="signature-image hidden h-20 max-w-full object-contain" />}
-        <div className="mt-3 grid grid-cols-2 gap-8 text-center text-xs">
-          <div className="border-t border-slate-600 pt-1"><strong>{str(patient.name)}</strong><p>Paciente ou responsável</p></div>
-          <div className="border-t border-slate-600 pt-1"><strong>{professional}</strong><p>CRO {cro}</p></div>
+        <canvas ref={canvas} width={750} height={120} onPointerDown={start} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} className={`signature-canvas h-24 w-full touch-none rounded border border-slate-300 bg-white ${savedSignature ? "hidden" : ""}`} />
+        {signature && savedSignature && <img src={signature} alt="Assinatura do paciente" className={`signature-image mx-auto h-20 max-w-full object-contain ${savedSignature ? "block" : "hidden"}`} />}
+        <div className="patient-signature-line mx-auto mt-3 max-w-[95mm] border-t border-slate-600 pt-1 text-center text-xs">
+          <strong>{str(patient.name)}</strong><p>Paciente ou responsável</p>
         </div>
         <p className="mt-2 text-right text-[10px]">{signedDate ? `Assinatura ${savedSignature ? "salva" : "desenhada (não salva)"} em ${signedDate}` : "Data: ____/____/________"}</p>
       </section>
@@ -176,10 +175,17 @@ export default function TermoAceitePage() {
       @page { size: A4 portrait; margin: 12mm; }
       @media print {
         html, body { margin:0!important; padding:0!important; background:white!important; }
+        /* Oculta a navegação e qualquer outro elemento do layout do aplicativo. */
+        body * { visibility:hidden!important; }
+        .accept-page, .accept-page * { visibility:visible!important; }
+        .accept-page { position:absolute!important; left:0!important; top:0!important; width:100%!important; z-index:2147483647!important; }
         .accept-page { padding:0!important; background:white!important; min-height:0!important; }
         .actions { display:none!important; }
         .paper { width:100%!important; max-width:none!important; box-shadow:none!important; padding:0!important; margin:0!important; }
         .signature-section { break-inside:avoid; }
+        .signature-canvas { display:none!important; }
+        .signature-image { width:auto!important; max-width:95mm!important; max-height:22mm!important; height:auto!important; object-fit:contain!important; margin:0 auto!important; }
+        .patient-signature-line { max-width:95mm!important; }
         .signature-image { display:block!important; }
         h1,h2 { break-after:avoid; }
         tr { break-inside:avoid; }
