@@ -21,6 +21,8 @@ export default function TermoAceitePage() {
   const [error, setError] = useState("");
   const [signature, setSignature] = useState("");
   const [signedDate, setSignedDate] = useState("");
+  const [savedSignature, setSavedSignature] = useState(false);
+  const [savingSignature, setSavingSignature] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
 
@@ -39,7 +41,19 @@ export default function TermoAceitePage() {
         if (p.error) throw p.error;
         if (it.error) throw it.error;
         if (c.error) throw c.error;
-        if (active) { setBudget(b.data); setPatient(p.data); setItems(it.data || []); setClinic(c.data); }
+        const existing = await supabase.from("digital_signatures")
+          .select("signature_data_url, signed_at")
+          .eq("patient_id", b.data.patient_id)
+          .eq("document_type", `aceite_orcamento_${id}`)
+          .order("signed_at", { ascending: false }).limit(1).maybeSingle();
+        if (active) {
+          setBudget(b.data); setPatient(p.data); setItems(it.data || []); setClinic(c.data);
+          if (!existing.error && existing.data?.signature_data_url) {
+            setSignature(existing.data.signature_data_url);
+            setSignedDate(existing.data.signed_at ? new Date(existing.data.signed_at).toLocaleString("pt-BR") : "");
+            setSavedSignature(true);
+          }
+        }
       } catch (e) { if (active) setError(e instanceof Error ? e.message : "Falha ao carregar documento."); }
       finally { if (active) setLoading(false); }
     })();
@@ -68,7 +82,29 @@ export default function TermoAceitePage() {
   };
   const clear = () => {
     const el = canvas.current; if (el) el.getContext("2d")?.clearRect(0,0,el.width,el.height);
-    setSignature(""); setSignedDate("");
+    setSignature(""); setSignedDate(""); setSavedSignature(false);
+  };
+
+  const saveSignature = async () => {
+    if (!signature || !patient || !budget || savingSignature) return;
+    try {
+      setSavingSignature(true);
+      const now = new Date().toISOString();
+      const { error: saveError } = await supabase.from("digital_signatures").insert({
+        patient_id: String(patient.id),
+        document_type: `aceite_orcamento_${id}`,
+        document_title: `Aceite do orçamento ${id}`,
+        signature_data_url: signature,
+        signed_name: str(patient.name),
+        signed_at: now,
+      });
+      if (saveError) throw saveError;
+      setSignedDate(new Date(now).toLocaleString("pt-BR"));
+      setSavedSignature(true);
+      alert("Assinatura registrada no sistema.");
+    } catch (e) {
+      alert("Não foi possível salvar a assinatura: " + (e instanceof Error ? e.message : String(e)));
+    } finally { setSavingSignature(false); }
   };
 
   if (loading) return <p className="p-8">Carregando termo de aceite...</p>;
@@ -86,6 +122,7 @@ export default function TermoAceitePage() {
     <div className="actions mx-auto mb-4 flex max-w-[210mm] flex-wrap gap-2 px-4">
       <button onClick={() => router.back()} className="rounded bg-white px-4 py-2 text-sm shadow">Voltar</button>
       <button onClick={() => window.print()} className="rounded bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Imprimir / Salvar PDF</button>
+      <button onClick={saveSignature} disabled={!signature || savedSignature || savingSignature} className="rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{savingSignature ? "Salvando..." : savedSignature ? "Assinatura salva" : "Salvar assinatura"}</button>
       <span className="self-center text-xs text-slate-600">Para gerar PDF, selecione “Salvar como PDF” na janela de impressão.</span>
     </div>
     <main className="paper mx-auto w-[210mm] max-w-full bg-white px-[17mm] py-[14mm] shadow-md">
@@ -131,9 +168,9 @@ export default function TermoAceitePage() {
           <div className="border-t border-slate-600 pt-1"><strong>{str(patient.name)}</strong><p>Paciente ou responsável</p></div>
           <div className="border-t border-slate-600 pt-1"><strong>{professional}</strong><p>CRO {cro}</p></div>
         </div>
-        <p className="mt-2 text-right text-[10px]">{signedDate ? `Assinatura desenhada em ${signedDate}` : "Data: ____/____/________"}</p>
+        <p className="mt-2 text-right text-[10px]">{signedDate ? `Assinatura ${savedSignature ? "salva" : "desenhada (não salva)"} em ${signedDate}` : "Data: ____/____/________"}</p>
       </section>
-      <p className="mt-4 border-t pt-2 text-center text-[9px] text-slate-500">Documento vinculado ao orçamento {id}. A assinatura desenhada nesta tela não é armazenada no sistema nesta versão.</p>
+      <p className="mt-4 border-t pt-2 text-center text-[9px] text-slate-500">Documento vinculado ao orçamento {id}. Assinatura eletrônica armazenada quando confirmada em “Salvar assinatura”. O aceite não substitui os consentimentos clínicos específicos.</p>
     </main>
     <style jsx global>{`
       @page { size: A4 portrait; margin: 12mm; }
