@@ -449,7 +449,7 @@ export default function PrintProntuarioPage() {
         const { error } = await supabase
           .from("digital_signatures")
           .update({
-            document_title: "Prontuário odontológico",
+            document_title: "Comprovante de recebimento de cópia do prontuário odontológico",
             signature_data_url: dataUrl,
             signed_name: patientName,
             signed_at: new Date().toISOString(),
@@ -463,7 +463,7 @@ export default function PrintProntuarioPage() {
           .insert({
             patient_id: patientId,
             document_type: "prontuario",
-            document_title: "Prontuário odontológico",
+            document_title: "Comprovante de recebimento de cópia do prontuário odontológico",
             signature_data_url: dataUrl,
             signed_name: patientName,
             signed_at: new Date().toISOString(),
@@ -1007,7 +1007,7 @@ export default function PrintProntuarioPage() {
           </section>
 
           <section className="page-break pt-10">
-            <SectionTitle title="Assinaturas" subtitle="Validação do paciente/responsável e do profissional" />
+            <SectionTitle title="Entrega de cópia do prontuário" subtitle="Assinatura de recebimento pelo paciente ou responsável" />
 
             <div className="no-print mb-8 rounded-2xl border border-[#d9eeee] bg-[#fbffff] p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -1016,7 +1016,7 @@ export default function PrintProntuarioPage() {
                     Assinatura digital do paciente
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    Desenhe a assinatura abaixo, salve e depois imprima ou baixe o PDF.
+                    Assinatura destinada a registrar o recebimento de uma cópia do prontuário. Não significa concordância com todas as evoluções clínicas. Salve antes de imprimir.
                   </p>
                 </div>
 
@@ -1070,7 +1070,8 @@ export default function PrintProntuarioPage() {
               )}
             </div>
 
-            <div className="mt-20 grid grid-cols-1 gap-16 md:grid-cols-2">
+            <p className="mt-5 text-center text-xs text-slate-600">Declaro ter recebido uma cópia do prontuário odontológico disponibilizado nesta data.</p>
+            <div className="mt-10 grid grid-cols-1 gap-16 md:grid-cols-2">
               <div className="text-center">
                 {signatureDataUrl && (
                   <img
@@ -1082,7 +1083,7 @@ export default function PrintProntuarioPage() {
 
                 <div className="border-t border-slate-500 pt-3">
                   <div className="font-bold text-slate-800">{patientName}</div>
-                  <div className="text-sm text-slate-500">Assinatura do paciente ou responsável</div>
+                  <div className="text-sm text-slate-500">Recebimento da cópia pelo paciente ou responsável</div>
                 </div>
               </div>
 

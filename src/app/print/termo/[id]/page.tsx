@@ -199,6 +199,10 @@ export default function PrintTermoConsentimentoPage() {
   const [extraNotes, setExtraNotes] = useState("");
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [isDrawingSignature, setIsDrawingSignature] = useState(false);
+  const [signatureId, setSignatureId] = useState<string | null>(null);
+  const [savingSignature, setSavingSignature] = useState(false);
+  const [signatureSignedAt, setSignatureSignedAt] = useState<string | null>(null);
+  const [signatureDirty, setSignatureDirty] = useState(false);
 
   const selectedTreatment = useMemo(() => {
     return treatments.find((item) => item.id === selectedTreatmentId) || null;
@@ -265,6 +269,59 @@ export default function PrintTermoConsentimentoPage() {
     loadData();
   }, [patientId]);
 
+  // Uma assinatura pertence a um tipo de consentimento e procedimento específicos.
+  // Não reutilizar automaticamente o aceite de outro procedimento.
+  useEffect(() => {
+    let cancelled = false;
+    setSignatureId(null);
+    setSignatureDataUrl(null);
+    setSignatureSignedAt(null);
+    setSignatureDirty(false);
+    if (!patientId) return;
+    const documentType = `consentimento_${consentType}`;
+    const documentTitle = `Termo de consentimento - ${consentOption.label} - ${selectedTreatmentId || "sem_tratamento"}`;
+    (async () => {
+      const { data, error } = await supabase.from("digital_signatures")
+        .select("id, signature_data_url, signature_data, signed_at")
+        .eq("patient_id", patientId)
+        .eq("document_type", documentType)
+        .eq("document_title", documentTitle)
+        .order("signed_at", { ascending: false }).limit(1).maybeSingle();
+      if (cancelled) return;
+      if (error) { console.warn("Não foi possível consultar assinatura:", error.message); return; }
+      setSignatureId(data?.id || null);
+      setSignatureDataUrl(data?.signature_data_url || data?.signature_data || null);
+      setSignatureSignedAt(data?.signed_at || null);
+    })();
+    return () => { cancelled = true; };
+  }, [patientId, consentType, selectedTreatmentId]);
+
+  const saveSignature = async () => {
+    if (!signatureDataUrl || !signatureDirty) {
+      alert("Desenhe uma nova assinatura antes de salvar.");
+      return;
+    }
+    const documentType = `consentimento_${consentType}`;
+    const documentTitle = `Termo de consentimento - ${consentOption.label} - ${selectedTreatmentId || "sem_tratamento"}`;
+    const signedAt = new Date().toISOString();
+    try {
+      setSavingSignature(true);
+      // Criar um registro novo preserva o anterior, em vez de substituí-lo.
+      const { data, error } = await supabase.from("digital_signatures").insert({
+        patient_id: patientId, document_type: documentType,
+        document_title: documentTitle, signature_data_url: signatureDataUrl,
+        signed_name: patient?.name || "Paciente", signed_at: signedAt,
+      }).select("id").single();
+      if (error) throw error;
+      setSignatureId(data?.id || null);
+      setSignatureSignedAt(signedAt);
+      setSignatureDirty(false);
+      alert("Assinatura registrada no sistema.");
+    } catch (error: any) {
+      alert("Erro ao salvar assinatura: " + (error?.message || "erro inesperado"));
+    } finally { setSavingSignature(false); }
+  };
+
   const prepareSignatureCanvas = () => {
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
@@ -327,6 +384,7 @@ export default function PrintTermoConsentimentoPage() {
 
     if (canvas) {
       setSignatureDataUrl(canvas.toDataURL("image/png"));
+      setSignatureDirty(true);
     }
 
     setIsDrawingSignature(false);
@@ -341,6 +399,7 @@ export default function PrintTermoConsentimentoPage() {
     }
 
     setSignatureDataUrl(null);
+    setSignatureDirty(true);
     setIsDrawingSignature(false);
   };
 
@@ -796,13 +855,10 @@ export default function PrintTermoConsentimentoPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={clearSignature}
-                className="rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-[#fbffff]"
-              >
-                Limpar assinatura
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={clearSignature} className="rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700">Limpar assinatura</button>
+                <button type="button" onClick={saveSignature} disabled={savingSignature || !signatureDirty || !signatureDataUrl} className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingSignature ? "Salvando..." : "Salvar assinatura"}</button>
+              </div>
             </div>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-[#d9eeee] bg-white">
@@ -820,13 +876,15 @@ export default function PrintTermoConsentimentoPage() {
                 onTouchEnd={stopSignature}
               />
             </div>
+            {signatureSignedAt && !signatureDirty && <p className="mt-3 text-xs text-teal-700">Assinatura salva em {new Date(signatureSignedAt).toLocaleString("pt-BR")}.</p>}
+            {signatureDirty && <p className="mt-3 text-xs text-amber-700">Assinatura ainda não salva. Clique em Salvar assinatura antes de imprimir.</p>}
           </section>
 
           <section className="print-avoid-break pt-14">
             <div className="grid grid-cols-1 gap-14 md:grid-cols-2">
               <div className="text-center">
                 <div className="flex h-20 items-end justify-center">
-                  {signatureDataUrl ? (
+                  {signatureDataUrl && !signatureDirty ? (
                     <img
                       src={signatureDataUrl}
                       alt="Assinatura do paciente"
