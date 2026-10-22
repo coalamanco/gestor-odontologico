@@ -712,47 +712,13 @@ export default function PrintTermoConsentimentoPage() {
         ref={printRef}
         className="print-document mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-[#d9eeee] bg-white shadow-xl"
       >
-        <section className="relative overflow-hidden bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] p-8 text-white md:p-10">
-          <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/15" />
-          <div className="absolute -bottom-24 left-10 h-52 w-52 rounded-full bg-white/10" />
-
-          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-            <div>
-              <div className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-50">
-                Termo de consentimento informado
-              </div>
-
-              <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
-                {consentOption.label}
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-cyan-50">
-                {consentOption.subtitle}
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/25 bg-white/15 p-5 text-left shadow-sm backdrop-blur md:min-w-[260px] md:text-right">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-cyan-50">
-                {clinicName}
-              </div>
-
-              <div className="mt-2 text-lg font-black">
-                {professionalName}
-              </div>
-
-              {clinicSettings?.cro && (
-                <div className="mt-1 text-xs font-semibold text-cyan-50">
-                  CRO: {clinicSettings.cro}
-                </div>
-              )}
-
-              {(clinicSettings?.phone || clinicSettings?.whatsapp) && (
-                <div className="mt-2 text-xs font-semibold text-cyan-50">
-                  {clinicSettings.phone || clinicSettings.whatsapp}
-                </div>
-              )}
-            </div>
-          </div>
+        <section className="border-b border-slate-300 bg-white px-6 py-4 text-center text-slate-800 md:px-10 md:py-5">
+          <h1 className="text-lg font-black uppercase tracking-wide md:text-xl">
+            TERMO DE CONSENTIMENTO INFORMADO
+          </h1>
+          <p className="mt-1 text-xs font-medium text-slate-600">
+            {professionalName}{clinicSettings?.cro ? ` · CRO ${clinicSettings.cro}` : ""}
+          </p>
         </section>
 
         <section className="space-y-6 p-6 md:p-10">
