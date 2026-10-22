@@ -1278,6 +1278,7 @@ function PacienteProntuarioContent({ params }: { params: { id: string } }) {
   const [patient, setPatient] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
+  const [selectedAcceptanceBudgetId, setSelectedAcceptanceBudgetId] = useState("");
   const [patientTreatments, setPatientTreatments] = useState<
     PatientTreatment[]
   >([]);
@@ -4572,14 +4573,6 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={openPrescriptionModal}
-              className="flex-1 rounded-xl border border-[#d9eeee] bg-white px-3 py-1.5 text-center text-xs font-black text-[#239d9a] shadow-sm hover:bg-[#fbffff] md:flex-none md:px-4 md:text-sm"
-            >
-              Novo documento clínico
-            </button>
-
             <Link
               href={`/pacientes/${params.id}/orcamento`}
               className="flex-1 rounded-xl bg-gradient-to-r from-[#1db7b3] via-[#44c1bf] to-[#85d4d2] px-3 py-1.5 text-center text-xs font-black text-white shadow-sm md:flex-none md:px-4 md:text-sm"
@@ -6096,7 +6089,7 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <button
                 type="button"
                 onClick={() =>
@@ -6149,6 +6142,46 @@ CRM clínico: ${createdFollowups} acompanhamento(s) criado(s) automaticamente.`
                   Acesse a área de orçamento para gerar ou revisar propostas.
                 </p>
               </Link>
+              <div className="rounded-2xl border border-[#bde8e7] bg-[#f7ffff] p-5">
+                <div className="text-sm font-black uppercase tracking-widest text-[#239d9a]">
+                  Termo de aceite
+                </div>
+                <div className="mt-2 text-base font-bold text-slate-800">
+                  Aceite e autorização do orçamento
+                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  Selecione um orçamento para gerar o termo com procedimentos, valores e assinaturas.
+                </p>
+                {budgets.length > 0 ? (
+                  <>
+                    <select
+                      aria-label="Orçamento para termo de aceite"
+                      value={selectedAcceptanceBudgetId}
+                      onChange={(event) => setSelectedAcceptanceBudgetId(event.target.value)}
+                      className="mt-3 w-full rounded-lg border border-[#bde8e7] bg-white px-3 py-2 text-sm text-slate-700"
+                    >
+                      <option value="">Selecione um orçamento</option>
+                      {budgets.map((budget) => (
+                        <option key={budget.id} value={budget.id}>
+                          {new Date(budget.created_at).toLocaleDateString("pt-BR")} — {budget.status || "Pendente"} — {Number(budget.total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedAcceptanceBudgetId ? (
+                      <Link
+                        href={`/print/aceite/${selectedAcceptanceBudgetId}`}
+                        className="mt-3 inline-flex rounded-lg bg-[#239d9a] px-4 py-2 text-sm font-bold text-white hover:bg-[#187f7c]"
+                      >
+                        Abrir termo de aceite
+                      </Link>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-500">Escolha o orçamento antes de abrir o termo.</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-3 text-xs text-slate-500">Nenhum orçamento cadastrado para este paciente.</p>
+                )}
+              </div>
             </div>
           </div>
         )}
