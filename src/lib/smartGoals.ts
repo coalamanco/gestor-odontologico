@@ -177,11 +177,6 @@ function getRecordPaidValue(record: SmartGoalFinancialRecord) {
   return 0;
 }
 
-function roundToHundreds(value: number) {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  return Math.round(value / 100) * 100;
-}
-
 function clampNumber(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -320,7 +315,7 @@ function buildRiskMessage(
   }
 
   if (riskLevel === "Médio") {
-    return "A clínica está em zona de atenção. A meta sugerida é conservadora e deve ser acompanhada semanalmente pelo Dashboard Executivo.";
+    return "A clínica está em zona de atenção. A meta configurada deve ser acompanhada semanalmente pelo Dashboard Executivo.";
   }
 
   return "O risco atual é baixo. A clínica possui base suficiente para trabalhar uma meta inteligente com crescimento controlado.";
@@ -369,14 +364,14 @@ function buildExecutiveRecommendation(input: {
   }
 
   if (input.trend === "Crescimento") {
-    return `A clínica está em tendência de crescimento. A meta inteligente sugerida é ${formattedSuggested}, mantendo avanço controlado sobre a média recente de ${formattedAverage}.`;
+    return `A clínica está em tendência de crescimento. A meta mensal configurada é ${formattedSuggested}. A média recente é ${formattedAverage}; acompanhe o crescimento sem aumentar a meta automaticamente.`;
   }
 
   if (input.trend === "Queda") {
-    return `A clínica apresenta queda recente. A meta inteligente sugerida é ${formattedSuggested}, com foco em recuperação antes de elevar metas agressivas.`;
+    return `A clínica apresenta queda recente. A meta mensal configurada é ${formattedSuggested}. Priorize a recuperação do faturamento antes de considerar uma meta maior.`;
   }
 
-  return `A clínica está estável. A meta inteligente sugerida é ${formattedSuggested}, equilibrando histórico recente, pipeline comercial e segurança operacional.`;
+  return `A clínica está estável. A meta mensal configurada é ${formattedSuggested}. O histórico e as oportunidades comerciais são acompanhados separadamente, sem elevar automaticamente essa referência.`;
 }
 
 export function calculateSmartGoals(input: SmartGoalsInput): SmartGoalsResult {
@@ -388,7 +383,7 @@ export function calculateSmartGoals(input: SmartGoalsInput): SmartGoalsResult {
   const campaigns = input.campaigns || [];
   const scoredPatients = input.scoredPatients || [];
 
-  const currentMonthlyGoal = Number(input.currentMonthlyGoal || 80000);
+  const currentMonthlyGoal = Number(input.currentMonthlyGoal || 15000);
   const currentAnnualGoal = Number(input.currentAnnualGoal || currentMonthlyGoal * 12);
   const currentCrmGoal = Number(input.currentCrmGoal || 30);
   const currentCommercialGoal = Number(input.currentCommercialGoal || 20);
@@ -447,32 +442,11 @@ export function calculateSmartGoals(input: SmartGoalsInput): SmartGoalsResult {
     return sum + Number(campaign.estimatedRevenue || 0);
   }, 0);
 
-  const weightedBase =
-    lastThreeMonthsAverage > 0
-      ? lastThreeMonthsAverage * 0.65 + lastSixMonthsAverage * 0.35
-      : currentMonthlyGoal * 0.75;
-
-  const opportunityBoost =
-    openBudgetsRevenue * 0.08 +
-    campaignProjection * 0.06 +
-    hotPatients * 450 +
-    highValuePatients * 300;
-
-  let growthMultiplier = 1.08;
-
-  if (trend === "Crescimento") growthMultiplier = 1.15;
-  if (trend === "Queda") growthMultiplier = 1.02;
-
-  const suggestedMonthlyGoal = roundToHundreds(
-    Math.max(
-      weightedBase * growthMultiplier + opportunityBoost,
-      currentMonthlyGoal * 0.65
-    )
-  );
-
-  const suggestedAnnualGoal = roundToHundreds(
-    Math.max(suggestedMonthlyGoal * 12, currentAnnualGoal * 0.65)
-  );
+  // A meta definida na configuração é a referência dos indicadores.
+  // Histórico, pacientes antigos, campanhas e orçamentos em aberto
+  // não aumentam automaticamente a meta financeira da clínica.
+  const suggestedMonthlyGoal = currentMonthlyGoal;
+  const suggestedAnnualGoal = currentAnnualGoal;
 
   const suggestedCrmGoal = Math.max(
     10,

@@ -115,8 +115,8 @@ export type ClinicGoalFinancialRecord = {
   export const CLINIC_GOALS_STORAGE_KEY = "clinic_goals";
   
   export const DEFAULT_CLINIC_GOALS: ClinicGoals = {
-    monthlyGoal: 80000,
-    annualGoal: 960000,
+    monthlyGoal: 15000,
+    annualGoal: 180000,
     crmGoal: 30,
     commercialGoal: 20,
     conversionGoal: 35,
@@ -206,8 +206,21 @@ export type ClinicGoalFinancialRecord = {
     try {
       const stored = window.localStorage.getItem(CLINIC_GOALS_STORAGE_KEY);
       if (!stored) return DEFAULT_CLINIC_GOALS;
-  
-      return normalizeGoals(JSON.parse(stored));
+
+      const parsed = JSON.parse(stored) as Partial<ClinicGoals>;
+      // Migra apenas o antigo par de metas padrão (80 mil/960 mil).
+      // Metas personalizadas diferentes desses valores são preservadas.
+      if (Number(parsed.monthlyGoal) === 80000 && Number(parsed.annualGoal) === 960000) {
+        const migrated = normalizeGoals({
+          ...parsed,
+          monthlyGoal: 15000,
+          annualGoal: 180000,
+        });
+        window.localStorage.setItem(CLINIC_GOALS_STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+
+      return normalizeGoals(parsed);
     } catch {
       return DEFAULT_CLINIC_GOALS;
     }
