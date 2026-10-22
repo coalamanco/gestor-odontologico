@@ -91,6 +91,16 @@ function EmptyBox({ text }: { text: string }) {
   );
 }
 
+function StatusBadge({ value }: { value?: string | null }) {
+  const status = String(value || "Não informado").trim();
+  const label = status.replace(/_/g, " ");
+  return (
+    <span className="inline-flex max-w-full items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+      {label}
+    </span>
+  );
+}
+
 export default function PrintProntuarioPage() {
   const params = useParams();
   const router = useRouter();
