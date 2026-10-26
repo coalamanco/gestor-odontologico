@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ExpandedSignaturePad from "@/components/ExpandedSignaturePad";
 
 type RecordData = Record<string, unknown>;
 const money = (v: unknown) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,6 +24,7 @@ export default function TermoAceitePage() {
   const [signedDate, setSignedDate] = useState("");
   const [savedSignature, setSavedSignature] = useState(false);
   const [savingSignature, setSavingSignature] = useState(false);
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
 
@@ -122,6 +124,7 @@ export default function TermoAceitePage() {
     <div className="actions mx-auto mb-4 flex max-w-[210mm] flex-wrap gap-2 px-4">
       <button onClick={() => router.back()} className="rounded bg-white px-4 py-2 text-sm shadow">Voltar</button>
       <button onClick={() => window.print()} className="rounded bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Imprimir / Salvar PDF</button>
+      <button onClick={() => setSignatureModalOpen(true)} className="rounded bg-teal-700 px-4 py-2 text-sm font-semibold text-white">✍️ Assinar em tela ampliada</button>
       <button onClick={saveSignature} disabled={!signature || savedSignature || savingSignature} className="rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{savingSignature ? "Salvando..." : savedSignature ? "Assinatura salva" : "Salvar assinatura"}</button>
       <span className="self-center text-xs text-slate-600">Para gerar PDF, selecione “Salvar como PDF” na janela de impressão.</span>
     </div>
@@ -163,7 +166,7 @@ export default function TermoAceitePage() {
       <section className="signature-section mt-5">
         <div className="actions mb-2 flex items-center justify-between text-xs"><strong>Assinatura do paciente ou responsável</strong><button onClick={clear} className="rounded border px-3 py-1">Limpar assinatura</button></div>
         <canvas ref={canvas} width={750} height={120} onPointerDown={start} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} className={`signature-canvas h-24 w-full touch-none rounded border border-slate-300 bg-white ${savedSignature ? "hidden" : ""}`} />
-        {signature && savedSignature && <img src={signature} alt="Assinatura do paciente" className={`signature-image mx-auto h-20 max-w-full object-contain ${savedSignature ? "block" : "hidden"}`} />}
+        {signature && <img src={signature} alt="Assinatura do paciente" className="signature-image mx-auto h-20 max-w-full object-contain" />}
         <div className="patient-signature-line mx-auto mt-3 max-w-[95mm] border-t border-slate-600 pt-1 text-center text-xs">
           <strong>{str(patient.name)}</strong><p>Paciente ou responsável</p>
         </div>
@@ -171,6 +174,7 @@ export default function TermoAceitePage() {
       </section>
       <p className="mt-4 border-t pt-2 text-center text-[9px] text-slate-500">Documento vinculado ao orçamento {id}. Assinatura eletrônica armazenada quando confirmada em “Salvar assinatura”. O aceite não substitui os consentimentos clínicos específicos.</p>
     </main>
+    <ExpandedSignaturePad open={signatureModalOpen} onClose={() => setSignatureModalOpen(false)} onConfirm={(data) => { setSignature(data); setSignedDate(new Date().toLocaleString("pt-BR")); setSavedSignature(false); setSignatureModalOpen(false); }} />
     <style jsx global>{`
       @page { size: A4 portrait; margin: 12mm; }
       @media print {

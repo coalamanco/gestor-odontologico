@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import ExpandedSignaturePad from "@/components/ExpandedSignaturePad";
 import { useParams, useRouter } from "next/navigation";
 
 function formatDateBr(value?: string | null) {
@@ -135,6 +136,8 @@ export default function PrintProntuarioPage() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [signatureId, setSignatureId] = useState<string | null>(null);
   const [savingSignature, setSavingSignature] = useState(false);
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
+  const [expandedSignatureDraft, setExpandedSignatureDraft] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!patientId) return;
@@ -363,9 +366,9 @@ export default function PrintProntuarioPage() {
 
   const saveSignature = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas && !expandedSignatureDraft) return;
 
-    const dataUrl = canvas.toDataURL("image/png");
+    const dataUrl = expandedSignatureDraft || canvas!.toDataURL("image/png");
 
     try {
       setSavingSignature(true);
@@ -401,6 +404,7 @@ export default function PrintProntuarioPage() {
       }
 
       setSignatureDataUrl(dataUrl);
+      setExpandedSignatureDraft(null);
       alert("Assinatura salva com sucesso.");
     } catch (error: any) {
       alert("Erro ao salvar assinatura: " + error.message);
@@ -410,6 +414,7 @@ export default function PrintProntuarioPage() {
   };
 
   const allowNewSignature = () => {
+    setExpandedSignatureDraft(null);
     setSignatureDataUrl(null);
     setTimeout(() => {
       clearSignatureCanvas();
@@ -819,6 +824,9 @@ export default function PrintProntuarioPage() {
 
               {!signatureDataUrl && (
                 <div className="mt-4">
+                  <button type="button" onClick={() => setSignatureModalOpen(true)} className="mb-3 rounded-xl bg-teal-700 px-5 py-3 text-sm font-bold text-white">✍️ Assinar em tela ampliada (XP-Pen)</button>
+                  {expandedSignatureDraft && <div className="mb-3"><img src={expandedSignatureDraft} alt="Assinatura ainda não salva" className="mx-auto max-h-28 max-w-full object-contain"/><p className="text-xs text-amber-700">Assinatura capturada. Clique em Salvar assinatura.</p></div>}
+                  <ExpandedSignaturePad open={signatureModalOpen} onClose={() => setSignatureModalOpen(false)} onConfirm={(data) => { setExpandedSignatureDraft(data); setSignatureModalOpen(false); }} />
                   <canvas
                     ref={canvasRef}
                     width={900}

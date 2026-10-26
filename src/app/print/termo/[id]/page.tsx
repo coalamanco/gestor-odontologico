@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { supabase } from "@/lib/supabase";
+import ExpandedSignaturePad from "@/components/ExpandedSignaturePad";
 
 type Patient = {
   id: string;
@@ -201,6 +202,7 @@ export default function PrintTermoConsentimentoPage() {
   const [isDrawingSignature, setIsDrawingSignature] = useState(false);
   const [signatureId, setSignatureId] = useState<string | null>(null);
   const [savingSignature, setSavingSignature] = useState(false);
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [signatureSignedAt, setSignatureSignedAt] = useState<string | null>(null);
   const [signatureDirty, setSignatureDirty] = useState(false);
 
@@ -822,6 +824,7 @@ export default function PrintTermoConsentimentoPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setSignatureModalOpen(true)} className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-bold text-white">✍️ Assinar em tela ampliada</button>
                 <button type="button" onClick={clearSignature} className="rounded-xl border border-[#d9eeee] bg-white px-4 py-2 text-sm font-bold text-slate-700">Limpar assinatura</button>
                 <button type="button" onClick={saveSignature} disabled={savingSignature || !signatureDirty || !signatureDataUrl} className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingSignature ? "Salvando..." : "Salvar assinatura"}</button>
               </div>
@@ -842,6 +845,7 @@ export default function PrintTermoConsentimentoPage() {
                 onTouchEnd={stopSignature}
               />
             </div>
+            <ExpandedSignaturePad open={signatureModalOpen} onClose={() => setSignatureModalOpen(false)} onConfirm={(data) => { setSignatureDataUrl(data); setSignatureDirty(true); setSignatureModalOpen(false); }} />
             {signatureSignedAt && !signatureDirty && <p className="mt-3 text-xs text-teal-700">Assinatura salva em {new Date(signatureSignedAt).toLocaleString("pt-BR")}.</p>}
             {signatureDirty && <p className="mt-3 text-xs text-amber-700">Assinatura ainda não salva. Clique em Salvar assinatura antes de imprimir.</p>}
           </section>
