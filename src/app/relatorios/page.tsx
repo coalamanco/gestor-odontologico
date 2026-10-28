@@ -80,7 +80,21 @@ function formatCurrency(value: number) {
 }
 
 function toInputDate(date: Date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// PostgreSQL DATE (YYYY-MM-DD) deve ser interpretado como data civil local.
+// new Date("YYYY-MM-DD") usa UTC e pode deslocar o recebimento para o dia anterior.
+function parseFinancialDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const parsed = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function startOfDay(date: Date) {
@@ -245,8 +259,8 @@ export default function RelatoriosPage() {
 
   const withinPeriod = (dateString?: string | null) => {
     if (!dateString) return false;
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return false;
+    const date = parseFinancialDate(dateString);
+    if (!date) return false;
 
     const { start, end } = getPeriodRange(period);
     return date >= start && date <= end;
@@ -333,8 +347,8 @@ export default function RelatoriosPage() {
       const date = payment.received_at || payment.created_at;
       if (!date) return;
 
-      const parsed = new Date(date);
-      if (Number.isNaN(parsed.getTime())) return;
+      const parsed = parseFinancialDate(date);
+      if (!parsed) return;
 
       const key = parsed.toLocaleDateString("pt-BR", {
         month: "short",
