@@ -44,6 +44,7 @@ type FinancialRecord = {
   status?: string | null;
   created_at?: string | null;
   paid_at?: string | null;
+  due_date?: string | null;
   payment_method?: string | null;
   receipt_type?: string | null;
   description?: string | null;
@@ -301,6 +302,23 @@ export default function RelatoriosPage() {
     });
   }, [financialRecords, period, startDate, endDate, search, patientNameById]);
 
+  // Saldos a receber seguem a DATA DE VENCIMENTO, não a data de criação.
+  // Mantemos filteredRecords para os demais indicadores e exportações existentes.
+  const receivableRecords = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return financialRecords.filter((record) => {
+      if (record.type !== "Receita" || !withinPeriod(record.due_date)) return false;
+      if (Math.max(0, parseMoney(record.amount) - parseMoney(record.paid_amount)) <= 0) return false;
+      if (!term) return true;
+      const patientName = record.patient_id
+        ? patientNameById.get(record.patient_id) || ""
+        : "";
+      return [patientName, record.description || "", record.status || "",
+        record.payment_method || "", record.receipt_type || ""]
+        .join(" ").toLowerCase().includes(term);
+    });
+  }, [financialRecords, period, startDate, endDate, search, patientNameById]);
+
   const summary = useMemo(() => {
     const recebido = filteredPayments.reduce(
       (acc, payment) => acc + parseMoney(payment.amount),
@@ -312,7 +330,7 @@ export default function RelatoriosPage() {
       0
     );
 
-    const aReceber = filteredRecords.reduce((acc, record) => {
+    const aReceber = receivableRecords.reduce((acc, record) => {
       const amount = parseMoney(record.amount);
       const paid = parseMoney(record.paid_amount);
       return acc + Math.max(0, amount - paid);
@@ -323,8 +341,7 @@ export default function RelatoriosPage() {
     ).length;
 
     const pagos = filteredRecords.filter((record) => record.status === "pago").length;
-    const pendentes = filteredRecords.filter((record) => record.status !== "pago")
-      .length;
+    const pendentes = receivableRecords.length;
 
     const ticketMedio =
       filteredPayments.length > 0 ? recebido / filteredPayments.length : 0;
@@ -338,7 +355,7 @@ export default function RelatoriosPage() {
       pendentes,
       ticketMedio,
     };
-  }, [filteredPayments, filteredRecords]);
+  }, [filteredPayments, filteredRecords, receivableRecords]);
 
   const monthlyChart = useMemo(() => {
     const grouped: Record<string, number> = {};
@@ -394,7 +411,7 @@ export default function RelatoriosPage() {
   }, [filteredPayments, patientNameById]);
 
   const openBalances = useMemo(() => {
-    return filteredRecords
+    return receivableRecords
       .map((record) => {
         const amount = parseMoney(record.amount);
         const paid = parseMoney(record.paid_amount);
@@ -409,7 +426,7 @@ export default function RelatoriosPage() {
       .filter((record) => record.balance > 0)
       .sort((a, b) => b.balance - a.balance)
       .slice(0, 10);
-  }, [filteredRecords, patientNameById]);
+  }, [receivableRecords, patientNameById]);
 
   const exportCsv = () => {
     const header = [
