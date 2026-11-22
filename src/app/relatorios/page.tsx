@@ -26,6 +26,10 @@ import {
   YAxis,
 } from "recharts";
 import { supabaseNoSchemaCache } from "@/lib/supabase";
+import {
+  getFinancialRecordBalance,
+  getFinancialRecordDueDate,
+} from "@/lib/financialEngine";
 
 type PeriodFilter =
   | "hoje"
@@ -307,8 +311,9 @@ export default function RelatoriosPage() {
   const receivableRecords = useMemo(() => {
     const term = search.trim().toLowerCase();
     return financialRecords.filter((record) => {
-      if (record.type !== "Receita" || !withinPeriod(record.due_date)) return false;
-      if (Math.max(0, parseMoney(record.amount) - parseMoney(record.paid_amount)) <= 0) return false;
+      const dueDate = getFinancialRecordDueDate(record);
+      if (record.type !== "Receita" || !withinPeriod(dueDate)) return false;
+      if (getFinancialRecordBalance(record) <= 0) return false;
       if (!term) return true;
       const patientName = record.patient_id
         ? patientNameById.get(record.patient_id) || ""
@@ -330,11 +335,10 @@ export default function RelatoriosPage() {
       0
     );
 
-    const aReceber = receivableRecords.reduce((acc, record) => {
-      const amount = parseMoney(record.amount);
-      const paid = parseMoney(record.paid_amount);
-      return acc + Math.max(0, amount - paid);
-    }, 0);
+    const aReceber = receivableRecords.reduce(
+      (acc, record) => acc + getFinancialRecordBalance(record),
+      0
+    );
 
     const recibos = filteredRecords.filter(
       (record) => record.receipt_type && record.receipt_type !== "nenhum"
@@ -413,14 +417,12 @@ export default function RelatoriosPage() {
   const openBalances = useMemo(() => {
     return receivableRecords
       .map((record) => {
-        const amount = parseMoney(record.amount);
-        const paid = parseMoney(record.paid_amount);
         return {
           ...record,
           patientName: record.patient_id
             ? patientNameById.get(record.patient_id) || "Paciente"
             : "Paciente",
-          balance: Math.max(0, amount - paid),
+          balance: getFinancialRecordBalance(record),
         };
       })
       .filter((record) => record.balance > 0)
